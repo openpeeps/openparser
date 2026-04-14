@@ -18,11 +18,11 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 
 ## 😍 Key Features
 - JSON parsing and dumping
-- - Direct-to-object JSON parsing
-- - JSON-L (JSON Lines) parsing
-- - Zero-copy parsing for large JSON datasets
+  - Direct-to-object JSON parsing
+  - JSON-L (JSON Lines) parsing
+  - Zero-copy parsing for large JSON datasets
 - CSV parsing and dumping
-- - Memory-efficient zero-copy parsing for large CSV datasets
+  - Memory-efficient zero-copy parsing for large CSV datasets
 - RSS/Atom feed parsing
 
 ### Parse JSON
