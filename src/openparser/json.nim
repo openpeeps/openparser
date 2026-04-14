@@ -8,17 +8,23 @@
 ## 
 ## It can convert Nim objects, tables and arrays to JSON strings and vice versa.
 ## It also provides compile-time options for customizing the serialization process.
+## 
+## This JSON implementation has a similar API to [pkg/jsony](https://github.com/treeform/jsony)
+## but is designed to work with memory-mapped files and provide a more flexible and extensible
+## serialization/deserialization mechanism.
 
 import std/[macros, macrocache, json, sequtils,
         strutils, options, tables, enumutils, memfiles,
-        critbits]
+        critbits, typetraits]
 
 export json # re-exporting the standard JSON module for JsonNode and related types
 
 type
-  Integers* = int | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64
+  Integers* = int | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64 | uint
+  
   AnyTable*[K, V] =
     Table[K, V] | OrderedTable[K, V] | TableRef[K, V] | OrderedTableRef[K, V]
+  
   JsonOptions* = ref object
     ## Options for JSON serialization
     pretty: bool
@@ -111,10 +117,9 @@ proc dumpHook*(s: var string, val: tuple)
 proc dumpHook*(s: var string, val: object)
 proc dumpHook*[T: ref object](s: var string, val: T)
 proc dumpHook*(s: var string, v: enum)
-
 proc dumpHook*[K: string, V](s: var string, val: AnyTable[K, V])
-
-proc tableToJson*[K: string, V](t: AnyTable[K, V]): string
+proc dumpHook*[T](s: var string, val: set[T])
+proc dumpHook*[T: distinct](s: var string, v: T)
 
 proc toJson*[T](v: T, opts: JsonOptions = nil): string =
   ## Convert a Nim object to its JSON string representation using dump hooks.
@@ -148,16 +153,9 @@ macro toStaticJson*(v: typed, opts: static JsonOptions = nil): untyped =
 #
 # Dump Hooks for JSON Serialization
 #
-proc dumpTableImpl[K: string, V, T](s: var string, t: T) =
-  s.add("{")
-  var i = 0
-  for k, item in t.pairs:
-    if i > 0: s.add(",")
-    dumpHook(s, k)
-    s.add(":")
-    dumpHook(s, item)
-    inc i
-  s.add("}")
+proc dumpHook*[T: distinct](s: var string, v: T) =
+  var x = cast[T.distinctBase](v)
+  s.dumpHook(x)
 
 proc dumpHook*[K: string, V](s: var string, val: AnyTable[K, V]) =
   ## Converts Table/OrderedTable and ref variants to JSON object.
@@ -185,6 +183,16 @@ proc dumpHook*[K: string, V](s: var string, val: AnyTable[K, V]) =
       inc i
 
   s.add("}")
+
+proc dumpHook*[T](s: var string, val: set[T]) =
+  ## Converts a set to a JSON array.
+  s.add("[")
+  var i = 0
+  for item in val:
+    if i > 0: s.add(",")
+    dumpHook(s, item)
+    inc i
+  s.add("]")
 
 proc dumpHook*[T](s: var string, arr: seq[T]) = 
   ## Converts a sequence of items to a JSON array string.
@@ -288,12 +296,6 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
       `strObj`
       `res`.add("}")
       `res`
-
-proc tableToJson*[K: string, V](t: AnyTable[K, V]): string =
-  ## Converts a Nim table to JSON string.
-  var s = ""
-  dumpTableImpl(s, t)
-  result = s
 
 proc arrayToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
   ## Converts a Nim array or sequence to its JSON representation.
@@ -521,6 +523,7 @@ proc parseHook*[T](parser: var Parser, field: string, v: var seq[T])
 proc parseHook*[T: ref object](parser: var Parser, field: string, v: var T)
 proc parseHook*[T: enum](parser: var Parser, field: string, v: var T)
 proc parseHook*[K: string, V](parser: var Parser, field: string, v: var AnyTable[K, V])
+proc parseHook*[T](parser: var Parser, field: string, v: var set[T])
 
 proc skipValue*(parser: var Parser)
 
@@ -655,6 +658,27 @@ proc parseHook*[T: enum](parser: var Parser, field: string, v: var T) =
   else:
     parser.error(unexpectedTokenExpected % [$parser.curr.kind, "string or number"])
 
+proc parseHook*[T](parser: var Parser, field: string, v: var set[T]) = 
+  ## A hook to parse set fields from JSON arrays
+  parser.expectSkip(tkLBracket) # start of array
+  while parser.curr.kind != tkRBracket:
+    var item: T
+    parser.parseHook("", item)
+    v.incl(item)
+    if parser.curr.kind == tkComma:
+      parser.walk()
+  parser.expectSkip(tkRBracket) # end of array
+
+proc parseHook*[T: distinct](parser: var Parser, field: string, v: var T) =
+  ## A hook to parse distinct types by parsing their base type and then converting
+  var tmp: T.distinctBase
+  parser.parseHook("", tmp)
+  v = T(tmp)
+
+proc parseHook*[T: Integers](parser: var Parser, field: string, v: var T) =
+  ## A hook to parse integer fields
+  v = cast[v.type](parser.curr.value.get().parseInt())
+
 macro getObjectFields(obj: typed): untyped =
   let objImpl = obj.getType()
   let tempFields =
@@ -675,7 +699,7 @@ macro getObjectFields(obj: typed): untyped =
     else: discard
   result = newStmtList().add(nnkPrefix.newTree(ident"@", fieldList))
 
-proc parseHook*(parser: var Parser, field: string, v: var object) =
+proc parseHook*[T: object|ref object](parser: var Parser, field: string, v: var T) =
   ## Custom parsing for Address field
   parser.expectSkip(tkLBrace) # start of object
   const objectFields: seq[string] = getObjectFields(v)
@@ -689,8 +713,19 @@ proc parseHook*(parser: var Parser, field: string, v: var object) =
           if key == objField:
             parser.walk() # advance to field name
             parser.expectSkip(tkColon)
-            # call the appropriate parseHook based on field type
-            parser.parseHook(objField, objVal)
+
+            when compiles(parser.parseHook(objField, objVal)):
+              # normal mutable fields
+              parser.parseHook(objField, objVal)
+            else:
+              # immutable fields (e.g. variant discriminator like `type`)
+              var tmp: type(objVal)
+              parser.parseHook(objField, tmp)
+              when compiles(objVal = tmp):
+                objVal = tmp
+              else:
+                parser.error("Field `" & objField & "` is immutable")
+
             if parser.curr.kind != tkRBrace:
               parser.walk() # advance to next token
             break all
