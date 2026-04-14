@@ -55,7 +55,9 @@
   <details open>
     <summary><a class="reference reference-toplevel" href="#7" id="57">Types</a></summary>
     <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#Integers" title="Integers = int | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64">Integers</a></li>
+      <li><a class="reference" href="#AnyTable" title="AnyTable[K; V] = Table[K, V] | OrderedTable[K, V] | TableRef[K, V] |
+    OrderedTableRef[K, V]">AnyTable</a></li>
+<li><a class="reference" href="#Integers" title="Integers = int | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64">Integers</a></li>
 <li><a class="reference" href="#JsonOptions" title="JsonOptions = ref object
   skipFields*: seq[string]   ## Fields to skip during serialization">JsonOptions</a></li>
 <li><a class="reference" href="#VoodooParsingError" title="VoodooParsingError = object of CatchableError">VoodooParsingError</a></li>
@@ -84,6 +86,7 @@
 <li><a class="reference" href="#dumpHook%2Cstring%2C_3" title="dumpHook(s: var string; val: object)">dumpHook(s: var string; val: object)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2Cstring" title="dumpHook(s: var string; val: string)">dumpHook(s: var string; val: string)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2C_2" title="dumpHook(s: var string; val: tuple)">dumpHook(s: var string; val: tuple)</a></li>
+<li><a class="reference" href="#dumpHook%2Cstring%2CAnyTable%5BK%3A%20string%2CV%5D" title="dumpHook[K: string; V](s: var string; val: AnyTable[K, V])">dumpHook[K: string; V](s: var string; val: AnyTable[K, V])</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2CT" title="dumpHook[T: ref object](s: var string; val: T)">dumpHook[T: ref object](s: var string; val: T)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2Cseq%5BT%5D" title="dumpHook[T](s: var string; arr: seq[T])">dumpHook[T](s: var string; arr: seq[T])</a></li>
 
@@ -123,6 +126,8 @@
   <li><a class="reference" href="#parseHook%2CParser%2Cstring%2Cbool" title="parseHook(parser: var Parser; field: string; v: var bool)">parseHook(parser: var Parser; field: string; v: var bool)</a></li>
 <li><a class="reference" href="#parseHook%2CParser%2Cstring%2C" title="parseHook(parser: var Parser; field: string; v: var object)">parseHook(parser: var Parser; field: string; v: var object)</a></li>
 <li><a class="reference" href="#parseHook%2CParser%2Cstring%2Cstring" title="parseHook(parser: var Parser; field: string; v: var string)">parseHook(parser: var Parser; field: string; v: var string)</a></li>
+<li><a class="reference" href="#parseHook%2CParser%2Cstring%2CAnyTable%5BK%3A%20string%2CV%5D" title="parseHook[K: string; V](parser: var Parser; field: string; v: var AnyTable[K, V])">parseHook[K: string; V](parser: var Parser; field: string; v: var AnyTable[K, V])</a></li>
+<li><a class="reference" href="#parseHook%2CParser%2Cstring%2CT_4" title="parseHook[T: enum](parser: var Parser; field: string; v: var T)">parseHook[T: enum](parser: var Parser; field: string; v: var T)</a></li>
 <li><a class="reference" href="#parseHook%2CParser%2Cstring%2CT_2" title="parseHook[T: float | float32 | float64](parser: var Parser; field: string;
                                         v: var T)">parseHook[T: float | float32 | float64](parser: var Parser; field: string;
                                         v: var T)</a></li>
@@ -135,6 +140,14 @@
   <li><a class="reference" href="#skipValue%2CParser" title="skipValue(parser: var Parser)">skipValue(parser: var Parser)</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">tableToJson
+  <li><a class="reference" href="#tableToJson%2CAnyTable%5BK%3A%20string%2CV%5D" title="tableToJson[K: string; V](t: AnyTable[K, V]): string">tableToJson[K: string; V](t: AnyTable[K, V]): string</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">toJson
+  <li><a class="reference" href="#toJson%2CT%2CJsonOptions" title="toJson[T](v: T; opts: JsonOptions = nil): string">toJson[T](v: T; opts: JsonOptions = nil): string</a></li>
+
+</ul>
 
     </ul>
   </details>
@@ -143,8 +156,8 @@
   <details open>
     <summary><a class="reference reference-toplevel" href="#17" id="67">Macros</a></summary>
     <ul class="simple simple-toc-section">
-      <ul class="simple nested-toc-section">toJson
-  <li><a class="reference" href="#toJson.m%2Ctyped%2CstaticJsonOptions" title="toJson(v: typed; opts: static JsonOptions = nil): untyped">toJson(v: typed; opts: static JsonOptions = nil): untyped</a></li>
+      <ul class="simple nested-toc-section">toStaticJson
+  <li><a class="reference" href="#toStaticJson.m%2Ctyped%2CstaticJsonOptions" title="toStaticJson(v: typed; opts: static JsonOptions = nil): untyped">toStaticJson(v: typed; opts: static JsonOptions = nil): untyped</a></li>
 
 </ul>
 
@@ -177,7 +190,16 @@
     <div class="section" id="7">
   <h1><a class="toc-backref" href="#7">Types</a></h1>
   <dl class="item">
-    <div id="Integers">
+    <div id="AnyTable">
+  <dt><pre><a href="json.html#AnyTable"><span class="Identifier">AnyTable</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">;</span> <span class="Identifier">V</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">K</span><span class="Other">,</span> <span class="Identifier">V</span><span class="Other">]</span> <span class="Operator">|</span> <span class="Identifier">OrderedTable</span><span class="Other">[</span><span class="Identifier">K</span><span class="Other">,</span> <span class="Identifier">V</span><span class="Other">]</span> <span class="Operator">|</span> <span class="Identifier">TableRef</span><span class="Other">[</span><span class="Identifier">K</span><span class="Other">,</span> <span class="Identifier">V</span><span class="Other">]</span> <span class="Operator">|</span>
+    <span class="Identifier">OrderedTableRef</span><span class="Other">[</span><span class="Identifier">K</span><span class="Other">,</span> <span class="Identifier">V</span><span class="Other">]</span></pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+<div id="Integers">
   <dt><pre><a href="json.html#Integers"><span class="Identifier">Integers</span></a> <span class="Other">=</span> <span class="Identifier">int</span> <span class="Operator">|</span> <span class="Identifier">int8</span> <span class="Operator">|</span> <span class="Identifier">int16</span> <span class="Operator">|</span> <span class="Identifier">int32</span> <span class="Operator">|</span> <span class="Identifier">int64</span> <span class="Operator">|</span> <span class="Identifier">uint8</span> <span class="Operator">|</span> <span class="Identifier">uint16</span> <span class="Operator">|</span> <span class="Identifier">uint32</span> <span class="Operator">|</span> <span class="Identifier">uint64</span></pre></dt>
   <dd>
     
@@ -244,7 +266,7 @@
   <dt><pre><span class="Keyword">proc</span> <a href="#dumpHook%2Cstring%2C_4"><span class="Identifier">dumpHook</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">enum</span><span class="Other">)</span></pre></dt>
   <dd>
     
-    Converts an enum to JSON
+    
     
   </dd>
 </div>
@@ -290,6 +312,14 @@
 </div>
 <div id="dumpHook,string,_2">
   <dt><pre><span class="Keyword">proc</span> <a href="#dumpHook%2Cstring%2C_2"><span class="Identifier">dumpHook</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">val</span><span class="Other">:</span> <span class="Keyword">tuple</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+<div id="dumpHook,string,AnyTable[K: string,V]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#dumpHook%2Cstring%2CAnyTable%5BK%3A%20string%2CV%5D"><span class="Identifier">dumpHook</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">val</span><span class="Other">:</span> <a href="json.html#AnyTable"><span class="Identifier">AnyTable</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">,</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -454,6 +484,23 @@
     
   </dd>
 </div>
+<div id="parseHook,Parser,string,AnyTable[K: string,V]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CParser%2Cstring%2CAnyTable%5BK%3A%20string%2CV%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">;</span> <span class="Identifier">field</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span>
+                             <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#AnyTable"><span class="Identifier">AnyTable</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">,</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+<div id="parseHook,Parser,string,T_4">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CParser%2Cstring%2CT_4"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">enum</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">;</span> <span class="Identifier">field</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
 <div id="parseHook,Parser,string,T_2">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CParser%2Cstring%2CT_2"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Identifier">float</span> <span class="Operator">|</span> <span class="Identifier">float32</span> <span class="Operator">|</span> <span class="Identifier">float64</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">;</span> <span class="Identifier">field</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span>
     <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
@@ -502,15 +549,37 @@
 </div>
 
 </div>
+<div id="tableToJson-procs-all">
+  <div id="tableToJson,AnyTable[K: string,V]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#tableToJson%2CAnyTable%5BK%3A%20string%2CV%5D"><span class="Identifier">tableToJson</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">t</span><span class="Other">:</span> <a href="json.html#AnyTable"><span class="Identifier">AnyTable</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">,</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+
+</div>
+<div id="toJson-procs-all">
+  <div id="toJson,T,JsonOptions">
+  <dt><pre><span class="Keyword">proc</span> <a href="#toJson%2CT%2CJsonOptions"><span class="Identifier">toJson</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">T</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="json.html#JsonOptions"><span class="Identifier">JsonOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+  <dd>
+    
+    Convert a Nim object to its JSON string representation using dump hooks.
+    
+  </dd>
+</div>
+
+</div>
 
   </dl>
 </div>
 <div class="section" id="17">
   <h1><a class="toc-backref" href="#17">Macros</a></h1>
   <dl class="item">
-    <div id="toJson-macros-all">
-  <div id="toJson.m,typed,staticJsonOptions">
-  <dt><pre><span class="Keyword">macro</span> <a href="#toJson.m%2Ctyped%2CstaticJsonOptions"><span class="Identifier">toJson</span></a><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">typed</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">JsonOptions</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+    <div id="toStaticJson-macros-all">
+  <div id="toStaticJson.m,typed,staticJsonOptions">
+  <dt><pre><span class="Keyword">macro</span> <a href="#toStaticJson.m%2Ctyped%2CstaticJsonOptions"><span class="Identifier">toStaticJson</span></a><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">typed</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">JsonOptions</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
   <dd>
     
     <p>Converts a Nim object to its JSON representation.</p>
@@ -548,7 +617,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-14 21:13:44 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-14 22:26:09 UTC</small>
       </div>
     </div>
   </div>
