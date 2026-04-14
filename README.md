@@ -34,7 +34,7 @@ import openparser/json
 
 let data = """{"name":"Albush","age":40,"address":{"street":"456 Elm St","city":"Othertown","zip":67890},"friends":[]}"""
 
-let jsonNode: JsonNode = fromJson(data, Person)
+let jsonNode: JsonNode = fromJson(data)
 echo jsonNode["name"].getStr # Albush
 echo jsonNode["age"].getInt # 40
 ```
@@ -60,7 +60,7 @@ type
 
 let data = """{"name":"Alice","age":30,"address":{"street":"123 Main St","city":"Anytown","zip":12345},"friends":[]}"""
 
-let person: Person = fromJson(data)
+let person: Person = fromJson(data, Person)
 echo person.name # Alice
 echo person.age # 30
 echo person.address.street # 123 Main St
