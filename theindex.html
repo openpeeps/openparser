@@ -128,9 +128,13 @@
           <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook[T](s: var string; arr: seq[T])" href="openparser/json.html#dumpHook%2Cstring%2Cseq%5BT%5D">json: proc dumpHook[T](s: var string; arr: seq[T])</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="json: proc dumpHook[T](s: var string; val: set[T])" href="openparser/json.html#dumpHook%2Cstring%2Cset%5BT%5D">json: proc dumpHook[T](s: var string; val: set[T])</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook(s: var string; val: string)" href="openparser/json.html#dumpHook%2Cstring%2Cstring">json: proc dumpHook(s: var string; val: string)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook[T: ref object](s: var string; val: T)" href="openparser/json.html#dumpHook%2Cstring%2CT">json: proc dumpHook[T: ref object](s: var string; val: T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="json: proc dumpHook[T: distinct](s: var string; v: T)" href="openparser/json.html#dumpHook%2Cstring%2CT_2">json: proc dumpHook[T: distinct](s: var string; v: T)</a></li>
           </ul></dd>
 <dt><a name="fetchAtom" href="#fetchAtom"><span>fetchAtom:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -200,13 +204,13 @@
           </ul></dd>
 <dt><a name="parseHook" href="#parseHook"><span>parseHook:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook(parser: var Parser; field: string; v: var object)" href="openparser/json.html#parseHook%2CParser%2Cstring%2C">json: proc parseHook(parser: var Parser; field: string; v: var object)</a></li>
-          <li><a class="reference external"
           data-doc-search-tag="json: proc parseHook[K: string; V](parser: var Parser; field: string; v: var AnyTable[K, V])" href="openparser/json.html#parseHook%2CParser%2Cstring%2CAnyTable%5BK%3A%20string%2CV%5D">json: proc parseHook[K: string; V](parser: var Parser; field: string; v: var AnyTable[K, V])</a></li>
           <li><a class="reference external"
           data-doc-search-tag="json: proc parseHook(parser: var Parser; field: string; v: var bool)" href="openparser/json.html#parseHook%2CParser%2Cstring%2Cbool">json: proc parseHook(parser: var Parser; field: string; v: var bool)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="json: proc parseHook[T](parser: var Parser; field: string; v: var seq[T])" href="openparser/json.html#parseHook%2CParser%2Cstring%2Cseq%5BT%5D">json: proc parseHook[T](parser: var Parser; field: string; v: var seq[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="json: proc parseHook[T](parser: var Parser; field: string; v: var set[T])" href="openparser/json.html#parseHook%2CParser%2Cstring%2Cset%5BT%5D">json: proc parseHook[T](parser: var Parser; field: string; v: var set[T])</a></li>
           <li><a class="reference external"
           data-doc-search-tag="json: proc parseHook(parser: var Parser; field: string; v: var string)" href="openparser/json.html#parseHook%2CParser%2Cstring%2Cstring">json: proc parseHook(parser: var Parser; field: string; v: var string)</a></li>
           <li><a class="reference external"
@@ -219,6 +223,12 @@
           data-doc-search-tag="json: proc parseHook[T: ref object](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_3">json: proc parseHook[T: ref object](parser: var Parser; field: string; v: var T)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="json: proc parseHook[T: enum](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_4">json: proc parseHook[T: enum](parser: var Parser; field: string; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="json: proc parseHook[T: distinct](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_5">json: proc parseHook[T: distinct](parser: var Parser; field: string; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="json: proc parseHook[T: Integers](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_6">json: proc parseHook[T: Integers](parser: var Parser; field: string; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="json: proc parseHook[T: object | ref object](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_7">json: proc parseHook[T: object | ref object](parser: var Parser; field: string; v: var T)</a></li>
           </ul></dd>
 <dt><a name="parseRss" href="#parseRss"><span>parseRss:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -260,10 +270,6 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc skipValue(parser: var Parser)" href="openparser/json.html#skipValue%2CParser">json: proc skipValue(parser: var Parser)</a></li>
           </ul></dd>
-<dt><a name="tableToJson" href="#tableToJson"><span>tableToJson:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: proc tableToJson[K: string; V](t: AnyTable[K, V]): string" href="openparser/json.html#tableToJson%2CAnyTable%5BK%3A%20string%2CV%5D">json: proc tableToJson[K: string; V](t: AnyTable[K, V]): string</a></li>
-          </ul></dd>
 <dt><a name="toAtomXml" href="#toAtomXml"><span>toAtomXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="feed: proc toAtomXml(feed: AtomFeed): string" href="openparser/feed.html#toAtomXml%2CAtomFeed">feed: proc toAtomXml(feed: AtomFeed): string</a></li>
@@ -292,7 +298,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-14 22:26:09 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-14 22:53:12 UTC</small>
       </div>
     </div>
   </div>

@@ -57,7 +57,8 @@
     <ul class="simple simple-toc-section">
       <li><a class="reference" href="#AnyTable" title="AnyTable[K; V] = Table[K, V] | OrderedTable[K, V] | TableRef[K, V] |
     OrderedTableRef[K, V]">AnyTable</a></li>
-<li><a class="reference" href="#Integers" title="Integers = int | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64">Integers</a></li>
+<li><a class="reference" href="#Integers" title="Integers = int | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64 |
+    uint">Integers</a></li>
 <li><a class="reference" href="#JsonOptions" title="JsonOptions = ref object
   skipFields*: seq[string]   ## Fields to skip during serialization">JsonOptions</a></li>
 <li><a class="reference" href="#VoodooParsingError" title="VoodooParsingError = object of CatchableError">VoodooParsingError</a></li>
@@ -87,8 +88,10 @@
 <li><a class="reference" href="#dumpHook%2Cstring%2Cstring" title="dumpHook(s: var string; val: string)">dumpHook(s: var string; val: string)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2C_2" title="dumpHook(s: var string; val: tuple)">dumpHook(s: var string; val: tuple)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2CAnyTable%5BK%3A%20string%2CV%5D" title="dumpHook[K: string; V](s: var string; val: AnyTable[K, V])">dumpHook[K: string; V](s: var string; val: AnyTable[K, V])</a></li>
+<li><a class="reference" href="#dumpHook%2Cstring%2CT_2" title="dumpHook[T: distinct](s: var string; v: T)">dumpHook[T: distinct](s: var string; v: T)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2CT" title="dumpHook[T: ref object](s: var string; val: T)">dumpHook[T: ref object](s: var string; val: T)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2Cseq%5BT%5D" title="dumpHook[T](s: var string; arr: seq[T])">dumpHook[T](s: var string; arr: seq[T])</a></li>
+<li><a class="reference" href="#dumpHook%2Cstring%2Cset%5BT%5D" title="dumpHook[T](s: var string; val: set[T])">dumpHook[T](s: var string; val: set[T])</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">fromJson
@@ -124,24 +127,23 @@
 </ul>
 <ul class="simple nested-toc-section">parseHook
   <li><a class="reference" href="#parseHook%2CParser%2Cstring%2Cbool" title="parseHook(parser: var Parser; field: string; v: var bool)">parseHook(parser: var Parser; field: string; v: var bool)</a></li>
-<li><a class="reference" href="#parseHook%2CParser%2Cstring%2C" title="parseHook(parser: var Parser; field: string; v: var object)">parseHook(parser: var Parser; field: string; v: var object)</a></li>
 <li><a class="reference" href="#parseHook%2CParser%2Cstring%2Cstring" title="parseHook(parser: var Parser; field: string; v: var string)">parseHook(parser: var Parser; field: string; v: var string)</a></li>
 <li><a class="reference" href="#parseHook%2CParser%2Cstring%2CAnyTable%5BK%3A%20string%2CV%5D" title="parseHook[K: string; V](parser: var Parser; field: string; v: var AnyTable[K, V])">parseHook[K: string; V](parser: var Parser; field: string; v: var AnyTable[K, V])</a></li>
+<li><a class="reference" href="#parseHook%2CParser%2Cstring%2CT_5" title="parseHook[T: distinct](parser: var Parser; field: string; v: var T)">parseHook[T: distinct](parser: var Parser; field: string; v: var T)</a></li>
 <li><a class="reference" href="#parseHook%2CParser%2Cstring%2CT_4" title="parseHook[T: enum](parser: var Parser; field: string; v: var T)">parseHook[T: enum](parser: var Parser; field: string; v: var T)</a></li>
 <li><a class="reference" href="#parseHook%2CParser%2Cstring%2CT_2" title="parseHook[T: float | float32 | float64](parser: var Parser; field: string;
                                         v: var T)">parseHook[T: float | float32 | float64](parser: var Parser; field: string;
                                         v: var T)</a></li>
 <li><a class="reference" href="#parseHook%2CParser%2Cstring%2CT" title="parseHook[T: int | int32 | int64](parser: var Parser; field: string; v: var T)">parseHook[T: int | int32 | int64](parser: var Parser; field: string; v: var T)</a></li>
+<li><a class="reference" href="#parseHook%2CParser%2Cstring%2CT_6" title="parseHook[T: Integers](parser: var Parser; field: string; v: var T)">parseHook[T: Integers](parser: var Parser; field: string; v: var T)</a></li>
+<li><a class="reference" href="#parseHook%2CParser%2Cstring%2CT_7" title="parseHook[T: object | ref object](parser: var Parser; field: string; v: var T)">parseHook[T: object | ref object](parser: var Parser; field: string; v: var T)</a></li>
 <li><a class="reference" href="#parseHook%2CParser%2Cstring%2CT_3" title="parseHook[T: ref object](parser: var Parser; field: string; v: var T)">parseHook[T: ref object](parser: var Parser; field: string; v: var T)</a></li>
 <li><a class="reference" href="#parseHook%2CParser%2Cstring%2Cseq%5BT%5D" title="parseHook[T](parser: var Parser; field: string; v: var seq[T])">parseHook[T](parser: var Parser; field: string; v: var seq[T])</a></li>
+<li><a class="reference" href="#parseHook%2CParser%2Cstring%2Cset%5BT%5D" title="parseHook[T](parser: var Parser; field: string; v: var set[T])">parseHook[T](parser: var Parser; field: string; v: var set[T])</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">skipValue
   <li><a class="reference" href="#skipValue%2CParser" title="skipValue(parser: var Parser)">skipValue(parser: var Parser)</a></li>
-
-</ul>
-<ul class="simple nested-toc-section">tableToJson
-  <li><a class="reference" href="#tableToJson%2CAnyTable%5BK%3A%20string%2CV%5D" title="tableToJson[K: string; V](t: AnyTable[K, V]): string">tableToJson[K: string; V](t: AnyTable[K, V]): string</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">toJson
@@ -186,6 +188,7 @@
     
     <p class="module-desc"><p>This module implements a JSON parser and serializer for Nim language.</p>
 <p>It can convert Nim objects, tables and arrays to JSON strings and vice versa. It also provides compile-time options for customizing the serialization process.</p>
+<p>This JSON implementation has a similar API to <a class="reference external" href="https://github.com/treeform/jsony">pkg/jsony</a> but is designed to work with memory-mapped files and provide a more flexible and extensible serialization/deserialization mechanism.</p>
 </p>
     <div class="section" id="7">
   <h1><a class="toc-backref" href="#7">Types</a></h1>
@@ -200,7 +203,8 @@
   </dd>
 </div>
 <div id="Integers">
-  <dt><pre><a href="json.html#Integers"><span class="Identifier">Integers</span></a> <span class="Other">=</span> <span class="Identifier">int</span> <span class="Operator">|</span> <span class="Identifier">int8</span> <span class="Operator">|</span> <span class="Identifier">int16</span> <span class="Operator">|</span> <span class="Identifier">int32</span> <span class="Operator">|</span> <span class="Identifier">int64</span> <span class="Operator">|</span> <span class="Identifier">uint8</span> <span class="Operator">|</span> <span class="Identifier">uint16</span> <span class="Operator">|</span> <span class="Identifier">uint32</span> <span class="Operator">|</span> <span class="Identifier">uint64</span></pre></dt>
+  <dt><pre><a href="json.html#Integers"><span class="Identifier">Integers</span></a> <span class="Other">=</span> <span class="Identifier">int</span> <span class="Operator">|</span> <span class="Identifier">int8</span> <span class="Operator">|</span> <span class="Identifier">int16</span> <span class="Operator">|</span> <span class="Identifier">int32</span> <span class="Operator">|</span> <span class="Identifier">int64</span> <span class="Operator">|</span> <span class="Identifier">uint8</span> <span class="Operator">|</span> <span class="Identifier">uint16</span> <span class="Operator">|</span> <span class="Identifier">uint32</span> <span class="Operator">|</span> <span class="Identifier">uint64</span> <span class="Operator">|</span>
+    <span class="Identifier">uint</span></pre></dt>
   <dd>
     
     
@@ -326,6 +330,14 @@
     
   </dd>
 </div>
+<div id="dumpHook,string,T_2">
+  <dt><pre><span class="Keyword">proc</span> <a href="#dumpHook%2Cstring%2CT_2"><span class="Identifier">dumpHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">distinct</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
 <div id="dumpHook,string,T">
   <dt><pre><span class="Keyword">proc</span> <a href="#dumpHook%2Cstring%2CT"><span class="Identifier">dumpHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">val</span><span class="Other">:</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
@@ -339,6 +351,14 @@
   <dd>
     
     Converts a sequence of items to a JSON array string.
+    
+  </dd>
+</div>
+<div id="dumpHook,string,set[T]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#dumpHook%2Cstring%2Cset%5BT%5D"><span class="Identifier">dumpHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">val</span><span class="Other">:</span> <span class="Identifier">set</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    
     
   </dd>
 </div>
@@ -467,14 +487,6 @@
     
   </dd>
 </div>
-<div id="parseHook,Parser,string,">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CParser%2Cstring%2C"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">;</span> <span class="Identifier">field</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Keyword">object</span><span class="Other">)</span></pre></dt>
-  <dd>
-    
-    Custom parsing for Address field
-    
-  </dd>
-</div>
 <div id="parseHook,Parser,string,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CParser%2Cstring%2Cstring"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">;</span> <span class="Identifier">field</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
@@ -490,6 +502,14 @@
   <dd>
     
     
+    
+  </dd>
+</div>
+<div id="parseHook,Parser,string,T_5">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CParser%2Cstring%2CT_5"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">distinct</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">;</span> <span class="Identifier">field</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    A hook to parse distinct types by parsing their base type and then converting
     
   </dd>
 </div>
@@ -519,6 +539,23 @@
     
   </dd>
 </div>
+<div id="parseHook,Parser,string,T_6">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CParser%2Cstring%2CT_6"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <a href="json.html#Integers"><span class="Identifier">Integers</span></a><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">;</span> <span class="Identifier">field</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    A hook to parse integer fields
+    
+  </dd>
+</div>
+<div id="parseHook,Parser,string,T_7">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CParser%2Cstring%2CT_7"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">object</span> <span class="Operator">|</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">;</span> <span class="Identifier">field</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span>
+                                       <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    Custom parsing for Address field
+    
+  </dd>
+</div>
 <div id="parseHook,Parser,string,T_3">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CParser%2Cstring%2CT_3"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">;</span> <span class="Identifier">field</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
@@ -535,12 +572,8 @@
     
   </dd>
 </div>
-
-</div>
-<div id="skipValue-procs-all">
-  <div id="skipValue,Parser">
-  <dt><pre><span class="Keyword">proc</span> <a href="#skipValue%2CParser"><span class="Identifier">skipValue</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">VoodooParsingError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span>
-                                     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+<div id="parseHook,Parser,string,set[T]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CParser%2Cstring%2Cset%5BT%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">;</span> <span class="Identifier">field</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">set</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -549,9 +582,10 @@
 </div>
 
 </div>
-<div id="tableToJson-procs-all">
-  <div id="tableToJson,AnyTable[K: string,V]">
-  <dt><pre><span class="Keyword">proc</span> <a href="#tableToJson%2CAnyTable%5BK%3A%20string%2CV%5D"><span class="Identifier">tableToJson</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">t</span><span class="Other">:</span> <a href="json.html#AnyTable"><span class="Identifier">AnyTable</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">,</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+<div id="skipValue-procs-all">
+  <div id="skipValue,Parser">
+  <dt><pre><span class="Keyword">proc</span> <a href="#skipValue%2CParser"><span class="Identifier">skipValue</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Parser</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">VoodooParsingError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span>
+                                     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -617,7 +651,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-14 22:26:09 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-14 22:53:11 UTC</small>
       </div>
     </div>
   </div>
