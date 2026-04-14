@@ -1,0 +1,41 @@
+nimTitle	json	openparser/json.html	module openparser/json		0
+nim	Integers	openparser/json.html#Integers	type Integers		18
+nim	JsonOptions	openparser/json.html#JsonOptions	type JsonOptions		20
+nim	VoodooParsingError	openparser/json.html#VoodooParsingError	object VoodooParsingError		72
+nim	skippable	openparser/json.html#skippable.t	template skippable()		74
+nim	openReadOnly	openparser/json.html#openReadOnly,string	proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile		91
+nim	isMapped	openparser/json.html#isMapped,MemFile	proc isMapped(m: MemFile): bool		96
+nim	objectToJson	openparser/json.html#objectToJson,NimNode,NimNode,JsonOptions	proc objectToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode		101
+nim	arrayToJson	openparser/json.html#arrayToJson,NimNode,NimNode,JsonOptions	proc arrayToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode		102
+nim	dumpHook	openparser/json.html#dumpHook,string,string	proc dumpHook(s: var string; val: string)		104
+nim	dumpHook	openparser/json.html#dumpHook,string,Integers	proc dumpHook(s: var string; val: Integers)		105
+nim	dumpHook	openparser/json.html#dumpHook,string,	proc dumpHook(s: var string; val: float32 | float64)		106
+nim	dumpHook	openparser/json.html#dumpHook,string,bool	proc dumpHook(s: var string; val: bool)		107
+nim	dumpHook	openparser/json.html#dumpHook,string,_2	proc dumpHook(s: var string; val: tuple)		108
+nim	dumpHook	openparser/json.html#dumpHook,string,_3	proc dumpHook(s: var string; val: object)		109
+nim	dumpHook	openparser/json.html#dumpHook,string,T	proc dumpHook[T: ref object](s: var string; val: T)		110
+nim	toJson	openparser/json.html#toJson.m,typed,staticJsonOptions	macro toJson(v: typed; opts: static JsonOptions = nil): untyped		112
+nim	dumpHook	openparser/json.html#dumpHook,string,seq[T]	proc dumpHook[T](s: var string; arr: seq[T])		139
+nim	dumpHook	openparser/json.html#dumpHook,string,_4	proc dumpHook(s: var string; v: enum)		179
+nim	`$`	openparser/json.html#$,TokenKind	proc `$`(tk: TokenKind): string		262
+nim	`$`	openparser/json.html#$,Token	proc `$`(tk: Token): string		275
+nim	parseHook	openparser/json.html#parseHook,Parser,string,string	proc parseHook(parser: var Parser; field: string; v: var string)		460
+nim	parseHook	openparser/json.html#parseHook,Parser,string,T	proc parseHook[T: int | int32 | int64](parser: var Parser; field: string; v: var T)		461
+nim	parseHook	openparser/json.html#parseHook,Parser,string,T_2	proc parseHook[T: float | float32 | float64](parser: var Parser; field: string;\n                                        v: var T)		462
+nim	parseHook	openparser/json.html#parseHook,Parser,string,bool	proc parseHook(parser: var Parser; field: string; v: var bool)		463
+nim	parseHook	openparser/json.html#parseHook,Parser,string,seq[T]	proc parseHook[T](parser: var Parser; field: string; v: var seq[T])		464
+nim	parseHook	openparser/json.html#parseHook,Parser,string,T_3	proc parseHook[T: ref object](parser: var Parser; field: string; v: var T)		465
+nim	skipValue	openparser/json.html#skipValue,Parser	proc skipValue(parser: var Parser)		467
+nim	parseHook	openparser/json.html#parseHook,Parser,string,	proc parseHook(parser: var Parser; field: string; v: var object)		560
+nim	fromJson	openparser/json.html#fromJson,string	proc fromJson(str: string): JsonNode		734
+nim	fromJsonL	openparser/json.html#fromJsonL,string	proc fromJsonL(str: string): JsonNode		739
+nim	fromJson	openparser/json.html#fromJson,MemFile	proc fromJson(mapped: MemFile): JsonNode		744
+nim	fromJsonL	openparser/json.html#fromJsonL,MemFile	proc fromJsonL(mapped: MemFile): JsonNode		749
+nim	fromJsonFile	openparser/json.html#fromJsonFile,string	proc fromJsonFile(filename: string): JsonNode		754
+nim	fromJsonLFile	openparser/json.html#fromJsonLFile,string	proc fromJsonLFile(filename: string): JsonNode		760
+nim	fromJson	openparser/json.html#fromJson,string,typedesc[T]	proc fromJson[T](s: string; x: typedesc[T]): T		794
+nimgrp	dumphook	openparser/json.html#dumpHook-procs-all	proc		104
+nimgrp	fromjsonl	openparser/json.html#fromJsonL-procs-all	proc		739
+nimgrp	$	openparser/json.html#$-procs-all	proc		262
+nimgrp	parsehook	openparser/json.html#parseHook-procs-all	proc		460
+nimgrp	fromjson	openparser/json.html#fromJson-procs-all	proc		734

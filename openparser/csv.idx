@@ -1,0 +1,11 @@
+nimTitle	csv	openparser/csv.html	module openparser/csv		0
+nim	CsvRowCallback	openparser/csv.html#CsvRowCallback	type CsvRowCallback		20
+nim	CsvOptions	openparser/csv.html#CsvOptions	object CsvOptions		25
+nim	CsvFieldSlice	openparser/csv.html#CsvFieldSlice	object CsvFieldSlice		40
+nim	CsvParseError	openparser/csv.html#CsvParseError	object CsvParseError		53
+nim	defaultCsvOptions	openparser/csv.html#defaultCsvOptions	proc defaultCsvOptions(): CsvOptions		55
+nim	toString	openparser/csv.html#toString,CsvFieldSlice	proc toString(f: CsvFieldSlice): string		58
+nim	`$`	openparser/csv.html#$,CsvFieldSlice	proc `$`(f: CsvFieldSlice): string		82
+nim	asChars	openparser/csv.html#asChars,MemFile	proc asChars(mfile: MemFile): ptr UncheckedArray[char]		85
+nim	parseCsv	openparser/csv.html#parseCsv,MemFile,CsvRowCallback,CsvOptions	proc parseCsv(mfile: MemFile; onRow: CsvRowCallback;\n         options: CsvOptions = defaultCsvOptions())		90
+nim	parseFile	openparser/csv.html#parseFile,string,CsvRowCallback,CsvOptions	proc parseFile(filename: string; onRow: CsvRowCallback;\n          options: CsvOptions = defaultCsvOptions())		202

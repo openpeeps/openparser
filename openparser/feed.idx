@@ -1,0 +1,16 @@
+nimTitle	feed	openparser/feed.html	module openparser/feed		0
+nim	AtomNs	openparser/feed.html#AtomNs	const AtomNs		15
+nim	AtomParsingError	openparser/feed.html#AtomParsingError	object AtomParsingError		18
+nim	AtomValidationError	openparser/feed.html#AtomValidationError	object AtomValidationError		19
+nim	AtomText	openparser/feed.html#AtomText	object AtomText		21
+nim	AtomPerson	openparser/feed.html#AtomPerson	object AtomPerson		26
+nim	AtomLink	openparser/feed.html#AtomLink	object AtomLink		32
+nim	AtomCategory	openparser/feed.html#AtomCategory	object AtomCategory		41
+nim	AtomGenerator	openparser/feed.html#AtomGenerator	object AtomGenerator		47
+nim	AtomContent	openparser/feed.html#AtomContent	object AtomContent		54
+nim	AtomEntry	openparser/feed.html#AtomEntry	object AtomEntry		61
+nim	AtomFeed	openparser/feed.html#AtomFeed	object AtomFeed		75
+nim	parseAtom	openparser/feed.html#parseAtom,string	proc parseAtom(xml: string): AtomFeed		281
+nim	readAtom	openparser/feed.html#readAtom,string	proc readAtom(filePath: string): AtomFeed		321
+nim	fetchAtom	openparser/feed.html#fetchAtom,string	proc fetchAtom(url: string): AtomFeed		325
+nim	toAtomXml	openparser/feed.html#toAtomXml,AtomFeed	proc toAtomXml(feed: AtomFeed): string		330

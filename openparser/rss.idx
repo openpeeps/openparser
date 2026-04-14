@@ -1,0 +1,10 @@
+nimTitle	rss	openparser/rss.html	module openparser/rss		0
+nim	RssImage	openparser/rss.html#RssImage	object RssImage		14
+nim	RssMediaContent	openparser/rss.html#RssMediaContent	object RssMediaContent		23
+nim	RssItem	openparser/rss.html#RssItem	object RssItem		36
+nim	RssFeed	openparser/rss.html#RssFeed	object RssFeed		56
+nim	RSSParsingError	openparser/rss.html#RSSParsingError	object RSSParsingError		81
+nim	parseRss	openparser/rss.html#parseRss,string	proc parseRss(xml: string): RssFeed		136
+nim	readRss	openparser/rss.html#readRss,string	proc readRss(filePath: string): RssFeed		172
+nim	fetchRss	openparser/rss.html#fetchRss,string	proc fetchRss(url: string): RssFeed		177
+nim	toRssXml	openparser/rss.html#toRssXml,RssFeed	proc toRssXml(feed: RssFeed): string		223
