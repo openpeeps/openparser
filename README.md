@@ -17,13 +17,13 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 
 
 ## 😍 Key Features
-- [x] JSON parsing and dumping
-- [x] Direct-to-object JSON parsing
-- [x] JSON-L (JSON Lines) parsing
-- [x] CSV parsing and dumping
-- [x] Memory-efficient, zero-copy parsing via `std/memfiles`
-- [x] Written in Nim language
-
+- JSON parsing and dumping
+- - Direct-to-object JSON parsing
+- - JSON-L (JSON Lines) parsing
+- - Zero-copy parsing for large JSON datasets
+- CSV parsing and dumping
+- - Memory-efficient zero-copy parsing for large CSV datasets
+- RSS/Atom feed parsing
 
 ### Parse JSON
 
