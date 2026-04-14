@@ -10,13 +10,15 @@
 ## It also provides compile-time options for customizing the serialization process.
 
 import std/[macros, macrocache, json, sequtils,
-        strutils, options, tables, enumutils, memfiles]
+        strutils, options, tables, enumutils, memfiles,
+        critbits]
 
 export json # re-exporting the standard JSON module for JsonNode and related types
 
 type
   Integers* = int | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64
-
+  AnyTable*[K, V] =
+    Table[K, V] | OrderedTable[K, V] | TableRef[K, V] | OrderedTableRef[K, V]
   JsonOptions* = ref object
     ## Options for JSON serialization
     pretty: bool
@@ -108,17 +110,27 @@ proc dumpHook*(s: var string, val: bool)
 proc dumpHook*(s: var string, val: tuple)
 proc dumpHook*(s: var string, val: object)
 proc dumpHook*[T: ref object](s: var string, val: T)
+proc dumpHook*(s: var string, v: enum)
 
-macro toJson*(v: typed, opts: static JsonOptions = nil): untyped =
+proc dumpHook*[K: string, V](s: var string, val: AnyTable[K, V])
+
+proc tableToJson*[K: string, V](t: AnyTable[K, V]): string
+
+proc toJson*[T](v: T, opts: JsonOptions = nil): string =
+  ## Convert a Nim object to its JSON string representation using dump hooks.
+  var s = ""
+  dumpHook(s, v)
+  result = s
+
+macro toStaticJson*(v: typed, opts: static JsonOptions = nil): untyped =
   ## Converts a Nim object to its JSON representation.
   ## 
   ## This macro uses compile-time reflection to inspect the structure of `v` and 
   ## generate code that constructs a JSON string representation of it, mostly at compile time.
-  let tinst = v.getTypeInst()
-  if tinst.kind == nnkSym and tinst.strVal == "JsonNode":
+  let tInst = v.getTypeInst()
+  if tInst.kind == nnkSym and tInst.strVal == "JsonNode":
     return quote do:
-      $`v`
-
+      $`v` # if it's already a JsonNode, just return it as-is without further processing
   # retrieve the implementation of typed `v`
   var valImpl = v.getType()
   var objName = v.getTypeInst()
@@ -136,6 +148,44 @@ macro toJson*(v: typed, opts: static JsonOptions = nil): untyped =
 #
 # Dump Hooks for JSON Serialization
 #
+proc dumpTableImpl[K: string, V, T](s: var string, t: T) =
+  s.add("{")
+  var i = 0
+  for k, item in t.pairs:
+    if i > 0: s.add(",")
+    dumpHook(s, k)
+    s.add(":")
+    dumpHook(s, item)
+    inc i
+  s.add("}")
+
+proc dumpHook*[K: string, V](s: var string, val: AnyTable[K, V]) =
+  ## Converts Table/OrderedTable and ref variants to JSON object.
+  when val is TableRef[K, V] or val is OrderedTableRef[K, V]:
+    if val.isNil:
+      s.add("null")
+      return
+
+  s.add("{")
+  var i = 0
+
+  when val is TableRef[K, V] or val is OrderedTableRef[K, V]:
+    for k, item in val[].pairs:
+      if i > 0: s.add(",")
+      dumpHook(s, k)     # JSON object key (string)
+      s.add(":")
+      dumpHook(s, item)  # JSON object value
+      inc i
+  else:
+    for k, item in val.pairs:
+      if i > 0: s.add(",")
+      dumpHook(s, k)     
+      s.add(":")
+      dumpHook(s, item)
+      inc i
+
+  s.add("}")
+
 proc dumpHook*[T](s: var string, arr: seq[T]) = 
   ## Converts a sequence of items to a JSON array string.
   s.add("[")
@@ -238,6 +288,12 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
       `strObj`
       `res`.add("}")
       `res`
+
+proc tableToJson*[K: string, V](t: AnyTable[K, V]): string =
+  ## Converts a Nim table to JSON string.
+  var s = ""
+  dumpTableImpl(s, t)
+  result = s
 
 proc arrayToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
   ## Converts a Nim array or sequence to its JSON representation.
@@ -463,6 +519,8 @@ proc parseHook*[T: float|float32|float64](parser: var Parser, field: string, v: 
 proc parseHook*(parser: var Parser, field: string, v: var bool)
 proc parseHook*[T](parser: var Parser, field: string, v: var seq[T])
 proc parseHook*[T: ref object](parser: var Parser, field: string, v: var T)
+proc parseHook*[T: enum](parser: var Parser, field: string, v: var T)
+proc parseHook*[K: string, V](parser: var Parser, field: string, v: var AnyTable[K, V])
 
 proc skipValue*(parser: var Parser)
 
@@ -536,6 +594,66 @@ proc parseHook*[T: float|float32|float64](parser: var Parser, field: string, v: 
 proc parseHook*(parser: var Parser, field: string, v: var bool) =
   ## A hook to parse boolean fields
   v = parser.curr.kind == tkTrue
+
+proc parseHook*[K: string, V](parser: var Parser, field: string, v: var AnyTable[K, V]) =
+  ## Parse JSON object into Table/OrderedTable and ref variants.
+  when v is TableRef[K, V] or v is OrderedTableRef[K, V]:
+    if parser.curr.kind == tkNull:
+      v = nil
+      parser.walk()
+      return
+
+    when v is TableRef[K, V]:
+      if v.isNil: v = newTable[K, V]() else: v[].clear()
+    else:
+      if v.isNil: v = newOrderedTable[K, V]() else: v[].clear()
+
+  else:
+    if parser.curr.kind == tkNull:
+      when v is Table[K, V]:
+        v = initTable[K, V]()
+      else:
+        v = initOrderedTable[K, V]()
+      parser.walk()
+      return
+
+    when v is Table[K, V]:
+      v = initTable[K, V]()
+    else:
+      v = initOrderedTable[K, V]()
+
+  parser.expectSkip(tkLBrace) # consume '{' and move to first key/value or '}'
+
+  while parser.curr.kind != tkRBrace:
+    if parser.curr.kind != tkString:
+      parser.error(unexpectedTokenExpected % [$parser.curr.kind, $tkString])
+
+    let key = parser.curr.value.get()
+    parser.walk()
+    parser.expectSkip(tkColon)
+
+    var item: V
+    parser.parseHook(key, item)
+    v[key] = item
+
+    # normalize cursor position for scalar vs composite parseHook implementations
+    if parser.curr.kind notin {tkComma, tkRBrace, tkEof}:
+      parser.walk()
+    if parser.curr.kind == tkComma:
+      parser.walk()
+
+  parser.expectSkip(tkRBrace)
+
+proc parseHook*[T: enum](parser: var Parser, field: string, v: var T) =
+  ## A hook to parse enum fields
+  if parser.curr.kind == tkString:
+    let enumStr = parser.curr.value.get()
+    v = strutils.parseEnum[T](enumStr)
+  elif parser.curr.kind == tkNumber:
+    let enumNum = parser.curr.value.get().parseInt()
+    v = T(enumNum)
+  else:
+    parser.error(unexpectedTokenExpected % [$parser.curr.kind, "string or number"])
 
 macro getObjectFields(obj: typed): untyped =
   let objImpl = obj.getType()

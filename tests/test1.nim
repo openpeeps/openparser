@@ -1,22 +1,29 @@
-import unittest, os
+import unittest, os, tables
 import ../src/openparser/json
 
 type
+  MemberType* = enum
+    mtAdmin = "admin"
+    mtUser = "user"
+    mtGuest = "guest"
+
   Address = object
     street: string
     city: string
     zip: int
 
   Person = ref object
+    `type`: MemberType
     name: string
     age: int
     address: Address
     friends: seq[Person]
     
 suite "JSON Parser Tests":
-  let jsonStr = """{"name":"Alice","age":30,"address":{"street":"123 Main St","city":"Anytown","zip":12345},"friends":[]}"""
+  let jsonStr = """{"type":"user","name":"Alice","age":30,"address":{"street":"123 Main St","city":"Anytown","zip":12345},"friends":[]}"""
   test "Direct-to-Object Parsing":
     let person = fromJson(jsonStr, Person)
+    check person.`type` == mtUser
     check person.name == "Alice"
     check person.age == 30
     check person.address.street == "123 Main St"
@@ -26,7 +33,20 @@ suite "JSON Parser Tests":
   
   test "Object serialization":
     let person = Person(name: "Albush", age: 40, address: Address(street: "456 Elm St", city: "Othertown", zip: 67890), friends: @[])
-    check toJson(person) == """{"name":"Albush","age":40,"address":{"street":"456 Elm St","city":"Othertown","zip":67890},"friends":[]}"""
+    check toStaticJson(person) == """{"type":"admin","name":"Albush","age":40,"address":{"street":"456 Elm St","city":"Othertown","zip":67890},"friends":[]}"""
+
+  test "Tables to JSON":
+    var table: OrderedTable[string, int] = initOrderedTable[string, int]()
+    table["one"] = 1
+    table["two"] = 2
+    let jsonTable = toJson(table)
+    check jsonTable == """{"one":1,"two":2}"""
+
+  test "JSON to Tables":
+    let jsonStr = """{"one":1,"two":2}"""
+    var table = fromJson(jsonStr, OrderedTable[string, int])
+    check table["one"] == 1
+    check table["two"] == 2
 
   test "JSONL Parsing":
     let jsonLStr = """
