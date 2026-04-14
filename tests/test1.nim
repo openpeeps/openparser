@@ -13,7 +13,10 @@ type
     zip: int
 
   Person = ref object
-    `type`: MemberType
+    case `type`: MemberType
+    of mtAdmin:
+      adminLevel: int
+    else: discard
     name: string
     age: int
     address: Address
@@ -23,17 +26,17 @@ suite "JSON Parser Tests":
   let jsonStr = """{"type":"user","name":"Alice","age":30,"address":{"street":"123 Main St","city":"Anytown","zip":12345},"friends":[]}"""
   test "Direct-to-Object Parsing":
     let person = fromJson(jsonStr, Person)
-    check person.`type` == mtUser
+    check person.`type` == mtUser # default case
     check person.name == "Alice"
     check person.age == 30
     check person.address.street == "123 Main St"
     check person.address.city == "Anytown"
     check person.address.zip == 12345
     check person.friends.len == 0
-  
+
   test "Object serialization":
     let person = Person(name: "Albush", age: 40, address: Address(street: "456 Elm St", city: "Othertown", zip: 67890), friends: @[])
-    check toStaticJson(person) == """{"type":"admin","name":"Albush","age":40,"address":{"street":"456 Elm St","city":"Othertown","zip":67890},"friends":[]}"""
+    check toStaticJson(person) == """{"type":"admin","adminLevel":0,"name":"Albush","age":40,"address":{"street":"456 Elm St","city":"Othertown","zip":67890},"friends":[]}"""
 
   test "Tables to JSON":
     var table: OrderedTable[string, int] = initOrderedTable[string, int]()

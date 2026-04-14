@@ -68,7 +68,7 @@ type
 
   Token = ref object
     kind: TokenKind
-    value: Option[string]
+    value: string
     line, col: int
 
   Parser = object
@@ -77,7 +77,7 @@ type
     options: JsonOptions
     lvl: int # indentation level
 
-  VoodooParsingError* = object of CatchableError
+  OpenParserJsonError* = object of CatchableError
 
 template skippable*() {.pragma.}
 
@@ -90,11 +90,11 @@ const
 
 proc error(l: var Lexer, msg: string) =
   # Raise a lexer error
-  raise newException(VoodooParsingError, ("Error ($1:$2) " % [$l.line, $l.col]) & msg)
+  raise newException(OpenParserJsonError, ("Error ($1:$2) " % [$l.line, $l.col]) & msg)
 
 proc error(p: var Parser, msg: string) =
   # Raise a parsing error with the current lexer position
-  raise newException(VoodooParsingError, ("Error ($1:$2) " % [$p.lexer.line, $p.lexer.col]) & msg)
+  raise newException(OpenParserJsonError, ("Error ($1:$2) " % [$p.lexer.line, $p.lexer.col]) & msg)
 
 proc openReadOnly*(filename: string, allowRemap = false,
                    mapFlags = cint(-1)): MemFile {.inline.} =
@@ -104,6 +104,63 @@ proc openReadOnly*(filename: string, allowRemap = false,
 proc isMapped*(m: MemFile): bool {.inline.} =
   ## True when this MemFile currently has a valid mapped region.
   m.mem != nil and m.size > 0
+
+
+#
+# JSONY object variants
+#
+proc hasKind(node: NimNode, kind: NimNodeKind): bool =
+  for c in node.children:
+    if c.kind == kind:
+      return true
+  return false
+
+proc `[]`(node: NimNode, kind: NimNodeKind): NimNode =
+  for c in node.children:
+    if c.kind == kind:
+      return c
+  return nil
+
+template fieldPairs*[T: ref object](x: T): untyped =
+  x[].fieldPairs
+
+macro isObjectVariant*(v: typed): bool =
+  ## Is this an object variant?
+  var typ = v.getTypeImpl()
+  if typ.kind == nnkSym:
+    return ident("false")
+  while typ.kind != nnkObjectTy:
+    typ = typ[0].getTypeImpl()
+  if typ[2].hasKind(nnkRecCase):
+    ident("true")
+  else:
+    ident("false")
+
+proc discriminator*(v: NimNode): NimNode =
+  var typ = v.getTypeImpl()
+  while typ.kind != nnkObjectTy:
+    typ = typ[0].getTypeImpl()
+  return typ[nnkRecList][nnkRecCase][nnkIdentDefs][nnkSym]
+
+macro discriminatorFieldName*(v: typed): untyped =
+  ## Turns into the discriminator field.
+  return newLit($discriminator(v))
+
+macro discriminatorField*(v: typed): untyped =
+  ## Turns into the discriminator field.
+  let
+    fieldName = discriminator(v)
+  return quote do:
+    `v`.`fieldName`
+
+macro new*(v: typed, d: typed): untyped =
+  ## Creates a new object variant with the discriminator field.
+  let
+    typ = v.getTypeInst()
+    fieldName = discriminator(v)
+  return quote do:
+    `v` = `typ`(`fieldName`: `d`)
+
 
 # Forward declarations
 proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode
@@ -219,14 +276,29 @@ proc dumpHook*(s: var string, val: bool) =
   s.add($val)
 
 proc dumpHook*(s: var string, val: object) =
-  s.add("{")
-  var i = 0
-  for fieldName, fieldVal in fieldPairs(val):
-    if i > 0: s.add(",")
-    s.add("\"" & fieldName & "\":")
-    dumpHook(s, fieldVal)
-    inc i
-  s.add("}")
+  when isObjectVariant(val):
+    const discName = discriminatorFieldName(val)
+
+    s.add("{")
+    s.add("\"" & discName & "\":")
+    dumpHook(s, discriminatorField(val))
+
+    for fieldName, fieldVal in fieldPairs(val):
+      if fieldName != discName:
+        s.add(",")
+        s.add("\"" & fieldName & "\":")
+        dumpHook(s, fieldVal)
+
+    s.add("}")
+  else:
+    s.add("{")
+    var i = 0
+    for fieldName, fieldVal in fieldPairs(val):
+      if i > 0: s.add(",")
+      s.add("\"" & fieldName & "\":")
+      dumpHook(s, fieldVal)
+      inc i
+    s.add("}")
 
 proc dumpHook*[T: ref object](s: var string, val: T) =
   if val.isNil:
@@ -254,6 +326,21 @@ proc dumpHook*(s: var string, val: tuple) =
   s.add("}")
 
 proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
+  var hasRecCase = false
+  for field in valImpl[2]:
+    if field.kind == nnkRecCase:
+      hasRecCase = true
+      break
+
+  if hasRecCase:
+    # Variant objects: use runtime dumpHook path (handles discriminator + active branch)
+    result = quote do:
+      block:
+        var s = ""
+        dumpHook(s, `v`)
+        s
+    return
+
   let strObj = newStmtList()
   var i = 0
   let res = genSym(nskVar, "res")
@@ -264,15 +351,11 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
       let fieldName = field.strVal
       if opts != nil:
         if opts.skipFields.len > 0 and opts.skipFields.contains(fieldName):
-          # skip any field that is mentioned
-          # in the skipFields option
           inc i
           continue
       if i != 0 and i < len:
         strObj.add(newCall(ident"add", res, newLit(",")))
-      strObj.add(newCall(ident"add", res,
-        newLit("\"" & fieldName & "\":")
-      ))
+      strObj.add(newCall(ident"add", res, newLit("\"" & fieldName & "\":")))
       strObj.add(
         nnkWhenStmt.newTree(
           nnkElifBranch.newTree(
@@ -286,9 +369,11 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
       )
       inc i
     of nnkRecCase:
-      discard # todo handle object variants
-    else: discard
-  var objectSerialization = genSym(nskLabel, "objectSerialization")
+      discard
+    else:
+      discard
+
+  let objectSerialization = genSym(nskLabel, "objectSerialization")
   result = newStmtList()
   result.add quote do:
     block `objectSerialization`:
@@ -333,7 +418,7 @@ proc `$`*(tk: TokenKind): string =
 proc `$`*(tk: Token): string =
   ## Convert Token to string
   result = "TOKEN<kind: " & $tk.kind & 
-           (if tk.value.isSome: ", value:" & tk.value.get() else: "") & 
+           (if tk.value.len > 0: ", value:" & tk.value else: "") & 
            ", line:" & $tk.line & ", col:" & $tk.col & ">"
 
 proc nextToken(parser: var Parser): Token {.discardable.}
@@ -486,10 +571,10 @@ proc nextToken(parser: var Parser): Token =
   of '"':
     advance(parser.lexer)  # skip the opening quote
     result.kind = tkString
-    result.value = some(readString(parser.lexer))
+    result.value = readString(parser.lexer)
   of '0'..'9', '-':
     result.kind = tkNumber
-    result.value = some(readNumber(parser.lexer))
+    result.value = readNumber(parser.lexer)
   of 't':
     if matchKeyword(parser.lexer, "true"):
       result.kind = tkTrue
@@ -515,8 +600,10 @@ proc walk(parser: var Parser): Token {.discardable.} =
   parser.next = parser.nextToken()
   result = parser.curr
 
+#
+# Parse Hooks for JSON Deserialization
+#
 proc parseHook*(parser: var Parser, field: string, v: var string)
-proc parseHook*[T: int|int32|int64](parser: var Parser, field: string, v: var T)
 proc parseHook*[T: float|float32|float64](parser: var Parser, field: string, v: var T)
 proc parseHook*(parser: var Parser, field: string, v: var bool)
 proc parseHook*[T](parser: var Parser, field: string, v: var seq[T])
@@ -524,6 +611,7 @@ proc parseHook*[T: ref object](parser: var Parser, field: string, v: var T)
 proc parseHook*[T: enum](parser: var Parser, field: string, v: var T)
 proc parseHook*[K: string, V](parser: var Parser, field: string, v: var AnyTable[K, V])
 proc parseHook*[T](parser: var Parser, field: string, v: var set[T])
+proc parseHook*[T: Integers](parser: var Parser, field: string, v: var T)
 
 proc skipValue*(parser: var Parser)
 
@@ -584,19 +672,18 @@ proc skipValue*(parser: var Parser) =
 #
 proc parseHook*(parser: var Parser, field: string, v: var string) =
   ## A hook to parse string fields
-  v = parser.curr.value.get()
-
-proc parseHook*[T: int|int32|int64](parser: var Parser, field: string, v: var T) =
-  ## A hook to parse integer fields
-  v = parser.curr.value.get().parseInt()
+  v = parser.curr.value
+  parser.walk()
 
 proc parseHook*[T: float|float32|float64](parser: var Parser, field: string, v: var T) =
   ## A hook to parse integer fields
-  v = parser.curr.value.get().parseFloat()
+  v = parser.curr.value.parseFloat()
+  parser.walk()
 
 proc parseHook*(parser: var Parser, field: string, v: var bool) =
   ## A hook to parse boolean fields
   v = parser.curr.kind == tkTrue
+  parser.walk()
 
 proc parseHook*[K: string, V](parser: var Parser, field: string, v: var AnyTable[K, V]) =
   ## Parse JSON object into Table/OrderedTable and ref variants.
@@ -631,7 +718,7 @@ proc parseHook*[K: string, V](parser: var Parser, field: string, v: var AnyTable
     if parser.curr.kind != tkString:
       parser.error(unexpectedTokenExpected % [$parser.curr.kind, $tkString])
 
-    let key = parser.curr.value.get()
+    let key = parser.curr.value
     parser.walk()
     parser.expectSkip(tkColon)
 
@@ -650,11 +737,13 @@ proc parseHook*[K: string, V](parser: var Parser, field: string, v: var AnyTable
 proc parseHook*[T: enum](parser: var Parser, field: string, v: var T) =
   ## A hook to parse enum fields
   if parser.curr.kind == tkString:
-    let enumStr = parser.curr.value.get()
+    let enumStr = parser.curr.value
     v = strutils.parseEnum[T](enumStr)
+    parser.walk()
   elif parser.curr.kind == tkNumber:
-    let enumNum = parser.curr.value.get().parseInt()
+    let enumNum = parser.curr.value.parseInt()
     v = T(enumNum)
+    parser.walk()
   else:
     parser.error(unexpectedTokenExpected % [$parser.curr.kind, "string or number"])
 
@@ -674,10 +763,12 @@ proc parseHook*[T: distinct](parser: var Parser, field: string, v: var T) =
   var tmp: T.distinctBase
   parser.parseHook("", tmp)
   v = T(tmp)
+  parser.walk()
 
 proc parseHook*[T: Integers](parser: var Parser, field: string, v: var T) =
   ## A hook to parse integer fields
-  v = cast[v.type](parser.curr.value.get().parseInt())
+  v = cast[v.type](parser.curr.value.parseInt())
+  parser.walk()
 
 macro getObjectFields(obj: typed): untyped =
   let objImpl = obj.getType()
@@ -700,45 +791,61 @@ macro getObjectFields(obj: typed): untyped =
   result = newStmtList().add(nnkPrefix.newTree(ident"@", fieldList))
 
 proc parseHook*[T: object|ref object](parser: var Parser, field: string, v: var T) =
-  ## Custom parsing for Address field
   parser.expectSkip(tkLBrace) # start of object
   const objectFields: seq[string] = getObjectFields(v)
+
   while parser.curr.kind notin {tkRBrace, tkEof}:
-    var key: string
-    block all:
-      # find the matching field in the object
-      if objectFields.len > 0:
-        key = parser.curr.value.get()
-        for objField, objVal in v.fieldPairs:
-          if key == objField:
-            parser.walk() # advance to field name
-            parser.expectSkip(tkColon)
+    if parser.curr.kind != tkString:
+      parser.error(unexpectedTokenExpected % [$parser.curr.kind, $tkString])
 
-            when compiles(parser.parseHook(objField, objVal)):
-              # normal mutable fields
-              parser.parseHook(objField, objVal)
-            else:
-              # immutable fields (e.g. variant discriminator like `type`)
-              var tmp: type(objVal)
-              parser.parseHook(objField, tmp)
-              when compiles(objVal = tmp):
-                objVal = tmp
-              else:
-                parser.error("Field `" & objField & "` is immutable")
+    let key = parser.curr.value
 
-            if parser.curr.kind != tkRBrace:
-              parser.walk() # advance to next token
-            break all
+    # Variant discriminator handling: initialize correct branch early.
+    when isObjectVariant(v):
+      if key == discriminatorFieldName(v):
+        parser.walk()
+        parser.expectSkip(tkColon)
+
+        var d: type(discriminatorField(v))
+        parser.parseHook(key, d)
+        new(v, d) # initialize the object variant with the discriminator value
+
+        if parser.curr.kind notin {tkComma, tkRBrace, tkEof}:
+          parser.walk()
+        if parser.curr.kind == tkComma:
+          parser.walk()
+        continue
+
+    var matched = false
+    for objField, objVal in v.fieldPairs:
+      if key == objField:
+        matched = true
+        parser.walk()
+        parser.expectSkip(tkColon)
+
+        when compiles(parser.parseHook(objField, objVal)):
+          parser.parseHook(objField, objVal)
+        else:
+          var tmp: type(objVal)
+          parser.parseHook(objField, tmp)
+          when compiles(objVal = tmp):
+            objVal = tmp
           else:
-            if key notin objectFields:
-              # TODO skip or error based on options
-              parser.skipValue()
-      else:
-        # the object has no fields, skip parsing
-        parser.skipValue()
+            parser.error("Field `" & objField & "` is immutable")
+
+        if parser.curr.kind notin {tkComma, tkRBrace, tkEof}:
+          parser.walk()
+        break
+
+    if not matched:
+      # unknown key/value
+      parser.walk()
+      parser.expectSkip(tkColon)
+      parser.skipValue()
+
     if parser.curr.kind == tkComma:
-      parser.walk() # skip comma
-  # the end of the object
+      parser.walk()
+
   parser.expectSkip(tkRBrace)
 
 proc parseHook*[T: ref object](parser: var Parser, field: string, v: var T) =
@@ -782,7 +889,7 @@ proc parseObject(parser: var Parser, obj: var JsonNode) =
     of tkEOF:
       raise newException(ValueError, "EOF reached while parsing object")
     of tkString:
-      let key = token.value.get()
+      let key = token.value
       let colonToken = parser.walk()
       if colonToken.kind != tkColon:
         raise newException(ValueError,
@@ -790,13 +897,13 @@ proc parseObject(parser: var Parser, obj: var JsonNode) =
       let valToken = parser.walk()
       case valToken.kind
         of tkString:
-          obj[key] = newJString(valToken.value.get())
+          obj[key] = newJString(valToken.value)
         of tkNumber:
           let num =
             try:
-              newJInt(parseInt(valToken.value.get()))
+              newJInt(parseInt(valToken.value))
             except ValueError:
-              newJFloat(parseFloat(valToken.value.get()))
+              newJFloat(parseFloat(valToken.value))
           obj[key] = num
         of tkTrue, tkFalse:
           obj[key] = newJBool(valToken.kind == tkTrue)
@@ -831,13 +938,13 @@ proc parseArray(parser: var Parser, arr: var JsonNode) =
       parser.parseArray(nestedArr)
       arr.add(nestedArr)
     of tkString:
-      arr.add(newJString(token.value.get()))
+      arr.add(newJString(token.value))
     of tkNumber:
       let num =
         try:
-          newJInt(parseInt(token.value.get()))
+          newJInt(parseInt(token.value))
         except ValueError:
-          newJFloat(parseFloat(token.value.get()))
+          newJFloat(parseFloat(token.value))
       arr.add(num)
     of tkTrue, tkFalse:
       arr.add(newJBool(token.kind == tkTrue))
