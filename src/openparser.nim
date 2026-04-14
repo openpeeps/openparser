@@ -4,4 +4,9 @@
 #          Made by Humans from OpenPeeps
 #          https://github.com/openpeeps/voodoo
 
-{.error:"Import the specific parser you need".}
+when not defined(builddocs):
+  {.error:"Import the specific parser you need".}
+else:
+  # For documentation purposes, we re-export all parsers here
+  import ./openparser/[json, csv, rss, feed]
+  export json, csv, rss, feed
