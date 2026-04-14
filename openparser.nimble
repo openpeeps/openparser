@@ -2,7 +2,7 @@
 
 version       = "0.1.0"
 author        = "George Lemon"
-description   = "A new awesome nimble package"
+description   = "Tiny parsers and serializers for JSON, CSV, RSS, Atom feeds and more"
 license       = "MIT"
 srcDir        = "src"
 
