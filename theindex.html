@@ -110,6 +110,18 @@
 <li><a class="reference external"
           data-doc-search-tag="csv: proc defaultCsvOptions(): CsvOptions" href="openparser/csv.html#defaultCsvOptions">csv: proc defaultCsvOptions(): CsvOptions</a></li>
           </ul></dd>
+<dt><a name="discriminator" href="#discriminator"><span>discriminator:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: proc discriminator(v: NimNode): NimNode" href="openparser/json.html#discriminator%2CNimNode">json: proc discriminator(v: NimNode): NimNode</a></li>
+          </ul></dd>
+<dt><a name="discriminatorField" href="#discriminatorField"><span>discriminatorField:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: macro discriminatorField(v: typed): untyped" href="openparser/json.html#discriminatorField.m%2Ctyped">json: macro discriminatorField(v: typed): untyped</a></li>
+          </ul></dd>
+<dt><a name="discriminatorFieldName" href="#discriminatorFieldName"><span>discriminatorFieldName:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: macro discriminatorFieldName(v: typed): untyped" href="openparser/json.html#discriminatorFieldName.m%2Ctyped">json: macro discriminatorFieldName(v: typed): untyped</a></li>
+          </ul></dd>
 <dt><a name="dumpHook" href="#dumpHook"><span>dumpHook:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook(s: var string; val: float32 | float64)" href="openparser/json.html#dumpHook%2Cstring%2C">json: proc dumpHook(s: var string; val: float32 | float64)</a></li>
@@ -144,6 +156,10 @@
 <li><a class="reference external"
           data-doc-search-tag="rss: proc fetchRss(url: string): RssFeed" href="openparser/rss.html#fetchRss%2Cstring">rss: proc fetchRss(url: string): RssFeed</a></li>
           </ul></dd>
+<dt><a name="fieldPairs" href="#fieldPairs"><span>fieldPairs:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: template fieldPairs[T: ref object](x: T): untyped" href="openparser/json.html#fieldPairs.t%2CT">json: template fieldPairs[T: ref object](x: T): untyped</a></li>
+          </ul></dd>
 <dt><a name="fromJson" href="#fromJson"><span>fromJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc fromJson(mapped: MemFile): JsonNode" href="openparser/json.html#fromJson%2CMemFile">json: proc fromJson(mapped: MemFile): JsonNode</a></li>
@@ -174,13 +190,25 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc isMapped(m: MemFile): bool" href="openparser/json.html#isMapped%2CMemFile">json: proc isMapped(m: MemFile): bool</a></li>
           </ul></dd>
+<dt><a name="isObjectVariant" href="#isObjectVariant"><span>isObjectVariant:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: macro isObjectVariant(v: typed): bool" href="openparser/json.html#isObjectVariant.m%2Ctyped">json: macro isObjectVariant(v: typed): bool</a></li>
+          </ul></dd>
 <dt><a name="JsonOptions" href="#JsonOptions"><span>JsonOptions:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: type JsonOptions" href="openparser/json.html#JsonOptions">json: type JsonOptions</a></li>
           </ul></dd>
+<dt><a name="new" href="#new"><span>new:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: macro new(v: typed; d: typed): untyped" href="openparser/json.html#new.m%2Ctyped%2Ctyped">json: macro new(v: typed; d: typed): untyped</a></li>
+          </ul></dd>
 <dt><a name="objectToJson" href="#objectToJson"><span>objectToJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc objectToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode" href="openparser/json.html#objectToJson%2CNimNode%2CNimNode%2CJsonOptions">json: proc objectToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode</a></li>
+          </ul></dd>
+<dt><a name="OpenParserJsonError" href="#OpenParserJsonError"><span>OpenParserJsonError:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: object OpenParserJsonError" href="openparser/json.html#OpenParserJsonError">json: object OpenParserJsonError</a></li>
           </ul></dd>
 <dt><a name="openReadOnly" href="#openReadOnly"><span>openReadOnly:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -214,21 +242,19 @@
           <li><a class="reference external"
           data-doc-search-tag="json: proc parseHook(parser: var Parser; field: string; v: var string)" href="openparser/json.html#parseHook%2CParser%2Cstring%2Cstring">json: proc parseHook(parser: var Parser; field: string; v: var string)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T: int | int32 | int64](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT">json: proc parseHook[T: int | int32 | int64](parser: var Parser; field: string; v: var T)</a></li>
-          <li><a class="reference external"
           data-doc-search-tag="json: proc parseHook[T: float | float32 | float64](parser: var Parser; field: string;
-                                        v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_2">json: proc parseHook[T: float | float32 | float64](parser: var Parser; field: string;
+                                        v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT">json: proc parseHook[T: float | float32 | float64](parser: var Parser; field: string;
                                         v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T: ref object](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_3">json: proc parseHook[T: ref object](parser: var Parser; field: string; v: var T)</a></li>
+          data-doc-search-tag="json: proc parseHook[T: ref object](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_2">json: proc parseHook[T: ref object](parser: var Parser; field: string; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T: enum](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_4">json: proc parseHook[T: enum](parser: var Parser; field: string; v: var T)</a></li>
+          data-doc-search-tag="json: proc parseHook[T: enum](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_3">json: proc parseHook[T: enum](parser: var Parser; field: string; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="json: proc parseHook[T: Integers](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_4">json: proc parseHook[T: Integers](parser: var Parser; field: string; v: var T)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="json: proc parseHook[T: distinct](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_5">json: proc parseHook[T: distinct](parser: var Parser; field: string; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T: Integers](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_6">json: proc parseHook[T: Integers](parser: var Parser; field: string; v: var T)</a></li>
-          <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T: object | ref object](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_7">json: proc parseHook[T: object | ref object](parser: var Parser; field: string; v: var T)</a></li>
+          data-doc-search-tag="json: proc parseHook[T: object | ref object](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_6">json: proc parseHook[T: object | ref object](parser: var Parser; field: string; v: var T)</a></li>
           </ul></dd>
 <dt><a name="parseRss" href="#parseRss"><span>parseRss:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -290,15 +316,11 @@
 <li><a class="reference external"
           data-doc-search-tag="csv: proc toString(f: CsvFieldSlice): string" href="openparser/csv.html#toString%2CCsvFieldSlice">csv: proc toString(f: CsvFieldSlice): string</a></li>
           </ul></dd>
-<dt><a name="VoodooParsingError" href="#VoodooParsingError"><span>VoodooParsingError:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: object VoodooParsingError" href="openparser/json.html#VoodooParsingError">json: object VoodooParsingError</a></li>
-          </ul></dd>
 </dl>
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-14 22:53:12 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-14 23:31:01 UTC</small>
       </div>
     </div>
   </div>
