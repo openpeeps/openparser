@@ -2,7 +2,7 @@
 #
 # (c) 2026 George Lemon | MIT License
 #          Made by Humans from OpenPeeps
-#          https://github.com/openpeeps/openparsers
+#          https://github.com/openpeeps/openparser
 
 import std/[xmltree, xmlparser, strutils, httpclient, options]
 
