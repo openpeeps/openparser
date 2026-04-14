@@ -13,8 +13,8 @@ import std/[memfiles, os]
 ## The parser is designed for large CSV files (datasets, logs, etc) that may not fit into memory,
 ## making it a great choice for data processing tasks where performance is critical.
 ## 
-## If speed is not necessary, you can tweak the parser `batchSize` and `batchDelayMs` options to allow
-## to keep the CPU responsive for other tasks.
+## If speed is not necessary, you can tweak the parser `batchSize` and `batchDelayMs` options
+## to maintain a lower CPU usage in long-running parses.
 
 type
   CsvRowCallback* = proc(fields: openArray[CsvFieldSlice], row: int): bool {.closure.}
