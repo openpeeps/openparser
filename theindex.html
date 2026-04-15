@@ -29,10 +29,6 @@
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc `$`(f: CsvFieldSlice): string" href="openparser/csv.html#%24%2CCsvFieldSlice">csv: proc `$`(f: CsvFieldSlice): string</a></li>
-          <li><a class="reference external"
-          data-doc-search-tag="json: proc `$`(tk: Token): string" href="openparser/json.html#%24%2CToken">json: proc `$`(tk: Token): string</a></li>
-          <li><a class="reference external"
-          data-doc-search-tag="json: proc `$`(tk: TokenKind): string" href="openparser/json.html#%24%2CTokenKind">json: proc `$`(tk: TokenKind): string</a></li>
           </ul></dd>
 <dt><a name="AnyTable" href="#AnyTable"><span>AnyTable:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -110,18 +106,6 @@
 <li><a class="reference external"
           data-doc-search-tag="csv: proc defaultCsvOptions(): CsvOptions" href="openparser/csv.html#defaultCsvOptions">csv: proc defaultCsvOptions(): CsvOptions</a></li>
           </ul></dd>
-<dt><a name="discriminator" href="#discriminator"><span>discriminator:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: proc discriminator(v: NimNode): NimNode" href="openparser/json.html#discriminator%2CNimNode">json: proc discriminator(v: NimNode): NimNode</a></li>
-          </ul></dd>
-<dt><a name="discriminatorField" href="#discriminatorField"><span>discriminatorField:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: macro discriminatorField(v: typed): untyped" href="openparser/json.html#discriminatorField.m%2Ctyped">json: macro discriminatorField(v: typed): untyped</a></li>
-          </ul></dd>
-<dt><a name="discriminatorFieldName" href="#discriminatorFieldName"><span>discriminatorFieldName:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: macro discriminatorFieldName(v: typed): untyped" href="openparser/json.html#discriminatorFieldName.m%2Ctyped">json: macro discriminatorFieldName(v: typed): untyped</a></li>
-          </ul></dd>
 <dt><a name="dumpHook" href="#dumpHook"><span>dumpHook:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook(s: var string; val: float32 | float64)" href="openparser/json.html#dumpHook%2Cstring%2C">json: proc dumpHook(s: var string; val: float32 | float64)</a></li>
@@ -156,10 +140,6 @@
 <li><a class="reference external"
           data-doc-search-tag="rss: proc fetchRss(url: string): RssFeed" href="openparser/rss.html#fetchRss%2Cstring">rss: proc fetchRss(url: string): RssFeed</a></li>
           </ul></dd>
-<dt><a name="fieldPairs" href="#fieldPairs"><span>fieldPairs:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: template fieldPairs[T: ref object](x: T): untyped" href="openparser/json.html#fieldPairs.t%2CT">json: template fieldPairs[T: ref object](x: T): untyped</a></li>
-          </ul></dd>
 <dt><a name="fromJson" href="#fromJson"><span>fromJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc fromJson(mapped: MemFile): JsonNode" href="openparser/json.html#fromJson%2CMemFile">json: proc fromJson(mapped: MemFile): JsonNode</a></li>
@@ -190,17 +170,13 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc isMapped(m: MemFile): bool" href="openparser/json.html#isMapped%2CMemFile">json: proc isMapped(m: MemFile): bool</a></li>
           </ul></dd>
-<dt><a name="isObjectVariant" href="#isObjectVariant"><span>isObjectVariant:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: macro isObjectVariant(v: typed): bool" href="openparser/json.html#isObjectVariant.m%2Ctyped">json: macro isObjectVariant(v: typed): bool</a></li>
-          </ul></dd>
 <dt><a name="JsonOptions" href="#JsonOptions"><span>JsonOptions:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: type JsonOptions" href="openparser/json.html#JsonOptions">json: type JsonOptions</a></li>
           </ul></dd>
-<dt><a name="new" href="#new"><span>new:</span></a></dt><dd><ul class="simple">
+<dt><a name="JsonParser" href="#JsonParser"><span>JsonParser:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="json: macro new(v: typed; d: typed): untyped" href="openparser/json.html#new.m%2Ctyped%2Ctyped">json: macro new(v: typed; d: typed): untyped</a></li>
+          data-doc-search-tag="json: object JsonParser" href="openparser/json.html#JsonParser">json: object JsonParser</a></li>
           </ul></dd>
 <dt><a name="objectToJson" href="#objectToJson"><span>objectToJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -232,29 +208,33 @@
           </ul></dd>
 <dt><a name="parseHook" href="#parseHook"><span>parseHook:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[K: string; V](parser: var Parser; field: string; v: var AnyTable[K, V])" href="openparser/json.html#parseHook%2CParser%2Cstring%2CAnyTable%5BK%3A%20string%2CV%5D">json: proc parseHook[K: string; V](parser: var Parser; field: string; v: var AnyTable[K, V])</a></li>
+          data-doc-search-tag="json: proc parseHook[K: string; V](parser: var JsonParser; field: string;
+                        v: var AnyTable[K, V])" href="openparser/json.html#parseHook%2CJsonParser%2Cstring%2CAnyTable%5BK%3A%20string%2CV%5D">json: proc parseHook[K: string; V](parser: var JsonParser; field: string;
+                        v: var AnyTable[K, V])</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook(parser: var Parser; field: string; v: var bool)" href="openparser/json.html#parseHook%2CParser%2Cstring%2Cbool">json: proc parseHook(parser: var Parser; field: string; v: var bool)</a></li>
+          data-doc-search-tag="json: proc parseHook(parser: var JsonParser; field: string; v: var bool)" href="openparser/json.html#parseHook%2CJsonParser%2Cstring%2Cbool">json: proc parseHook(parser: var JsonParser; field: string; v: var bool)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T](parser: var Parser; field: string; v: var seq[T])" href="openparser/json.html#parseHook%2CParser%2Cstring%2Cseq%5BT%5D">json: proc parseHook[T](parser: var Parser; field: string; v: var seq[T])</a></li>
+          data-doc-search-tag="json: proc parseHook[T](parser: var JsonParser; field: string; v: var seq[T])" href="openparser/json.html#parseHook%2CJsonParser%2Cstring%2Cseq%5BT%5D">json: proc parseHook[T](parser: var JsonParser; field: string; v: var seq[T])</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T](parser: var Parser; field: string; v: var set[T])" href="openparser/json.html#parseHook%2CParser%2Cstring%2Cset%5BT%5D">json: proc parseHook[T](parser: var Parser; field: string; v: var set[T])</a></li>
+          data-doc-search-tag="json: proc parseHook[T](parser: var JsonParser; field: string; v: var set[T])" href="openparser/json.html#parseHook%2CJsonParser%2Cstring%2Cset%5BT%5D">json: proc parseHook[T](parser: var JsonParser; field: string; v: var set[T])</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook(parser: var Parser; field: string; v: var string)" href="openparser/json.html#parseHook%2CParser%2Cstring%2Cstring">json: proc parseHook(parser: var Parser; field: string; v: var string)</a></li>
+          data-doc-search-tag="json: proc parseHook(parser: var JsonParser; field: string; v: var string)" href="openparser/json.html#parseHook%2CJsonParser%2Cstring%2Cstring">json: proc parseHook(parser: var JsonParser; field: string; v: var string)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T: float | float32 | float64](parser: var Parser; field: string;
-                                        v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT">json: proc parseHook[T: float | float32 | float64](parser: var Parser; field: string;
+          data-doc-search-tag="json: proc parseHook[T: float | float32 | float64](parser: var JsonParser; field: string;
+                                        v: var T)" href="openparser/json.html#parseHook%2CJsonParser%2Cstring%2CT">json: proc parseHook[T: float | float32 | float64](parser: var JsonParser; field: string;
                                         v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T: ref object](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_2">json: proc parseHook[T: ref object](parser: var Parser; field: string; v: var T)</a></li>
+          data-doc-search-tag="json: proc parseHook[T: ref object](parser: var JsonParser; field: string; v: var T)" href="openparser/json.html#parseHook%2CJsonParser%2Cstring%2CT_2">json: proc parseHook[T: ref object](parser: var JsonParser; field: string; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T: enum](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_3">json: proc parseHook[T: enum](parser: var Parser; field: string; v: var T)</a></li>
+          data-doc-search-tag="json: proc parseHook[T: enum](parser: var JsonParser; field: string; v: var T)" href="openparser/json.html#parseHook%2CJsonParser%2Cstring%2CT_3">json: proc parseHook[T: enum](parser: var JsonParser; field: string; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T: Integers](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_4">json: proc parseHook[T: Integers](parser: var Parser; field: string; v: var T)</a></li>
+          data-doc-search-tag="json: proc parseHook[T: Integers](parser: var JsonParser; field: string; v: var T)" href="openparser/json.html#parseHook%2CJsonParser%2Cstring%2CT_4">json: proc parseHook[T: Integers](parser: var JsonParser; field: string; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T: distinct](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_5">json: proc parseHook[T: distinct](parser: var Parser; field: string; v: var T)</a></li>
+          data-doc-search-tag="json: proc parseHook[T: distinct](parser: var JsonParser; field: string; v: var T)" href="openparser/json.html#parseHook%2CJsonParser%2Cstring%2CT_5">json: proc parseHook[T: distinct](parser: var JsonParser; field: string; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc parseHook[T: object | ref object](parser: var Parser; field: string; v: var T)" href="openparser/json.html#parseHook%2CParser%2Cstring%2CT_6">json: proc parseHook[T: object | ref object](parser: var Parser; field: string; v: var T)</a></li>
+          data-doc-search-tag="json: proc parseHook[T: object | ref object](parser: var JsonParser; field: string;
+                                  v: var T)" href="openparser/json.html#parseHook%2CJsonParser%2Cstring%2CT_6">json: proc parseHook[T: object | ref object](parser: var JsonParser; field: string;
+                                  v: var T)</a></li>
           </ul></dd>
 <dt><a name="parseRss" href="#parseRss"><span>parseRss:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -294,7 +274,55 @@
           </ul></dd>
 <dt><a name="skipValue" href="#skipValue"><span>skipValue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="json: proc skipValue(parser: var Parser)" href="openparser/json.html#skipValue%2CParser">json: proc skipValue(parser: var Parser)</a></li>
+          data-doc-search-tag="json: proc skipValue(parser: var JsonParser)" href="openparser/json.html#skipValue%2CJsonParser">json: proc skipValue(parser: var JsonParser)</a></li>
+          </ul></dd>
+<dt><a name="tkColon" href="#tkColon"><span>tkColon:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkColon" href="openparser/json.html#tkColon">json: TokenKind.tkColon</a></li>
+          </ul></dd>
+<dt><a name="tkComma" href="#tkComma"><span>tkComma:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkComma" href="openparser/json.html#tkComma">json: TokenKind.tkComma</a></li>
+          </ul></dd>
+<dt><a name="tkEof" href="#tkEof"><span>tkEof:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkEof" href="openparser/json.html#tkEof">json: TokenKind.tkEof</a></li>
+          </ul></dd>
+<dt><a name="tkFalse" href="#tkFalse"><span>tkFalse:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkFalse" href="openparser/json.html#tkFalse">json: TokenKind.tkFalse</a></li>
+          </ul></dd>
+<dt><a name="tkLBrace" href="#tkLBrace"><span>tkLBrace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkLBrace" href="openparser/json.html#tkLBrace">json: TokenKind.tkLBrace</a></li>
+          </ul></dd>
+<dt><a name="tkLBracket" href="#tkLBracket"><span>tkLBracket:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkLBracket" href="openparser/json.html#tkLBracket">json: TokenKind.tkLBracket</a></li>
+          </ul></dd>
+<dt><a name="tkNull" href="#tkNull"><span>tkNull:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkNull" href="openparser/json.html#tkNull">json: TokenKind.tkNull</a></li>
+          </ul></dd>
+<dt><a name="tkNumber" href="#tkNumber"><span>tkNumber:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkNumber" href="openparser/json.html#tkNumber">json: TokenKind.tkNumber</a></li>
+          </ul></dd>
+<dt><a name="tkRBrace" href="#tkRBrace"><span>tkRBrace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkRBrace" href="openparser/json.html#tkRBrace">json: TokenKind.tkRBrace</a></li>
+          </ul></dd>
+<dt><a name="tkRBracket" href="#tkRBracket"><span>tkRBracket:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkRBracket" href="openparser/json.html#tkRBracket">json: TokenKind.tkRBracket</a></li>
+          </ul></dd>
+<dt><a name="tkString" href="#tkString"><span>tkString:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkString" href="openparser/json.html#tkString">json: TokenKind.tkString</a></li>
+          </ul></dd>
+<dt><a name="tkTrue" href="#tkTrue"><span>tkTrue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: TokenKind.tkTrue" href="openparser/json.html#tkTrue">json: TokenKind.tkTrue</a></li>
           </ul></dd>
 <dt><a name="toAtomXml" href="#toAtomXml"><span>toAtomXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -303,6 +331,14 @@
 <dt><a name="toJson" href="#toJson"><span>toJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc toJson[T](v: T; opts: JsonOptions = nil): string" href="openparser/json.html#toJson%2CT%2CJsonOptions">json: proc toJson[T](v: T; opts: JsonOptions = nil): string</a></li>
+          </ul></dd>
+<dt><a name="Token" href="#Token"><span>Token:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: type Token" href="openparser/json.html#Token">json: type Token</a></li>
+          </ul></dd>
+<dt><a name="TokenKind" href="#TokenKind"><span>TokenKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: enum TokenKind" href="openparser/json.html#TokenKind">json: enum TokenKind</a></li>
           </ul></dd>
 <dt><a name="toRssXml" href="#toRssXml"><span>toRssXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -316,11 +352,15 @@
 <li><a class="reference external"
           data-doc-search-tag="csv: proc toString(f: CsvFieldSlice): string" href="openparser/csv.html#toString%2CCsvFieldSlice">csv: proc toString(f: CsvFieldSlice): string</a></li>
           </ul></dd>
+<dt><a name="walk" href="#walk"><span>walk:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: proc walk(parser: var JsonParser): Token" href="openparser/json.html#walk%2CJsonParser">json: proc walk(parser: var JsonParser): Token</a></li>
+          </ul></dd>
 </dl>
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-14 23:31:01 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-15 04:09:06 UTC</small>
       </div>
     </div>
   </div>

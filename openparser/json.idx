@@ -1,17 +1,26 @@
 nimTitle	json	openparser/json.html	module openparser/json		0
-nim	Integers	openparser/json.html#Integers	type Integers		23
-nim	AnyTable	openparser/json.html#AnyTable	type AnyTable		25
-nim	JsonOptions	openparser/json.html#JsonOptions	type JsonOptions		28
-nim	OpenParserJsonError	openparser/json.html#OpenParserJsonError	object OpenParserJsonError		80
-nim	skippable	openparser/json.html#skippable.t	template skippable()		82
-nim	openReadOnly	openparser/json.html#openReadOnly,string	proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile		99
-nim	isMapped	openparser/json.html#isMapped,MemFile	proc isMapped(m: MemFile): bool		104
-nim	fieldPairs	openparser/json.html#fieldPairs.t,T	template fieldPairs[T: ref object](x: T): untyped		124
-nim	isObjectVariant	openparser/json.html#isObjectVariant.m,typed	macro isObjectVariant(v: typed): bool		127
-nim	discriminator	openparser/json.html#discriminator,NimNode	proc discriminator(v: NimNode): NimNode		139
-nim	discriminatorFieldName	openparser/json.html#discriminatorFieldName.m,typed	macro discriminatorFieldName(v: typed): untyped		145
-nim	discriminatorField	openparser/json.html#discriminatorField.m,typed	macro discriminatorField(v: typed): untyped		149
-nim	new	openparser/json.html#new.m,typed,typed	macro new(v: typed; d: typed): untyped		156
+nim	Integers	openparser/json.html#Integers	type Integers		22
+nim	AnyTable	openparser/json.html#AnyTable	type AnyTable		24
+nim	JsonOptions	openparser/json.html#JsonOptions	type JsonOptions		27
+nim	tkEof	openparser/json.html#tkEof	TokenKind.tkEof		50
+nim	tkLBrace	openparser/json.html#tkLBrace	TokenKind.tkLBrace		50
+nim	tkRBrace	openparser/json.html#tkRBrace	TokenKind.tkRBrace		50
+nim	tkLBracket	openparser/json.html#tkLBracket	TokenKind.tkLBracket		50
+nim	tkRBracket	openparser/json.html#tkRBracket	TokenKind.tkRBracket		50
+nim	tkComma	openparser/json.html#tkComma	TokenKind.tkComma		50
+nim	tkColon	openparser/json.html#tkColon	TokenKind.tkColon		50
+nim	tkString	openparser/json.html#tkString	TokenKind.tkString		50
+nim	tkNumber	openparser/json.html#tkNumber	TokenKind.tkNumber		50
+nim	tkTrue	openparser/json.html#tkTrue	TokenKind.tkTrue		50
+nim	tkFalse	openparser/json.html#tkFalse	TokenKind.tkFalse		50
+nim	tkNull	openparser/json.html#tkNull	TokenKind.tkNull		50
+nim	TokenKind	openparser/json.html#TokenKind	enum TokenKind		50
+nim	Token	openparser/json.html#Token	type Token		68
+nim	JsonParser	openparser/json.html#JsonParser	object JsonParser		73
+nim	OpenParserJsonError	openparser/json.html#OpenParserJsonError	object OpenParserJsonError		79
+nim	skippable	openparser/json.html#skippable.t	template skippable()		81
+nim	openReadOnly	openparser/json.html#openReadOnly,string	proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile		98
+nim	isMapped	openparser/json.html#isMapped,MemFile	proc isMapped(m: MemFile): bool		103
 nim	objectToJson	openparser/json.html#objectToJson,NimNode,NimNode,JsonOptions	proc objectToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode		166
 nim	arrayToJson	openparser/json.html#arrayToJson,NimNode,NimNode,JsonOptions	proc arrayToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode		167
 nim	dumpHook	openparser/json.html#dumpHook,string,string	proc dumpHook(s: var string; val: string)		169
@@ -28,29 +37,27 @@ nim	dumpHook	openparser/json.html#dumpHook,string,T_2	proc dumpHook[T: distinct]
 nim	toJson	openparser/json.html#toJson,T,JsonOptions	proc toJson[T](v: T; opts: JsonOptions = nil): string		181
 nim	toStaticJson	openparser/json.html#toStaticJson.m,typed,staticJsonOptions	macro toStaticJson(v: typed; opts: static JsonOptions = nil): untyped		187
 nim	dumpHook	openparser/json.html#dumpHook,string,seq[T]	proc dumpHook[T](s: var string; arr: seq[T])		254
-nim	`$`	openparser/json.html#$,TokenKind	proc `$`(tk: TokenKind): string		405
-nim	`$`	openparser/json.html#$,Token	proc `$`(tk: Token): string		418
-nim	parseHook	openparser/json.html#parseHook,Parser,string,string	proc parseHook(parser: var Parser; field: string; v: var string)		606
-nim	parseHook	openparser/json.html#parseHook,Parser,string,T	proc parseHook[T: float | float32 | float64](parser: var Parser; field: string;\n                                        v: var T)		607
-nim	parseHook	openparser/json.html#parseHook,Parser,string,bool	proc parseHook(parser: var Parser; field: string; v: var bool)		608
-nim	parseHook	openparser/json.html#parseHook,Parser,string,seq[T]	proc parseHook[T](parser: var Parser; field: string; v: var seq[T])		609
-nim	parseHook	openparser/json.html#parseHook,Parser,string,T_2	proc parseHook[T: ref object](parser: var Parser; field: string; v: var T)		610
-nim	parseHook	openparser/json.html#parseHook,Parser,string,T_3	proc parseHook[T: enum](parser: var Parser; field: string; v: var T)		611
-nim	parseHook	openparser/json.html#parseHook,Parser,string,AnyTable[K: string,V]	proc parseHook[K: string; V](parser: var Parser; field: string; v: var AnyTable[K, V])		612
-nim	parseHook	openparser/json.html#parseHook,Parser,string,set[T]	proc parseHook[T](parser: var Parser; field: string; v: var set[T])		613
-nim	parseHook	openparser/json.html#parseHook,Parser,string,T_4	proc parseHook[T: Integers](parser: var Parser; field: string; v: var T)		614
-nim	skipValue	openparser/json.html#skipValue,Parser	proc skipValue(parser: var Parser)		616
-nim	parseHook	openparser/json.html#parseHook,Parser,string,T_5	proc parseHook[T: distinct](parser: var Parser; field: string; v: var T)		761
-nim	parseHook	openparser/json.html#parseHook,Parser,string,T_6	proc parseHook[T: object | ref object](parser: var Parser; field: string; v: var T)		793
-nim	fromJson	openparser/json.html#fromJson,string	proc fromJson(str: string): JsonNode		994
-nim	fromJsonL	openparser/json.html#fromJsonL,string	proc fromJsonL(str: string): JsonNode		999
-nim	fromJson	openparser/json.html#fromJson,MemFile	proc fromJson(mapped: MemFile): JsonNode		1004
-nim	fromJsonL	openparser/json.html#fromJsonL,MemFile	proc fromJsonL(mapped: MemFile): JsonNode		1009
-nim	fromJsonFile	openparser/json.html#fromJsonFile,string	proc fromJsonFile(filename: string): JsonNode		1014
-nim	fromJsonLFile	openparser/json.html#fromJsonLFile,string	proc fromJsonLFile(filename: string): JsonNode		1020
-nim	fromJson	openparser/json.html#fromJson,string,typedesc[T]	proc fromJson[T](s: string; x: typedesc[T]): T		1054
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,string	proc parseHook(parser: var JsonParser; field: string; v: var string)		589
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,T	proc parseHook[T: float | float32 | float64](parser: var JsonParser; field: string;\n                                        v: var T)		590
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,bool	proc parseHook(parser: var JsonParser; field: string; v: var bool)		591
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,seq[T]	proc parseHook[T](parser: var JsonParser; field: string; v: var seq[T])		592
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,T_2	proc parseHook[T: ref object](parser: var JsonParser; field: string; v: var T)		593
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,T_3	proc parseHook[T: enum](parser: var JsonParser; field: string; v: var T)		594
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,AnyTable[K: string,V]	proc parseHook[K: string; V](parser: var JsonParser; field: string;\n                        v: var AnyTable[K, V])		595
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,set[T]	proc parseHook[T](parser: var JsonParser; field: string; v: var set[T])		596
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,T_4	proc parseHook[T: Integers](parser: var JsonParser; field: string; v: var T)		597
+nim	skipValue	openparser/json.html#skipValue,JsonParser	proc skipValue(parser: var JsonParser)		599
+nim	walk	openparser/json.html#walk,JsonParser	proc walk(parser: var JsonParser): Token		601
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,T_5	proc parseHook[T: distinct](parser: var JsonParser; field: string; v: var T)		751
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,T_6	proc parseHook[T: object | ref object](parser: var JsonParser; field: string;\n                                  v: var T)		783
+nim	fromJson	openparser/json.html#fromJson,string	proc fromJson(str: string): JsonNode		985
+nim	fromJsonL	openparser/json.html#fromJsonL,string	proc fromJsonL(str: string): JsonNode		990
+nim	fromJson	openparser/json.html#fromJson,MemFile	proc fromJson(mapped: MemFile): JsonNode		995
+nim	fromJsonL	openparser/json.html#fromJsonL,MemFile	proc fromJsonL(mapped: MemFile): JsonNode		1000
+nim	fromJsonFile	openparser/json.html#fromJsonFile,string	proc fromJsonFile(filename: string): JsonNode		1005
+nim	fromJsonLFile	openparser/json.html#fromJsonLFile,string	proc fromJsonLFile(filename: string): JsonNode		1011
+nim	fromJson	openparser/json.html#fromJson,string,typedesc[T]	proc fromJson[T](s: string; x: typedesc[T]): T		1045
 nimgrp	dumphook	openparser/json.html#dumpHook-procs-all	proc		169
-nimgrp	fromjsonl	openparser/json.html#fromJsonL-procs-all	proc		999
-nimgrp	$	openparser/json.html#$-procs-all	proc		405
-nimgrp	parsehook	openparser/json.html#parseHook-procs-all	proc		606
-nimgrp	fromjson	openparser/json.html#fromJson-procs-all	proc		994
+nimgrp	fromjsonl	openparser/json.html#fromJsonL-procs-all	proc		990
+nimgrp	parsehook	openparser/json.html#parseHook-procs-all	proc		589
+nimgrp	fromjson	openparser/json.html#fromJson-procs-all	proc		985
