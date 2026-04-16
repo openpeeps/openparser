@@ -73,6 +73,10 @@ type
   JsonParser* = object
     lexer: Lexer
     prev*, curr*, next*: Token
+    currentField*: Option[string] # for context-aware parseHooks
+      ## The name of the current field being parsed, if applicable. This is set
+      ## before calling parseHook for a field value, allowing parseHooks to have
+      ## context about which field they are parsing
     options: JsonOptions
     lvl: int # indentation level
 
@@ -665,15 +669,15 @@ proc nextToken(parser: var JsonParser): Token =
 #
 # Parse Hooks for JSON Deserialization
 #
-proc parseHook*(parser: var JsonParser, field: string, v: var string)
-proc parseHook*[T: float|float32|float64](parser: var JsonParser, field: string, v: var T)
-proc parseHook*(parser: var JsonParser, field: string, v: var bool)
-proc parseHook*[T](parser: var JsonParser, field: string, v: var seq[T])
-proc parseHook*[T: ref object](parser: var JsonParser, field: string, v: var T)
-proc parseHook*[T: enum](parser: var JsonParser, field: string, v: var T)
-proc parseHook*[K: string, V](parser: var JsonParser, field: string, v: var AnyTable[K, V])
-proc parseHook*[T](parser: var JsonParser, field: string, v: var set[T])
-proc parseHook*[T: Integers](parser: var JsonParser, field: string, v: var T)
+proc parseHook*(parser: var JsonParser, v: var string)
+proc parseHook*[T: float|float32|float64](parser: var JsonParser, v: var T)
+proc parseHook*(parser: var JsonParser, v: var bool)
+proc parseHook*[T](parser: var JsonParser, v: var seq[T])
+proc parseHook*[T: ref object](parser: var JsonParser, v: var T)
+proc parseHook*[T: enum](parser: var JsonParser, v: var T)
+proc parseHook*[K: string, V](parser: var JsonParser, v: var AnyTable[K, V])
+proc parseHook*[T](parser: var JsonParser, v: var set[T])
+proc parseHook*[T: Integers](parser: var JsonParser, v: var T)
 
 proc skipValue*(parser: var JsonParser)
 
@@ -739,22 +743,22 @@ proc skipValue*(parser: var JsonParser) =
 #
 # Parse Hooks
 #
-proc parseHook*(parser: var JsonParser, field: string, v: var string) =
+proc parseHook*(parser: var JsonParser, v: var string) =
   ## A hook to parse string fields
   v = parser.curr.value
   parser.walk()
 
-proc parseHook*[T: float|float32|float64](parser: var JsonParser, field: string, v: var T) =
+proc parseHook*[T: float|float32|float64](parser: var JsonParser, v: var T) =
   ## A hook to parse integer fields
   v = parser.curr.value.parseFloat()
   parser.walk()
 
-proc parseHook*(parser: var JsonParser, field: string, v: var bool) =
+proc parseHook*(parser: var JsonParser, v: var bool) =
   ## A hook to parse boolean fields
   v = parser.curr.kind == tkTrue
   parser.walk()
 
-proc parseHook*[K: string, V](parser: var JsonParser, field: string, v: var AnyTable[K, V]) =
+proc parseHook*[K: string, V](parser: var JsonParser, v: var AnyTable[K, V]) =
   ## Parse JSON object into Table/OrderedTable and ref variants.
   when v is TableRef[K, V] or v is OrderedTableRef[K, V]:
     if parser.curr.kind == tkNull:
@@ -791,7 +795,8 @@ proc parseHook*[K: string, V](parser: var JsonParser, field: string, v: var AnyT
     parser.expectSkip(tkColon)
 
     var item: V
-    parser.parseHook(key, item)
+    parser.currentField = some(key)
+    parser.parseHook(item)
     v[key] = item
 
     # normalize cursor position for scalar vs composite parseHook implementations
@@ -801,7 +806,7 @@ proc parseHook*[K: string, V](parser: var JsonParser, field: string, v: var AnyT
       parser.walk()
   parser.expectSkip(tkRBrace) # consume closing '}' and move on
 
-proc parseHook*[T: enum](parser: var JsonParser, field: string, v: var T) =
+proc parseHook*[T: enum](parser: var JsonParser, v: var T) =
   ## A hook to parse enum fields
   if parser.curr.kind == tkString:
     let enumStr = parser.curr.value
@@ -814,25 +819,25 @@ proc parseHook*[T: enum](parser: var JsonParser, field: string, v: var T) =
   else:
     parser.error(unexpectedTokenExpected % [$parser.curr.kind, "string or number"])
 
-proc parseHook*[T](parser: var JsonParser, field: string, v: var set[T]) = 
+proc parseHook*[T](parser: var JsonParser, v: var set[T]) = 
   ## A hook to parse set fields from JSON arrays
   parser.expectSkip(tkLBracket) # start of array
   while parser.curr.kind != tkRBracket:
     var item: T
-    parser.parseHook("", item)
+    parser.parseHook(item)
     v.incl(item)
     if parser.curr.kind == tkComma:
       parser.walk()
   parser.expectSkip(tkRBracket) # end of array
 
-proc parseHook*[T: distinct](parser: var JsonParser, field: string, v: var T) =
+proc parseHook*[T: distinct](parser: var JsonParser, v: var T) =
   ## A hook to parse distinct types by parsing their base type and then converting
   var tmp: T.distinctBase
-  parser.parseHook("", tmp)
+  parser.parseHook(tmp)
   v = T(tmp)
   parser.walk()
 
-proc parseHook*[T: Integers](parser: var JsonParser, field: string, v: var T) =
+proc parseHook*[T: Integers](parser: var JsonParser, v: var T) =
   ## A hook to parse integer fields
   v = cast[v.type](parser.curr.value.parseInt())
   parser.walk()
@@ -862,7 +867,7 @@ macro copyFieldsBeforeRecCase(dst, src: typed): untyped =
     else:
       discard
 
-proc parseHook*[T: object|ref object](parser: var JsonParser, field: string, v: var T) =
+proc parseHook*[T: object|ref object](parser: var JsonParser, v: var T) =
   parser.expectSkip(tkLBrace) # start of object
   # const objectFields: seq[string] = getObjectFields(v)
 
@@ -879,7 +884,8 @@ proc parseHook*[T: object|ref object](parser: var JsonParser, field: string, v: 
         parser.expectSkip(tkColon)
 
         var d: type(discriminatorField(v))
-        parser.parseHook(key, d)
+        parser.currentField = some(key)
+        parser.parseHook(d)
 
         let prev = v
         new(v, d)
@@ -898,11 +904,13 @@ proc parseHook*[T: object|ref object](parser: var JsonParser, field: string, v: 
         parser.walk()
         parser.expectSkip(tkColon)
 
-        when compiles(parser.parseHook(objField, objVal)):
-          parser.parseHook(objField, objVal)
+        when compiles(parser.parseHook(objVal)):
+          parser.currentField = some(objField)
+          parser.parseHook(objVal)
         else:
           var tmp: type(objVal)
-          parser.parseHook(objField, tmp)
+          parser.currentField = some(objField)
+          parser.parseHook(tmp)
           when compiles(objVal = tmp):
             objVal = tmp
           else:
@@ -923,7 +931,7 @@ proc parseHook*[T: object|ref object](parser: var JsonParser, field: string, v: 
 
   parser.expectSkip(tkRBrace)
 
-proc parseHook*[T: ref object](parser: var JsonParser, field: string, v: var T) =
+proc parseHook*[T: ref object](parser: var JsonParser, v: var T) =
   ## A hook to parse ref object fields
   if parser.curr.kind == tkNull:
     v = nil
@@ -931,21 +939,21 @@ proc parseHook*[T: ref object](parser: var JsonParser, field: string, v: var T) 
   else:
     if v.isNil:
       new(v)
-    parser.parseHook("", v[])
+    parser.parseHook(v[])
 
-proc parseHook*[T](parser: var JsonParser, field: string, v: var seq[T]) =
+proc parseHook*[T](parser: var JsonParser, v: var seq[T]) =
   ## A hook to parse sequence fields
   parser.expectSkip(tkLBracket) # start of array
   while parser.curr.kind != tkRBracket:
     var item: T
-    parser.parseHook("", item)
+    parser.parseHook(item)
     v.add(item)
     if parser.curr.kind == tkComma:
       parser.walk()
   parser.expectSkip(tkRBracket) # end of array
 
 
-proc parseHook*[T](parser: var JsonParser, field: string, v: var Option[T]) =
+proc parseHook*[T](parser: var JsonParser, v: var Option[T]) =
   ## A hook to parse a value wrapped in an Option type, treating null as
   ## None and any other value as Some(value).
   if parser.curr.kind == tkNull:
@@ -953,7 +961,7 @@ proc parseHook*[T](parser: var JsonParser, field: string, v: var Option[T]) =
     parser.walk()
   else:
     var tmp: T
-    parser.parseHook("", tmp)
+    parser.parseHook(tmp)
     v = some(tmp)
   
 
@@ -1120,7 +1128,7 @@ proc fromJsonLFile*(filename: string): JsonNode =
 proc parseJson[T: object|ref object](parser: var JsonParser, v: var T) =
   case parser.curr.kind
   of tkLBrace:
-    parser.parseHook("", v)
+    parser.parseHook(v)
   else:
     parser.error(unexpectedToken % [$parser.curr.kind])
 
