@@ -20,6 +20,7 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 - **JSON**
   - Zero-copy deserialization (via memfiles) for high performance and low memory usage
   - Direct-to-object parsing and serialization
+  - Object variant support
   - Support for other Nim types (Similar to pkg/jsony)
   - Scientific notation support for numbers
 - **CSV**
@@ -30,14 +31,14 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 >[!NOTE]
 > Importing `openparser` directly will produce a compile-time error, you need to import the specific module for the data format you want to use, e.g. `openparser/json` for JSON parsing and dumping or `openparser/csv` for CSV parsing.
 
-### Parse JSON
+## Parse JSON
 
 OpenParser provide a simple and efficient module for parsing JSON data using the zero-copy parsing approach, which allows you to parse JSOn data without copying it into memory, making it faster and more memory-efficient.
 
 >[!NOTE]
 >OpenParser's JSON parser is exporting the `std/json` module by default.
 
-#### `fromJson` string into JsonNode
+### `fromJson` string into JsonNode or Nim data structures
 
 Here a simple example taking a stringified JSON and parsing it into a `JsonNode` tree structure:
 ```nim
@@ -50,7 +51,7 @@ echo jsonNode["name"].getStr # Albush
 echo jsonNode["age"].getInt # 40
 ```
 
-#### `fromJsonFile into JsonNode with memfiles
+### `fromJsonFile` into JsonNode with memfiles
 `fromJsonFile` function allows you to parse JSON data directly from a file using memfiles, which is a memory-mapped file that allows for zero-copy parsing:
 
 ```nim
@@ -58,27 +59,24 @@ let data = fromJsonFile("example.json")
 echo data.kind # JsonNode object
 ```
 
-#### `fromJson` string into Nim data structures
-OpenParser also supports parsing JSON strings directly into Nim data structures (objects, sequences, etc.) similar to the `pkg/jsony` library, which allows you to easily convert JSON data into Nim objects without having to manually traverse the JSON tree.
-
-#### `fromJSONL` for JSON Lines
-OpenParser also supports parsing JSON Lines (JSONL) format, which is a convenient format for storing and processing large datasets where each line is a separate JSON object. You can use the `fromJSONL` function to parse JSONL data into a sequence of `JsonNode` objects or directly.
-
-Use `fromJsonLFile` to parse JSONL data from a file using memfiles for efficient parsing of large files or `fromJsonL` to parse JSONL data from a string. The API is similar to `fromJson` and `fromJsonFile`, but it returns a sequence of `JsonNode` objects, one for each line in the JSONL input:
-
+### `fromJsonL` for parsing JSON Lines (JSONL) files
+`fromJsonL` function allows you to parse JSON Lines (JSONL) files, which contain multiple JSON objects separated by newlines:
 ```nim
-import openparser/json
-
-let peeps: JsonNode = fromJsonL("peeps.json")
+let peeps = fromJsonL("...")
 assert peeps.kind == JArray
 ```
 
-#### `toJson` anything into a JSON string
-OpenParser also provides a `toJson` function that allows you to serialize Nim data structures (objects, sequences, etc.) into JSON strings. This function can handle a wide range of Nim types, including custom types with the help of `dumpHook` procedures.
+### `fromJsonLFile` for parsing JSON Lines (JSONL) files with memfiles
+`fromJsonLFile` function allows you to parse JSON Lines (JSONL) files directly from a file using memfiles, which is a memory-mapped file that allows for zero-copy parsing:
+```nim
+let peeps = fromJsonLFile("people.jsonl")
+assert peeps.kind == JArray
+```
 
+### `toJson` serialize Nim data structures into JSON strings
+`toJson` function allows you to serialize Nim data structures into JSON strings:
 ```nim
 import openparser/json
-
 var data = %*{
   "name": "Alice",
   "age": 30,
@@ -88,17 +86,16 @@ var data = %*{
     "city": "Anytown",
     "zip": 12345
   },
-  "friends": ["Bob", "Charlie"]
+  "friends": ["Bob"]
 }
 
-# serialize the data into a minified JSON string
-echo toJson(data) # {"name":"Alice"}
+echo toJson(data) # {"name":"Alice"...}
 ```
 
-#### `toJson` pretty-printing
-A todo for the future is to add support for pretty printing JSON while serializing, which would allow you to generate more human-readable JSON output with indentation and line breaks.
+### `toJson` pretty-printing
+A **todo** for the future is to add support for pretty printing JSON while serializing, which would allow you to generate more human-readable JSON output with indentation and line breaks.
 
-#### JSON custom hooks
+## JSON custom hooks
 
 Here an example of how to use a custom `parseHook` to parse JSON data into Nim types that are not natively supported by the default parser:
 ```nim
@@ -127,41 +124,13 @@ proc dumpHook*(s: var string, v: Time) =
   s.add('"')
 ```
 
-#### JSON error reporting
+### JSON error reporting
 OpenParser's JSON parser is context-aware and provides detailed error reporting including a snippet of the JSON data around the error location, making it easier to identify and fix issues in the JSON input, for example:
-```
-
-```
-
-### Direct-to-object JSON parsing
-Inspired by other libraries like [pkg/jsony](https://github.com/treeform/jsony), OpenParser JSON module also supports direct-to-object parsing, which allows you to parse JSON strings directly into Nim data structures (objects, sequences, etc.) without having to manually traverse the JSON tree.
-
-Here, a basic example of how to use direct-to-object JSON parsing with OpenParser:
-```nim
-import openparser/json
-
-type
-  Address = object
-    street: string
-    city: string
-    zip: int
-
-  Person = object
-    name: string
-    age: int
-    address: Address
-    friends: seq[Person]
-
-let data = """{"name":"Alice","age":30,"address":{"street":"123 Main St","city":"Anytown","zip":12345},"friends":[]}"""
-
-let person: Person = fromJson(data, Person)
-echo person.name # Alice
-echo person.age # 30
-echo person.address.street # 123 Main St
-```
+...
 
 
-### Parse large CSV files
+
+## Parse large CSV files
 OpenParser can parse large CSV files efficiently without loading the entire file into memory, making it ideal for processing big datasets.
 
 For example, here will use a ~680MB CSV dataset from [Kaggle - TripAdvisor European restaurants](https://www.kaggle.com/datasets/stefanoleone992/tripadvisor-european-restaurants/data) that contains around 1 million rows and 42 columns.

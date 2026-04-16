@@ -782,7 +782,6 @@ proc parseHook*[K: string, V](parser: var JsonParser, field: string, v: var AnyT
       v = initOrderedTable[K, V]()
 
   parser.expectSkip(tkLBrace) # consume '{' and move to first key/value or '}'
-
   while parser.curr.kind != tkRBrace:
     if parser.curr.kind != tkString:
       parser.error(unexpectedTokenExpected % [$parser.curr.kind, $tkString])
@@ -800,8 +799,7 @@ proc parseHook*[K: string, V](parser: var JsonParser, field: string, v: var AnyT
       parser.walk()
     if parser.curr.kind == tkComma:
       parser.walk()
-
-  parser.expectSkip(tkRBrace)
+  parser.expectSkip(tkRBrace) # consume closing '}' and move on
 
 proc parseHook*[T: enum](parser: var JsonParser, field: string, v: var T) =
   ## A hook to parse enum fields
@@ -859,9 +857,34 @@ macro getObjectFields(obj: typed): untyped =
     else: discard
   result = newStmtList().add(nnkPrefix.newTree(ident"@", fieldList))
 
+macro copyFieldsBeforeRecCase(dst, src: typed): untyped =
+  # Copy fields declared before `nnkRecCase` (shared fields in variant objects).
+  var typ = dst.getTypeImpl()
+  while typ.kind != nnkObjectTy:
+    typ = typ[0].getTypeImpl()
+
+  let recList = typ[nnkRecList]
+  result = newStmtList()
+
+  for n in recList:
+    if n.kind == nnkRecCase:
+      break
+    case n.kind
+    of nnkIdentDefs:
+      for i in 0 ..< n.len - 2:
+        let field = n[i]
+        result.add quote do:
+          `dst`.`field` = `src`.`field`
+    of nnkSym:
+      let field = n
+      result.add quote do:
+        `dst`.`field` = `src`.`field`
+    else:
+      discard
+
 proc parseHook*[T: object|ref object](parser: var JsonParser, field: string, v: var T) =
   parser.expectSkip(tkLBrace) # start of object
-  const objectFields: seq[string] = getObjectFields(v)
+  # const objectFields: seq[string] = getObjectFields(v)
 
   while parser.curr.kind notin {tkRBrace, tkEof}:
     if parser.curr.kind != tkString:
@@ -869,7 +892,7 @@ proc parseHook*[T: object|ref object](parser: var JsonParser, field: string, v: 
 
     let key = parser.curr.value
 
-    # Variant discriminator handling: initialize correct branch early.
+    # variant discriminator handling: initialize correct branch early
     when isObjectVariant(v):
       if key == discriminatorFieldName(v):
         parser.walk()
@@ -877,7 +900,10 @@ proc parseHook*[T: object|ref object](parser: var JsonParser, field: string, v: 
 
         var d: type(discriminatorField(v))
         parser.parseHook(key, d)
-        new(v, d) # initialize the object variant with the discriminator value
+
+        let prev = v
+        new(v, d)
+        copyFieldsBeforeRecCase(v, prev)
 
         if parser.curr.kind notin {tkComma, tkRBrace, tkEof}:
           parser.walk()

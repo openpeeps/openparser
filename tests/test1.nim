@@ -124,3 +124,28 @@ suite "Serializers":
     except OpenParserJsonError as e: 
       echo e.msg
       check true # expected error
+  
+  test "JSON with object case variants":
+    type
+      VegetableKind = enum
+        Root, Leafy, Fruit
+
+      Vegetable = object
+        name: string
+        case kind: VegetableKind
+        of Root:
+          length: int
+        of Leafy, Fruit:
+          color: string
+
+    let jsonStr = """{"name":"Carrot","kind":"Root","length":15}"""
+    let veg = fromJson(jsonStr, Vegetable)
+    check veg.name == "Carrot"
+    check veg.kind == Root
+    check veg.length == 15
+
+    let jsonStr2 = """{"name":"Spinach","kind":"Leafy","color":"Green"}"""
+    let veg2 = fromJson(jsonStr2, Vegetable)
+    check veg2.name == "Spinach"
+    check veg2.kind == Leafy
+    check veg2.color == "Green"
