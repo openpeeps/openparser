@@ -15,15 +15,17 @@
 ## About
 OpenParser is a collection of parsers and dumpers (serializers) for various data formats, written in Nim language. It provides a simple and efficient way to parse and dump data in different formats, such as JSON, CSV, and more.
 
-
 ## 😍 Key Features
-- JSON parsing and dumping
-  - Direct-to-object JSON parsing
-  - JSON-L (JSON Lines) parsing
-  - Zero-copy parsing for large JSON datasets
-- CSV parsing and dumping
-  - Memory-efficient zero-copy parsing for large CSV datasets
-- RSS/Atom feed parsing
+
+- **JSON**
+  - Zero-copy deserialization (via memfiles) for high performance and low memory usage
+  - Direct-to-object parsing and serialization
+  - Support for other Nim types (Similar to pkg/jsony)
+  - Scientific notation support for numbers
+- **CSV**
+  - Zero-copy parsing for large files (via memfiles)
+- **RSS & Atom**
+  - Reader (parser) and writer (serializer) for RSS and Atom feeds
 
 ### Parse JSON
 
@@ -40,7 +42,7 @@ echo jsonNode["age"].getInt # 40
 ```
 
 ### Direct-to-object JSON parsing
-Inspired by other libraries like jsony, OpenParser JSON module also supports direct-to-object parsing, which allows you to parse JSON strings directly into Nim data structures (objects, sequences, etc.) without having to manually traverse the JSON tree.
+Inspired by other libraries like [pkg/jsony](https://github.com/treeform/jsony), OpenParser JSON module also supports direct-to-object parsing, which allows you to parse JSON strings directly into Nim data structures (objects, sequences, etc.) without having to manually traverse the JSON tree.
 
 Here, a basic example of how to use direct-to-object JSON parsing with OpenParser:
 ```nim
@@ -66,6 +68,7 @@ echo person.age # 30
 echo person.address.street # 123 Main St
 ```
 
+
 ### Parse large CSV files
 OpenParser can parse large CSV files efficiently without loading the entire file into memory, making it ideal for processing big datasets.
 
@@ -83,8 +86,16 @@ parseFile("tripadvisor_european_restaurants.csv",
       discard # do something with the fields, e.g. print them
     true # return true to continue parsing, false to stop
 echo "Total rows: ", i - 1 # subtract 1 for the header row
-```
 
+let t = cpuTime()
+parseFile("tripadvisor_european_restaurants.csv",
+  proc(fields: openArray[CsvFieldSlice], row: int): bool =
+    inc i
+    true
+)
+let elapsed = cpuTime() - t
+echo "Parsed ", i, " rows in ", elapsed, " seconds" # ~0.783363 seconds on my machine
+```
 
 ### ❤ Contributions & Support
 - 🐛 Found a bug? [Create a new Issue](https://github.com/openpeeps/openparser/issues)
