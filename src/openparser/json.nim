@@ -179,6 +179,10 @@ proc dumpHook*[T](s: var string, val: set[T])
 proc dumpHook*[T: distinct](s: var string, v: T)
 proc dumpHook*(s: var string, v: JsonNode)
 
+type t[T] = tuple[a: string, b: T]
+proc dumpHook*[N, T](s: var string, v: array[N, t[T]])
+proc dumpHook*[N, T](s: var string, v: array[N, T])
+
 proc toJson*[T](v: T, opts: JsonOptions = nil): string =
   ## Convert a Nim object to its JSON string representation using dump hooks.
   result.dumpHook(v)
@@ -351,6 +355,27 @@ proc dumpHook*(s: var string, v: JsonNode) =
   of JFloat: dumpHook(s, v.fnum)
   of JBool:  dumpHook(s, v.bval)
   of JNull:  s.add("null")
+
+proc dumpHook*[N, T](s: var string, v: array[N, t[T]]) = 
+  ## Converts an array of tuples to a JSON array of objects, where
+  ## each tuple is converted to a JSON object with "a" and "b" fields.
+  s.add("[")
+  for i, item in v:
+    if i > 0: s.add(",") # add comma between items
+    s.add("{")
+    dumpHook(s, item.a) # convert the "a" field of the tuple to JSON
+    s.add(":")
+    dumpHook(s, item.b) # convert the "b" field of the tuple to JSON
+    s.add("}")
+  s.add("]")
+
+proc dumpHook*[N, T](s: var string, v: array[N, T]) =
+  ## Converts an array to a JSON array by dumping each element using dumpHook
+  s.add("[")
+  for i, item in v:
+    if i > 0: s.add(",") # add comma between items
+    dumpHook(s, item) # convert each item to JSON
+  s.add("]")
 
 proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
   var hasRecCase = false
