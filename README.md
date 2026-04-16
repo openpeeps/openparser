@@ -161,11 +161,23 @@ let t = cpuTime()
 parseFile("tripadvisor_european_restaurants.csv",
   proc(fields: openArray[CsvFieldSlice], row: int): bool =
     inc i
+    for field in fields:
+      discard # do something with the fields, e.g. print them
     true
 )
+
 let elapsed = cpuTime() - t
-echo "Parsed ", i, " rows in ", elapsed, " seconds" # ~0.783363 seconds on my machine
+
+echo "Parsed ", i, " rows in ", elapsed, " seconds"
+# ~0.783363 seconds on my machine
+# memory usage should be minimal due to zero-copy parsing with memfiles
 ```
+
+## Roadmap
+- [ ] JSON depth/size limit to prevent DoS attacks
+- [ ] JSON schema validation support
+- [ ] JSON skippable fields
+- [ ] JSON custom field mapping
 
 ### ❤ Contributions & Support
 - 🐛 Found a bug? [Create a new Issue](https://github.com/openpeeps/openparser/issues)
