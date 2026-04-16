@@ -87,13 +87,36 @@ const
   unexpectedTokenExpected = "Got `$1`, expected $2"
   unexpectedChar = "Unexpected character `$1`"
 
+proc charAt(l: Lexer, idx: int): char {.inline.} =
+  if idx < 0 or idx >= l.len: return '\0'
+  if l.data != nil: l.data[idx] else: l.input[idx]
+
+proc getContext(l: Lexer, radius: int = 20): string =
+  # Get a snippet of the input around the current lexer position for error reporting
+  let startPos = max(0, l.pos - radius)
+  let endPos = min(l.len, l.pos + radius)
+
+  var snippet: string
+  if l.input.len > 0:
+    snippet = l.input[startPos ..< endPos]
+  else:
+    # Memory-mapped input path
+    snippet = newStringOfCap(max(0, endPos - startPos))
+    for i in startPos ..< endPos:
+      snippet.add(l.charAt(i))
+
+  let markerPos = max(0, min(snippet.len, l.pos - startPos))
+  result = snippet & "\n" & " ".repeat(markerPos) & "^"
+
 proc error(l: var Lexer, msg: string) =
   # Raise a lexer error
-  raise newException(OpenParserJsonError, ("Error ($1:$2) " % [$l.line, $l.col]) & msg)
+  let context = getContext(l)
+  raise newException(OpenParserJsonError, ("\n" & context & "\n" & "Error ($1:$2) " % [$l.line, $l.col]) & msg)
 
 proc error(p: var JsonParser, msg: string) =
   # Raise a parsing error with the current lexer position
-  raise newException(OpenParserJsonError, ("Error ($1:$2) " % [$p.lexer.line, $p.lexer.col]) & msg)
+  let context = getContext(p.lexer)
+  raise newException(OpenParserJsonError, ("\n" & context & "\n" & "Error ($1:$2) " % [$p.lexer.line, $p.lexer.col]) & msg)
 
 proc openReadOnly*(filename: string, allowRemap = false,
                    mapFlags = cint(-1)): MemFile {.inline.} =
@@ -265,7 +288,7 @@ proc dumpHook*[T](s: var string, arr: seq[T]) =
 
 proc dumpHook*(s: var string, val: string) = 
   ## Converts a string to JSON
-  s.add("\"" & val & "\"")
+  s.add(escapeJson(val))
 
 proc dumpHook*(s: var string, val: Integers) = 
   ## Converts int to JSON
@@ -483,10 +506,6 @@ proc `$`(tk: Token): string =
            ", line:" & $tk.line & ", col:" & $tk.col & ">"
 
 proc nextToken(parser: var JsonParser): Token {.discardable.}
-
-proc charAt(l: Lexer, idx: int): char {.inline.} =
-  if idx < 0 or idx >= l.len: return '\0'
-  if l.data != nil: l.data[idx] else: l.input[idx]
 
 proc newLexer(input: string): Lexer =
   result = Lexer(input: input, data: nil, len: input.len, pos: 0, line: 1, col: 1)
@@ -791,7 +810,7 @@ proc parseHook*[T: enum](parser: var JsonParser, field: string, v: var T) =
     v = strutils.parseEnum[T](enumStr)
     parser.walk()
   elif parser.curr.kind == tkNumber:
-    let enumNum = parser.curr.value.parseInt()
+    let enumNum = parser.curr.value.parseInt() # it must be an integer
     v = T(enumNum)
     parser.walk()
   else:
@@ -951,24 +970,26 @@ proc parseObject(parser: var JsonParser, obj: var JsonNode) =
     let token = parser.walk()
     case token.kind
     of tkEOF:
-      raise newException(ValueError, "EOF reached while parsing object")
+      parser.error(errorEndOfFile % "object")
     of tkString:
       let key = token.value
       let colonToken = parser.walk()
       if colonToken.kind != tkColon:
-        raise newException(ValueError,
-          "Expected ':' after key '" & key & "' at line " & $token.line & ", column " & $token.col)
+        parser.error(unexpectedTokenExpected % [$colonToken.kind, $tkColon])
       let valToken = parser.walk()
       case valToken.kind
         of tkString:
           obj[key] = newJString(valToken.value)
         of tkNumber:
-          let num =
+          var numNode: JsonNode
+          try:
+            numNode = newJInt(parseInt(valToken.value))
+          except ValueError:
             try:
-              newJInt(parseInt(valToken.value))
+              numNode = newJFloat(parseFloat(valToken.value))
             except ValueError:
-              newJFloat(parseFloat(valToken.value))
-          obj[key] = num
+              parser.error("Invalid number format: " & valToken.value)
+          obj[key] = numNode
         of tkTrue, tkFalse:
           obj[key] = newJBool(valToken.kind == tkTrue)
         of tkNull:
