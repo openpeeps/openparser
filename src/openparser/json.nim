@@ -837,26 +837,6 @@ proc parseHook*[T: Integers](parser: var JsonParser, field: string, v: var T) =
   v = cast[v.type](parser.curr.value.parseInt())
   parser.walk()
 
-macro getObjectFields(obj: typed): untyped =
-  let objImpl = obj.getType()
-  let tempFields =
-    if objImpl.kind == nnkBracketExpr and objImpl[0].kind == nnkSym and objImpl[0].strVal == "ref":
-      objImpl[1].getType()[2]
-    else:
-    obj.getType()[2]
-  var fields =
-    if tempFields.len > 0 and tempFields[0].kind == nnkRecList:
-      tempFields[0]
-    else:
-      tempFields
-  var fieldList = newNimNode(nnkBracket)
-  for field in fields:
-    case field.kind
-    of nnkSym:
-      fieldList.add(newLit(field.strVal))
-    else: discard
-  result = newStmtList().add(nnkPrefix.newTree(ident"@", fieldList))
-
 macro copyFieldsBeforeRecCase(dst, src: typed): untyped =
   # Copy fields declared before `nnkRecCase` (shared fields in variant objects).
   var typ = dst.getTypeImpl()
