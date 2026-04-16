@@ -4,9 +4,8 @@ import ../src/openparser/csv
 suite "CSV parsing tests":
   test "CSV parsing with default options":
     var i = 0
-    let path = "/Users/georgelemon/Documents/Datasets/tripadvisor_european_restaurants.csv"
     let t = cpuTime()
-    parseFile(path,
+    parseFile("./tests/data/example.csv",
       proc(fields: openArray[CsvFieldSlice], row: int): bool =
         inc i
         true
