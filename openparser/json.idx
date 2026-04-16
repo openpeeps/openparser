@@ -53,16 +53,16 @@ nim	parseHook	openparser/json.html#parseHook,JsonParser,string,T_4	proc parseHoo
 nim	skipValue	openparser/json.html#skipValue,JsonParser	proc skipValue(parser: var JsonParser)		678
 nim	walk	openparser/json.html#walk,JsonParser	proc walk(parser: var JsonParser): Token		680
 nim	parseHook	openparser/json.html#parseHook,JsonParser,string,T_5	proc parseHook[T: distinct](parser: var JsonParser; field: string; v: var T)		828
-nim	parseHook	openparser/json.html#parseHook,JsonParser,string,T_6	proc parseHook[T: object | ref object](parser: var JsonParser; field: string;\n                                  v: var T)		885
-nim	parseHook	openparser/json.html#parseHook,JsonParser,string,Option[T]	proc parseHook[T](parser: var JsonParser; field: string; v: var Option[T])		968
-nim	fromJson	openparser/json.html#fromJson,string	proc fromJson(str: string): JsonNode		1105
-nim	fromJsonL	openparser/json.html#fromJsonL,string	proc fromJsonL(str: string): JsonNode		1110
-nim	fromJson	openparser/json.html#fromJson,MemFile	proc fromJson(mapped: MemFile): JsonNode		1115
-nim	fromJsonL	openparser/json.html#fromJsonL,MemFile	proc fromJsonL(mapped: MemFile): JsonNode		1120
-nim	fromJsonFile	openparser/json.html#fromJsonFile,string	proc fromJsonFile(filename: string): JsonNode		1125
-nim	fromJsonLFile	openparser/json.html#fromJsonLFile,string	proc fromJsonLFile(filename: string): JsonNode		1131
-nim	fromJson	openparser/json.html#fromJson,string,typedesc[T]	proc fromJson[T](s: string; x: typedesc[T]): T		1165
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,T_6	proc parseHook[T: object | ref object](parser: var JsonParser; field: string;\n                                  v: var T)		865
+nim	parseHook	openparser/json.html#parseHook,JsonParser,string,Option[T]	proc parseHook[T](parser: var JsonParser; field: string; v: var Option[T])		948
+nim	fromJson	openparser/json.html#fromJson,string	proc fromJson(str: string): JsonNode		1085
+nim	fromJsonL	openparser/json.html#fromJsonL,string	proc fromJsonL(str: string): JsonNode		1090
+nim	fromJson	openparser/json.html#fromJson,MemFile	proc fromJson(mapped: MemFile): JsonNode		1095
+nim	fromJsonL	openparser/json.html#fromJsonL,MemFile	proc fromJsonL(mapped: MemFile): JsonNode		1100
+nim	fromJsonFile	openparser/json.html#fromJsonFile,string	proc fromJsonFile(filename: string): JsonNode		1105
+nim	fromJsonLFile	openparser/json.html#fromJsonLFile,string	proc fromJsonLFile(filename: string): JsonNode		1111
+nim	fromJson	openparser/json.html#fromJson,string,typedesc[T]	proc fromJson[T](s: string; x: typedesc[T]): T		1145
 nimgrp	dumphook	openparser/json.html#dumpHook-procs-all	proc		192
-nimgrp	fromjsonl	openparser/json.html#fromJsonL-procs-all	proc		1110
+nimgrp	fromjsonl	openparser/json.html#fromJsonL-procs-all	proc		1090
 nimgrp	parsehook	openparser/json.html#parseHook-procs-all	proc		668
-nimgrp	fromjson	openparser/json.html#fromJson-procs-all	proc		1105
+nimgrp	fromjson	openparser/json.html#fromJson-procs-all	proc		1085
