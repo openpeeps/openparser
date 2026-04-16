@@ -177,12 +177,11 @@ proc dumpHook*(s: var string, v: enum)
 proc dumpHook*[K: string, V](s: var string, val: AnyTable[K, V])
 proc dumpHook*[T](s: var string, val: set[T])
 proc dumpHook*[T: distinct](s: var string, v: T)
+proc dumpHook*(s: var string, v: JsonNode)
 
 proc toJson*[T](v: T, opts: JsonOptions = nil): string =
   ## Convert a Nim object to its JSON string representation using dump hooks.
-  var s = ""
-  dumpHook(s, v)
-  result = s
+  result.dumpHook(v)
 
 macro toStaticJson*(v: typed, opts: static JsonOptions = nil): untyped =
   ## Converts a Nim object to its JSON representation.
@@ -324,6 +323,34 @@ proc dumpHook*(s: var string, val: tuple) =
       s.add(",") # add comma between fields
     inc i
   s.add("}")
+
+proc dumpHook*(s: var string, v: JsonNode) =
+  ## Converts a JsonNode to its JSON string representation.
+  if v == nil:
+    s.add("null")
+    return
+  case v.kind
+  of JObject:
+    s.add("{")
+    var i = 0
+    for k, item in v.fields:
+      if i > 0: s.add(",")
+      s.add("\"" & k & "\"") # JSON object key (string)
+      s.add(":")
+      dumpHook(s, item)  # JSON object value
+      inc i
+    s.add("}")
+  of JArray:
+    s.add("[")
+    for i, item in v.elems:
+      if i > 0: s.add(",") # add comma between items
+      dumpHook(s, item)
+    s.add("]")
+  of JString: dumpHook(s, v.str)
+  of JInt:   dumpHook(s, v.num)
+  of JFloat: dumpHook(s, v.fnum)
+  of JBool:  dumpHook(s, v.bval)
+  of JNull:  s.add("null")
 
 proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
   var hasRecCase = false
