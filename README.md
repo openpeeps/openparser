@@ -104,14 +104,23 @@ import std/times
 import openparser/json
 import semver
 
-proc parseHook*(parser: var JsonParser, field: string, v: var Semver) =
+proc parseHook*(parser: var JsonParser, v: var Semver) =
   v = parseVersion(parser.curr.value)
   parser.walk() # move the parser forward after parsing the value
 
-proc parseHook*(parser: var JsonParser, field: string, v: var Time) =
+proc parseHook*(parser: var JsonParser, v: var Time) =
   v = parseTime(str, "yyyy-MM-dd'T'hh:mm:ss'.'ffffffz", local())
   parser.walk() # move the parser forward after parsing the value
 ```
+
+To determine the field name being parsed in the `parseHook`, you can use the `currentField` property
+available in the `JsonParser` object. This is a `Option[string]` that holds the name of the current field being parsed, if available:
+```
+if parser.currentField.isSome:
+  let fieldName = parser.currentField.get()
+  echo "Parsing field: ", fieldName
+```
+
 
 A `dumpHook` is necessary to serialize custom Nim types back into JSON strings:
 ```nim
