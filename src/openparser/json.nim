@@ -182,6 +182,7 @@ proc dumpHook*(s: var string, v: JsonNode)
 type t[T] = tuple[a: string, b: T]
 proc dumpHook*[N, T](s: var string, v: array[N, t[T]])
 proc dumpHook*[N, T](s: var string, v: array[N, T])
+proc dumpHook*[T](s: var string, v: Option[T])
 
 proc toJson*[T](v: T, opts: JsonOptions = nil): string =
   ## Convert a Nim object to its JSON string representation using dump hooks.
@@ -376,6 +377,13 @@ proc dumpHook*[N, T](s: var string, v: array[N, T]) =
     if i > 0: s.add(",") # add comma between items
     dumpHook(s, item) # convert each item to JSON
   s.add("]")
+
+proc dumpHook*[T](s: var string, v: Option[T]) =
+  ## Converts an Option[T] to JSON, where None is represented as null
+  if v.isSome:
+    dumpHook(s, v.get())
+  else:
+    s.add("null")
 
 proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
   var hasRecCase = false
@@ -910,6 +918,19 @@ proc parseHook*[T](parser: var JsonParser, field: string, v: var seq[T]) =
     if parser.curr.kind == tkComma:
       parser.walk()
   parser.expectSkip(tkRBracket) # end of array
+
+
+proc parseHook*[T](parser: var JsonParser, field: string, v: var Option[T]) =
+  ## A hook to parse a value wrapped in an Option type, treating null as
+  ## None and any other value as Some(value).
+  if parser.curr.kind == tkNull:
+    v = none(T)
+    parser.walk()
+  else:
+    var tmp: T
+    parser.parseHook("", tmp)
+    v = some(tmp)
+  
 
 #
 # JsonNode Objects
