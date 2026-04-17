@@ -148,15 +148,6 @@ For example, here will use a ~680MB CSV dataset from [Kaggle - TripAdvisor Europ
 import openparser/csv
 
 var i = 0
-parseFile("tripadvisor_european_restaurants.csv",
-  proc(fields: openArray[CsvFieldSlice], row: int): bool =
-    # this callback will be called for each row in the CSV file
-    for _ in fields:
-      inc(i)
-      discard # do something with the fields, e.g. print them
-    true # return true to continue parsing, false to stop
-echo "Total rows: ", i - 1 # subtract 1 for the header row
-
 let t = cpuTime()
 parseFile("tripadvisor_european_restaurants.csv",
   proc(fields: openArray[CsvFieldSlice], row: int): bool =
