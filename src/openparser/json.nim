@@ -223,7 +223,7 @@ macro toStaticJson*(v: typed, opts: static JsonOptions = nil): untyped =
   let tInst = v.getTypeInst()
   if tInst.kind == nnkSym and tInst.strVal == "JsonNode":
     return quote do:
-      $`v` # if it's already a JsonNode, just return it as-is without further processing
+      dumpHook(v)
   # retrieve the implementation of typed `v`
   var valImpl = v.getType()
   var objName = v.getTypeInst()
