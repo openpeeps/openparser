@@ -14,7 +14,7 @@
 ## serialization/deserialization mechanism.
 import std/[macros, macrocache, json, sequtils,
         strutils, options, tables, enumutils, memfiles,
-        critbits, typetraits]
+        critbits, typetraits, strutils]
 
 export json # re-exporting the standard JSON module for JsonNode and related types
 
@@ -43,19 +43,28 @@ type
     skipUnknownFields: bool = true
       ## Whether to ignore unknown fields during
       ## deserialization
+    indentSize: int = 0
+      # Number of spaces to use for indentation when pretty-printing JSON
+    newLine: string = "\n"
+      # Newline character(s) to use when pretty-printing JSON
 
   #
   # JSON JsonParser
   #
   TokenKind* = enum
-    tkEof,
+    ## Token kinds for JSON parsing
+    tkEof = "<EOF>"
     tkLBrace = "{"
     tkRBrace = "}"
     tkLBracket = "["
     tkRBracket = "]"
     tkComma = ","
     tkColon = ":"
-    tkString, tkNumber, tkTrue, tkFalse, tkNull = "null"
+    tkString = "<string>"
+    tkNumber = "<number>"
+    tkTrue = "<true>"
+    tkFalse = "<false>"
+    tkNull = "<null>"
 
   Lexer = ref object
     input: string
@@ -68,7 +77,7 @@ type
   Token* = ref object
     kind*: TokenKind
     value*: string
-    line*, col*: int
+    line*, col*, pos*: int
 
   JsonParser* = object
     lexer: Lexer
@@ -95,32 +104,65 @@ proc charAt(l: Lexer, idx: int): char {.inline.} =
   if idx < 0 or idx >= l.len: return '\0'
   if l.data != nil: l.data[idx] else: l.input[idx]
 
-proc getContext(l: Lexer, radius: int = 20): string =
-  # Get a snippet of the input around the current lexer position for error reporting
-  let startPos = max(0, l.pos - radius)
-  let endPos = min(l.len, l.pos + radius)
+proc getContext(l: Lexer, posOverride: int = -1): string =
+  # Show the full current line and place caret at exact token position.
+  let rawPos = if posOverride >= 0: posOverride else: l.pos
+  let atPos = max(0, min(rawPos, l.len))
+
+  var lineStart = atPos
+  while lineStart > 0 and l.charAt(lineStart - 1) != '\n':
+    dec lineStart
+
+  var lineEnd = atPos
+  while lineEnd < l.len and l.charAt(lineEnd) notin {'\n', '\r'}:
+    inc lineEnd
 
   var snippet: string
   if l.input.len > 0:
-    snippet = l.input[startPos ..< endPos]
+    snippet = l.input[lineStart ..< lineEnd]
   else:
-    # Memory-mapped input path
-    snippet = newStringOfCap(max(0, endPos - startPos))
-    for i in startPos ..< endPos:
+    snippet = newStringOfCap(max(0, lineEnd - lineStart))
+    for i in lineStart ..< lineEnd:
       snippet.add(l.charAt(i))
 
-  let markerPos = max(0, min(snippet.len, l.pos - startPos))
+  let markerPos = max(0, min(snippet.len, atPos - lineStart))
   result = snippet & "\n" & " ".repeat(markerPos) & "^"
+
+# proc `$`(tk: TokenKind): string =
+#   ## Convert TokenKind to string
+#   result = 
+#     case tk
+#     of tkLBrace, tkRBrace, tkLBracket,
+#         tkRBracket, tkComma, tkColon:
+#           tk.symbolName
+#     of tkEof: "<EOF>"
+#     of tkString: "<string>"
+#     of tkNumber: "<number>"
+#     of tkTrue, tkFalse: "<boolean>"
+#     of tkNull: "<null>"
 
 proc error(l: var Lexer, msg: string) =
   # Raise a lexer error
   let context = getContext(l)
   raise newException(OpenParserJsonError, ("\n" & context & "\n" & "Error ($1:$2) " % [$l.line, $l.col]) & msg)
 
+
 proc error(p: var JsonParser, msg: string) =
-  # Raise a parsing error with the current lexer position
-  let context = getContext(p.lexer)
-  raise newException(OpenParserJsonError, ("\n" & context & "\n" & "Error ($1:$2) " % [$p.lexer.line, $p.lexer.col]) & msg)
+  # Prefer current token coordinates over lexer cursor (lookahead-safe).
+  var atPos = p.lexer.pos
+  var atLine = p.lexer.line
+  var atCol = p.lexer.col
+
+  if p.curr != nil:
+    atPos = p.curr.pos
+    atLine = p.curr.line
+    atCol = p.curr.col
+
+  let context = getContext(p.lexer, atPos)
+  raise newException(
+    OpenParserJsonError,
+    ("\n" & context & "\n" & "Error ($1:$2) " % [$atLine, $atCol]) & msg
+  )
 
 proc openReadOnly*(filename: string, allowRemap = false,
                    mapFlags = cint(-1)): MemFile {.inline.} =
@@ -474,7 +516,6 @@ proc arrayToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
   var strArrayItems = newStmtList()
   var blockLabel = genSym(nskLabel, "VoodooArraySerialization")
   result = newStmtList()
-  # echo v.getImpl().treerepr
   result.add quote do:
     block `blockLabel`:
       var str: string
@@ -490,19 +531,6 @@ proc arrayToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
 #
 # Lexer API
 #
-proc `$`(tk: TokenKind): string =
-  ## Convert TokenKind to string
-  result = 
-    case tk
-    of tkLBrace, tkRBrace, tkLBracket,
-        tkRBracket, tkComma, tkColon:
-          tk.symbolName
-    of tkEof: "<EOF>"
-    of tkString: "<string>"
-    of tkNumber: "<number>"
-    of tkTrue, tkFalse: "<boolean>"
-    of tkNull: "<null>"
-
 proc `$`(tk: Token): string =
   ## Convert Token to string
   result = "TOKEN<kind: " & $tk.kind & 
@@ -619,7 +647,11 @@ proc readNumber(l: var Lexer): string =
 proc nextToken(parser: var JsonParser): Token =
   # Get the next token from the lexer
   skipWhitespace(parser.lexer)
-  result = Token(line: parser.lexer.line, col: parser.lexer.col)
+  result = Token(
+    line: parser.lexer.line,
+    col: parser.lexer.col,
+    pos: parser.lexer.pos
+  )
   case parser.lexer.current
   of '\0':
     result.kind = tkEof
@@ -678,6 +710,7 @@ proc parseHook*[T: enum](parser: var JsonParser, v: var T)
 proc parseHook*[K: string, V](parser: var JsonParser, v: var AnyTable[K, V])
 proc parseHook*[T](parser: var JsonParser, v: var set[T])
 proc parseHook*[T: Integers](parser: var JsonParser, v: var T)
+proc parseHook*[T: tuple](parser: var JsonParser, v: var T)
 
 proc skipValue*(parser: var JsonParser)
 
@@ -696,6 +729,7 @@ proc expectSkip(parser: var JsonParser, tkind: TokenKind) =
       parser.error(unexpectedTokenExpected % [$parser.curr.kind, $tkind])
   else:
     parser.walk()
+    
 
 template withKeyValue(body: untyped) {.inject.} =
   let key = parser.curr
@@ -740,6 +774,12 @@ proc skipValue*(parser: var JsonParser) =
     while parser.curr.kind notin {tkComma, tkRBrace, tkRBracket, tkEof}:
       parser.walk()
 
+template ensureComma() {.inject.} =
+  if parser.curr.kind == tkComma:
+    parser.walk()
+  elif parser.curr.kind notin {tkRBrace, tkRBracket}:
+    parser.error(unexpectedTokenExpected % [$parser.curr.kind, "comma or closing brace/bracket"])
+
 #
 # Parse Hooks
 #
@@ -747,6 +787,7 @@ proc parseHook*(parser: var JsonParser, v: var string) =
   ## A hook to parse string fields
   v = parser.curr.value
   parser.walk()
+
 
 proc parseHook*[T: float|float32|float64](parser: var JsonParser, v: var T) =
   ## A hook to parse integer fields
@@ -800,10 +841,9 @@ proc parseHook*[K: string, V](parser: var JsonParser, v: var AnyTable[K, V]) =
     v[key] = item
 
     # normalize cursor position for scalar vs composite parseHook implementations
-    if parser.curr.kind notin {tkComma, tkRBrace, tkEof}:
-      parser.walk()
-    if parser.curr.kind == tkComma:
-      parser.walk()
+    # if parser.curr.kind notin {tkComma, tkRBrace, tkEof}:
+    #   parser.walk()
+    ensureComma()
   parser.expectSkip(tkRBrace) # consume closing '}' and move on
 
 proc parseHook*[T: enum](parser: var JsonParser, v: var T) =
@@ -842,6 +882,39 @@ proc parseHook*[T: Integers](parser: var JsonParser, v: var T) =
   v = cast[v.type](parser.curr.value.parseInt())
   parser.walk()
 
+proc snakeCase(s: string): string =
+  if s.len == 0: return ""
+  result.add(s[0]) # preserve first char case
+  for i in 1 ..< s.len:
+    let c = s[i]
+    if c != '_':
+      result.add(c.toLowerAscii)
+
+proc parseHook*[T: tuple](parser: var JsonParser, v: var T) =
+  ## A hook to parse tuple fields (named tuples)
+  parser.expectSkip(tkLBrace) # start of object
+  when T.isNamedTuple():
+    while parser.curr.kind != tkRBrace:
+      if parser.curr.kind != tkString:
+        parser.error(unexpectedTokenExpected % [$parser.curr.kind, $tkString])
+      let key = parser.curr.value
+      parser.walk()
+      parser.expectSkip(tkColon)
+      var matched = false
+      block all:
+        for k, field in v.fieldPairs:
+          if k == key or snakeCase(k) == snakeCase(key):
+            var tmp: type(field)
+            parser.parseHook(tmp)
+            field = tmp
+            matched = true
+            break all
+      if not matched:
+        parser.skipValue()
+      ensureComma()
+    parser.expectSkip(tkRBrace)
+    
+      
 macro copyFieldsBeforeRecCase(dst, src: typed): untyped =
   # Copy fields declared before `nnkRecCase` (shared fields in variant objects).
   var typ = dst.getTypeImpl()
@@ -890,11 +963,11 @@ proc parseHook*[T: object|ref object](parser: var JsonParser, v: var T) =
         let prev = v
         new(v, d)
         copyFieldsBeforeRecCase(v, prev)
-
-        if parser.curr.kind notin {tkComma, tkRBrace, tkEof}:
-          parser.walk()
-        if parser.curr.kind == tkComma:
-          parser.walk()
+        ensureComma()
+        # if parser.curr.kind notin {tkComma, tkRBrace, tkEof}:
+        #   parser.walk()
+        # if parser.curr.kind == tkComma:
+        #   parser.walk()
         continue
 
     var matched = false
@@ -916,8 +989,7 @@ proc parseHook*[T: object|ref object](parser: var JsonParser, v: var T) =
           else:
             parser.error("Field `" & objField & "` is immutable")
 
-        if parser.curr.kind notin {tkComma, tkRBrace, tkEof}:
-          parser.walk()
+        ensureComma()
         break
 
     if not matched:
@@ -928,7 +1000,7 @@ proc parseHook*[T: object|ref object](parser: var JsonParser, v: var T) =
 
     if parser.curr.kind == tkComma:
       parser.walk()
-
+    # ensureComma()
   parser.expectSkip(tkRBrace)
 
 proc parseHook*[T: ref object](parser: var JsonParser, v: var T) =
@@ -948,8 +1020,7 @@ proc parseHook*[T](parser: var JsonParser, v: var seq[T]) =
     var item: T
     parser.parseHook(item)
     v.add(item)
-    if parser.curr.kind == tkComma:
-      parser.walk()
+    ensureComma()
   parser.expectSkip(tkRBracket) # end of array
 
 
@@ -964,7 +1035,6 @@ proc parseHook*[T](parser: var JsonParser, v: var Option[T]) =
     parser.parseHook(tmp)
     v = some(tmp)
   
-
 #
 # JsonNode Objects
 #
@@ -992,36 +1062,35 @@ proc parseObject(parser: var JsonParser, obj: var JsonNode) =
         parser.error(unexpectedTokenExpected % [$colonToken.kind, $tkColon])
       let valToken = parser.walk()
       case valToken.kind
-        of tkString:
-          obj[key] = newJString(valToken.value)
-        of tkNumber:
-          var numNode: JsonNode
+      of tkString:
+        obj[key] = newJString(valToken.value)
+      of tkNumber:
+        var numNode: JsonNode
+        try:
+          numNode = newJInt(parseInt(valToken.value))
+        except ValueError:
           try:
-            numNode = newJInt(parseInt(valToken.value))
+            numNode = newJFloat(parseFloat(valToken.value))
           except ValueError:
-            try:
-              numNode = newJFloat(parseFloat(valToken.value))
-            except ValueError:
-              parser.error("Invalid number format: " & valToken.value)
-          obj[key] = numNode
-        of tkTrue, tkFalse:
-          obj[key] = newJBool(valToken.kind == tkTrue)
-        of tkNull:
-          obj[key] = newJNull()
-        of tkLBrace:
-          var nestedObj = newJObject()
-          parser.parseObject(nestedObj)
-          obj[key] = nestedObj
-        of tkLBracket:
-          var nestArr = newJArray()
-          parser.parseArray(nestArr)
-          obj[key] = nestArr
-        else:
-          parser.error(unexpectedToken % [$valToken.kind])
-    of tkComma, tkRBrace:
-      continue
+            parser.error("Invalid number format: " & valToken.value)
+        obj[key] = numNode
+      of tkTrue, tkFalse:
+        obj[key] = newJBool(valToken.kind == tkTrue)
+      of tkNull:
+        obj[key] = newJNull()
+      of tkLBrace:
+        var nestedObj = newJObject()
+        parser.parseObject(nestedObj)
+        obj[key] = nestedObj
+      of tkLBracket:
+        var nestArr = newJArray()
+        parser.parseArray(nestArr)
+        obj[key] = nestArr
+      else:
+        parser.error(unexpectedToken % [$valToken.kind])
     else:
-      parser.error(unexpectedToken % [$token.kind])
+      if parser.curr.kind notin {tkComma, tkRBrace, tkEof}:
+        parser.error(unexpectedToken % [$token.kind])
   parser.walk() # consume the closing '}'
 
 proc parseArray(parser: var JsonParser, arr: var JsonNode) =

@@ -117,7 +117,7 @@ suite "Serializers":
     check jsonStr == """{"name":"Alice","age":30,"isMember":true,"address":{"street":"123 Main St","city":"Anytown","zip":12345},"friends":["Bob","Charlie"]}"""
 
   test "Bad JSON parsing should raise an error":
-    let badJsonStr = """{"name":"Alice","age":30,"isMember":true,"address": "street":"123 Main St","city":"Anytown","zip":12345},"friends":["Bob","Charlie"]}"""
+    let badJsonStr = """{"name":"Alice","age":"isMember":true}"""
     try:
       let data = fromJson(badJsonStr)
       check false # should not reach here
