@@ -25,14 +25,14 @@
   <div class="document" id="documentId">
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="index.html">openparser</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/rss.html">openparser/rss</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="index.html">openparser</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/rss.html">openparser/rss</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc `$`(f: CsvFieldSlice): string" href="openparser/csv.html#%24%2CCsvFieldSlice">csv: proc `$`(f: CsvFieldSlice): string</a></li>
           </ul></dd>
 <dt><a name="AnyTable" href="#AnyTable"><span>AnyTable:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="json: type AnyTable" href="openparser/json.html#AnyTable">json: type AnyTable</a></li>
+          data-doc-search-tag="types: type AnyTable" href="openparser/private/types.html#AnyTable">types: type AnyTable</a></li>
           </ul></dd>
 <dt><a name="arrayToJson" href="#arrayToJson"><span>arrayToJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -130,15 +130,17 @@
           <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook[T](s: var string; v: Option[T])" href="openparser/json.html#dumpHook%2Cstring%2COption%5BT%5D">json: proc dumpHook[T](s: var string; v: Option[T])</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="json: proc dumpHook(s: var string; val: pointer)" href="openparser/json.html#dumpHook%2Cstring%2Cpointer">json: proc dumpHook(s: var string; val: pointer)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="json: proc dumpHook[T](s: var string; val: ref T)" href="openparser/json.html#dumpHook%2Cstring%2Cref.T">json: proc dumpHook[T](s: var string; val: ref T)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook[T](s: var string; arr: seq[T])" href="openparser/json.html#dumpHook%2Cstring%2Cseq%5BT%5D">json: proc dumpHook[T](s: var string; arr: seq[T])</a></li>
           <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook[T](s: var string; val: set[T])" href="openparser/json.html#dumpHook%2Cstring%2Cset%5BT%5D">json: proc dumpHook[T](s: var string; val: set[T])</a></li>
           <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook(s: var string; val: string)" href="openparser/json.html#dumpHook%2Cstring%2Cstring">json: proc dumpHook(s: var string; val: string)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="json: proc dumpHook[T: ref object](s: var string; val: T)" href="openparser/json.html#dumpHook%2Cstring%2CT">json: proc dumpHook[T: ref object](s: var string; val: T)</a></li>
-          <li><a class="reference external"
-          data-doc-search-tag="json: proc dumpHook[T: distinct](s: var string; v: T)" href="openparser/json.html#dumpHook%2Cstring%2CT_2">json: proc dumpHook[T: distinct](s: var string; v: T)</a></li>
+          data-doc-search-tag="json: proc dumpHook[T: distinct](s: var string; v: T)" href="openparser/json.html#dumpHook%2Cstring%2CT">json: proc dumpHook[T: distinct](s: var string; v: T)</a></li>
           </ul></dd>
 <dt><a name="fetchAtom" href="#fetchAtom"><span>fetchAtom:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -172,7 +174,7 @@
           </ul></dd>
 <dt><a name="Integers" href="#Integers"><span>Integers:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="json: type Integers" href="openparser/json.html#Integers">json: type Integers</a></li>
+          data-doc-search-tag="types: type Integers" href="openparser/private/types.html#Integers">types: type Integers</a></li>
           </ul></dd>
 <dt><a name="isMapped" href="#isMapped"><span>isMapped:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -185,6 +187,58 @@
 <dt><a name="JsonParser" href="#JsonParser"><span>JsonParser:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: object JsonParser" href="openparser/json.html#JsonParser">json: object JsonParser</a></li>
+          </ul></dd>
+<dt><a name="JsonTokenKind" href="#JsonTokenKind"><span>JsonTokenKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: enum JsonTokenKind" href="openparser/json.html#JsonTokenKind">json: enum JsonTokenKind</a></li>
+          </ul></dd>
+<dt><a name="jtkColon" href="#jtkColon"><span>jtkColon:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkColon" href="openparser/json.html#jtkColon">json: JsonTokenKind.jtkColon</a></li>
+          </ul></dd>
+<dt><a name="jtkComma" href="#jtkComma"><span>jtkComma:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkComma" href="openparser/json.html#jtkComma">json: JsonTokenKind.jtkComma</a></li>
+          </ul></dd>
+<dt><a name="jtkEof" href="#jtkEof"><span>jtkEof:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkEof" href="openparser/json.html#jtkEof">json: JsonTokenKind.jtkEof</a></li>
+          </ul></dd>
+<dt><a name="jtkFalse" href="#jtkFalse"><span>jtkFalse:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkFalse" href="openparser/json.html#jtkFalse">json: JsonTokenKind.jtkFalse</a></li>
+          </ul></dd>
+<dt><a name="jtkLBrace" href="#jtkLBrace"><span>jtkLBrace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkLBrace" href="openparser/json.html#jtkLBrace">json: JsonTokenKind.jtkLBrace</a></li>
+          </ul></dd>
+<dt><a name="jtkLBracket" href="#jtkLBracket"><span>jtkLBracket:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkLBracket" href="openparser/json.html#jtkLBracket">json: JsonTokenKind.jtkLBracket</a></li>
+          </ul></dd>
+<dt><a name="jtkNull" href="#jtkNull"><span>jtkNull:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkNull" href="openparser/json.html#jtkNull">json: JsonTokenKind.jtkNull</a></li>
+          </ul></dd>
+<dt><a name="jtkNumber" href="#jtkNumber"><span>jtkNumber:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkNumber" href="openparser/json.html#jtkNumber">json: JsonTokenKind.jtkNumber</a></li>
+          </ul></dd>
+<dt><a name="jtkRBrace" href="#jtkRBrace"><span>jtkRBrace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkRBrace" href="openparser/json.html#jtkRBrace">json: JsonTokenKind.jtkRBrace</a></li>
+          </ul></dd>
+<dt><a name="jtkRBracket" href="#jtkRBracket"><span>jtkRBracket:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkRBracket" href="openparser/json.html#jtkRBracket">json: JsonTokenKind.jtkRBracket</a></li>
+          </ul></dd>
+<dt><a name="jtkString" href="#jtkString"><span>jtkString:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkString" href="openparser/json.html#jtkString">json: JsonTokenKind.jtkString</a></li>
+          </ul></dd>
+<dt><a name="jtkTrue" href="#jtkTrue"><span>jtkTrue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: JsonTokenKind.jtkTrue" href="openparser/json.html#jtkTrue">json: JsonTokenKind.jtkTrue</a></li>
           </ul></dd>
 <dt><a name="objectToJson" href="#objectToJson"><span>objectToJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -282,54 +336,6 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc skipValue(parser: var JsonParser)" href="openparser/json.html#skipValue%2CJsonParser">json: proc skipValue(parser: var JsonParser)</a></li>
           </ul></dd>
-<dt><a name="tkColon" href="#tkColon"><span>tkColon:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkColon" href="openparser/json.html#tkColon">json: TokenKind.tkColon</a></li>
-          </ul></dd>
-<dt><a name="tkComma" href="#tkComma"><span>tkComma:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkComma" href="openparser/json.html#tkComma">json: TokenKind.tkComma</a></li>
-          </ul></dd>
-<dt><a name="tkEof" href="#tkEof"><span>tkEof:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkEof" href="openparser/json.html#tkEof">json: TokenKind.tkEof</a></li>
-          </ul></dd>
-<dt><a name="tkFalse" href="#tkFalse"><span>tkFalse:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkFalse" href="openparser/json.html#tkFalse">json: TokenKind.tkFalse</a></li>
-          </ul></dd>
-<dt><a name="tkLBrace" href="#tkLBrace"><span>tkLBrace:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkLBrace" href="openparser/json.html#tkLBrace">json: TokenKind.tkLBrace</a></li>
-          </ul></dd>
-<dt><a name="tkLBracket" href="#tkLBracket"><span>tkLBracket:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkLBracket" href="openparser/json.html#tkLBracket">json: TokenKind.tkLBracket</a></li>
-          </ul></dd>
-<dt><a name="tkNull" href="#tkNull"><span>tkNull:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkNull" href="openparser/json.html#tkNull">json: TokenKind.tkNull</a></li>
-          </ul></dd>
-<dt><a name="tkNumber" href="#tkNumber"><span>tkNumber:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkNumber" href="openparser/json.html#tkNumber">json: TokenKind.tkNumber</a></li>
-          </ul></dd>
-<dt><a name="tkRBrace" href="#tkRBrace"><span>tkRBrace:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkRBrace" href="openparser/json.html#tkRBrace">json: TokenKind.tkRBrace</a></li>
-          </ul></dd>
-<dt><a name="tkRBracket" href="#tkRBracket"><span>tkRBracket:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkRBracket" href="openparser/json.html#tkRBracket">json: TokenKind.tkRBracket</a></li>
-          </ul></dd>
-<dt><a name="tkString" href="#tkString"><span>tkString:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkString" href="openparser/json.html#tkString">json: TokenKind.tkString</a></li>
-          </ul></dd>
-<dt><a name="tkTrue" href="#tkTrue"><span>tkTrue:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: TokenKind.tkTrue" href="openparser/json.html#tkTrue">json: TokenKind.tkTrue</a></li>
-          </ul></dd>
 <dt><a name="toAtomXml" href="#toAtomXml"><span>toAtomXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="feed: proc toAtomXml(feed: AtomFeed): string" href="openparser/feed.html#toAtomXml%2CAtomFeed">feed: proc toAtomXml(feed: AtomFeed): string</a></li>
@@ -341,10 +347,6 @@
 <dt><a name="Token" href="#Token"><span>Token:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: type Token" href="openparser/json.html#Token">json: type Token</a></li>
-          </ul></dd>
-<dt><a name="TokenKind" href="#TokenKind"><span>TokenKind:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: enum TokenKind" href="openparser/json.html#TokenKind">json: enum TokenKind</a></li>
           </ul></dd>
 <dt><a name="toRssXml" href="#toRssXml"><span>toRssXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -366,7 +368,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-20 10:36:56 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-22 01:51:24 UTC</small>
       </div>
     </div>
   </div>
