@@ -41,7 +41,7 @@ type
     ytkComment
     ytkUnknown
 
-  Token* = ref object
+  YamlToken* = ref object
     ## Represents a lexical token produced by the YAML lexer
     kind*: YamlTokenKind
     value*: string
@@ -51,7 +51,7 @@ type
     wsno*: int
     indent*: int
 
-  Lexer* = object
+  YamlLexer* = object
     ## Performs lexical analysis on a YAML input string,
     ## producing tokens for the parser
     input: string
@@ -61,9 +61,9 @@ type
     current: char
 
   YamlParser* = object
-    ## Parses a sequence of tokens from the Lexer to build a YAMLObject
-    lex: Lexer
-    prev, curr, next: Token
+    ## Parses a sequence of tokens from the YamlLexer to build a YAMLObject
+    lex: YamlLexer
+    prev, curr, next: YamlToken
 
   YAML* = string
     ## A simple alias for YAML strings
@@ -71,11 +71,11 @@ type
   OpenParserYamlError* = object of CatchableError
     ## Exception type for errors encountered during YAML parsing or dumping
 
-proc newLexer*(input: string): Lexer =
-  ## Create a new Lexer for the given input string
-  Lexer(input: input, len: input.len, line: 1, col: 1)
+proc newYamlLexer*(input: string): YamlLexer =
+  ## Create a new YamlLexer for the given input string
+  YamlLexer(input: input, len: input.len, line: 1, col: 1)
 
-proc charAt(l: Lexer, idx: int): char {.inline.} =
+proc charAt(l: YamlLexer, idx: int): char {.inline.} =
   if idx < 0 or idx >= l.len: return '\0'
   else: return l.input[idx]
 
@@ -87,7 +87,7 @@ const
   unexpectedChar = "Unexpected character `$1`"
 
 
-proc getContext(l: Lexer, posOverride: int = -1): string =
+proc getContext(l: YamlLexer, posOverride: int = -1): string =
   # Show the full current line and place caret at exact token position.
   let rawPos = if posOverride >= 0: posOverride else: l.pos
   let atPos = max(0, min(rawPos, l.len))
@@ -111,7 +111,7 @@ proc getContext(l: Lexer, posOverride: int = -1): string =
   let markerPos = max(0, min(snippet.len, atPos - lineStart))
   result = snippet & "\n" & " ".repeat(markerPos) & "^"
 
-proc error(l: var Lexer, msg: string) =
+proc error(l: var YamlLexer, msg: string) =
   # Raise a lexer error
   let context = getContext(l)
   raise newException(OpenParserYamlError, ("\n" & context & "\n" & "Error ($1:$2) " % [$l.line, $l.col]) & msg)
@@ -133,7 +133,7 @@ proc error(p: var YamlParser, msg: string) =
     ("\n" & context & "\n" & "Error ($1:$2) " % [$atLine, $atCol]) & msg
   )
 
-proc advance(l: var Lexer) =
+proc advance(l: var YamlLexer) =
   if l.pos < l.len - 1:
     inc l.pos
     l.current = l.charAt(l.pos)
@@ -142,7 +142,7 @@ proc advance(l: var Lexer) =
     l.pos = l.len
     l.current = '\0'
 
-proc lineIndentAt(l: Lexer, idx: int): int {.inline.} =
+proc lineIndentAt(l: YamlLexer, idx: int): int {.inline.} =
   ## Indent of the logical line containing idx (spaces/tabs at line start).
   if idx < 0 or idx >= l.len: return 0
 
@@ -162,7 +162,7 @@ proc lineIndentAt(l: Lexer, idx: int): int {.inline.} =
     else:
       break
 
-proc skipWhitespace(l: var Lexer, wsBeforeToken: var int): int =
+proc skipWhitespace(l: var YamlLexer, wsBeforeToken: var int): int =
   # Skip whitespace/newlines
   wsBeforeToken = 0
   while true:
@@ -187,20 +187,20 @@ proc skipWhitespace(l: var Lexer, wsBeforeToken: var int): int =
     return 0
   result = lineIndentAt(l, l.pos)
 
-proc readIdentifier(l: var Lexer): string =
+proc readIdentifier(l: var YamlLexer): string =
   # Read an unquoted identifier (e.g. for keys or unquoted values)
   while l.current in {'a'..'z', 'A'..'Z', '0'..'9', '_', '-'}:
     result.add(l.current)
     advance(l)
 
-proc readComment(l: var Lexer): string =
+proc readComment(l: var YamlLexer): string =
   # Read from '#' to end of line (excluding newline)
   advance(l) # skip '#'
   while l.current notin {'\0', '\n', '\r'}:
     result.add(l.current)
     advance(l)
 
-proc readString(l: var Lexer, quote: char): string =
+proc readString(l: var YamlLexer, quote: char): string =
   # read a quoted string, handling escape sequences for double quotes
   while true:
     if l.current == '\0':
@@ -222,7 +222,7 @@ proc readString(l: var Lexer, quote: char): string =
       result.add(l.current)
     advance(l)
 
-proc readNumber(l: var Lexer, kind: var YamlTokenKind): string =
+proc readNumber(l: var YamlLexer, kind: var YamlTokenKind): string =
   result = ""
   kind = ytkInteger
 
@@ -253,7 +253,7 @@ proc readNumber(l: var Lexer, kind: var YamlTokenKind): string =
       result.add(l.current)
       advance(l)
 
-proc tokenText(t: Token): string =
+proc tokenText(t: YamlToken): string =
   case t.kind
   of ytkIdentifier, ytkString, ytkFloat, ytkInteger: t.value
   else: $t.kind
@@ -270,12 +270,12 @@ let tokens = {
   '>': ytkGT,
 }.toTable
 
-proc nextToken*(p: var YamlParser): Token =
+proc nextToken*(p: var YamlParser): YamlToken =
   ## Lexical analysis to produce the next token from the input
   var wsBefore = 0
   let lineIndent = skipWhitespace(p.lex, wsBefore)
 
-  result = Token()
+  result = YamlToken()
   result.line = p.lex.line
   result.col = p.lex.col
   result.pos = p.lex.pos
@@ -352,7 +352,7 @@ proc advance(p: var YamlParser) {.inline.} =
     p.curr = p.next
     p.next = p.nextToken()
 
-proc getScalarValue(t: Token): YamlNode =
+proc getScalarValue(t: YamlToken): YamlNode =
   # Convert a scalar token to a YamlNode based on its kind
   case t.kind
   of ytkString:
@@ -609,7 +609,7 @@ proc `$`*(yamlObject: YAMLObject): string =
   toJson(yamlObject)
 
 proc parseYAML*(input: YAML): YAMLObject =
-  var p = YamlParser(lex: Lexer(input: input, len: input.len, line: 1, col: 1))
+  var p = YamlParser(lex: YamlLexer(input: input, len: input.len, line: 1, col: 1))
   p.lex.current = p.lex.charAt(0)
   p.curr = p.nextToken()
   p.next = p.nextToken()
@@ -696,7 +696,7 @@ macro parseYamlMacro(x: typed, str: typed): untyped =
   add blockStmtList, quote do:
     var
       tmp = `objIdent`()
-      parser = YamlParser(lex: newLexer(`str`))
+      parser = YamlParser(lex: newYamlLexer(`str`))
     parser.curr = parser.nextToken()
     parser.next = parser.nextToken()
     parser.parseYAML(tmp)

@@ -49,7 +49,7 @@ type
   # JSON JsonParser
   #
   JsonTokenKind* = enum
-    ## Token kinds for JSON parsing
+    ## JsonToken kinds for JSON parsing
     jtkEof = "<EOF>"
     jtkLBrace = "{"
     jtkRBrace = "}"
@@ -63,7 +63,7 @@ type
     jtkFalse = "<false>"
     jtkNull = "<null>"
 
-  Lexer = ref object
+  JsonLexer = ref object
     input: string
     data: ptr UncheckedArray[char]
     len: int
@@ -71,14 +71,14 @@ type
     line, col: int
     current: char
 
-  Token* = ref object
+  JsonToken* = ref object
     kind*: JsonTokenKind
     value*: string
     line*, col*, pos*: int
 
   JsonParser* = object
-    lexer: Lexer
-    prev*, curr*, next*: Token
+    lexer: JsonLexer
+    prev*, curr*, next*: JsonToken
     currentField*: Option[string] # for context-aware parseHooks
       ## The name of the current field being parsed, if applicable. This is set
       ## before calling parseHook for a field value, allowing parseHooks to have
@@ -97,11 +97,11 @@ const
   unexpectedTokenExpected = "Got `$1`, expected $2"
   unexpectedChar = "Unexpected character `$1`"
 
-proc charAt(l: Lexer, idx: int): char {.inline.} =
+proc charAt(l: JsonLexer, idx: int): char {.inline.} =
   if idx < 0 or idx >= l.len: return '\0'
   if l.data != nil: l.data[idx] else: l.input[idx]
 
-proc getContext(l: Lexer, posOverride: int = -1): string =
+proc getContext(l: JsonLexer, posOverride: int = -1): string =
   # Show the full current line and place caret at exact token position.
   let rawPos = if posOverride >= 0: posOverride else: l.pos
   let atPos = max(0, min(rawPos, l.len))
@@ -125,7 +125,7 @@ proc getContext(l: Lexer, posOverride: int = -1): string =
   let markerPos = max(0, min(snippet.len, atPos - lineStart))
   result = snippet & "\n" & " ".repeat(markerPos) & "^"
 
-proc error(l: var Lexer, msg: string) =
+proc error(l: var JsonLexer, msg: string) =
   # Raise a lexer error
   let context = getContext(l)
   raise newException(OpenParserJsonError, ("\n" & context & "\n" & "Error ($1:$2) " % [$l.line, $l.col]) & msg)
@@ -524,25 +524,25 @@ proc arrayToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
       move(str) # return the JSON string
 
 #
-# Lexer API
+# JsonLexer API
 #
-proc `$`(tk: Token): string =
-  ## Convert Token to string
+proc `$`(tk: JsonToken): string =
+  ## Convert JsonToken to string
   result = "TOKEN<kind: " & $tk.kind & 
            (if tk.value.len > 0: ", value:" & tk.value else: "") & 
            ", line:" & $tk.line & ", col:" & $tk.col & ">"
 
-proc nextToken(parser: var JsonParser): Token {.discardable.}
+proc nextToken(parser: var JsonParser): JsonToken {.discardable.}
 
-proc newLexer(input: string): Lexer =
-  result = Lexer(input: input, data: nil, len: input.len, pos: 0, line: 1, col: 1)
+proc newJsonLexer(input: string): JsonLexer =
+  result = JsonLexer(input: input, data: nil, len: input.len, pos: 0, line: 1, col: 1)
   result.current = result.charAt(0)
 
-proc newLexer(mem: pointer, size: int): Lexer =
-  result = Lexer(data: cast[ptr UncheckedArray[char]](mem), len: size, pos: 0, line: 1, col: 1)
+proc newJsonLexer(mem: pointer, size: int): JsonLexer =
+  result = JsonLexer(data: cast[ptr UncheckedArray[char]](mem), len: size, pos: 0, line: 1, col: 1)
   result.current = result.charAt(0)
 
-proc advance(l: var Lexer) =
+proc advance(l: var JsonLexer) =
   if l.pos < l.len - 1:
     inc l.pos
     l.current = l.charAt(l.pos)
@@ -551,7 +551,7 @@ proc advance(l: var Lexer) =
     l.pos = l.len
     l.current = '\0'
 
-proc matchKeyword(l: var Lexer, kw: string): bool =
+proc matchKeyword(l: var JsonLexer, kw: string): bool =
   if l.pos + kw.len > l.len: return false
   for i, c in kw:
     if l.charAt(l.pos + i) != c:
@@ -560,7 +560,7 @@ proc matchKeyword(l: var Lexer, kw: string): bool =
     advance(l)
   result = true
 
-proc skipWhitespace(l: var Lexer) =
+proc skipWhitespace(l: var JsonLexer) =
   while true:
     case l.current
     of {' ', '\t', '\n', '\r'}:
@@ -570,7 +570,7 @@ proc skipWhitespace(l: var Lexer) =
       advance(l)
     else: break
 
-proc readString(l: var Lexer): string =
+proc readString(l: var JsonLexer): string =
   result = ""
   while true:
     case l.current
@@ -611,7 +611,7 @@ proc readString(l: var Lexer): string =
       result.add(l.current)
       advance(l)
 
-proc readNumber(l: var Lexer): string =
+proc readNumber(l: var JsonLexer): string =
   result = ""
   if l.current == '-':
     result.add('-')
@@ -639,10 +639,10 @@ proc readNumber(l: var Lexer): string =
 #
 # JSON Parsing implementation to Nim objects
 #
-proc nextToken(parser: var JsonParser): Token =
+proc nextToken(parser: var JsonParser): JsonToken =
   # Get the next token from the lexer
   skipWhitespace(parser.lexer)
-  result = Token(
+  result = JsonToken(
     line: parser.lexer.line,
     col: parser.lexer.col,
     pos: parser.lexer.pos
@@ -708,7 +708,7 @@ proc parseHook*[T: Integers](parser: var JsonParser, v: var T)
 proc parseHook*[T: tuple](parser: var JsonParser, v: var T)
 proc skipValue*(parser: var JsonParser)
 
-proc advance*(parser: var JsonParser): Token {.discardable.} =
+proc advance*(parser: var JsonParser): JsonToken {.discardable.} =
   # Advance to the next token and return it
   parser.prev = parser.curr
   parser.curr = parser.next
@@ -1121,7 +1121,7 @@ proc parseArray(parser: var JsonParser, arr: var JsonNode) =
       parser.error(unexpectedToken % [$token.kind])
   parser.advance() # consume the closing ']'
 
-proc initParser(lexer: Lexer): JsonParser =
+proc initParser(lexer: JsonLexer): JsonParser =
   result = JsonParser(lexer: lexer)
   result.curr = result.nextToken()
   result.next = result.nextToken()
@@ -1154,22 +1154,22 @@ proc parseAnyRootL(parser: var JsonParser): JsonNode =
 
 proc fromJson*(str: string): JsonNode =
   ## Parse a JSON from `str` and returns the standard `JsonNode`
-  var parser = initParser(newLexer(str))
+  var parser = initParser(newJsonLexer(str))
   result = parseAnyRoot(parser)
 
 proc fromJsonL*(str: string): JsonNode =
   ## Parse line-delimited JSON from `str` and returns a `JsonNode` array
-  var parser = initParser(newLexer(str))
+  var parser = initParser(newJsonLexer(str))
   result = parseAnyRootL(parser)
 
 proc fromJson*(mapped: MemFile): JsonNode =
   ## Parse JSON directly from mapped memory.
-  var parser = initParser(newLexer(mapped.mem, mapped.size))
+  var parser = initParser(newJsonLexer(mapped.mem, mapped.size))
   result = parseAnyRoot(parser)
 
 proc fromJsonL*(mapped: MemFile): JsonNode =
   ## Parse line-delimited JSON directly from mapped memory.
-  var parser = initParser(newLexer(mapped.mem, mapped.size))
+  var parser = initParser(newJsonLexer(mapped.mem, mapped.size))
   result = parseAnyRootL(parser)
 
 proc fromJsonFile*(filename: string): JsonNode =
@@ -1214,7 +1214,7 @@ macro fromJsonMacro(x: typed, str: typed): untyped =
   add blockStmtList, quote do:
     var
       tmp = `objIdent`()
-      parser = JsonParser(lexer: newLexer(`str`))
+      parser = JsonParser(lexer: newJsonLexer(`str`))
     parser.curr = parser.nextToken()
     parser.next = parser.nextToken()
     parser.parseJson(tmp)
