@@ -56,6 +56,7 @@ proc defaultCsvOptions*(): CsvOptions {.inline.} =
   CsvOptions()
 
 proc toString*(f: CsvFieldSlice): string =
+  ## Convert a `CsvFieldSlice` to a string, handling quoted fields and escaped quotes
   if f.size <= 0:
     return ""
   if not f.escapedQuotes:
@@ -80,12 +81,14 @@ proc toString*(f: CsvFieldSlice): string =
   setLen(result, j)
 
 proc `$`*(f: CsvFieldSlice): string {.inline.} =
+  ## Stringify a `CsvFieldSlice` for debugging purposes. This will show
+  ## the raw field content including quotes and escaped quotes, which can be
+  ## useful for diagnosing parsing issues.
   toString(f)
 
 proc asChars*(mfile: MemFile): ptr UncheckedArray[char] {.inline.} =
   ## Fast raw char view over `mfile.mem` for pointer/index based parsers.
   cast[ptr UncheckedArray[char]](mfile.mem)
-
 
 proc parseCsv*(mfile: MemFile, onRow: CsvRowCallback, options: CsvOptions = defaultCsvOptions()) =
   ## High-performance CSV parser over memory-mapped files.

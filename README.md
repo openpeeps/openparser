@@ -135,7 +135,12 @@ proc dumpHook*(s: var string, v: Time) =
 
 ### JSON error reporting
 OpenParser's JSON parser is context-aware and provides detailed error reporting including a snippet of the JSON data around the error location, making it easier to identify and fix issues in the JSON input, for example:
-...
+
+```
+{"name":"Alice","age":"isMember":true}
+                                ^
+Error (1:33) Unexpected token `:`
+```
 
 
 
