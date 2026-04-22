@@ -34,7 +34,7 @@
           </ul></dd>
 <dt><a name="advance" href="#advance"><span>advance:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="json: proc advance(parser: var JsonParser): Token" href="openparser/json.html#advance%2CJsonParser">json: proc advance(parser: var JsonParser): Token</a></li>
+          data-doc-search-tag="json: proc advance(parser: var JsonParser): JsonToken" href="openparser/json.html#advance%2CJsonParser">json: proc advance(parser: var JsonParser): JsonToken</a></li>
           </ul></dd>
 <dt><a name="AnyTable" href="#AnyTable"><span>AnyTable:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -194,6 +194,10 @@
 <li><a class="reference external"
           data-doc-search-tag="json: object JsonParser" href="openparser/json.html#JsonParser">json: object JsonParser</a></li>
           </ul></dd>
+<dt><a name="JsonToken" href="#JsonToken"><span>JsonToken:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: type JsonToken" href="openparser/json.html#JsonToken">json: type JsonToken</a></li>
+          </ul></dd>
 <dt><a name="JsonTokenKind" href="#JsonTokenKind"><span>JsonTokenKind:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: enum JsonTokenKind" href="openparser/json.html#JsonTokenKind">json: enum JsonTokenKind</a></li>
@@ -246,17 +250,13 @@
 <li><a class="reference external"
           data-doc-search-tag="json: JsonTokenKind.jtkTrue" href="openparser/json.html#jtkTrue">json: JsonTokenKind.jtkTrue</a></li>
           </ul></dd>
-<dt><a name="Lexer" href="#Lexer"><span>Lexer:</span></a></dt><dd><ul class="simple">
+<dt><a name="newYamlLexer" href="#newYamlLexer"><span>newYamlLexer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="yaml: object Lexer" href="openparser/yaml.html#Lexer">yaml: object Lexer</a></li>
-          </ul></dd>
-<dt><a name="newLexer" href="#newLexer"><span>newLexer:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="yaml: proc newLexer(input: string): Lexer" href="openparser/yaml.html#newLexer%2Cstring">yaml: proc newLexer(input: string): Lexer</a></li>
+          data-doc-search-tag="yaml: proc newYamlLexer(input: string): YamlLexer" href="openparser/yaml.html#newYamlLexer%2Cstring">yaml: proc newYamlLexer(input: string): YamlLexer</a></li>
           </ul></dd>
 <dt><a name="nextToken" href="#nextToken"><span>nextToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="yaml: proc nextToken(p: var YamlParser): Token" href="openparser/yaml.html#nextToken%2CYamlParser">yaml: proc nextToken(p: var YamlParser): Token</a></li>
+          data-doc-search-tag="yaml: proc nextToken(p: var YamlParser): YamlToken" href="openparser/yaml.html#nextToken%2CYamlParser">yaml: proc nextToken(p: var YamlParser): YamlToken</a></li>
           </ul></dd>
 <dt><a name="objectToJson" href="#objectToJson"><span>objectToJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -388,12 +388,6 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc toJson[T](v: T; opts: JsonOptions = nil): string" href="openparser/json.html#toJson%2CT%2CJsonOptions">json: proc toJson[T](v: T; opts: JsonOptions = nil): string</a></li>
           </ul></dd>
-<dt><a name="Token" href="#Token"><span>Token:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="json: type Token" href="openparser/json.html#Token">json: type Token</a></li>
-          <li><a class="reference external"
-          data-doc-search-tag="yaml: type Token" href="openparser/yaml.html#Token">yaml: type Token</a></li>
-          </ul></dd>
 <dt><a name="toRssXml" href="#toRssXml"><span>toRssXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="rss: proc toRssXml(feed: RssFeed): string" href="openparser/rss.html#toRssXml%2CRssFeed">rss: proc toRssXml(feed: RssFeed): string</a></li>
@@ -426,6 +420,10 @@
 <li><a class="reference external"
           data-doc-search-tag="yaml: YamlValueKind.yamlInteger" href="openparser/yaml.html#yamlInteger">yaml: YamlValueKind.yamlInteger</a></li>
           </ul></dd>
+<dt><a name="YamlLexer" href="#YamlLexer"><span>YamlLexer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: object YamlLexer" href="openparser/yaml.html#YamlLexer">yaml: object YamlLexer</a></li>
+          </ul></dd>
 <dt><a name="YamlNode" href="#YamlNode"><span>YamlNode:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="yaml: object YamlNode" href="openparser/yaml.html#YamlNode">yaml: object YamlNode</a></li>
@@ -449,6 +447,10 @@
 <dt><a name="yamlString" href="#yamlString"><span>yamlString:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="yaml: YamlValueKind.yamlString" href="openparser/yaml.html#yamlString">yaml: YamlValueKind.yamlString</a></li>
+          </ul></dd>
+<dt><a name="YamlToken" href="#YamlToken"><span>YamlToken:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: type YamlToken" href="openparser/yaml.html#YamlToken">yaml: type YamlToken</a></li>
           </ul></dd>
 <dt><a name="YamlTokenKind" href="#YamlTokenKind"><span>YamlTokenKind:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -538,7 +540,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-22 03:33:39 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-22 19:46:05 UTC</small>
       </div>
     </div>
   </div>

@@ -61,20 +61,20 @@
       <li><a class="reference" href="#JsonOptions" title="JsonOptions = ref object
   skipFields*: seq[string]   ## Fields to skip during serialization">JsonOptions</a></li>
 <li><a class="reference" href="#JsonParser" title="JsonParser = object
-  prev*, curr*, next*: Token
+  prev*, curr*, next*: JsonToken
   currentField*: Option[string] ## The name of the current field being parsed, if applicable. This is set
                                 ## before calling parseHook for a field value, allowing parseHooks to have
                                 ## context about which field they are parsing">JsonParser</a></li>
+<li><a class="reference" href="#JsonToken" title="JsonToken = ref object
+  kind*: JsonTokenKind
+  value*: string
+  line*, col*, pos*: int">JsonToken</a></li>
 <li><a class="reference" href="#JsonTokenKind" title="JsonTokenKind = enum
   jtkEof = &quot;&lt;EOF&gt;&quot;, jtkLBrace = &quot;{&quot;, jtkRBrace = &quot;}&quot;, jtkLBracket = &quot;[&quot;,
   jtkRBracket = &quot;]&quot;, jtkComma = &quot;,&quot;, jtkColon = &quot;:&quot;, jtkString = &quot;&lt;string&gt;&quot;,
   jtkNumber = &quot;&lt;number&gt;&quot;, jtkTrue = &quot;&lt;true&gt;&quot;, jtkFalse = &quot;&lt;false&gt;&quot;,
   jtkNull = &quot;&lt;null&gt;&quot;">JsonTokenKind</a></li>
 <li><a class="reference" href="#OpenParserJsonError" title="OpenParserJsonError = object of CatchableError">OpenParserJsonError</a></li>
-<li><a class="reference" href="#Token" title="Token = ref object
-  kind*: JsonTokenKind
-  value*: string
-  line*, col*, pos*: int">Token</a></li>
 
     </ul>
   </details>
@@ -84,7 +84,7 @@
     <summary><a class="reference reference-toplevel" href="#12" id="62">Procs</a></summary>
     <ul class="simple simple-toc-section">
       <ul class="simple nested-toc-section">advance
-  <li><a class="reference" href="#advance%2CJsonParser" title="advance(parser: var JsonParser): Token">advance(parser: var JsonParser): Token</a></li>
+  <li><a class="reference" href="#advance%2CJsonParser" title="advance(parser: var JsonParser): JsonToken">advance(parser: var JsonParser): JsonToken</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">arrayToJson
@@ -227,10 +227,21 @@
 </div>
 <div id="JsonParser">
   <dt><pre><a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
-  <span class="Identifier">prev</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">curr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">next</span><span class="Operator">*</span><span class="Other">:</span> <a href="json.html#Token"><span class="Identifier">Token</span></a>
+  <span class="Identifier">prev</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">curr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">next</span><span class="Operator">*</span><span class="Other">:</span> <a href="json.html#JsonToken"><span class="Identifier">JsonToken</span></a>
   <span class="Identifier">currentField</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Comment">## The name of the current field being parsed, if applicable. This is set</span>
                                 <span class="Comment">## before calling parseHook for a field value, allowing parseHooks to have</span>
                                 <span class="Comment">## context about which field they are parsing</span></pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+<div id="JsonToken">
+  <dt><pre><a href="json.html#JsonToken"><span class="Identifier">JsonToken</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="json.html#JsonTokenKind"><span class="Identifier">JsonTokenKind</span></a>
+  <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+  <span class="Identifier">line</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">col</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">pos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
   <dd>
     
     
@@ -245,23 +256,12 @@
   <span class="Identifier">jtkNull</span> <span class="Other">=</span> <span class="StringLit">&quot;&lt;null&gt;&quot;</span></pre></dt>
   <dd>
     
-    Token kinds for JSON parsing
+    JsonToken kinds for JSON parsing
     
   </dd>
 </div>
 <div id="OpenParserJsonError">
   <dt><pre><a href="json.html#OpenParserJsonError"><span class="Identifier">OpenParserJsonError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">CatchableError</span></pre></dt>
-  <dd>
-    
-    
-    
-  </dd>
-</div>
-<div id="Token">
-  <dt><pre><a href="json.html#Token"><span class="Identifier">Token</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
-  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="json.html#JsonTokenKind"><span class="Identifier">JsonTokenKind</span></a>
-  <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">line</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">col</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">pos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
   <dd>
     
     
@@ -276,7 +276,7 @@
   <dl class="item">
     <div id="advance-procs-all">
   <div id="advance,JsonParser">
-  <dt><pre><span class="Keyword">proc</span> <a href="#advance%2CJsonParser"><span class="Identifier">advance</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="json.html#Token"><span class="Identifier">Token</span></a> {.<span class="Identifier">discardable</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#advance%2CJsonParser"><span class="Identifier">advance</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="json.html#JsonToken"><span class="Identifier">JsonToken</span></a> {.<span class="Identifier">discardable</span><span class="Other">,</span>
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserJsonError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -739,7 +739,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-22 03:33:39 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-22 19:46:04 UTC</small>
       </div>
     </div>
   </div>

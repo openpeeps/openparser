@@ -19,13 +19,13 @@ nim	ytkBoolean	openparser/yaml.html#ytkBoolean	YamlTokenKind.ytkBoolean		23
 nim	ytkComment	openparser/yaml.html#ytkComment	YamlTokenKind.ytkComment		23
 nim	ytkUnknown	openparser/yaml.html#ytkUnknown	YamlTokenKind.ytkUnknown		23
 nim	YamlTokenKind	openparser/yaml.html#YamlTokenKind	enum YamlTokenKind		23
-nim	Token	openparser/yaml.html#Token	type Token		44
-nim	Lexer	openparser/yaml.html#Lexer	object Lexer		54
+nim	YamlToken	openparser/yaml.html#YamlToken	type YamlToken		44
+nim	YamlLexer	openparser/yaml.html#YamlLexer	object YamlLexer		54
 nim	YamlParser	openparser/yaml.html#YamlParser	object YamlParser		63
 nim	YAML	openparser/yaml.html#YAML	type YAML		68
 nim	OpenParserYamlError	openparser/yaml.html#OpenParserYamlError	object OpenParserYamlError		71
-nim	newLexer	openparser/yaml.html#newLexer,string	proc newLexer(input: string): Lexer		74
-nim	nextToken	openparser/yaml.html#nextToken,YamlParser	proc nextToken(p: var YamlParser): Token		273
+nim	newYamlLexer	openparser/yaml.html#newYamlLexer,string	proc newYamlLexer(input: string): YamlLexer		74
+nim	nextToken	openparser/yaml.html#nextToken,YamlParser	proc nextToken(p: var YamlParser): YamlToken		273
 nim	yamlInteger	openparser/yaml.html#yamlInteger	YamlValueKind.yamlInteger		319
 nim	yamlFloat	openparser/yaml.html#yamlFloat	YamlValueKind.yamlFloat		319
 nim	yamlString	openparser/yaml.html#yamlString	YamlValueKind.yamlString		319

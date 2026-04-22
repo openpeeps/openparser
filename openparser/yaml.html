@@ -58,17 +58,9 @@
   <details open>
     <summary><a class="reference reference-toplevel" href="#7" id="57">Types</a></summary>
     <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#Lexer" title="Lexer = object">Lexer</a></li>
-<li><a class="reference" href="#OpenParserYamlError" title="OpenParserYamlError = object of CatchableError">OpenParserYamlError</a></li>
-<li><a class="reference" href="#Token" title="Token = ref object
-  kind*: YamlTokenKind
-  value*: string
-  line*: int
-  col*: int
-  pos*: int
-  wsno*: int
-  indent*: int">Token</a></li>
+      <li><a class="reference" href="#OpenParserYamlError" title="OpenParserYamlError = object of CatchableError">OpenParserYamlError</a></li>
 <li><a class="reference" href="#YAML" title="YAML = string">YAML</a></li>
+<li><a class="reference" href="#YamlLexer" title="YamlLexer = object">YamlLexer</a></li>
 <li><a class="reference" href="#YamlNode" title="YamlNode {.acyclic.} = object
   case kind*: YamlValueKind
   of yamlInteger:
@@ -87,6 +79,14 @@
     arrValue*: seq[YamlNode]">YamlNode</a></li>
 <li><a class="reference" href="#YAMLObject_2" title="YAMLObject = OrderedTableRef[string, YamlNode]">YAMLObject</a></li>
 <li><a class="reference" href="#YamlParser" title="YamlParser = object">YamlParser</a></li>
+<li><a class="reference" href="#YamlToken" title="YamlToken = ref object
+  kind*: YamlTokenKind
+  value*: string
+  line*: int
+  col*: int
+  pos*: int
+  wsno*: int
+  indent*: int">YamlToken</a></li>
 <li><a class="reference" href="#YamlTokenKind" title="YamlTokenKind = enum
   ytkEOF = &quot;EOF&quot;, ytkIdentifier = &quot;Identifier&quot;, ytkColon = &quot;:&quot;, ytkComma = &quot;,&quot;,
   ytkDash = &quot;-&quot;, ytkLB = &quot;[&quot;, ytkRB = &quot;]&quot;, ytkLC = &quot;{&quot;, ytkRC = &quot;}&quot;,
@@ -107,12 +107,12 @@
   <li><a class="reference" href="#%24%2CYAMLObject" title="`$`(yamlObject: YAMLObject): string">`$`(yamlObject: YAMLObject): string</a></li>
 
 </ul>
-<ul class="simple nested-toc-section">newLexer
-  <li><a class="reference" href="#newLexer%2Cstring" title="newLexer(input: string): Lexer">newLexer(input: string): Lexer</a></li>
+<ul class="simple nested-toc-section">newYamlLexer
+  <li><a class="reference" href="#newYamlLexer%2Cstring" title="newYamlLexer(input: string): YamlLexer">newYamlLexer(input: string): YamlLexer</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">nextToken
-  <li><a class="reference" href="#nextToken%2CYamlParser" title="nextToken(p: var YamlParser): Token">nextToken(p: var YamlParser): Token</a></li>
+  <li><a class="reference" href="#nextToken%2CYamlParser" title="nextToken(p: var YamlParser): YamlToken">nextToken(p: var YamlParser): YamlToken</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">parseHook
@@ -155,34 +155,11 @@
 <div class="section" id="7">
   <h1><a class="toc-backref" href="#7">Types</a></h1>
   <dl class="item">
-    <div id="Lexer">
-  <dt><pre><a href="yaml.html#Lexer"><span class="Identifier">Lexer</span></a> <span class="Other">=</span> <span class="Keyword">object</span></pre></dt>
-  <dd>
-    
-    Performs lexical analysis on a YAML input string, producing tokens for the parser
-    
-  </dd>
-</div>
-<div id="OpenParserYamlError">
+    <div id="OpenParserYamlError">
   <dt><pre><a href="yaml.html#OpenParserYamlError"><span class="Identifier">OpenParserYamlError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">CatchableError</span></pre></dt>
   <dd>
     
     Exception type for errors encountered during YAML parsing or dumping
-    
-  </dd>
-</div>
-<div id="Token">
-  <dt><pre><a href="yaml.html#Token"><span class="Identifier">Token</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
-  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="yaml.html#YamlTokenKind"><span class="Identifier">YamlTokenKind</span></a>
-  <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">line</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
-  <span class="Identifier">col</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
-  <span class="Identifier">pos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
-  <span class="Identifier">wsno</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
-  <span class="Identifier">indent</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
-  <dd>
-    
-    Represents a lexical token produced by the YAML lexer
     
   </dd>
 </div>
@@ -191,6 +168,14 @@
   <dd>
     
     A simple alias for YAML strings
+    
+  </dd>
+</div>
+<div id="YamlLexer">
+  <dt><pre><a href="yaml.html#YamlLexer"><span class="Identifier">YamlLexer</span></a> <span class="Other">=</span> <span class="Keyword">object</span></pre></dt>
+  <dd>
+    
+    Performs lexical analysis on a YAML input string, producing tokens for the parser
     
   </dd>
 </div>
@@ -229,7 +214,22 @@
   <dt><pre><a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a> <span class="Other">=</span> <span class="Keyword">object</span></pre></dt>
   <dd>
     
-    Parses a sequence of tokens from the Lexer to build a YAMLObject
+    Parses a sequence of tokens from the YamlLexer to build a YAMLObject
+    
+  </dd>
+</div>
+<div id="YamlToken">
+  <dt><pre><a href="yaml.html#YamlToken"><span class="Identifier">YamlToken</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="yaml.html#YamlTokenKind"><span class="Identifier">YamlTokenKind</span></a>
+  <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+  <span class="Identifier">line</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
+  <span class="Identifier">col</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
+  <span class="Identifier">pos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
+  <span class="Identifier">wsno</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
+  <span class="Identifier">indent</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
+  <dd>
+    
+    Represents a lexical token produced by the YAML lexer
     
   </dd>
 </div>
@@ -272,12 +272,12 @@
 </div>
 
 </div>
-<div id="newLexer-procs-all">
-  <div id="newLexer,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#newLexer%2Cstring"><span class="Identifier">newLexer</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#Lexer"><span class="Identifier">Lexer</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+<div id="newYamlLexer-procs-all">
+  <div id="newYamlLexer,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlLexer%2Cstring"><span class="Identifier">newYamlLexer</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlLexer"><span class="Identifier">YamlLexer</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Create a new Lexer for the given input string
+    Create a new YamlLexer for the given input string
     
   </dd>
 </div>
@@ -285,7 +285,7 @@
 </div>
 <div id="nextToken-procs-all">
   <div id="nextToken,YamlParser">
-  <dt><pre><span class="Keyword">proc</span> <a href="#nextToken%2CYamlParser"><span class="Identifier">nextToken</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#Token"><span class="Identifier">Token</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#nextToken%2CYamlParser"><span class="Identifier">nextToken</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlToken"><span class="Identifier">YamlToken</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -386,7 +386,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-22 03:33:39 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-22 19:46:05 UTC</small>
       </div>
     </div>
   </div>

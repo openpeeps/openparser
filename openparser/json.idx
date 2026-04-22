@@ -13,7 +13,7 @@ nim	jtkTrue	openparser/json.html#jtkTrue	JsonTokenKind.jtkTrue		51
 nim	jtkFalse	openparser/json.html#jtkFalse	JsonTokenKind.jtkFalse		51
 nim	jtkNull	openparser/json.html#jtkNull	JsonTokenKind.jtkNull		51
 nim	JsonTokenKind	openparser/json.html#JsonTokenKind	enum JsonTokenKind		51
-nim	Token	openparser/json.html#Token	type Token		74
+nim	JsonToken	openparser/json.html#JsonToken	type JsonToken		74
 nim	JsonParser	openparser/json.html#JsonParser	object JsonParser		79
 nim	OpenParserJsonError	openparser/json.html#OpenParserJsonError	object OpenParserJsonError		89
 nim	skippable	openparser/json.html#skippable.t	template skippable()		91
@@ -51,7 +51,7 @@ nim	parseHook	openparser/json.html#parseHook,JsonParser,set[T]	proc parseHook[T]
 nim	parseHook	openparser/json.html#parseHook,JsonParser,T_4	proc parseHook[T: Integers](parser: var JsonParser; v: var T)		707
 nim	parseHook	openparser/json.html#parseHook,JsonParser,T_5	proc parseHook[T: tuple](parser: var JsonParser; v: var T)		708
 nim	skipValue	openparser/json.html#skipValue,JsonParser	proc skipValue(parser: var JsonParser)		709
-nim	advance	openparser/json.html#advance,JsonParser	proc advance(parser: var JsonParser): Token		711
+nim	advance	openparser/json.html#advance,JsonParser	proc advance(parser: var JsonParser): JsonToken		711
 nim	parseHook	openparser/json.html#parseHook,JsonParser,JsonNode	proc parseHook(parser: var JsonParser; v: var JsonNode)		770
 nim	parseHook	openparser/json.html#parseHook,JsonParser,T_6	proc parseHook[T: distinct](parser: var JsonParser; v: var T)		884
 nim	parseHook	openparser/json.html#parseHook,JsonParser,T_7	proc parseHook[T: object | ref object](parser: var JsonParser; v: var T)		952
