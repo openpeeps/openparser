@@ -8,5 +8,5 @@ when not defined(builddocs):
   {.error:"Import the specific parser you need".}
 else:
   # For documentation purposes, we re-export all parsers here
-  import ./openparser/[json, csv, rss, feed]
-  export json, csv, rss, feed
+  import ./openparser/[json, csv, rss, feed, yaml]
+  export json, csv, rss, feed, yaml

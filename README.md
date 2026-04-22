@@ -144,7 +144,7 @@ Error (1:33) Unexpected token `:`
 
 
 
-## Parse large CSV files
+## CSV documents
 OpenParser can parse large CSV files efficiently without loading the entire file into memory, making it ideal for processing big datasets.
 
 For example, here will use a ~680MB CSV dataset from [Kaggle - TripAdvisor European restaurants](https://www.kaggle.com/datasets/stefanoleone992/tripadvisor-european-restaurants/data) that contains around 1 million rows and 42 columns.
@@ -168,6 +168,11 @@ echo "Parsed ", i, " rows in ", elapsed, " seconds"
 # ~0.783363 seconds on my machine
 # memory usage should be minimal due to zero-copy parsing with memfiles
 ```
+
+## YAML Documents
+There is a **work-in-progress YAML parser** and dumper module that provides support for dealing with YAML documents. Currently it parse the YAML input into a YamlObject (`TableRef` of `YamlNode` nodes).
+
+...todo examples...
 
 ## Roadmap
 - [ ] JSON depth/size limit to prevent DoS attacks
