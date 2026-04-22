@@ -1,0 +1,50 @@
+nimTitle	yaml	openparser/yaml.html	module openparser/yaml		0
+nim	ytkEOF	openparser/yaml.html#ytkEOF	YamlTokenKind.ytkEOF		23
+nim	ytkIdentifier	openparser/yaml.html#ytkIdentifier	YamlTokenKind.ytkIdentifier		23
+nim	ytkColon	openparser/yaml.html#ytkColon	YamlTokenKind.ytkColon		23
+nim	ytkComma	openparser/yaml.html#ytkComma	YamlTokenKind.ytkComma		23
+nim	ytkDash	openparser/yaml.html#ytkDash	YamlTokenKind.ytkDash		23
+nim	ytkLB	openparser/yaml.html#ytkLB	YamlTokenKind.ytkLB		23
+nim	ytkRB	openparser/yaml.html#ytkRB	YamlTokenKind.ytkRB		23
+nim	ytkLC	openparser/yaml.html#ytkLC	YamlTokenKind.ytkLC		23
+nim	ytkRC	openparser/yaml.html#ytkRC	YamlTokenKind.ytkRC		23
+nim	ytkPipe	openparser/yaml.html#ytkPipe	YamlTokenKind.ytkPipe		23
+nim	ytkGT	openparser/yaml.html#ytkGT	YamlTokenKind.ytkGT		23
+nim	ytkQuote	openparser/yaml.html#ytkQuote	YamlTokenKind.ytkQuote		23
+nim	ytkSingleQuote	openparser/yaml.html#ytkSingleQuote	YamlTokenKind.ytkSingleQuote		23
+nim	ytkString	openparser/yaml.html#ytkString	YamlTokenKind.ytkString		23
+nim	ytkFloat	openparser/yaml.html#ytkFloat	YamlTokenKind.ytkFloat		23
+nim	ytkInteger	openparser/yaml.html#ytkInteger	YamlTokenKind.ytkInteger		23
+nim	ytkBoolean	openparser/yaml.html#ytkBoolean	YamlTokenKind.ytkBoolean		23
+nim	ytkComment	openparser/yaml.html#ytkComment	YamlTokenKind.ytkComment		23
+nim	ytkUnknown	openparser/yaml.html#ytkUnknown	YamlTokenKind.ytkUnknown		23
+nim	YamlTokenKind	openparser/yaml.html#YamlTokenKind	enum YamlTokenKind		23
+nim	Token	openparser/yaml.html#Token	type Token		44
+nim	Lexer	openparser/yaml.html#Lexer	object Lexer		54
+nim	YamlParser	openparser/yaml.html#YamlParser	object YamlParser		63
+nim	YAML	openparser/yaml.html#YAML	type YAML		68
+nim	OpenParserYamlError	openparser/yaml.html#OpenParserYamlError	object OpenParserYamlError		71
+nim	newLexer	openparser/yaml.html#newLexer,string	proc newLexer(input: string): Lexer		74
+nim	nextToken	openparser/yaml.html#nextToken,YamlParser	proc nextToken(p: var YamlParser): Token		273
+nim	yamlInteger	openparser/yaml.html#yamlInteger	YamlValueKind.yamlInteger		319
+nim	yamlFloat	openparser/yaml.html#yamlFloat	YamlValueKind.yamlFloat		319
+nim	yamlString	openparser/yaml.html#yamlString	YamlValueKind.yamlString		319
+nim	yamlBoolean	openparser/yaml.html#yamlBoolean	YamlValueKind.yamlBoolean		319
+nim	yamlObject	openparser/yaml.html#yamlObject	YamlValueKind.yamlObject		319
+nim	yamlArray	openparser/yaml.html#yamlArray	YamlValueKind.yamlArray		319
+nim	yamlNull	openparser/yaml.html#yamlNull	YamlValueKind.yamlNull		319
+nim	YamlValueKind	openparser/yaml.html#YamlValueKind	enum YamlValueKind		319
+nim	YamlNode	openparser/yaml.html#YamlNode	object YamlNode		328
+nim	YAMLObject	openparser/yaml.html#YAMLObject_2	type YAMLObject		344
+nim	`$`	openparser/yaml.html#$,YAMLObject	proc `$`(yamlObject: YAMLObject): string		607
+nim	parseYAML	openparser/yaml.html#parseYAML,YAML	proc parseYAML(input: YAML): YAMLObject		611
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,string	proc parseHook(parser: var YamlParser; v: var string)		625
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T	proc parseHook[T: float | float32 | float64](parser: var YamlParser; v: var T)		626
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,bool	proc parseHook(parser: var YamlParser; v: var bool)		627
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_2	proc parseHook[T: Integers](parser: var YamlParser; v: var T)		654
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_3	proc parseHook[T: enum](parser: var YamlParser; v: var T)		659
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,set[T]	proc parseHook[T](parser: var YamlParser; v: var set[T])		672
+nim	parseYAML	openparser/yaml.html#parseYAML,YamlParser,T	proc parseYAML[T: object | ref object](parser: var YamlParser; v: var T)		683
+nim	parseYAML	openparser/yaml.html#parseYAML,YAML,typedesc[T]	proc parseYAML[T](input: YAML; t: typedesc[T]): T		707
+nimgrp	parseyaml	openparser/yaml.html#parseYAML-procs-all	proc		611
+nimgrp	parsehook	openparser/yaml.html#parseHook-procs-all	proc		625
