@@ -325,7 +325,7 @@ type
     yamlArray
     yamlNull
 
-  YamlNode* {.acyclic.} = object
+  YamlNode* {.acyclic.} = ref object
     case kind*: YamlValueKind
     of yamlInteger:
       intValue*: int64
@@ -343,6 +343,108 @@ type
 
   YAMLObject* = OrderedTableRef[string, YamlNode]
     ## Represents a simple 
+
+proc newYamlString*(s: string): YamlNode =
+  ## Create a new YamlNode of kind yamlString
+  YamlNode(kind: yamlString, strValue: s)
+
+proc newYamlFloat*(f: float64): YamlNode =
+  ## Create a new YamlNode of kind yamlFloat
+  YamlNode(kind: yamlFloat, floatValue: f)
+
+proc newYamlInteger*(i: int64): YamlNode =
+  ## Create a new YamlNode of kind yamlInteger
+  YamlNode(kind: yamlInteger, intValue: i)
+
+proc newYamlBoolean*(b: bool): YamlNode =
+  ## Create a new YamlNode of kind yamlBoolean
+  YamlNode(kind: yamlBoolean, boolValue: b)
+
+proc newYamlNull*(): YamlNode =
+  ## Create a new YamlNode of kind yamlNull
+  YamlNode(kind: yamlNull)
+
+proc newYamlObject*(): YamlNode =
+  ## Create a new YamlNode of kind yamlObject
+  YamlNode(kind: yamlObject, objValue: newOrderedTable[string, YamlNode]())
+
+proc newYamlArray*(): YamlNode =
+  ## Create a new YamlNode of kind yamlArray
+  YamlNode(kind: yamlArray, arrValue: @[])
+
+proc get*(n: YamlNode, key: string): YamlNode =
+  ## Recursively access nested YAML data using dot-separated keys.
+  ## Example: get(config, "user.name")
+  if n == nil or key.len == 0:
+    return nil
+  if '.' notin key:
+    if n.kind == yamlObject and n.objValue.hasKey(key):
+      return n.objValue[key]
+    else:
+      return nil
+  let dotIdx = key.find('.')
+  let head = key[0 ..< dotIdx]
+  let tail = key[dotIdx+1 .. ^1]
+  let nextNode =
+    if n.kind == yamlObject and n.objValue.hasKey(head):
+      n.objValue[head]
+    else:
+      nil
+  if nextNode == nil:
+    return nil
+  return get(nextNode, tail)
+
+proc get*(obj: YamlObject, key: string): YamlNode =
+  ## Access a value from a YAMLObject using a key
+  if obj.hasKey(key):
+    return obj[key]
+  else:
+    return nil
+
+proc put*(obj: YamlObject, key: string, value: YamlNode) =
+  ## Insert or update a key-value pair in a YAMLObject
+  obj[key] = value
+
+proc getStr*(n: YamlNode): string =
+  ## Get string value or "" if not a string node
+  if n != nil and n.kind == yamlString:
+    result = n.strValue
+
+proc getInt*(n: YamlNode): int64 =
+  ## Get integer value or 0 if not an integer node
+  if n != nil and n.kind == yamlInteger:
+    result = n.intValue
+
+proc getFloat*(n: YamlNode): float64 =
+  ## Get float value or 0.0 if not a float node
+  if n != nil and n.kind == yamlFloat:
+    result = n.floatValue
+
+proc getBool*(n: YamlNode): bool =
+  ## Get boolean value or false if not a boolean node
+  if n != nil and n.kind == yamlBoolean:
+    result = n.boolValue
+
+proc getArray*(n: YamlNode): seq[YamlNode] =
+  ## Get array value or empty seq if not an array node
+  if n != nil and n.kind == yamlArray:
+    result = n.arrValue
+
+proc getObject*(n: YamlNode): OrderedTableRef[string, YamlNode] =
+  ## Get object value or empty table if not an object node
+  if n != nil and n.kind == yamlObject:
+    result = n.objValue
+
+proc getValue*(v: YamlNode): string =
+  ## Get the string representation of a YamlNode value (for debugging)
+  case v.kind
+  of yamlNull: "null"
+  of yamlBoolean: $v.boolValue
+  of yamlInteger: $v.intValue
+  of yamlFloat: $v.floatValue
+  of yamlString: v.strValue
+  of yamlObject: "{...}"
+  of yamlArray: "[...]"
 
 proc advance(p: var YamlParser) {.inline.} =
   p.prev = p.curr
@@ -389,21 +491,35 @@ proc parseSequence(p: var YamlParser, indent: int): seq[YamlNode]
 proc parseInlineArray(p: var YamlParser): YamlNode
 proc parseInlineObject(p: var YamlParser): YamlNode
 
-proc parsePlainUnquoted(p: var YamlParser): YamlNode =
-  ## Parse plain scalar on the same line (e.g.: title: hello world)
+proc parsePlainUnquoted(p: var YamlParser, inlineMode = false): YamlNode =
+  ## Parse plain scalar on the same line.
+  ## In inline mode, stop at ',', ']' and '}'.
   let lineNo = p.curr.line
-  var parts: seq[string] = @[]
-  var firstTok = p.curr
+  let firstTok = p.curr
+  var count = 0
+  var buf = ""
 
-  while p.curr.kind in {ytkIdentifier, ytkInteger, ytkFloat} and p.curr.line == lineNo:
-    parts.add(p.curr.value)
+  while p.curr.kind != ytkEOF and p.curr.line == lineNo:
+    if p.curr.kind == ytkComment:
+      break
+    if inlineMode and p.curr.kind in {ytkComma, ytkRB, ytkRC}:
+      break
+
+    if count > 0 and p.curr.wsno > 0:
+      buf.add(repeat(' ', p.curr.wsno))
+
+    # prefer token value; fallback to token text
+    # for punctuation-like tokens
+    let part = if p.curr.value.len > 0: p.curr.value else: tokenText(p.curr)
+    buf.add(part)
+
+    inc count
     advance(p)
 
-  if parts.len == 1:
-    # preserve bool/null/integer/float behavior
-    result = getScalarValue(firstTok)
+  if count == 1:
+    result = getScalarValue(firstTok) # preserves bool/int/float/null coercion
   else:
-    result = YamlNode(kind: yamlString, strValue: parts.join(" "))
+    result = YamlNode(kind: yamlString, strValue: buf)
 
 proc parseBlockString(p: var YamlParser, parentIndent: int, folded: bool): YamlNode =
   ## Parse YAML block scalar after '|' or '>'
@@ -529,29 +645,32 @@ proc parseMapping(p: var YamlParser, indent: int): YAMLObject =
       result[key] = YamlNode(kind: yamlNull)
 
 proc parseValue(p: var YamlParser, parentIndent: int): YamlNode =
+  let inlineMode = parentIndent < 0
   case p.curr.kind
   of ytkIdentifier:
     if p.next.kind == ytkColon and p.curr.indent > parentIndent:
       let obj = parseMapping(p, p.curr.indent)
       result = YamlNode(kind: yamlObject, objValue: obj)
     else:
-      result = parsePlainUnquoted(p)
+      result = parsePlainUnquoted(p, inlineMode)
   of ytkString, ytkFloat, ytkInteger:
-    result = parseScalar(p)
+    result = parsePlainUnquoted(p, inlineMode)
   of ytkLB:
     result = parseInlineArray(p)
   of ytkLC:
     result = parseInlineObject(p)
   of ytkDash:
-    let arr = parseSequence(p, p.curr.indent) # use indentation, not wsno
+    let arr = parseSequence(p, p.curr.indent)
     result = YamlNode(kind: yamlArray, arrValue: arr)
   of ytkPipe:
     result = parseBlockString(p, parentIndent, folded = false)
   of ytkGT:
     result = parseBlockString(p, parentIndent, folded = true)
   else:
-    raise newException(ValueError,
-      "Unexpected value token " & $p.curr.kind & " at line " & $p.curr.line & ", col " & $p.curr.col)
+    raise newException(
+      ValueError,
+      "Unexpected value token " & $p.curr.kind & " at line " & $p.curr.line & ", col " & $p.curr.col
+    )
 
 proc parseRoot(p: var YamlParser): YAMLObject =
   result = parseMapping(p, 0)
@@ -576,7 +695,7 @@ proc nimStringLiteral(s: string): string =
 #
 # Dump hook to for converting YAMLObject to JSON
 #
-proc dumpHook(s: var string, v: YamlNode) =
+proc dumpHook*(s: var string, v: YamlNode) =
   case v.kind
   of yamlNull:
     s.add("null")
