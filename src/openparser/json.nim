@@ -1134,6 +1134,21 @@ proc parseAnyRoot(parser: var JsonParser): JsonNode =
   of jtkLBracket:
     result = newJArray()
     parser.parseArray(result)
+  of jtkNull:
+    result = newJNull()
+    parser.advance()
+  of jtkString:
+    result = newJString(parser.curr.value)
+    parser.advance()
+  of jtkNumber:
+    try:
+      result = newJInt(parseInt(parser.curr.value))
+    except ValueError:
+      result = newJFloat(parseFloat(parser.curr.value))
+    parser.advance()
+  of jtkTrue, jtkFalse:
+    result = newJBool(parser.curr.kind == jtkTrue)
+    parser.advance()
   else:
     parser.error(unexpectedToken % [$parser.curr.kind])
 
