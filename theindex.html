@@ -147,6 +147,8 @@
           data-doc-search-tag="json: proc dumpHook(s: var string; val: string)" href="openparser/json.html#dumpHook%2Cstring%2Cstring">json: proc dumpHook(s: var string; val: string)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook[T: distinct](s: var string; v: T)" href="openparser/json.html#dumpHook%2Cstring%2CT">json: proc dumpHook[T: distinct](s: var string; v: T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="yaml: proc dumpHook(s: var string; v: YamlNode)" href="openparser/yaml.html#dumpHook%2Cstring%2CYamlNode">yaml: proc dumpHook(s: var string; v: YamlNode)</a></li>
           </ul></dd>
 <dt><a name="fetchAtom" href="#fetchAtom"><span>fetchAtom:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -177,6 +179,40 @@
 <dt><a name="fromJsonLFile" href="#fromJsonLFile"><span>fromJsonLFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc fromJsonLFile(filename: string): JsonNode" href="openparser/json.html#fromJsonLFile%2Cstring">json: proc fromJsonLFile(filename: string): JsonNode</a></li>
+          </ul></dd>
+<dt><a name="get" href="#get"><span>get:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc get(n: YamlNode; key: string): YamlNode" href="openparser/yaml.html#get%2CYamlNode%2Cstring">yaml: proc get(n: YamlNode; key: string): YamlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="yaml: proc get(obj: YAMLObject; key: string): YamlNode" href="openparser/yaml.html#get%2CYAMLObject%2Cstring">yaml: proc get(obj: YAMLObject; key: string): YamlNode</a></li>
+          </ul></dd>
+<dt><a name="getArray" href="#getArray"><span>getArray:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc getArray(n: YamlNode): seq[YamlNode]" href="openparser/yaml.html#getArray%2CYamlNode">yaml: proc getArray(n: YamlNode): seq[YamlNode]</a></li>
+          </ul></dd>
+<dt><a name="getBool" href="#getBool"><span>getBool:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc getBool(n: YamlNode): bool" href="openparser/yaml.html#getBool%2CYamlNode">yaml: proc getBool(n: YamlNode): bool</a></li>
+          </ul></dd>
+<dt><a name="getFloat" href="#getFloat"><span>getFloat:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc getFloat(n: YamlNode): float64" href="openparser/yaml.html#getFloat%2CYamlNode">yaml: proc getFloat(n: YamlNode): float64</a></li>
+          </ul></dd>
+<dt><a name="getInt" href="#getInt"><span>getInt:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc getInt(n: YamlNode): int64" href="openparser/yaml.html#getInt%2CYamlNode">yaml: proc getInt(n: YamlNode): int64</a></li>
+          </ul></dd>
+<dt><a name="getObject" href="#getObject"><span>getObject:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc getObject(n: YamlNode): OrderedTableRef[string, YamlNode]" href="openparser/yaml.html#getObject%2CYamlNode">yaml: proc getObject(n: YamlNode): OrderedTableRef[string, YamlNode]</a></li>
+          </ul></dd>
+<dt><a name="getStr" href="#getStr"><span>getStr:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc getStr(n: YamlNode): string" href="openparser/yaml.html#getStr%2CYamlNode">yaml: proc getStr(n: YamlNode): string</a></li>
+          </ul></dd>
+<dt><a name="getValue" href="#getValue"><span>getValue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc getValue(v: YamlNode): string" href="openparser/yaml.html#getValue%2CYamlNode">yaml: proc getValue(v: YamlNode): string</a></li>
           </ul></dd>
 <dt><a name="Integers" href="#Integers"><span>Integers:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -250,9 +286,37 @@
 <li><a class="reference external"
           data-doc-search-tag="json: JsonTokenKind.jtkTrue" href="openparser/json.html#jtkTrue">json: JsonTokenKind.jtkTrue</a></li>
           </ul></dd>
+<dt><a name="newYamlArray" href="#newYamlArray"><span>newYamlArray:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc newYamlArray(): YamlNode" href="openparser/yaml.html#newYamlArray">yaml: proc newYamlArray(): YamlNode</a></li>
+          </ul></dd>
+<dt><a name="newYamlBoolean" href="#newYamlBoolean"><span>newYamlBoolean:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc newYamlBoolean(b: bool): YamlNode" href="openparser/yaml.html#newYamlBoolean%2Cbool">yaml: proc newYamlBoolean(b: bool): YamlNode</a></li>
+          </ul></dd>
+<dt><a name="newYamlFloat" href="#newYamlFloat"><span>newYamlFloat:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc newYamlFloat(f: float64): YamlNode" href="openparser/yaml.html#newYamlFloat%2Cfloat64">yaml: proc newYamlFloat(f: float64): YamlNode</a></li>
+          </ul></dd>
+<dt><a name="newYamlInteger" href="#newYamlInteger"><span>newYamlInteger:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc newYamlInteger(i: int64): YamlNode" href="openparser/yaml.html#newYamlInteger%2Cint64">yaml: proc newYamlInteger(i: int64): YamlNode</a></li>
+          </ul></dd>
 <dt><a name="newYamlLexer" href="#newYamlLexer"><span>newYamlLexer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="yaml: proc newYamlLexer(input: string): YamlLexer" href="openparser/yaml.html#newYamlLexer%2Cstring">yaml: proc newYamlLexer(input: string): YamlLexer</a></li>
+          </ul></dd>
+<dt><a name="newYamlNull" href="#newYamlNull"><span>newYamlNull:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc newYamlNull(): YamlNode" href="openparser/yaml.html#newYamlNull">yaml: proc newYamlNull(): YamlNode</a></li>
+          </ul></dd>
+<dt><a name="newYamlObject" href="#newYamlObject"><span>newYamlObject:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc newYamlObject(): YamlNode" href="openparser/yaml.html#newYamlObject">yaml: proc newYamlObject(): YamlNode</a></li>
+          </ul></dd>
+<dt><a name="newYamlString" href="#newYamlString"><span>newYamlString:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc newYamlString(s: string): YamlNode" href="openparser/yaml.html#newYamlString%2Cstring">yaml: proc newYamlString(s: string): YamlNode</a></li>
           </ul></dd>
 <dt><a name="nextToken" href="#nextToken"><span>nextToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -344,6 +408,10 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseYAML[T: object | ref object](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseYAML%2CYamlParser%2CT">yaml: proc parseYAML[T: object | ref object](parser: var YamlParser; v: var T)</a></li>
           </ul></dd>
+<dt><a name="put" href="#put"><span>put:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc put(obj: YAMLObject; key: string; value: YamlNode)" href="openparser/yaml.html#put%2CYAMLObject%2Cstring%2CYamlNode">yaml: proc put(obj: YAMLObject; key: string; value: YamlNode)</a></li>
+          </ul></dd>
 <dt><a name="readAtom" href="#readAtom"><span>readAtom:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="feed: proc readAtom(filePath: string): AtomFeed" href="openparser/feed.html#readAtom%2Cstring">feed: proc readAtom(filePath: string): AtomFeed</a></li>
@@ -426,7 +494,7 @@
           </ul></dd>
 <dt><a name="YamlNode" href="#YamlNode"><span>YamlNode:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="yaml: object YamlNode" href="openparser/yaml.html#YamlNode">yaml: object YamlNode</a></li>
+          data-doc-search-tag="yaml: type YamlNode" href="openparser/yaml.html#YamlNode">yaml: type YamlNode</a></li>
           </ul></dd>
 <dt><a name="yamlNull" href="#yamlNull"><span>yamlNull:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -540,7 +608,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-22 19:46:05 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-23 22:58:47 UTC</small>
       </div>
     </div>
   </div>
