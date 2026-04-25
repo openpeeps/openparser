@@ -152,13 +152,12 @@
 <li><a class="reference" href="#parseHook%2CJsonParser%2CJsonNode" title="parseHook(parser: var JsonParser; v: var JsonNode)">parseHook(parser: var JsonParser; v: var JsonNode)</a></li>
 <li><a class="reference" href="#parseHook%2CJsonParser%2Cstring" title="parseHook(parser: var JsonParser; v: var string)">parseHook(parser: var JsonParser; v: var string)</a></li>
 <li><a class="reference" href="#parseHook%2CJsonParser%2CAnyTable%5BK%3A%20string%2CV%5D" title="parseHook[K: string; V](parser: var JsonParser; v: var AnyTable[K, V])">parseHook[K: string; V](parser: var JsonParser; v: var AnyTable[K, V])</a></li>
-<li><a class="reference" href="#parseHook%2CJsonParser%2CT_6" title="parseHook[T: distinct](parser: var JsonParser; v: var T)">parseHook[T: distinct](parser: var JsonParser; v: var T)</a></li>
-<li><a class="reference" href="#parseHook%2CJsonParser%2CT_3" title="parseHook[T: enum](parser: var JsonParser; v: var T)">parseHook[T: enum](parser: var JsonParser; v: var T)</a></li>
+<li><a class="reference" href="#parseHook%2CJsonParser%2CT_5" title="parseHook[T: distinct](parser: var JsonParser; v: var T)">parseHook[T: distinct](parser: var JsonParser; v: var T)</a></li>
+<li><a class="reference" href="#parseHook%2CJsonParser%2CT_2" title="parseHook[T: enum](parser: var JsonParser; v: var T)">parseHook[T: enum](parser: var JsonParser; v: var T)</a></li>
 <li><a class="reference" href="#parseHook%2CJsonParser%2CT" title="parseHook[T: float | float32 | float64](parser: var JsonParser; v: var T)">parseHook[T: float | float32 | float64](parser: var JsonParser; v: var T)</a></li>
-<li><a class="reference" href="#parseHook%2CJsonParser%2CT_4" title="parseHook[T: Integers](parser: var JsonParser; v: var T)">parseHook[T: Integers](parser: var JsonParser; v: var T)</a></li>
-<li><a class="reference" href="#parseHook%2CJsonParser%2CT_7" title="parseHook[T: object | ref object](parser: var JsonParser; v: var T)">parseHook[T: object | ref object](parser: var JsonParser; v: var T)</a></li>
-<li><a class="reference" href="#parseHook%2CJsonParser%2CT_2" title="parseHook[T: ref object](parser: var JsonParser; v: var T)">parseHook[T: ref object](parser: var JsonParser; v: var T)</a></li>
-<li><a class="reference" href="#parseHook%2CJsonParser%2CT_5" title="parseHook[T: tuple](parser: var JsonParser; v: var T)">parseHook[T: tuple](parser: var JsonParser; v: var T)</a></li>
+<li><a class="reference" href="#parseHook%2CJsonParser%2CT_3" title="parseHook[T: Integers](parser: var JsonParser; v: var T)">parseHook[T: Integers](parser: var JsonParser; v: var T)</a></li>
+<li><a class="reference" href="#parseHook%2CJsonParser%2CT_6" title="parseHook[T: object | ref object](parser: var JsonParser; v: var T)">parseHook[T: object | ref object](parser: var JsonParser; v: var T)</a></li>
+<li><a class="reference" href="#parseHook%2CJsonParser%2CT_4" title="parseHook[T: tuple](parser: var JsonParser; v: var T)">parseHook[T: tuple](parser: var JsonParser; v: var T)</a></li>
 <li><a class="reference" href="#parseHook%2CJsonParser%2COption%5BT%5D" title="parseHook[T](parser: var JsonParser; v: var Option[T])">parseHook[T](parser: var JsonParser; v: var Option[T])</a></li>
 <li><a class="reference" href="#parseHook%2CJsonParser%2Cseq%5BT%5D" title="parseHook[T](parser: var JsonParser; v: var seq[T])">parseHook[T](parser: var JsonParser; v: var seq[T])</a></li>
 <li><a class="reference" href="#parseHook%2CJsonParser%2Cset%5BT%5D" title="parseHook[T](parser: var JsonParser; v: var set[T])">parseHook[T](parser: var JsonParser; v: var set[T])</a></li>
@@ -609,16 +608,16 @@
     
   </dd>
 </div>
-<div id="parseHook,JsonParser,T_6">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_6"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">distinct</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+<div id="parseHook,JsonParser,T_5">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_5"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">distinct</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     A hook to parse distinct types by parsing their base type and then converting
     
   </dd>
 </div>
-<div id="parseHook,JsonParser,T_3">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_3"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">enum</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+<div id="parseHook,JsonParser,T_2">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_2"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">enum</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -633,32 +632,24 @@
     
   </dd>
 </div>
+<div id="parseHook,JsonParser,T_3">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_3"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <a href="private/types.html#Integers"><span class="Identifier">Integers</span></a><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+<div id="parseHook,JsonParser,T_6">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_6"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">object</span> <span class="Operator">|</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
 <div id="parseHook,JsonParser,T_4">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_4"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <a href="private/types.html#Integers"><span class="Identifier">Integers</span></a><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
-  <dd>
-    
-    
-    
-  </dd>
-</div>
-<div id="parseHook,JsonParser,T_7">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_7"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">object</span> <span class="Operator">|</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
-  <dd>
-    
-    
-    
-  </dd>
-</div>
-<div id="parseHook,JsonParser,T_2">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_2"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
-  <dd>
-    
-    
-    
-  </dd>
-</div>
-<div id="parseHook,JsonParser,T_5">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_5"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">tuple</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_4"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">tuple</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -760,7 +751,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-25 13:17:57 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-25 13:55:16 UTC</small>
       </div>
     </div>
   </div>
