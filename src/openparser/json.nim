@@ -231,11 +231,13 @@ proc dumpHook*[K: string, V](s: var string, val: AnyTable[K, V])
 proc dumpHook*[T](s: var string, val: set[T])
 proc dumpHook*[T: distinct](s: var string, v: T)
 proc dumpHook*(s: var string, v: JsonNode)
+proc dumpHook*(s: var string, v: char)
 
 type t[T] = tuple[a: string, b: T]
 proc dumpHook*[N, T](s: var string, v: array[N, t[T]])
 proc dumpHook*[N, T](s: var string, v: array[N, T])
 proc dumpHook*[T](s: var string, v: Option[T])
+proc dumpHook*[T](s: var string, v: CritBitTree[T])
 
 proc toJson*[T](v: T, opts: JsonOptions = nil): string =
   ## Convert a Nim object to its JSON string representation using dump hooks.
@@ -421,6 +423,10 @@ proc dumpHook*(s: var string, v: JsonNode) =
   of JBool:  dumpHook(s, v.bval)
   of JNull:  s.add("null")
 
+proc dumpHook*(s: var string, v: char) =
+  ## Converts a char to JSON string (with escaping)
+  s.add("\"" & escapeJson($v) & "\"")
+
 proc dumpHook*[N, T](s: var string, v: array[N, t[T]]) = 
   ## Converts an array of tuples to a JSON array of objects, where
   ## each tuple is converted to a JSON object with "a" and "b" fields.
@@ -448,6 +454,19 @@ proc dumpHook*[T](s: var string, v: Option[T]) =
     dumpHook(s, v.get())
   else:
     s.add("null")
+
+proc dumpHook*[T](s: var string, v: CritBitTree[T]) =
+  ## Converts a CritBitTree to a JSON object where keys are strings
+  ## and values are dumped using dumpHook
+  s.add("{")
+  var i = 0
+  for key, item in v:
+    if i > 0: s.add(",") # add comma between items
+    dumpHook(s, key) # convert the key to JSON string
+    s.add(":")
+    dumpHook(s, item) # convert the value to JSON
+    inc i
+  s.add("}")
 
 proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
   var hasRecCase = false
