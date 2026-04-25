@@ -719,7 +719,7 @@ proc parseHook*(parser: var JsonParser, v: var string)
 proc parseHook*[T: float|float32|float64](parser: var JsonParser, v: var T)
 proc parseHook*(parser: var JsonParser, v: var bool)
 proc parseHook*[T](parser: var JsonParser, v: var seq[T])
-proc parseHook*[T: ref object](parser: var JsonParser, v: var T)
+# proc parseHook*[T: ref object](parser: var JsonParser, v: var T)
 proc parseHook*[T: enum](parser: var JsonParser, v: var T)
 proc parseHook*[K: string, V](parser: var JsonParser, v: var AnyTable[K, V])
 proc parseHook*[T](parser: var JsonParser, v: var set[T])
@@ -1025,15 +1025,15 @@ proc parseHook*[T: object|ref object](parser: var JsonParser, v: var T) =
 
   parser.expectSkip(jtkRBrace)
 
-proc parseHook*[T: ref object](parser: var JsonParser, v: var T) =
-  ## A hook to parse ref object fields
-  if parser.curr.kind == jtkNull:
-    v = nil
-    parser.advance()
-  else:
-    if v.isNil:
-      new(v)
-    parser.parseHook(v[])
+# proc parseHook*[T: ref object](parser: var JsonParser, v: var T) =
+#   ## A hook to parse ref object fields
+#   if parser.curr.kind == jtkNull:
+#     v = nil
+#     parser.advance()
+#   else:
+#     if v.isNil:
+#       new(v)
+#     parser.parseHook(v[])
 
 proc parseHook*[T](parser: var JsonParser, v: var seq[T]) =
   ## A hook to parse sequence fields
