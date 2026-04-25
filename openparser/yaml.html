@@ -16,13 +16,16 @@
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4QQQEwksSS9ZWwAAAk1JREFUWMPtll2ITVEUx39nn/O7Y5qR8f05wtCUUr6ZIS++8pEnkZInPImneaCQ5METNdOkeFBKUhMPRIkHKfEuUZSUlGlKPN2TrgfncpvmnntnmlEyq1Z7t89/rf9a6+y99oZxGZf/XeIq61EdtgKXgdXA0xrYAvBjOIF1AI9zvjcC74BSpndrJPkBWDScTF8Aa4E3wDlgHbASaANmVqlcCnwHvgDvgVfAJ+AikAAvgfVZwLnSVZHZaOuKoQi3ZOMi4NkYkpe1p4J7A8BpYAD49hfIy/oqG0+hLomiKP2L5L+1ubn5115S+3OAn4EnwBlgMzCjyt6ZAnQCJ4A7wOs88iRJHvw50HoujuPBoCKwHWiosy8MdfZnAdcHk8dxXFJ3VQbQlCTJvRBCGdRbD4M6uc5glpY3eAihpN5S5w12diSEcCCEcKUO4ljdr15T76ur1FDDLIQQ3qv71EdDOe3Kxj3leRXyk+pxdWnFWod6Wt2bY3de3aSuUHcPBVimHs7mK9WrmeOF6lR1o9qnzskh2ar2qm1qizpfXaPeVGdlmGN5pb09qMxz1Xb1kLqgzn1RyH7JUXW52lr5e/Kqi9qpto7V1atuUzfnARrV7jEib1T76gG2qxdGmXyiekkt1GswPTtek0aBfJp6YySGBfWg2tPQ0FAYgf1stUfdmdcjarbYJEniKIq6gY/Aw+zWHAC+p2labGpqiorFYgGYCEzN7oQdQClN07O1/EfDyGgC0ALMBdYAi4FyK+4H3gLPsxfR1zRNi+NP7nH5J+QntnXe5B5mpfQAAAAASUVORK5CYII=">
 
 <!-- CSS -->
-<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.8">
+<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.10">
 
 <!-- JS -->
-<script type="text/javascript" src="../dochack.js?v=2.2.8"></script>
+<script type="text/javascript" src="../dochack.js?v=2.2.10"></script>
 </head>
 <body>
   <div class="document" id="documentId">
+    <input type="checkbox" id="nav-toggle" hidden>
+    <label for="nav-toggle" id="nav-burger">&#9776;</label>
+    <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">openparser/yaml</h1>
       <div class="row">
@@ -64,19 +67,19 @@
 <li><a class="reference" href="#YamlNode" title="YamlNode {.acyclic.} = ref object
   case kind*: YamlValueKind
   of yamlInteger:
-    intValue*: int64
+    intValue*: int64         ## Represents an integer value in YAML
   of yamlFloat:
-    floatValue*: float64
+    floatValue*: float64     ## Represents a floating-point value in YAML
   of yamlString:
-    strValue*: string
+    strValue*: string        ## Represents a string value in YAML
   of yamlBoolean:
-    boolValue*: bool
-  of yamlNull:
-    nil
+    boolValue*: bool         ## Represents a boolean value in YAML
   of yamlObject:
-    objValue*: OrderedTableRef[string, YamlNode]
+    objValue*: OrderedTableRef[string, YamlNode] ## Represents a YAML mapping (object) with string keys and YamlNode values
   of yamlArray:
-    arrValue*: seq[YamlNode]">YamlNode</a></li>
+    arrValue*: seq[YamlNode] ## Represents a YAML sequence (array) of YamlNode items
+  of yamlNull:
+    nil">YamlNode</a></li>
 <li><a class="reference" href="#YAMLObject_2" title="YAMLObject = OrderedTableRef[string, YamlNode]">YAMLObject</a></li>
 <li><a class="reference" href="#YamlParser" title="YamlParser = object">YamlParser</a></li>
 <li><a class="reference" href="#YamlToken" title="YamlToken = ref object
@@ -225,7 +228,7 @@
   <h1><a class="toc-backref" href="#7">Types</a></h1>
   <dl class="item">
     <div id="OpenParserYamlError">
-  <dt><pre><a href="yaml.html#OpenParserYamlError"><span class="Identifier">OpenParserYamlError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">CatchableError</span></pre></dt>
+  <dt><pre><a href="#OpenParserYamlError"><span class="Identifier">OpenParserYamlError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">CatchableError</span></pre></dt>
   <dd>
     
     Exception type for errors encountered during YAML parsing or dumping
@@ -233,7 +236,7 @@
   </dd>
 </div>
 <div id="YAML">
-  <dt><pre><a href="yaml.html#YAML"><span class="Identifier">YAML</span></a> <span class="Other">=</span> <span class="Identifier">string</span></pre></dt>
+  <dt><pre><a href="#YAML"><span class="Identifier">YAML</span></a> <span class="Other">=</span> <span class="Identifier">string</span></pre></dt>
   <dd>
     
     A simple alias for YAML strings
@@ -241,7 +244,7 @@
   </dd>
 </div>
 <div id="YamlLexer">
-  <dt><pre><a href="yaml.html#YamlLexer"><span class="Identifier">YamlLexer</span></a> <span class="Other">=</span> <span class="Keyword">object</span></pre></dt>
+  <dt><pre><a href="#YamlLexer"><span class="Identifier">YamlLexer</span></a> <span class="Other">=</span> <span class="Keyword">object</span></pre></dt>
   <dd>
     
     Performs lexical analysis on a YAML input string, producing tokens for the parser
@@ -249,30 +252,30 @@
   </dd>
 </div>
 <div id="YamlNode">
-  <dt><pre><a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span class="Identifier">acyclic</span>.} <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
-  <span class="Keyword">case</span> <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="yaml.html#YamlValueKind"><span class="Identifier">YamlValueKind</span></a>
+  <dt><pre><a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span class="Identifier">acyclic</span>.} <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <span class="Keyword">case</span> <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="#YamlValueKind"><span class="Identifier">YamlValueKind</span></a>
   <span class="Keyword">of</span> <span class="Identifier">yamlInteger</span><span class="Other">:</span>
-    <span class="Identifier">intValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int64</span>
+    <span class="Identifier">intValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int64</span>         <span class="Comment">## Represents an integer value in YAML</span>
   <span class="Keyword">of</span> <span class="Identifier">yamlFloat</span><span class="Other">:</span>
-    <span class="Identifier">floatValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float64</span>
+    <span class="Identifier">floatValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float64</span>     <span class="Comment">## Represents a floating-point value in YAML</span>
   <span class="Keyword">of</span> <span class="Identifier">yamlString</span><span class="Other">:</span>
-    <span class="Identifier">strValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+    <span class="Identifier">strValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>        <span class="Comment">## Represents a string value in YAML</span>
   <span class="Keyword">of</span> <span class="Identifier">yamlBoolean</span><span class="Other">:</span>
-    <span class="Identifier">boolValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
-  <span class="Keyword">of</span> <span class="Identifier">yamlNull</span><span class="Other">:</span>
-    <span class="Keyword">nil</span>
+    <span class="Identifier">boolValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>         <span class="Comment">## Represents a boolean value in YAML</span>
   <span class="Keyword">of</span> <span class="Identifier">yamlObject</span><span class="Other">:</span>
-    <span class="Identifier">objValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">OrderedTableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span>
+    <span class="Identifier">objValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">OrderedTableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span> <span class="Comment">## Represents a YAML mapping (object) with string keys and YamlNode values</span>
   <span class="Keyword">of</span> <span class="Identifier">yamlArray</span><span class="Other">:</span>
-    <span class="Identifier">arrValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span></pre></dt>
+    <span class="Identifier">arrValue</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span> <span class="Comment">## Represents a YAML sequence (array) of YamlNode items</span>
+  <span class="Keyword">of</span> <span class="Identifier">yamlNull</span><span class="Other">:</span>
+    <span class="Keyword">nil</span></pre></dt>
   <dd>
     
-    
+    Represents a node in the YAML data structure, which can be a scalar, object or array
     
   </dd>
 </div>
 <div id="YAMLObject_2">
-  <dt><pre><a href="yaml.html#YAMLObject"><span class="Identifier">YAMLObject</span></a> <span class="Other">=</span> <span class="Identifier">OrderedTableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span></pre></dt>
+  <dt><pre><a href="#YAMLObject"><span class="Identifier">YAMLObject</span></a> <span class="Other">=</span> <span class="Identifier">OrderedTableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span></pre></dt>
   <dd>
     
     Represents a simple 
@@ -280,7 +283,7 @@
   </dd>
 </div>
 <div id="YamlParser">
-  <dt><pre><a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a> <span class="Other">=</span> <span class="Keyword">object</span></pre></dt>
+  <dt><pre><a href="#YamlParser"><span class="Identifier">YamlParser</span></a> <span class="Other">=</span> <span class="Keyword">object</span></pre></dt>
   <dd>
     
     Parses a sequence of tokens from the YamlLexer to build a YAMLObject
@@ -288,8 +291,8 @@
   </dd>
 </div>
 <div id="YamlToken">
-  <dt><pre><a href="yaml.html#YamlToken"><span class="Identifier">YamlToken</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
-  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="yaml.html#YamlTokenKind"><span class="Identifier">YamlTokenKind</span></a>
+  <dt><pre><a href="#YamlToken"><span class="Identifier">YamlToken</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="#YamlTokenKind"><span class="Identifier">YamlTokenKind</span></a>
   <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">line</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
   <span class="Identifier">col</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
@@ -303,7 +306,7 @@
   </dd>
 </div>
 <div id="YamlTokenKind">
-  <dt><pre><a href="yaml.html#YamlTokenKind"><span class="Identifier">YamlTokenKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#YamlTokenKind"><span class="Identifier">YamlTokenKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">ytkEOF</span> <span class="Other">=</span> <span class="StringLit">&quot;EOF&quot;</span><span class="Other">,</span> <span class="Identifier">ytkIdentifier</span> <span class="Other">=</span> <span class="StringLit">&quot;Identifier&quot;</span><span class="Other">,</span> <span class="Identifier">ytkColon</span> <span class="Other">=</span> <span class="StringLit">&quot;:&quot;</span><span class="Other">,</span> <span class="Identifier">ytkComma</span> <span class="Other">=</span> <span class="StringLit">&quot;,&quot;</span><span class="Other">,</span>
   <span class="Identifier">ytkDash</span> <span class="Other">=</span> <span class="StringLit">&quot;-&quot;</span><span class="Other">,</span> <span class="Identifier">ytkLB</span> <span class="Other">=</span> <span class="StringLit">&quot;[&quot;</span><span class="Other">,</span> <span class="Identifier">ytkRB</span> <span class="Other">=</span> <span class="StringLit">&quot;]&quot;</span><span class="Other">,</span> <span class="Identifier">ytkLC</span> <span class="Other">=</span> <span class="StringLit">&quot;{&quot;</span><span class="Other">,</span> <span class="Identifier">ytkRC</span> <span class="Other">=</span> <span class="StringLit">&quot;}&quot;</span><span class="Other">,</span>
   <span class="Identifier">ytkPipe</span> <span class="Other">=</span> <span class="StringLit">&quot;|&quot;</span><span class="Other">,</span> <span class="Identifier">ytkGT</span> <span class="Other">=</span> <span class="StringLit">&quot;&gt;&quot;</span><span class="Other">,</span> <span class="Identifier">ytkQuote</span> <span class="Other">=</span> <span class="StringLit">&quot;\&quot;&quot;</span><span class="Other">,</span> <span class="Identifier">ytkSingleQuote</span> <span class="Other">=</span> <span class="StringLit">&quot;\'&quot;</span><span class="Other">,</span> <span class="Identifier">ytkString</span><span class="Other">,</span>
@@ -315,7 +318,7 @@
   </dd>
 </div>
 <div id="YamlValueKind">
-  <dt><pre><a href="yaml.html#YamlValueKind"><span class="Identifier">YamlValueKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#YamlValueKind"><span class="Identifier">YamlValueKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">yamlInteger</span><span class="Other">,</span> <span class="Identifier">yamlFloat</span><span class="Other">,</span> <span class="Identifier">yamlString</span><span class="Other">,</span> <span class="Identifier">yamlBoolean</span><span class="Other">,</span> <span class="Identifier">yamlObject</span><span class="Other">,</span> <span class="Identifier">yamlArray</span><span class="Other">,</span>
   <span class="Identifier">yamlNull</span></pre></dt>
   <dd>
@@ -332,7 +335,7 @@
   <dl class="item">
     <div id="$-procs-all">
   <div id="$,YAMLObject">
-  <dt><pre><span class="Keyword">proc</span> <a href="#%24%2CYAMLObject"><span class="Identifier">`$`</span></a><span class="Other">(</span><span class="Identifier">yamlObject</span><span class="Other">:</span> <a href="yaml.html#YAMLObject"><span class="Identifier">YAMLObject</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#%24%2CYAMLObject"><span class="Identifier">`$`</span></a><span class="Other">(</span><span class="Identifier">yamlObject</span><span class="Other">:</span> <a href="#YAMLObject"><span class="Identifier">YAMLObject</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Return a JSON string representation of the YAMLObject
@@ -343,7 +346,7 @@
 </div>
 <div id="dumpHook-procs-all">
   <div id="dumpHook,string,YamlNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#dumpHook%2Cstring%2CYamlNode"><span class="Identifier">dumpHook</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#dumpHook%2Cstring%2CYamlNode"><span class="Identifier">dumpHook</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -354,7 +357,7 @@
 </div>
 <div id="get-procs-all">
   <div id="get,YamlNode,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#get%2CYamlNode%2Cstring"><span class="Identifier">get</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">;</span> <span class="Identifier">key</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#get%2CYamlNode%2Cstring"><span class="Identifier">get</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">;</span> <span class="Identifier">key</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -363,7 +366,7 @@
   </dd>
 </div>
 <div id="get,YAMLObject,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#get%2CYAMLObject%2Cstring"><span class="Identifier">get</span></a><span class="Other">(</span><span class="Identifier">obj</span><span class="Other">:</span> <a href="yaml.html#YAMLObject"><span class="Identifier">YAMLObject</span></a><span class="Other">;</span> <span class="Identifier">key</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#get%2CYAMLObject%2Cstring"><span class="Identifier">get</span></a><span class="Other">(</span><span class="Identifier">obj</span><span class="Other">:</span> <a href="#YAMLObject"><span class="Identifier">YAMLObject</span></a><span class="Other">;</span> <span class="Identifier">key</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -375,7 +378,7 @@
 </div>
 <div id="getArray-procs-all">
   <div id="getArray,YamlNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#getArray%2CYamlNode"><span class="Identifier">getArray</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#getArray%2CYamlNode"><span class="Identifier">getArray</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Get array value or empty seq if not an array node
@@ -386,7 +389,7 @@
 </div>
 <div id="getBool-procs-all">
   <div id="getBool,YamlNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#getBool%2CYamlNode"><span class="Identifier">getBool</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#getBool%2CYamlNode"><span class="Identifier">getBool</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Get boolean value or false if not a boolean node
@@ -397,7 +400,7 @@
 </div>
 <div id="getFloat-procs-all">
   <div id="getFloat,YamlNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#getFloat%2CYamlNode"><span class="Identifier">getFloat</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">float64</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#getFloat%2CYamlNode"><span class="Identifier">getFloat</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">float64</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Get float value or 0.0 if not a float node
@@ -408,7 +411,7 @@
 </div>
 <div id="getInt-procs-all">
   <div id="getInt,YamlNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#getInt%2CYamlNode"><span class="Identifier">getInt</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int64</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#getInt%2CYamlNode"><span class="Identifier">getInt</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int64</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Get integer value or 0 if not an integer node
@@ -419,7 +422,7 @@
 </div>
 <div id="getObject-procs-all">
   <div id="getObject,YamlNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#getObject%2CYamlNode"><span class="Identifier">getObject</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">OrderedTableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#getObject%2CYamlNode"><span class="Identifier">getObject</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">OrderedTableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -431,7 +434,7 @@
 </div>
 <div id="getStr-procs-all">
   <div id="getStr,YamlNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#getStr%2CYamlNode"><span class="Identifier">getStr</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#getStr%2CYamlNode"><span class="Identifier">getStr</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Get string value or &quot;&quot; if not a string node
@@ -442,7 +445,7 @@
 </div>
 <div id="getValue-procs-all">
   <div id="getValue,YamlNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#getValue%2CYamlNode"><span class="Identifier">getValue</span></a><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#getValue%2CYamlNode"><span class="Identifier">getValue</span></a><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Get the string representation of a YamlNode value (for debugging)
@@ -453,7 +456,7 @@
 </div>
 <div id="newYamlArray-procs-all">
   <div id="newYamlArray">
-  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlArray"><span class="Identifier">newYamlArray</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlArray"><span class="Identifier">newYamlArray</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Create a new YamlNode of kind yamlArray
@@ -464,7 +467,7 @@
 </div>
 <div id="newYamlBoolean-procs-all">
   <div id="newYamlBoolean,bool">
-  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlBoolean%2Cbool"><span class="Identifier">newYamlBoolean</span></a><span class="Other">(</span><span class="Identifier">b</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlBoolean%2Cbool"><span class="Identifier">newYamlBoolean</span></a><span class="Other">(</span><span class="Identifier">b</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Create a new YamlNode of kind yamlBoolean
@@ -475,7 +478,7 @@
 </div>
 <div id="newYamlFloat-procs-all">
   <div id="newYamlFloat,float64">
-  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlFloat%2Cfloat64"><span class="Identifier">newYamlFloat</span></a><span class="Other">(</span><span class="Identifier">f</span><span class="Other">:</span> <span class="Identifier">float64</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlFloat%2Cfloat64"><span class="Identifier">newYamlFloat</span></a><span class="Other">(</span><span class="Identifier">f</span><span class="Other">:</span> <span class="Identifier">float64</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Create a new YamlNode of kind yamlFloat
@@ -486,7 +489,7 @@
 </div>
 <div id="newYamlInteger-procs-all">
   <div id="newYamlInteger,int64">
-  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlInteger%2Cint64"><span class="Identifier">newYamlInteger</span></a><span class="Other">(</span><span class="Identifier">i</span><span class="Other">:</span> <span class="Identifier">int64</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlInteger%2Cint64"><span class="Identifier">newYamlInteger</span></a><span class="Other">(</span><span class="Identifier">i</span><span class="Other">:</span> <span class="Identifier">int64</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Create a new YamlNode of kind yamlInteger
@@ -497,7 +500,7 @@
 </div>
 <div id="newYamlLexer-procs-all">
   <div id="newYamlLexer,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlLexer%2Cstring"><span class="Identifier">newYamlLexer</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlLexer"><span class="Identifier">YamlLexer</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlLexer%2Cstring"><span class="Identifier">newYamlLexer</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlLexer"><span class="Identifier">YamlLexer</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Create a new YamlLexer for the given input string
@@ -508,7 +511,7 @@
 </div>
 <div id="newYamlNull-procs-all">
   <div id="newYamlNull">
-  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlNull"><span class="Identifier">newYamlNull</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlNull"><span class="Identifier">newYamlNull</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Create a new YamlNode of kind yamlNull
@@ -519,7 +522,7 @@
 </div>
 <div id="newYamlObject-procs-all">
   <div id="newYamlObject">
-  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlObject"><span class="Identifier">newYamlObject</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlObject"><span class="Identifier">newYamlObject</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Create a new YamlNode of kind yamlObject
@@ -530,7 +533,7 @@
 </div>
 <div id="newYamlString-procs-all">
   <div id="newYamlString,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlString%2Cstring"><span class="Identifier">newYamlString</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#newYamlString%2Cstring"><span class="Identifier">newYamlString</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Create a new YamlNode of kind yamlString
@@ -541,7 +544,7 @@
 </div>
 <div id="nextToken-procs-all">
   <div id="nextToken,YamlParser">
-  <dt><pre><span class="Keyword">proc</span> <a href="#nextToken%2CYamlParser"><span class="Identifier">nextToken</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YamlToken"><span class="Identifier">YamlToken</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#nextToken%2CYamlParser"><span class="Identifier">nextToken</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#YamlToken"><span class="Identifier">YamlToken</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -553,7 +556,7 @@
 </div>
 <div id="parseHook-procs-all">
   <div id="parseHook,YamlParser,bool">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2Cbool"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">bool</span><span class="Other">)</span> {.
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2Cbool"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">bool</span><span class="Other">)</span> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -562,7 +565,7 @@
   </dd>
 </div>
 <div id="parseHook,YamlParser,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2Cstring"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">)</span> {.
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2Cstring"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">)</span> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -571,7 +574,7 @@
   </dd>
 </div>
 <div id="parseHook,YamlParser,T_3">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2CT_3"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">enum</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2CT_3"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">enum</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     A hook to parse enum fields
@@ -579,7 +582,7 @@
   </dd>
 </div>
 <div id="parseHook,YamlParser,T">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2CT"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Identifier">float</span> <span class="Operator">|</span> <span class="Identifier">float32</span> <span class="Operator">|</span> <span class="Identifier">float64</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2CT"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Identifier">float</span> <span class="Operator">|</span> <span class="Identifier">float32</span> <span class="Operator">|</span> <span class="Identifier">float64</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -587,7 +590,7 @@
   </dd>
 </div>
 <div id="parseHook,YamlParser,T_2">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2CT_2"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <a href="private/types.html#Integers"><span class="Identifier">Integers</span></a><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2CT_2"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <a href="private/types.html#Integers"><span class="Identifier">Integers</span></a><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     A hook to parse integer fields
@@ -595,7 +598,7 @@
   </dd>
 </div>
 <div id="parseHook,YamlParser,set[T]">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2Cset%5BT%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">set</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2Cset%5BT%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">set</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
   <dd>
     
     A hook to parse set fields from JSON arrays
@@ -606,7 +609,7 @@
 </div>
 <div id="parseYAML-procs-all">
   <div id="parseYAML,YAML">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAML%2CYAML"><span class="Identifier">parseYAML</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="yaml.html#YAML"><span class="Identifier">YAML</span></a><span class="Other">)</span><span class="Other">:</span> <a href="yaml.html#YAMLObject"><span class="Identifier">YAMLObject</span></a> {.
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAML%2CYAML"><span class="Identifier">parseYAML</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="#YAML"><span class="Identifier">YAML</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#YAMLObject"><span class="Identifier">YAMLObject</span></a> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -615,7 +618,7 @@
   </dd>
 </div>
 <div id="parseYAML,YamlParser,T">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAML%2CYamlParser%2CT"><span class="Identifier">parseYAML</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">object</span> <span class="Operator">|</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="yaml.html#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAML%2CYamlParser%2CT"><span class="Identifier">parseYAML</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">object</span> <span class="Operator">|</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -623,7 +626,7 @@
   </dd>
 </div>
 <div id="parseYAML,YAML,typedesc[T]">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAML%2CYAML%2Ctypedesc%5BT%5D"><span class="Identifier">parseYAML</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="yaml.html#YAML"><span class="Identifier">YAML</span></a><span class="Other">;</span> <span class="Identifier">t</span><span class="Other">:</span> <span class="Identifier">typedesc</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">T</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAML%2CYAML%2Ctypedesc%5BT%5D"><span class="Identifier">parseYAML</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="#YAML"><span class="Identifier">YAML</span></a><span class="Other">;</span> <span class="Identifier">t</span><span class="Other">:</span> <span class="Identifier">typedesc</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">T</span></pre></dt>
   <dd>
     
     Parse YAML string into a Nim object or sequence of type <tt class="docutils literal"><span class="pre"><span class="Identifier">T</span></span></tt>
@@ -634,7 +637,7 @@
 </div>
 <div id="put-procs-all">
   <div id="put,YAMLObject,string,YamlNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#put%2CYAMLObject%2Cstring%2CYamlNode"><span class="Identifier">put</span></a><span class="Other">(</span><span class="Identifier">obj</span><span class="Other">:</span> <a href="yaml.html#YAMLObject"><span class="Identifier">YAMLObject</span></a><span class="Other">;</span> <span class="Identifier">key</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">value</span><span class="Other">:</span> <a href="yaml.html#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#put%2CYAMLObject%2Cstring%2CYamlNode"><span class="Identifier">put</span></a><span class="Other">(</span><span class="Identifier">obj</span><span class="Other">:</span> <a href="#YAMLObject"><span class="Identifier">YAMLObject</span></a><span class="Other">;</span> <span class="Identifier">key</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">value</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -654,7 +657,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-23 22:58:47 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-25 13:17:57 UTC</small>
       </div>
     </div>
   </div>

@@ -16,13 +16,16 @@
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4QQQEwksSS9ZWwAAAk1JREFUWMPtll2ITVEUx39nn/O7Y5qR8f05wtCUUr6ZIS++8pEnkZInPImneaCQ5METNdOkeFBKUhMPRIkHKfEuUZSUlGlKPN2TrgfncpvmnntnmlEyq1Z7t89/rf9a6+y99oZxGZf/XeIq61EdtgKXgdXA0xrYAvBjOIF1AI9zvjcC74BSpndrJPkBWDScTF8Aa4E3wDlgHbASaANmVqlcCnwHvgDvgVfAJ+AikAAvgfVZwLnSVZHZaOuKoQi3ZOMi4NkYkpe1p4J7A8BpYAD49hfIy/oqG0+hLomiKP2L5L+1ubn5115S+3OAn4EnwBlgMzCjyt6ZAnQCJ4A7wOs88iRJHvw50HoujuPBoCKwHWiosy8MdfZnAdcHk8dxXFJ3VQbQlCTJvRBCGdRbD4M6uc5glpY3eAihpN5S5w12diSEcCCEcKUO4ljdr15T76ur1FDDLIQQ3qv71EdDOe3Kxj3leRXyk+pxdWnFWod6Wt2bY3de3aSuUHcPBVimHs7mK9WrmeOF6lR1o9qnzskh2ar2qm1qizpfXaPeVGdlmGN5pb09qMxz1Xb1kLqgzn1RyH7JUXW52lr5e/Kqi9qpto7V1atuUzfnARrV7jEib1T76gG2qxdGmXyiekkt1GswPTtek0aBfJp6YySGBfWg2tPQ0FAYgf1stUfdmdcjarbYJEniKIq6gY/Aw+zWHAC+p2labGpqiorFYgGYCEzN7oQdQClN07O1/EfDyGgC0ALMBdYAi4FyK+4H3gLPsxfR1zRNi+NP7nH5J+QntnXe5B5mpfQAAAAASUVORK5CYII=">
 
 <!-- CSS -->
-<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.8">
+<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.10">
 
 <!-- JS -->
-<script type="text/javascript" src="../dochack.js?v=2.2.8"></script>
+<script type="text/javascript" src="../dochack.js?v=2.2.10"></script>
 </head>
 <body>
   <div class="document" id="documentId">
+    <input type="checkbox" id="nav-toggle" hidden>
+    <label for="nav-toggle" id="nav-burger">&#9776;</label>
+    <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">openparser/feed</h1>
       <div class="row">
@@ -163,7 +166,7 @@
   <h1><a class="toc-backref" href="#7">Types</a></h1>
   <dl class="item">
     <div id="AtomCategory">
-  <dt><pre><a href="feed.html#AtomCategory"><span class="Identifier">AtomCategory</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#AtomCategory"><span class="Identifier">AtomCategory</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">term</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">scheme</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">label</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span></pre></dt>
@@ -174,7 +177,7 @@
   </dd>
 </div>
 <div id="AtomContent">
-  <dt><pre><a href="feed.html#AtomContent"><span class="Identifier">AtomContent</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#AtomContent"><span class="Identifier">AtomContent</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">src</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span></pre></dt>
@@ -185,17 +188,17 @@
   </dd>
 </div>
 <div id="AtomEntry">
-  <dt><pre><a href="feed.html#AtomEntry"><span class="Identifier">AtomEntry</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#AtomEntry"><span class="Identifier">AtomEntry</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">id</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">title</span><span class="Operator">*</span><span class="Other">:</span> <a href="feed.html#AtomText"><span class="Identifier">AtomText</span></a>
+  <span class="Identifier">title</span><span class="Operator">*</span><span class="Other">:</span> <a href="#AtomText"><span class="Identifier">AtomText</span></a>
   <span class="Identifier">updated</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">authors</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="feed.html#AtomPerson"><span class="Identifier">AtomPerson</span></a><span class="Other">]</span>
-  <span class="Identifier">contributors</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="feed.html#AtomPerson"><span class="Identifier">AtomPerson</span></a><span class="Other">]</span>
-  <span class="Identifier">links</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="feed.html#AtomLink"><span class="Identifier">AtomLink</span></a><span class="Other">]</span>
-  <span class="Identifier">categories</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="feed.html#AtomCategory"><span class="Identifier">AtomCategory</span></a><span class="Other">]</span>
-  <span class="Identifier">summary</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="feed.html#AtomText"><span class="Identifier">AtomText</span></a><span class="Other">]</span>
-  <span class="Identifier">content</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="feed.html#AtomContent"><span class="Identifier">AtomContent</span></a><span class="Other">]</span>
-  <span class="Identifier">rights</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="feed.html#AtomText"><span class="Identifier">AtomText</span></a><span class="Other">]</span>
+  <span class="Identifier">authors</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#AtomPerson"><span class="Identifier">AtomPerson</span></a><span class="Other">]</span>
+  <span class="Identifier">contributors</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#AtomPerson"><span class="Identifier">AtomPerson</span></a><span class="Other">]</span>
+  <span class="Identifier">links</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#AtomLink"><span class="Identifier">AtomLink</span></a><span class="Other">]</span>
+  <span class="Identifier">categories</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#AtomCategory"><span class="Identifier">AtomCategory</span></a><span class="Other">]</span>
+  <span class="Identifier">summary</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="#AtomText"><span class="Identifier">AtomText</span></a><span class="Other">]</span>
+  <span class="Identifier">content</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="#AtomContent"><span class="Identifier">AtomContent</span></a><span class="Other">]</span>
+  <span class="Identifier">rights</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="#AtomText"><span class="Identifier">AtomText</span></a><span class="Other">]</span>
   <span class="Identifier">published</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span></pre></dt>
   <dd>
     
@@ -204,20 +207,20 @@
   </dd>
 </div>
 <div id="AtomFeed">
-  <dt><pre><a href="feed.html#AtomFeed"><span class="Identifier">AtomFeed</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#AtomFeed"><span class="Identifier">AtomFeed</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">id</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">title</span><span class="Operator">*</span><span class="Other">:</span> <a href="feed.html#AtomText"><span class="Identifier">AtomText</span></a>
+  <span class="Identifier">title</span><span class="Operator">*</span><span class="Other">:</span> <a href="#AtomText"><span class="Identifier">AtomText</span></a>
   <span class="Identifier">updated</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">authors</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="feed.html#AtomPerson"><span class="Identifier">AtomPerson</span></a><span class="Other">]</span>
-  <span class="Identifier">contributors</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="feed.html#AtomPerson"><span class="Identifier">AtomPerson</span></a><span class="Other">]</span>
-  <span class="Identifier">links</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="feed.html#AtomLink"><span class="Identifier">AtomLink</span></a><span class="Other">]</span>
-  <span class="Identifier">categories</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="feed.html#AtomCategory"><span class="Identifier">AtomCategory</span></a><span class="Other">]</span>
-  <span class="Identifier">subtitle</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="feed.html#AtomText"><span class="Identifier">AtomText</span></a><span class="Other">]</span>
-  <span class="Identifier">rights</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="feed.html#AtomText"><span class="Identifier">AtomText</span></a><span class="Other">]</span>
-  <span class="Identifier">generator</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="feed.html#AtomGenerator"><span class="Identifier">AtomGenerator</span></a><span class="Other">]</span>
+  <span class="Identifier">authors</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#AtomPerson"><span class="Identifier">AtomPerson</span></a><span class="Other">]</span>
+  <span class="Identifier">contributors</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#AtomPerson"><span class="Identifier">AtomPerson</span></a><span class="Other">]</span>
+  <span class="Identifier">links</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#AtomLink"><span class="Identifier">AtomLink</span></a><span class="Other">]</span>
+  <span class="Identifier">categories</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#AtomCategory"><span class="Identifier">AtomCategory</span></a><span class="Other">]</span>
+  <span class="Identifier">subtitle</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="#AtomText"><span class="Identifier">AtomText</span></a><span class="Other">]</span>
+  <span class="Identifier">rights</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="#AtomText"><span class="Identifier">AtomText</span></a><span class="Other">]</span>
+  <span class="Identifier">generator</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="#AtomGenerator"><span class="Identifier">AtomGenerator</span></a><span class="Other">]</span>
   <span class="Identifier">icon</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">logo</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
-  <span class="Identifier">entries</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="feed.html#AtomEntry"><span class="Identifier">AtomEntry</span></a><span class="Other">]</span>
+  <span class="Identifier">entries</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#AtomEntry"><span class="Identifier">AtomEntry</span></a><span class="Other">]</span>
   <span class="Identifier">lang</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">base</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span></pre></dt>
   <dd>
@@ -227,7 +230,7 @@
   </dd>
 </div>
 <div id="AtomGenerator">
-  <dt><pre><a href="feed.html#AtomGenerator"><span class="Identifier">AtomGenerator</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#AtomGenerator"><span class="Identifier">AtomGenerator</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">uri</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">version</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span></pre></dt>
@@ -238,7 +241,7 @@
   </dd>
 </div>
 <div id="AtomLink">
-  <dt><pre><a href="feed.html#AtomLink"><span class="Identifier">AtomLink</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#AtomLink"><span class="Identifier">AtomLink</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">href</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">rel</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">mimeType</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
@@ -252,7 +255,7 @@
   </dd>
 </div>
 <div id="AtomParsingError">
-  <dt><pre><a href="feed.html#AtomParsingError"><span class="Identifier">AtomParsingError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">CatchableError</span></pre></dt>
+  <dt><pre><a href="#AtomParsingError"><span class="Identifier">AtomParsingError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">CatchableError</span></pre></dt>
   <dd>
     
     
@@ -260,7 +263,7 @@
   </dd>
 </div>
 <div id="AtomPerson">
-  <dt><pre><a href="feed.html#AtomPerson"><span class="Identifier">AtomPerson</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#AtomPerson"><span class="Identifier">AtomPerson</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">name</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">uri</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>
   <span class="Identifier">email</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span></pre></dt>
@@ -271,7 +274,7 @@
   </dd>
 </div>
 <div id="AtomText">
-  <dt><pre><a href="feed.html#AtomText"><span class="Identifier">AtomText</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#AtomText"><span class="Identifier">AtomText</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
   <dd>
@@ -281,7 +284,7 @@
   </dd>
 </div>
 <div id="AtomValidationError">
-  <dt><pre><a href="feed.html#AtomValidationError"><span class="Identifier">AtomValidationError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">CatchableError</span></pre></dt>
+  <dt><pre><a href="#AtomValidationError"><span class="Identifier">AtomValidationError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">CatchableError</span></pre></dt>
   <dd>
     
     
@@ -295,7 +298,7 @@
   <h1><a class="toc-backref" href="#10">Consts</a></h1>
   <dl class="item">
     <div id="AtomNs">
-  <dt><pre><a href="feed.html#AtomNs"><span class="Identifier">AtomNs</span></a> <span class="Other">=</span> <span class="StringLit">&quot;http://www.w3.org/2005/Atom&quot;</span></pre></dt>
+  <dt><pre><a href="#AtomNs"><span class="Identifier">AtomNs</span></a> <span class="Other">=</span> <span class="StringLit">&quot;http://www.w3.org/2005/Atom&quot;</span></pre></dt>
   <dd>
     
     
@@ -310,7 +313,7 @@
   <dl class="item">
     <div id="fetchAtom-procs-all">
   <div id="fetchAtom,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#fetchAtom%2Cstring"><span class="Identifier">fetchAtom</span></a><span class="Other">(</span><span class="Identifier">url</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="feed.html#AtomFeed"><span class="Identifier">AtomFeed</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#fetchAtom%2Cstring"><span class="Identifier">fetchAtom</span></a><span class="Other">(</span><span class="Identifier">url</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#AtomFeed"><span class="Identifier">AtomFeed</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span>
     <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">XmlError</span><span class="Other">,</span> <span class="Identifier">AtomParsingError</span><span class="Other">,</span> <span class="Identifier">AtomValidationError</span><span class="Other">,</span>
     <span class="Identifier">HttpRequestError</span><span class="Other">,</span> <span class="Identifier">LibraryError</span><span class="Other">,</span> <span class="Identifier">SslError</span><span class="Other">,</span> <span class="Identifier">TimeoutError</span><span class="Other">,</span> <span class="Identifier">ProtocolError</span><span class="Other">,</span>
     <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
@@ -325,7 +328,7 @@
 </div>
 <div id="parseAtom-procs-all">
   <div id="parseAtom,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseAtom%2Cstring"><span class="Identifier">parseAtom</span></a><span class="Other">(</span><span class="Identifier">xml</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="feed.html#AtomFeed"><span class="Identifier">AtomFeed</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseAtom%2Cstring"><span class="Identifier">parseAtom</span></a><span class="Other">(</span><span class="Identifier">xml</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#AtomFeed"><span class="Identifier">AtomFeed</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span>
     <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">XmlError</span><span class="Other">,</span> <span class="Identifier">AtomParsingError</span><span class="Other">,</span> <span class="Identifier">AtomValidationError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
     <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
@@ -338,7 +341,7 @@
 </div>
 <div id="readAtom-procs-all">
   <div id="readAtom,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#readAtom%2Cstring"><span class="Identifier">readAtom</span></a><span class="Other">(</span><span class="Identifier">filePath</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="feed.html#AtomFeed"><span class="Identifier">AtomFeed</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#readAtom%2Cstring"><span class="Identifier">readAtom</span></a><span class="Other">(</span><span class="Identifier">filePath</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#AtomFeed"><span class="Identifier">AtomFeed</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span>
     <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">XmlError</span><span class="Other">,</span> <span class="Identifier">AtomParsingError</span><span class="Other">,</span> <span class="Identifier">AtomValidationError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
@@ -351,7 +354,7 @@
 </div>
 <div id="toAtomXml-procs-all">
   <div id="toAtomXml,AtomFeed">
-  <dt><pre><span class="Keyword">proc</span> <a href="#toAtomXml%2CAtomFeed"><span class="Identifier">toAtomXml</span></a><span class="Other">(</span><span class="Identifier">feed</span><span class="Other">:</span> <a href="feed.html#AtomFeed"><span class="Identifier">AtomFeed</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">AtomValidationError</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#toAtomXml%2CAtomFeed"><span class="Identifier">toAtomXml</span></a><span class="Other">(</span><span class="Identifier">feed</span><span class="Other">:</span> <a href="#AtomFeed"><span class="Identifier">AtomFeed</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">AtomValidationError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -371,7 +374,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-23 22:58:47 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-25 13:17:57 UTC</small>
       </div>
     </div>
   </div>

@@ -16,13 +16,16 @@
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4QQQEwksSS9ZWwAAAk1JREFUWMPtll2ITVEUx39nn/O7Y5qR8f05wtCUUr6ZIS++8pEnkZInPImneaCQ5METNdOkeFBKUhMPRIkHKfEuUZSUlGlKPN2TrgfncpvmnntnmlEyq1Z7t89/rf9a6+y99oZxGZf/XeIq61EdtgKXgdXA0xrYAvBjOIF1AI9zvjcC74BSpndrJPkBWDScTF8Aa4E3wDlgHbASaANmVqlcCnwHvgDvgVfAJ+AikAAvgfVZwLnSVZHZaOuKoQi3ZOMi4NkYkpe1p4J7A8BpYAD49hfIy/oqG0+hLomiKP2L5L+1ubn5115S+3OAn4EnwBlgMzCjyt6ZAnQCJ4A7wOs88iRJHvw50HoujuPBoCKwHWiosy8MdfZnAdcHk8dxXFJ3VQbQlCTJvRBCGdRbD4M6uc5glpY3eAihpN5S5w12diSEcCCEcKUO4ljdr15T76ur1FDDLIQQ3qv71EdDOe3Kxj3leRXyk+pxdWnFWod6Wt2bY3de3aSuUHcPBVimHs7mK9WrmeOF6lR1o9qnzskh2ar2qm1qizpfXaPeVGdlmGN5pb09qMxz1Xb1kLqgzn1RyH7JUXW52lr5e/Kqi9qpto7V1atuUzfnARrV7jEib1T76gG2qxdGmXyiekkt1GswPTtek0aBfJp6YySGBfWg2tPQ0FAYgf1stUfdmdcjarbYJEniKIq6gY/Aw+zWHAC+p2labGpqiorFYgGYCEzN7oQdQClN07O1/EfDyGgC0ALMBdYAi4FyK+4H3gLPsxfR1zRNi+NP7nH5J+QntnXe5B5mpfQAAAAASUVORK5CYII=">
 
 <!-- CSS -->
-<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.8">
+<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.10">
 
 <!-- JS -->
-<script type="text/javascript" src="../dochack.js?v=2.2.8"></script>
+<script type="text/javascript" src="../dochack.js?v=2.2.10"></script>
 </head>
 <body>
   <div class="document" id="documentId">
+    <input type="checkbox" id="nav-toggle" hidden>
+    <label for="nav-toggle" id="nav-burger">&#9776;</label>
+    <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">openparser/json</h1>
       <div class="row">
@@ -92,7 +95,8 @@
 
 </ul>
 <ul class="simple nested-toc-section">dumpHook
-  <li><a class="reference" href="#dumpHook%2Cstring%2C_4" title="dumpHook(s: var string; v: enum)">dumpHook(s: var string; v: enum)</a></li>
+  <li><a class="reference" href="#dumpHook%2Cstring%2Cchar" title="dumpHook(s: var string; v: char)">dumpHook(s: var string; v: char)</a></li>
+<li><a class="reference" href="#dumpHook%2Cstring%2C_4" title="dumpHook(s: var string; v: enum)">dumpHook(s: var string; v: enum)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2CJsonNode" title="dumpHook(s: var string; v: JsonNode)">dumpHook(s: var string; v: JsonNode)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2Cbool" title="dumpHook(s: var string; val: bool)">dumpHook(s: var string; val: bool)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2C" title="dumpHook(s: var string; val: float32 | float64)">dumpHook(s: var string; val: float32 | float64)</a></li>
@@ -106,6 +110,7 @@
 <li><a class="reference" href="#dumpHook%2Cstring%2Carray%5BN%2CT%5D" title="dumpHook[N, T](s: var string; v: array[N, T])">dumpHook[N, T](s: var string; v: array[N, T])</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2CT" title="dumpHook[T: distinct](s: var string; v: T)">dumpHook[T: distinct](s: var string; v: T)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2Cseq%5BT%5D" title="dumpHook[T](s: var string; arr: seq[T])">dumpHook[T](s: var string; arr: seq[T])</a></li>
+<li><a class="reference" href="#dumpHook%2Cstring%2CCritBitTree%5BT%5D" title="dumpHook[T](s: var string; v: CritBitTree[T])">dumpHook[T](s: var string; v: CritBitTree[T])</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2COption%5BT%5D" title="dumpHook[T](s: var string; v: Option[T])">dumpHook[T](s: var string; v: Option[T])</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2Cref.T" title="dumpHook[T](s: var string; val: ref T)">dumpHook[T](s: var string; val: ref T)</a></li>
 <li><a class="reference" href="#dumpHook%2Cstring%2Cset%5BT%5D" title="dumpHook[T](s: var string; val: set[T])">dumpHook[T](s: var string; val: set[T])</a></li>
@@ -217,7 +222,7 @@
   <h1><a class="toc-backref" href="#7">Types</a></h1>
   <dl class="item">
     <div id="JsonOptions">
-  <dt><pre><a href="json.html#JsonOptions"><span class="Identifier">JsonOptions</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#JsonOptions"><span class="Identifier">JsonOptions</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
   <span class="Identifier">skipFields</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span>   <span class="Comment">## Fields to skip during serialization</span></pre></dt>
   <dd>
     
@@ -226,8 +231,8 @@
   </dd>
 </div>
 <div id="JsonParser">
-  <dt><pre><a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
-  <span class="Identifier">prev</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">curr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">next</span><span class="Operator">*</span><span class="Other">:</span> <a href="json.html#JsonToken"><span class="Identifier">JsonToken</span></a>
+  <dt><pre><a href="#JsonParser"><span class="Identifier">JsonParser</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <span class="Identifier">prev</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">curr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">next</span><span class="Operator">*</span><span class="Other">:</span> <a href="#JsonToken"><span class="Identifier">JsonToken</span></a>
   <span class="Identifier">currentField</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Comment">## The name of the current field being parsed, if applicable. This is set</span>
                                 <span class="Comment">## before calling parseHook for a field value, allowing parseHooks to have</span>
                                 <span class="Comment">## context about which field they are parsing</span></pre></dt>
@@ -238,8 +243,8 @@
   </dd>
 </div>
 <div id="JsonToken">
-  <dt><pre><a href="json.html#JsonToken"><span class="Identifier">JsonToken</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
-  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="json.html#JsonTokenKind"><span class="Identifier">JsonTokenKind</span></a>
+  <dt><pre><a href="#JsonToken"><span class="Identifier">JsonToken</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="#JsonTokenKind"><span class="Identifier">JsonTokenKind</span></a>
   <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">line</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">col</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">pos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
   <dd>
@@ -249,7 +254,7 @@
   </dd>
 </div>
 <div id="JsonTokenKind">
-  <dt><pre><a href="json.html#JsonTokenKind"><span class="Identifier">JsonTokenKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#JsonTokenKind"><span class="Identifier">JsonTokenKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">jtkEof</span> <span class="Other">=</span> <span class="StringLit">&quot;&lt;EOF&gt;&quot;</span><span class="Other">,</span> <span class="Identifier">jtkLBrace</span> <span class="Other">=</span> <span class="StringLit">&quot;{&quot;</span><span class="Other">,</span> <span class="Identifier">jtkRBrace</span> <span class="Other">=</span> <span class="StringLit">&quot;}&quot;</span><span class="Other">,</span> <span class="Identifier">jtkLBracket</span> <span class="Other">=</span> <span class="StringLit">&quot;[&quot;</span><span class="Other">,</span>
   <span class="Identifier">jtkRBracket</span> <span class="Other">=</span> <span class="StringLit">&quot;]&quot;</span><span class="Other">,</span> <span class="Identifier">jtkComma</span> <span class="Other">=</span> <span class="StringLit">&quot;,&quot;</span><span class="Other">,</span> <span class="Identifier">jtkColon</span> <span class="Other">=</span> <span class="StringLit">&quot;:&quot;</span><span class="Other">,</span> <span class="Identifier">jtkString</span> <span class="Other">=</span> <span class="StringLit">&quot;&lt;string&gt;&quot;</span><span class="Other">,</span>
   <span class="Identifier">jtkNumber</span> <span class="Other">=</span> <span class="StringLit">&quot;&lt;number&gt;&quot;</span><span class="Other">,</span> <span class="Identifier">jtkTrue</span> <span class="Other">=</span> <span class="StringLit">&quot;&lt;true&gt;&quot;</span><span class="Other">,</span> <span class="Identifier">jtkFalse</span> <span class="Other">=</span> <span class="StringLit">&quot;&lt;false&gt;&quot;</span><span class="Other">,</span>
@@ -261,7 +266,7 @@
   </dd>
 </div>
 <div id="OpenParserJsonError">
-  <dt><pre><a href="json.html#OpenParserJsonError"><span class="Identifier">OpenParserJsonError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">CatchableError</span></pre></dt>
+  <dt><pre><a href="#OpenParserJsonError"><span class="Identifier">OpenParserJsonError</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">CatchableError</span></pre></dt>
   <dd>
     
     
@@ -276,7 +281,7 @@
   <dl class="item">
     <div id="advance-procs-all">
   <div id="advance,JsonParser">
-  <dt><pre><span class="Keyword">proc</span> <a href="#advance%2CJsonParser"><span class="Identifier">advance</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="json.html#JsonToken"><span class="Identifier">JsonToken</span></a> {.<span class="Identifier">discardable</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#advance%2CJsonParser"><span class="Identifier">advance</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#JsonToken"><span class="Identifier">JsonToken</span></a> {.<span class="Identifier">discardable</span><span class="Other">,</span>
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserJsonError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -288,7 +293,7 @@
 </div>
 <div id="arrayToJson-procs-all">
   <div id="arrayToJson,NimNode,NimNode,JsonOptions">
-  <dt><pre><span class="Keyword">proc</span> <a href="#arrayToJson%2CNimNode%2CNimNode%2CJsonOptions"><span class="Identifier">arrayToJson</span></a><span class="Other">(</span><span class="Identifier">v</span><span class="Other">,</span> <span class="Identifier">valImpl</span><span class="Other">:</span> <span class="Identifier">NimNode</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="json.html#JsonOptions"><span class="Identifier">JsonOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">NimNode</span> {.
+  <dt><pre><span class="Keyword">proc</span> <a href="#arrayToJson%2CNimNode%2CNimNode%2CJsonOptions"><span class="Identifier">arrayToJson</span></a><span class="Other">(</span><span class="Identifier">v</span><span class="Other">,</span> <span class="Identifier">valImpl</span><span class="Other">:</span> <span class="Identifier">NimNode</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="#JsonOptions"><span class="Identifier">JsonOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">NimNode</span> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -299,7 +304,15 @@
 
 </div>
 <div id="dumpHook-procs-all">
-  <div id="dumpHook,string,_4">
+  <div id="dumpHook,string,char">
+  <dt><pre><span class="Keyword">proc</span> <a href="#dumpHook%2Cstring%2Cchar"><span class="Identifier">dumpHook</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">char</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+<div id="dumpHook,string,_4">
   <dt><pre><span class="Keyword">proc</span> <a href="#dumpHook%2Cstring%2C_4"><span class="Identifier">dumpHook</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">enum</span><span class="Other">)</span></pre></dt>
   <dd>
     
@@ -409,6 +422,14 @@
   <dd>
     
     Converts a sequence of items to a JSON array string.
+    
+  </dd>
+</div>
+<div id="dumpHook,string,CritBitTree[T]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#dumpHook%2Cstring%2CCritBitTree%5BT%5D"><span class="Identifier">dumpHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">CritBitTree</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    
     
   </dd>
 </div>
@@ -529,7 +550,7 @@
 </div>
 <div id="objectToJson-procs-all">
   <div id="objectToJson,NimNode,NimNode,JsonOptions">
-  <dt><pre><span class="Keyword">proc</span> <a href="#objectToJson%2CNimNode%2CNimNode%2CJsonOptions"><span class="Identifier">objectToJson</span></a><span class="Other">(</span><span class="Identifier">v</span><span class="Other">,</span> <span class="Identifier">valImpl</span><span class="Other">:</span> <span class="Identifier">NimNode</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="json.html#JsonOptions"><span class="Identifier">JsonOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">NimNode</span> {.
+  <dt><pre><span class="Keyword">proc</span> <a href="#objectToJson%2CNimNode%2CNimNode%2CJsonOptions"><span class="Identifier">objectToJson</span></a><span class="Other">(</span><span class="Identifier">v</span><span class="Other">,</span> <span class="Identifier">valImpl</span><span class="Other">:</span> <span class="Identifier">NimNode</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="#JsonOptions"><span class="Identifier">JsonOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">NimNode</span> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -553,7 +574,7 @@
 </div>
 <div id="parseHook-procs-all">
   <div id="parseHook,JsonParser,bool">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2Cbool"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">bool</span><span class="Other">)</span> {.
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2Cbool"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">bool</span><span class="Other">)</span> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserJsonError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -562,7 +583,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,JsonNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CJsonNode"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">JsonNode</span><span class="Other">)</span> {.
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CJsonNode"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">JsonNode</span><span class="Other">)</span> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">OpenParserJsonError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
@@ -572,7 +593,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2Cstring"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">)</span> {.
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2Cstring"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">)</span> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserJsonError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -581,7 +602,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,AnyTable[K: string,V]">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CAnyTable%5BK%3A%20string%2CV%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="private/types.html#AnyTable"><span class="Identifier">AnyTable</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">,</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CAnyTable%5BK%3A%20string%2CV%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="private/types.html#AnyTable"><span class="Identifier">AnyTable</span></a><span class="Other">[</span><span class="Identifier">K</span><span class="Other">,</span> <span class="Identifier">V</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -589,7 +610,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,T_6">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_6"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">distinct</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_6"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">distinct</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     A hook to parse distinct types by parsing their base type and then converting
@@ -597,7 +618,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,T_3">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_3"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">enum</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_3"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">enum</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -605,7 +626,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,T">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Identifier">float</span> <span class="Operator">|</span> <span class="Identifier">float32</span> <span class="Operator">|</span> <span class="Identifier">float64</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Identifier">float</span> <span class="Operator">|</span> <span class="Identifier">float32</span> <span class="Operator">|</span> <span class="Identifier">float64</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -613,7 +634,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,T_4">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_4"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <a href="private/types.html#Integers"><span class="Identifier">Integers</span></a><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_4"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <a href="private/types.html#Integers"><span class="Identifier">Integers</span></a><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -621,7 +642,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,T_7">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_7"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">object</span> <span class="Operator">|</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_7"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">object</span> <span class="Operator">|</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -629,7 +650,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,T_2">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_2"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_2"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -637,7 +658,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,T_5">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_5"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">tuple</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2CT_5"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">tuple</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -645,7 +666,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,Option[T]">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2COption%5BT%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2COption%5BT%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
   <dd>
     
     A hook to parse a value wrapped in an Option type, treating null as None and any other value as Some(value).
@@ -653,7 +674,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,seq[T]">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2Cseq%5BT%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2Cseq%5BT%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -661,7 +682,7 @@
   </dd>
 </div>
 <div id="parseHook,JsonParser,set[T]">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2Cset%5BT%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">set</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CJsonParser%2Cset%5BT%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">set</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -672,7 +693,7 @@
 </div>
 <div id="skipValue-procs-all">
   <div id="skipValue,JsonParser">
-  <dt><pre><span class="Keyword">proc</span> <a href="#skipValue%2CJsonParser"><span class="Identifier">skipValue</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="json.html#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">)</span> {.
+  <dt><pre><span class="Keyword">proc</span> <a href="#skipValue%2CJsonParser"><span class="Identifier">skipValue</span></a><span class="Other">(</span><span class="Identifier">parser</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#JsonParser"><span class="Identifier">JsonParser</span></a><span class="Other">)</span> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserJsonError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -684,7 +705,7 @@
 </div>
 <div id="toJson-procs-all">
   <div id="toJson,T,JsonOptions">
-  <dt><pre><span class="Keyword">proc</span> <a href="#toJson%2CT%2CJsonOptions"><span class="Identifier">toJson</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">T</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="json.html#JsonOptions"><span class="Identifier">JsonOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#toJson%2CT%2CJsonOptions"><span class="Identifier">toJson</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">T</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="#JsonOptions"><span class="Identifier">JsonOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
   <dd>
     
     Convert a Nim object to its JSON string representation using dump hooks.
@@ -701,7 +722,7 @@
   <dl class="item">
     <div id="toStaticJson-macros-all">
   <div id="toStaticJson.m,typed,staticJsonOptions">
-  <dt><pre><span class="Keyword">macro</span> <a href="#toStaticJson.m%2Ctyped%2CstaticJsonOptions"><span class="Identifier">toStaticJson</span></a><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">typed</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <span class="Identifier">static</span> <span class="Identifier">JsonOptions</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+  <dt><pre><span class="Keyword">macro</span> <a href="#toStaticJson.m%2Ctyped%2CstaticJsonOptions"><span class="Identifier">toStaticJson</span></a><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">typed</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <span class="Keyword">static</span> <a href="#JsonOptions"><span class="Identifier">JsonOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
   <dd>
     
     <p>Converts a Nim object to its JSON representation.</p>
@@ -739,7 +760,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-23 22:58:47 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-25 13:17:57 UTC</small>
       </div>
     </div>
   </div>
