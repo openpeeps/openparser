@@ -326,20 +326,27 @@ type
     yamlNull
 
   YamlNode* {.acyclic.} = ref object
+    ## Represents a node in the YAML data structure, which can be a scalar, object or array
     case kind*: YamlValueKind
     of yamlInteger:
       intValue*: int64
+        ## Represents an integer value in YAML
     of yamlFloat:
       floatValue*: float64
+        ## Represents a floating-point value in YAML
     of yamlString:
       strValue*: string
+        ## Represents a string value in YAML
     of yamlBoolean:
       boolValue*: bool
-    of yamlNull: discard
+        ## Represents a boolean value in YAML
     of yamlObject:
       objValue*: OrderedTableRef[string, YamlNode]
+        ## Represents a YAML mapping (object) with string keys and YamlNode values
     of yamlArray:
       arrValue*: seq[YamlNode]
+        ## Represents a YAML sequence (array) of YamlNode items
+    of yamlNull: discard
 
   YAMLObject* = OrderedTableRef[string, YamlNode]
     ## Represents a simple 
