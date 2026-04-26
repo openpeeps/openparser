@@ -62,6 +62,14 @@
     OrderedTableRef[K, V]">AnyTable</a></li>
 <li><a class="reference" href="#Integers" title="Integers = int | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64 |
     uint">Integers</a></li>
+<li><a class="reference" href="#OpenLexer" title="OpenLexer = object of RootObj
+  len*: int
+  pos*, line*, col*: int
+  current*: char
+  input*: string">OpenLexer</a></li>
+<li><a class="reference" href="#OpenToken" title="OpenToken = object of RootObj
+  value*: string
+  line*, col*, pos*, wsno*: int">OpenToken</a></li>
 
     </ul>
   </details>
@@ -96,6 +104,28 @@
     
   </dd>
 </div>
+<div id="OpenLexer">
+  <dt><pre><a href="#OpenLexer"><span class="Identifier">OpenLexer</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">RootObj</span>
+  <span class="Identifier">len</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
+  <span class="Identifier">pos</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">line</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">col</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
+  <span class="Identifier">current</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">char</span>
+  <span class="Identifier">input</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+  <dd>
+    
+    A base type for lexers, containing common fields for tracking the input string and the current position in the parsing process.
+    
+  </dd>
+</div>
+<div id="OpenToken">
+  <dt><pre><a href="#OpenToken"><span class="Identifier">OpenToken</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">RootObj</span>
+  <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+  <span class="Identifier">line</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">col</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">pos</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">wsno</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
+  <dd>
+    
+    A base type for tokens produced by the lexer, containing fields
+    
+  </dd>
+</div>
 
   </dl>
 </div>
@@ -106,7 +136,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-25 14:17:27 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-26 07:15:54 UTC</small>
       </div>
     </div>
   </div>

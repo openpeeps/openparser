@@ -1,3 +1,5 @@
 nimTitle	types	openparser/private/types.html	module openparser/private/types		0
 nim	Integers	openparser/private/types.html#Integers	type Integers		4
 nim	AnyTable	openparser/private/types.html#AnyTable	type AnyTable		8
+nim	OpenLexer	openparser/private/types.html#OpenLexer	object OpenLexer		13
+nim	OpenToken	openparser/private/types.html#OpenToken	object OpenToken		21
