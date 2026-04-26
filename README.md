@@ -16,17 +16,15 @@
 OpenParser is a collection of parsers and dumpers (serializers) for various data formats, written in Nim language. It provides a simple and efficient way to parse and dump data in different formats, such as JSON, CSV, and more.
 
 ## 😍 Key Features
-
-- **JSON**
-  - Zero-copy deserialization (via memfiles) for high performance and low memory usage
-  - Direct-to-object parsing and serialization
-  - Object variant support
-  - Support for other Nim types (Similar to pkg/jsony)
-  - Scientific notation support for numbers
-- **CSV**
-  - Zero-copy parsing for large files (via memfiles)
-- **RSS & Atom**
-  - Reader and writer for RSS and Atom feeds
+- Parse **JSON**, **CSV**, **YAML**, **TOML**, **RSS**, Atom
+- **Zero-copy** JSON parsing via Memfiles for high performance and low memory usage
+- **Direct-to-object** parsing for JSON, YAML and TOML
+- Custom Hooks API for parsing and dumping
+- Scientific notation support
+- Dot notation access for nested data structures
+- CSV zero-copy parsing for **large files**
+- RSS & Atom feed reader and writer
+- **Context-aware error** reporting while deserializing data
 
 >[!NOTE]
 > Importing `openparser` directly will produce a compile-time error, you need to import the specific module for the data format you want to use, e.g. `openparser/json` for JSON parsing and dumping or `openparser/csv` for CSV parsing.
@@ -143,7 +141,6 @@ Error (1:33) Unexpected token `:`
 ```
 
 
-
 ## CSV documents
 OpenParser can parse large CSV files efficiently without loading the entire file into memory, making it ideal for processing big datasets.
 
@@ -173,6 +170,13 @@ echo "Parsed ", i, " rows in ", elapsed, " seconds"
 There is a **work-in-progress YAML parser** and dumper module that provides support for dealing with YAML documents. Currently it parse the YAML input into a YamlObject (`TableRef` of `YamlNode` nodes).
 
 ...todo examples...
+
+## TOML Documents
+Another **work-in-progress parser** and dumper module, this one provides support for working with TOML documents. It parses the TOML input into a `TomlNode` tree structure or directly into Nim data structures using custom hooks.
+
+
+>[!NOTE]
+> Have an idea for a new feature or want to add a new parser/dumper for a different data format? Let's go wild!
 
 ## Roadmap
 - [ ] JSON depth/size limit to prevent DoS attacks
