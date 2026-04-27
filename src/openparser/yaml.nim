@@ -71,14 +71,6 @@ type
   OpenParserYamlError* = object of CatchableError
     ## Exception type for errors encountered during YAML parsing or dumping
 
-proc newYamlLexer*(input: string): YamlLexer =
-  ## Create a new YamlLexer for the given input string
-  YamlLexer(input: input, len: input.len, line: 1, col: 1)
-
-proc charAt(l: YamlLexer, idx: int): char {.inline.} =
-  if idx < 0 or idx >= l.len: return '\0'
-  else: return l.input[idx]
-
 const
   invalidToken = "Invalid token `$1`"
   errorEndOfFile = "Unexpected EOF while parsing `$1`"
@@ -86,6 +78,13 @@ const
   unexpectedTokenExpected = "Got `$1`, expected $2"
   unexpectedChar = "Unexpected character `$1`"
 
+proc newYamlLexer*(input: string): YamlLexer =
+  ## Create a new YamlLexer for the given input string
+  YamlLexer(input: input, len: input.len, line: 1, col: 1)
+
+proc charAt(l: YamlLexer, idx: int): char {.inline.} =
+  if idx < 0 or idx >= l.len: return '\0'
+  else: return l.input[idx]
 
 proc getContext(l: YamlLexer, posOverride: int = -1): string =
   # Show the full current line and place caret at exact token position.
