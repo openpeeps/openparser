@@ -152,6 +152,9 @@ proc skipWhitespace(l: var TomlLexer, wsBeforeToken: var int): int =
     return 0
   result = lineIndentAt(l, l.pos)
 
+proc peekChar*(lex: TomlLexer, offset: int): char =
+  # Lookahead character at current position + offset without advancing
+  lex.charAt(lex.pos + offset)
 
 proc readIdentifier(l: var TomlLexer): string =
   # Read an unquoted identifier (e.g. for keys or unquoted values)
@@ -171,7 +174,7 @@ proc readString(l: var TomlLexer, quote: char): string =
   advance(l) # Skip the opening quote
   while true:
     if l.current == '\0':
-      raise newException(ValueError, "Unterminated string literal")
+      raise newException(OpenParserTomlError, "Unterminated string literal")
     if l.current == quote:
       advance(l)
       break
@@ -190,6 +193,53 @@ proc readString(l: var TomlLexer, quote: char): string =
     else:
       result.add(l.current)
       advance(l)
+
+proc readMultiLineString(l: var TomlLexer): string =
+  # Read a multi-line string delimited by triple quotes """...""" or '''...'''
+    # consume the opening triple quotes
+    advance(l); advance(l); advance(l)
+    # optional initial newline after opening delimiter is trimmed per TOML
+    if l.current == '\n':
+      inc l.line
+      l.col = 0
+      advance(l)
+    while true:
+      if l.current == '\0':
+        raise newException(OpenParserTomlError, "Unterminated multi-line string literal")
+      # check for closing triple quotes
+      if l.current == '"' and l.charAt(l.pos+1) == '"' and l.charAt(l.pos+2) == '"':
+        advance(l); advance(l); advance(l)
+        break
+      if l.current == '\\':
+        # handle escapes and line continuations
+        advance(l)
+        if l.current == '\0':
+          raise newException(OpenParserTomlError, "Unterminated escape in multi-line string")
+        case l.current
+        of '"': result.add('"')
+        of '\\': result.add('\\')
+        of 'n': result.add('\n')
+        of 'r': result.add('\r')
+        of 't': result.add('\t')
+        of '\n':
+          # line continuation: backslash + newline -> skip newline and following indentation
+          inc l.line
+          l.col = 0
+          advance(l)
+          while l.current in {' ', '\t'}:
+            advance(l)
+          continue
+        else:
+          # unknown escape: preserve backslash + char
+          result.add('\\')
+          result.add(l.current)
+        advance(l)
+      else:
+        if l.current == '\n':
+          inc l.line
+          l.col = 0
+        result.add(l.current)
+        advance(l)
 
 proc readNumber(l: var TomlLexer, kind: var TomlTokenKind): string =
   result = ""
@@ -474,6 +524,7 @@ let tokens = {
   '}': ttkRC
 }.toTable
 
+const strQuote = ['\'', '"']
 proc nextToken*(p: var TomlParser): TomlToken =
   ## Lexical analysis to produce the next token from the input
   var wsBefore = 0
@@ -492,8 +543,12 @@ proc nextToken*(p: var TomlParser): TomlToken =
     result.kind = ttkComment
     result.value = p.lex.readComment()
   of '"', '\'':
-    result.kind = ttkString
-    result.value = p.lex.readString(p.lex.current)
+    if p.lex.current in strQuote and p.lex.peekChar(1) == p.lex.current and p.lex.peekChar(2) == p.lex.current:
+     result.kind = ttkString 
+     result.value = p.lex.readMultiLineString()
+    else:
+      result.kind = ttkString
+      result.value = p.lex.readString(p.lex.current)
   of '0'..'9', '-', '+':
     result.value = p.lex.readNumber(result.kind)
   of '=', '.', ',', '[', ']', '{', '}':
@@ -516,7 +571,7 @@ proc nextToken*(p: var TomlParser): TomlToken =
       result.kind = ttkIdentifier
       result.value = p.lex.readIdentifier()
   else:
-    raise newException(ValueError, "Invalid character: " & $(p.lex.current))
+    raise newException(OpenParserTomlError, "Invalid character: " & $(p.lex.current))
 
 proc error(p: var TomlParser, msg: string) =
   # Prefer current token coordinates over lexer cursor (lookahead-safe).
@@ -583,8 +638,36 @@ proc parseTomlDateTime(s: string): DateTime =
           return times.parse(sNoTz, fmt)
         except:
           discard
-  raise newException(ValueError, "Failed to parse TOML datetime: " & s)
+  raise newException(OpenParserTomlError, "Failed to parse TOML datetime: " & s)
 
+
+proc parseHook*(p: var TomlParser, v: var TomlNode)
+proc parseObject*(p: var TomlParser, ln: int): TomlNode
+
+proc parseInlineObject(p: var TomlParser): TomlNode =
+  p.advance() # consume '{'
+  var obj = newTomlTable()
+  while p.curr.kind != ttkRC:
+    case p.curr.kind
+    of ttkIdentifier:
+      let key = p.curr.value
+      p.advance() # consume identifier
+      if p.curr.kind != ttkEquals:
+        p.error("Expected '=' after key in inline table, got " & $p.curr.kind)
+      p.advance() # consume '='
+      var val: TomlNode
+      p.parseHook(val)
+      obj.tableVal[key] = val
+      if p.curr.kind == ttkComma:
+        p.advance() # consume comma and continue
+      elif p.curr.kind != ttkRC:
+        p.error("Expected ',' or '}' in inline table, got " & $p.curr.kind)
+    of ttkComment:
+      p.advance() # skip comments
+    else:
+      p.error("Expected key or end of inline table, got " & $p.curr.kind)
+  p.advance() # consume '}'
+  result = obj
 
 proc parseHook*(p: var TomlParser, v: var TomlNode) =
   # echo "Hook: " & $p.curr.kind & " at line " & $p.curr.line & ", col " & $p.curr.col
@@ -604,6 +687,8 @@ proc parseHook*(p: var TomlParser, v: var TomlNode) =
   of ttkDateTime:
     v = newTomlDateTime(parseTomlDateTime(p.curr.value))
     p.advance()
+  of ttkLC:
+    v = p.parseInlineObject()
   else: 
     p.error("Expected a value, got " & $p.curr.kind)
 
@@ -708,6 +793,6 @@ proc parseTOML*[T](input: TOML, t: typedesc[T]): T =
 when isMainModule:
   proc dumpHook*(s: var string, val: DateTime) =
     s.add(val.format("yyyy-MM-dd'T'HH:mm:ss"))
-    
+
   let doc = parseTOML(readFile("example.toml"))
   echo toJson(doc)
