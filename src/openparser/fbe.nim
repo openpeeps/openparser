@@ -75,6 +75,13 @@ proc ensureRead*(b: Buffer; n: int) =
   if b.pos + n > b.data.len:
     raise newException(CatchableError, "FBE.Buffer: not enough data to read")
 
+proc skipBytes*(b: var Buffer; n: int) {.inline.} =
+  ## Safely skip `n` bytes from current read position.
+  if n < 0:
+    raise newException(CatchableError, "FBE.Buffer: negative skip")
+  ensureRead(b, n)
+  b.pos += n
+
 proc writeByte*(b: var Buffer; v: uint8) =
   ## Writes a single byte to the buffer at the current position and
   ## advances the position.
@@ -99,10 +106,6 @@ proc appendReserve*(b: var Buffer; n: int): int =
   result = oldLen
 
 # Little-endian integer writers/readers
-# proc writeUint16LE*(b: var Buffer; v: uint16) =
-#   b.data.add(uint8(v and 0xFF'u16))
-#   b.data.add(uint8((v shr 8) and 0xFF'u16))
-
 proc writeUint16LE*(b: var Buffer; v: uint16) =
   let p = appendReserve(b, 2)
   b.data[p]     = uint8(v and 0xFF'u16)
@@ -114,13 +117,6 @@ proc readUint16LE*(b: var Buffer): uint16 =
   let hi = uint16(b.data[b.pos + 1])
   b.pos += 2
   result = (hi.shl(8)) or lo
-
-# proc writeUint32LE*(b: var Buffer; v: uint32) =
-#   b.data.add(uint8(v and 0xFF'u32))
-#   b.data.add(uint8((v shr 8) and 0xFF'u32))
-#   b.data.add(uint8((v shr 16) and 0xFF'u32))
-#   b.data.add(uint8((v shr 24) and 0xFF'u32))
-
 
 proc writeUint32LE*(b: var Buffer; v: uint32) =
   let p = appendReserve(b, 4)
@@ -137,10 +133,6 @@ proc readUint32LE*(b: var Buffer): uint32 =
   let b3 = uint32(b.data[b.pos+3])
   b.pos += 4
   result = (b3.shl(24)) or (b2.shl(16)) or (b1.shl(8)) or b0
-
-# proc writeUint64LE*(b: var Buffer; v: uint64) =
-#   for i in 0..7:
-#     b.data.add(uint8((v shr (i * 8)) and 0xFF'u64))
 
 proc writeUint64LE*(b: var Buffer; v: uint64) =
   let p = appendReserve(b, 8)
@@ -214,12 +206,6 @@ proc readChar*(b: var Buffer): uint8 = readByte(b)
 proc writeWChar*(b: var Buffer; wc: uint32) = writeUint32LE(b, wc)
 proc readWChar*(b: var Buffer): uint32 = readUint32LE(b)
 
-# proc writeBytes*(b: var Buffer; data: seq[uint8]) =
-#   writeUint32LE(b, uint32(data.len))
-#   if data.len > 0:
-#     for x in data:
-#       b.data.add(x)
-
 proc writeBytes*(b: var Buffer; data: seq[uint8]) =
   writeUint32LE(b, uint32(data.len))
   if data.len > 0:
@@ -230,31 +216,17 @@ proc readBytes*(b: var Buffer): seq[uint8] =
   let n = int(readUint32LE(b))
   ensureRead(b, n)
   result = newSeq[uint8](n)
-  for i in 0..<n:
-    result[i] = b.data[b.pos + i]
+  if n > 0:
+    copyMem(addr result[0], addr b.data[b.pos], n)
   b.pos += n
-
-# proc writeString*(b: var Buffer; s: string) =
-#   ## Write UTF-8 string as 4-byte length (bytes) + raw bytes
-#   let n = s.len
-#   writeUint32LE(b, uint32(n))
-#   if n > 0:
-#     let oldLen = b.data.len
-#     b.data.setLen(oldLen + n)
-#     # copy raw UTF-8 bytes from s.cstring (null-terminated) into seq storage
-#     copyMem(addr b.data[oldLen], cast[ptr uint8](s.cstring), n)
 
 proc writeString*(b: var Buffer; s: string) =
   ## Write UTF-8 string as 4-byte length (bytes) + raw bytes
-  # Note: s.len in Nim is number of codepoints; using cstring length for byte count.
-  var byteCount = 0
-  var pc = s.cstring
-  while pc[byteCount] != '\0':
-    byteCount.inc()
+  let byteCount = s.len
   writeUint32LE(b, uint32(byteCount))
   if byteCount > 0:
     let p = appendReserve(b, byteCount)
-    copyMem(addr b.data[p], cast[ptr uint8](s.cstring), byteCount)
+    copyMem(addr b.data[p], unsafeAddr s[0], byteCount)
 
 proc readString*(b: var Buffer): string =
   let n = int(readUint32LE(b))
@@ -269,13 +241,6 @@ proc readString*(b: var Buffer): string =
 proc writeTimestamp*(b: var Buffer; ns: uint64) = writeUint64LE(b, ns)
 proc readTimestamp*(b: var Buffer): uint64 = readUint64LE(b)
 
-# uuid (16 bytes, stored big-endian per spec)
-# proc writeUUID*(b: var Buffer; u: openArray[uint8]) =
-#   if u.len != 16:
-#     raise newException(ValueError, "UUID must be 16 bytes")
-#   # store in big-endian order (as-is)
-#   for i in 0..<16:
-#     b.data.add(u[i])
 proc writeUUID*(b: var Buffer; u: openArray[uint8]) =
   if u.len != 16:
     raise newException(ValueError, "UUID must be 16 bytes")
@@ -285,8 +250,7 @@ proc writeUUID*(b: var Buffer; u: openArray[uint8]) =
 proc readUUID*(b: var Buffer): seq[uint8] =
   ensureRead(b, 16)
   result = newSeq[uint8](16)
-  for i in 0..<16:
-    result[i] = b.data[b.pos + i]
+  copyMem(addr result[0], addr b.data[b.pos], 16)
   b.pos += 16
 
 # Generic helpers to write/read custom values via callbacks
@@ -298,7 +262,10 @@ proc readWith*[T](b: var Buffer; readFn: proc (b: var Buffer): T): T =
 
 # convenience: append raw bytes to buffer
 proc appendRaw*(b: var Buffer; data: openArray[uint8]) =
-  for x in data: b.data.add(x)
+  if data.len <= 0:
+    return
+  let p = appendReserve(b, data.len)
+  copyMem(addr b.data[p], unsafeAddr data[0], data.len)
 
 
 # Collections
@@ -378,11 +345,11 @@ proc readHash*[K, V](b: var Buffer;
 
 # Optional type (final model): 1 byte presence + value
 proc writeOptional*[T](b: var Buffer; hasValue: bool; value: T; writeVal: proc (b: var Buffer; v: T)) =
-  b.data.add(if hasValue: 1'u8 else: 0'u8)
+  writeByte(b, if hasValue: 1'u8 else: 0'u8)
   if hasValue:
     writeVal(b, value)
 
-proc readOptional*[T](b: var Buffer; readVal: proc (b: var Buffer): T; hasValue: bool): T =
+proc readOptional*[T](b: var Buffer; readVal: proc (b: var Buffer): T; hasValue: var bool): T =
   ensureRead(b, 1)
   hasValue = b.data[b.pos] != 0'u8
   b.pos.inc()
@@ -431,13 +398,6 @@ proc readFlags32*(b: var Buffer): uint32 = readUint32LE(b)
 proc writeFlags64*(b: var Buffer; v: uint64) = writeUint64LE(b, v)
 proc readFlags64*(b: var Buffer): uint64 = readUint64LE(b)
 
-# proc writeDecimal*(b: var Buffer; data: openArray[uint8]) =
-#   ## Writes a 128-bit decimal value as 16 bytes little-endian.
-#   if data.len != 16:
-#     raise newException(ValueError, "Decimal must be 16 bytes")
-#   for i in 0..<16:
-#     b.data.add(data[i])
-
 proc writeDecimal*(b: var Buffer; data: openArray[uint8]) =
   if data.len != 16:
     raise newException(ValueError, "Decimal must be 16 bytes")
@@ -448,8 +408,7 @@ proc readDecimal*(b: var Buffer): seq[uint8] =
   ## Reads a 128-bit decimal value (16 bytes little-endian) and returns as seq[uint8].
   ensureRead(b, 16)
   result = newSeq[uint8](16)
-  for i in 0..<16:
-    result[i] = b.data[b.pos + i]
+  copyMem(addr result[0], addr b.data[b.pos], 16)
   b.pos += 16
 
 proc ensureStructStackInit(b: var Buffer) =
@@ -566,7 +525,10 @@ proc beginReadRootStruct*(b: var Buffer): uint32 =
   let totalSize = readUint32LE(b)
   let version = readUint32LE(b)
   let fieldCount = readUint32LE(b)
-  let reserved = readUint32LE(b) # currently unused
+  discard readUint32LE(b) # reserved
+  if totalSize < uint32(ROOT_HEADER_SIZE):
+    raise newException(CatchableError, "beginReadRootStruct: invalid total size")
+  ensureRead(b, int(totalSize) - ROOT_HEADER_SIZE)
   ensureStructStackInit(b)
   var ctx: StructCtx
   ctx.startPos = b.pos - ROOT_HEADER_SIZE
@@ -576,22 +538,22 @@ proc beginReadRootStruct*(b: var Buffer): uint32 =
   ctx.readFieldsLeft = int(fieldCount)
   ctx.version = version
   ctx.isRoot = true
+  ctx.totalSize = int(totalSize)
   b.structStack.add(ctx)
   result = version
 
 proc endReadRootStruct*(b: var Buffer) =
-  ## Skips any remaining fields in current root struct and pops context. Should be
-  ## called after finishing reading all fields (or if you want to skip unread fields).
+  ## Skips to the end of current root struct (if needed) and pops context.
   if b.structStack.len == 0:
     raise newException(CatchableError, "endReadRootStruct: no struct context")
-  var ctx = b.structStack[^1]
+  let ctx = b.structStack[^1]
   if not ctx.isRoot:
     raise newException(CatchableError, "endReadRootStruct: top context is not root")
-  while ctx.readFieldsLeft > 0:
-    let fid = readUint16LE(b)
-    let sz = int(readUint32LE(b))
-    b.pos += sz
-    ctx.readFieldsLeft = ctx.readFieldsLeft - 1
+  let expectedEnd = ctx.startPos + ctx.totalSize
+  if b.pos < expectedEnd:
+    b.pos = expectedEnd
+  elif b.pos > expectedEnd:
+    raise newException(CatchableError, "endReadRootStruct: read more than structure size")
   b.structStack.del(b.structStack.len-1)
 
 proc beginReadInnerStruct*(b: var Buffer): uint32 =
@@ -623,9 +585,9 @@ proc endReadInnerStruct*(b: var Buffer) =
   if ctx.isRoot:
     raise newException(CatchableError, "endReadInnerStruct: top context is root")
   while ctx.readFieldsLeft > 0:
-    let fid = readUint16LE(b)
+    discard readUint16LE(b)
     let sz = int(readUint32LE(b))
-    b.pos += sz
+    skipBytes(b, sz)
     ctx.readFieldsLeft = ctx.readFieldsLeft - 1
   b.structStack.del(b.structStack.len-1)
 
@@ -932,10 +894,9 @@ proc decode*[T](b: var Buffer; into: var T; outVersion: var uint32) =
 
   decodeRootInto(b, into, handler, outVersion)
 
-  #
-  # Final 
-  #
-
+#
+# Final 
+#
 const
   FINAL_ROOT_HEADER_SIZE* = 8
   FINAL_INNER_HEADER_SIZE* = 0
@@ -991,16 +952,17 @@ proc endFinalInnerStruct*(b: var Buffer) =
 proc beginReadFinalRootStruct*(b: var Buffer): uint32 =
   ensureRead(b, FINAL_ROOT_HEADER_SIZE)
   let totalSize = readUint32LE(b)
-  let reserved = readUint32LE(b)
+  discard readUint32LE(b) # reserved
+  if totalSize < uint32(FINAL_ROOT_HEADER_SIZE):
+    raise newException(CatchableError, "beginReadFinalRootStruct: invalid total size")
+  let payloadBytes = int(totalSize) - FINAL_ROOT_HEADER_SIZE
+  ensureRead(b, payloadBytes)
   ensureStructStackInit(b)
   var ctx: StructCtx
   ctx.startPos = b.pos - FINAL_ROOT_HEADER_SIZE
   ctx.headerPos = ctx.startPos
   ctx.fieldCountPos = -1
   ctx.fieldCount = 0'u32
-  let payloadBytes = int(totalSize) - FINAL_ROOT_HEADER_SIZE
-  if payloadBytes < 0:
-    raise newException(CatchableError, "beginReadFinalRootStruct: invalid total size")
   ctx.readFieldsLeft = payloadBytes
   ctx.version = 0
   ctx.isRoot = true
@@ -1011,22 +973,14 @@ proc beginReadFinalRootStruct*(b: var Buffer): uint32 =
 proc endReadFinalRootStruct*(b: var Buffer) =
   if b.structStack.len == 0:
     raise newException(CatchableError, "endReadFinalRootStruct: no struct context")
-  var ctx = b.structStack[^1]
+  let ctx = b.structStack[^1]
   if not ctx.isRoot:
     raise newException(CatchableError, "endReadFinalRootStruct: top context is not root")
-  # ensure we've consumed exactly the root payload
   let expectedEnd = ctx.startPos + ctx.totalSize
-  # we can't re-read totalSize here safely — instead compute end from stack
-  # totalSize = current buffer length - ctx.startPos (if buffer built by us)
-  # For reader case: ensure pos is at ctx.startPos + totalSize
-  # But we don't have totalSize stored; check by using ctx.readFieldsLeft and pos
-  let consumed = b.pos - (ctx.startPos + FINAL_ROOT_HEADER_SIZE)
-  if consumed < ctx.readFieldsLeft:
-    # skip remaining bytes
-    b.pos = b.pos + (ctx.readFieldsLeft - consumed)
-  elif consumed > ctx.readFieldsLeft:
-    raise newException(CatchableError,
-      "endReadFinalRootStruct: read more than structure size")
+  if b.pos < expectedEnd:
+    b.pos = expectedEnd
+  elif b.pos > expectedEnd:
+    raise newException(CatchableError, "endReadFinalRootStruct: read more than structure size")
   b.structStack.del(b.structStack.len-1)
 
 template writeFinalFields(b, obj: untyped) =
@@ -1060,7 +1014,7 @@ template writeFinalFields(b, obj: untyped) =
     elif typeof(val) is seq[uint8]:
       b.writeBytes(fld)
     else:
-      # unsupported type -> compile-time skip
+      # unsupported type > compile-time skip
       discard
 
 template readFinalFields(b, obj: untyped) =
@@ -1095,9 +1049,10 @@ template readFinalFields(b, obj: untyped) =
       fld = b.readBytes()
     else:
       discard
-
-# High-level compact encode/decode: fields written sequentially in declaration order.
-proc encodeFinal*[T](obj: T): Buffer =
+#
+# High-level compact encode/decode: fields written sequentially in declaration order
+#
+proc encodeFinal*[T: tuple|object](obj: T): Buffer =
   result = initBuffer()
   result.reset()
   beginFinalRootStruct(result)
@@ -1105,32 +1060,26 @@ proc encodeFinal*[T](obj: T): Buffer =
   writeFinalFields(result, obj)
   endFinalRootStruct(result)
 
-proc decodeFinal*[T](b: var Buffer; into: var T) =
-  var tmp: T
-  let payloadBytes = beginReadFinalRootStruct(b)
-  # expand compile-time direct readers
-  readFinalFields(b, into)
-  # pop final root context
-  if b.structStack.len > 0:
-    b.structStack.del(b.structStack.len-1)
-
-proc encodeFinal*[T](items: seq[T]): Buffer =
+proc encodeFinal*[T: tuple|object](items: seq[T]): Buffer =
   result = initBuffer()
   result.reset()
   beginFinalRootStruct(result)
   writeUint32LE(result, uint32(items.len))
   for it in items:
-    # inline per-item writes (no inner header)
     writeFinalFields(result, it)
   endFinalRootStruct(result)
 
-proc decodeFinal*[T](b: var Buffer; into: var seq[T]) =
-  let payloadBytes = beginReadFinalRootStruct(b)
+proc decodeFinal*[T: tuple|object](b: var Buffer; into: var T) =
+  discard beginReadFinalRootStruct(b)
+  readFinalFields(b, into)
+  endReadFinalRootStruct(b)
+
+proc decodeFinal*[T: tuple|object](b: var Buffer; into: var seq[T]) =
+  discard beginReadFinalRootStruct(b)
   let n = int(b.readUint32LE())
   into.setLen(n)
   for i in 0..<n:
     var item: T
     readFinalFields(b, item)
     into[i] = item
-  if b.structStack.len > 0:
-    b.structStack.del(b.structStack.len-1)
+  endReadFinalRootStruct(b)
