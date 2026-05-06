@@ -17,6 +17,10 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 
 ## 😍 Key Features
 - Parse **JSON**, **CSV**, **YAML**, **TOML**, **RSS**, Atom
+- BSON encoding and decoding from `JsonNode` objects
+- DotEnv parser for `.env` files
+- [Fast Binary Encoding](https://github.com/chronoxor/FastBinaryEncoding) and Decoding
+- i18n [GNU Gettext](https://www.gnu.org/software/gettext/) PO and MO file parsing and dumping
 - **Zero-copy** JSON parsing via Memfiles for high performance and low memory usage
 - **Direct-to-object** parsing for JSON, YAML and TOML
 - Custom Hooks API for parsing and dumping
@@ -175,14 +179,14 @@ There is a **work-in-progress YAML parser** and dumper module that provides supp
 Another **work-in-progress parser** and dumper module, this one provides support for working with TOML documents. It parses the TOML input into a `TomlNode` tree structure or directly into Nim data structures using custom hooks.
 
 
->[!NOTE]
-> Have an idea for a new feature or want to add a new parser/dumper for a different data format? Let's go wild!
-
 ## Roadmap
 - [ ] JSON depth/size limit to prevent DoS attacks
 - [ ] JSON schema validation support
 - [ ] JSON skippable fields
 - [ ] JSON custom field mapping
+
+> [!NOTE]
+> Some implementations are made with the chatbot (dotenv, fbe, gettext) and may be buggy or incomplete, contributions are welcome to improve them!
 
 ### ❤ Contributions & Support
 - 🐛 Found a bug? [Create a new Issue](https://github.com/openpeeps/openparser/issues)
