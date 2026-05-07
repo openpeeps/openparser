@@ -8,13 +8,40 @@
 ## subset of BSON types that can be represented in JSON, including objects, arrays, strings,
 ## numbers, booleans, and null.
 
-import std/[json, strutils]
+import std/[json, strutils, os]
 
-type ParseMode = enum
-  pmAuto, pmObject, pmArray
+type
+  BSONDocument* = object
+    version*: int32
+      ## Version number for the BSON document format. This allows for future extensions
+      ## and compatibility checks when reading/writing BSON data.
+    data*: seq[byte]
+      ## A BSONDocument is a wrapper around raw BSON bytes
+
+  ParseMode = enum
+    pmAuto, pmObject, pmArray
+
+const
+  BSONDocMagic* = "OPBSON1\0"
+    ## Magic signature for BSON documents in Boogie. This is used to identify and validate BSON data
+    ## stored in the document store. The null terminator ensures it's a valid C string for compatibility with C APIs.
 
 proc fail(msg: string) {.noreturn.} =
   raise newException(ValueError, msg)
+
+# fwd decl
+proc toBson*(node: JsonNode): seq[byte]
+proc fromBson*(data: openArray[byte]): JsonNode
+
+proc bytesToString(b: openArray[byte]): string =
+  result = newString(b.len)
+  for i in 0 ..< b.len:
+    result[i] = char(b[i])
+
+proc stringToBytes(s: string): seq[byte] =
+  result = newSeq[byte](s.len)
+  for i, ch in s:
+    result[i] = byte(ord(ch))
 
 proc ensure(dataLen, pos, needed: int) =
   if pos + needed > dataLen:
@@ -269,3 +296,64 @@ proc toBson*(node: JsonNode): seq[byte] =
 proc fromBson*(data: openArray[byte]): JsonNode =
   ## Parse BSON data into a JsonNode. Returns JObject or JArray depending on the content.
   decodeBson(data)
+
+
+proc newBSONDocument*(node: JsonNode, version: int32 = 1'i32): BSONDocument =
+  if version <= 0:
+    fail("Invalid BSONDocument version")
+  BSONDocument(version: version, data: toBson(node))
+
+proc toJsonNode*(doc: BSONDocument): JsonNode =
+  fromBson(doc.data)
+
+proc toBytes*(doc: BSONDocument): seq[byte] =
+  if doc.version <= 0:
+    fail("Invalid BSONDocument version")
+  if doc.data.len > int(high(int32)):
+    fail("BSONDocument payload too large")
+  result = @[]
+  for ch in BSONDocMagic:
+    result.add(byte(ord(ch)))
+  writeInt32LE(result, doc.version)
+  writeInt32LE(result, int32(doc.data.len))
+  result.add(doc.data)
+
+proc fromBytes*(data: openArray[byte]): BSONDocument =
+  let minLen = BSONDocMagic.len + 8
+  if data.len < minLen:
+    fail("Invalid BSONDocument: too small")
+
+  for i, ch in BSONDocMagic:
+    if data[i] != byte(ord(ch)):
+      fail("Invalid BSONDocument: bad magic")
+
+  var pos = BSONDocMagic.len
+  let ver = readInt32LE(data, pos)
+  let n = readInt32LE(data, pos).int
+  if ver <= 0:
+    fail("Invalid BSONDocument: bad version")
+  if n < 0 or pos + n != data.len:
+    fail("Invalid BSONDocument: bad payload length")
+
+  result.version = ver
+  result.data = newSeq[byte](n)
+  for i in 0 ..< n:
+    result.data[i] = data[pos + i]
+
+proc writeBSONDocument*(path: string, doc: BSONDocument) =
+  ## Write a BSONDocument to a file. The document is encoded in the custom
+  ## Boogie BSON format, which includes a magic header and
+  ## versioning information.
+  ## 
+  ## This allows for future extensions and compatibility checks
+  ## when reading the document back.
+  let blob = toBytes(doc)
+  writeFile(path, bytesToString(blob))
+
+proc openBSONDocument*(path: string): BSONDocument =
+  ## Read a BSONDocument from a file. Validates the magic header
+  ## and version before parsing the content.
+  if not fileExists(path):
+    fail("BSONDocument file not found: " & path)
+  let blob = readFile(path)
+  fromBytes(stringToBytes(blob))
