@@ -3,3 +3,11 @@ nim	Integers	openparser/private/types.html#Integers	type Integers		4
 nim	AnyTable	openparser/private/types.html#AnyTable	type AnyTable		8
 nim	OpenLexer	openparser/private/types.html#OpenLexer	object OpenLexer		13
 nim	OpenToken	openparser/private/types.html#OpenToken	object OpenToken		21
+nim	hasKind	openparser/private/types.html#hasKind,NimNode,NimNodeKind	proc hasKind(node: NimNode; kind: NimNodeKind): bool		31
+nim	`[]`	openparser/private/types.html#[],NimNode,NimNodeKind	proc `[]`(node: NimNode; kind: NimNodeKind): NimNode		37
+nim	fieldPairs	openparser/private/types.html#fieldPairs.t,T	template fieldPairs[T: ref object](x: T): untyped		43
+nim	isObjectVariant	openparser/private/types.html#isObjectVariant.m,typed	macro isObjectVariant(v: typed): bool		46
+nim	discriminator	openparser/private/types.html#discriminator,NimNode	proc discriminator(v: NimNode): NimNode		58
+nim	discriminatorFieldName	openparser/private/types.html#discriminatorFieldName.m,typed	macro discriminatorFieldName(v: typed): untyped		64
+nim	discriminatorField	openparser/private/types.html#discriminatorField.m,typed	macro discriminatorField(v: typed): untyped		68
+nim	new	openparser/private/types.html#new.m,typed,typed	macro new(v: typed; d: typed): untyped		75

@@ -35,6 +35,10 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc `$`(yamlObject: YAMLObject): string" href="openparser/yaml.html#%24%2CYAMLObject">yaml: proc `$`(yamlObject: YAMLObject): string</a></li>
           </ul></dd>
+<dt><a name="%60%5B%5D%60" href="#%60%5B%5D%60"><span>`[]`:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="types: proc `[]`(node: NimNode; kind: NimNodeKind): NimNode" href="openparser/private/types.html#%5B%5D%2CNimNode%2CNimNodeKind">types: proc `[]`(node: NimNode; kind: NimNodeKind): NimNode</a></li>
+          </ul></dd>
 <dt><a name="advance" href="#advance"><span>advance:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc advance(parser: var JsonParser): JsonToken" href="openparser/json.html#advance%2CJsonParser">json: proc advance(parser: var JsonParser): JsonToken</a></li>
@@ -115,6 +119,18 @@
 <li><a class="reference external"
           data-doc-search-tag="csv: proc defaultCsvOptions(): CsvOptions" href="openparser/csv.html#defaultCsvOptions">csv: proc defaultCsvOptions(): CsvOptions</a></li>
           </ul></dd>
+<dt><a name="discriminator" href="#discriminator"><span>discriminator:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="types: proc discriminator(v: NimNode): NimNode" href="openparser/private/types.html#discriminator%2CNimNode">types: proc discriminator(v: NimNode): NimNode</a></li>
+          </ul></dd>
+<dt><a name="discriminatorField" href="#discriminatorField"><span>discriminatorField:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="types: macro discriminatorField(v: typed): untyped" href="openparser/private/types.html#discriminatorField.m%2Ctyped">types: macro discriminatorField(v: typed): untyped</a></li>
+          </ul></dd>
+<dt><a name="discriminatorFieldName" href="#discriminatorFieldName"><span>discriminatorFieldName:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="types: macro discriminatorFieldName(v: typed): untyped" href="openparser/private/types.html#discriminatorFieldName.m%2Ctyped">types: macro discriminatorFieldName(v: typed): untyped</a></li>
+          </ul></dd>
 <dt><a name="dumpHook" href="#dumpHook"><span>dumpHook:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook(s: var string; val: float32 | float64)" href="openparser/json.html#dumpHook%2Cstring%2C">json: proc dumpHook(s: var string; val: float32 | float64)</a></li>
@@ -164,6 +180,10 @@
 <dt><a name="fetchRss" href="#fetchRss"><span>fetchRss:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="rss: proc fetchRss(url: string): RssFeed" href="openparser/rss.html#fetchRss%2Cstring">rss: proc fetchRss(url: string): RssFeed</a></li>
+          </ul></dd>
+<dt><a name="fieldPairs" href="#fieldPairs"><span>fieldPairs:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="types: template fieldPairs[T: ref object](x: T): untyped" href="openparser/private/types.html#fieldPairs.t%2CT">types: template fieldPairs[T: ref object](x: T): untyped</a></li>
           </ul></dd>
 <dt><a name="fromJson" href="#fromJson"><span>fromJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -221,6 +241,10 @@
 <li><a class="reference external"
           data-doc-search-tag="yaml: proc getValue(v: YamlNode): string" href="openparser/yaml.html#getValue%2CYamlNode">yaml: proc getValue(v: YamlNode): string</a></li>
           </ul></dd>
+<dt><a name="hasKind" href="#hasKind"><span>hasKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="types: proc hasKind(node: NimNode; kind: NimNodeKind): bool" href="openparser/private/types.html#hasKind%2CNimNode%2CNimNodeKind">types: proc hasKind(node: NimNode; kind: NimNodeKind): bool</a></li>
+          </ul></dd>
 <dt><a name="Integers" href="#Integers"><span>Integers:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: type Integers" href="openparser/private/types.html#Integers">types: type Integers</a></li>
@@ -228,6 +252,10 @@
 <dt><a name="isMapped" href="#isMapped"><span>isMapped:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc isMapped(m: MemFile): bool" href="openparser/json.html#isMapped%2CMemFile">json: proc isMapped(m: MemFile): bool</a></li>
+          </ul></dd>
+<dt><a name="isObjectVariant" href="#isObjectVariant"><span>isObjectVariant:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="types: macro isObjectVariant(v: typed): bool" href="openparser/private/types.html#isObjectVariant.m%2Ctyped">types: macro isObjectVariant(v: typed): bool</a></li>
           </ul></dd>
 <dt><a name="JsonOptions" href="#JsonOptions"><span>JsonOptions:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -292,6 +320,10 @@
 <dt><a name="jtkTrue" href="#jtkTrue"><span>jtkTrue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: JsonTokenKind.jtkTrue" href="openparser/json.html#jtkTrue">json: JsonTokenKind.jtkTrue</a></li>
+          </ul></dd>
+<dt><a name="new" href="#new"><span>new:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="types: macro new(v: typed; d: typed): untyped" href="openparser/private/types.html#new.m%2Ctyped%2Ctyped">types: macro new(v: typed; d: typed): untyped</a></li>
           </ul></dd>
 <dt><a name="newYamlArray" href="#newYamlArray"><span>newYamlArray:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -399,7 +431,13 @@
           <li><a class="reference external"
           data-doc-search-tag="json: proc parseHook[T: ref object](parser: var JsonParser; v: var T)" href="openparser/json.html#parseHook%2CJsonParser%2CT_7">json: proc parseHook[T: ref object](parser: var JsonParser; v: var T)</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="yaml: proc parseHook[K: string; V](parser: var YamlParser; v: var AnyTable[K, V])" href="openparser/yaml.html#parseHook%2CYamlParser%2CAnyTable%5BK%3A%20string%2CV%5D">yaml: proc parseHook[K: string; V](parser: var YamlParser; v: var AnyTable[K, V])</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseHook(parser: var YamlParser; v: var bool)" href="openparser/yaml.html#parseHook%2CYamlParser%2Cbool">yaml: proc parseHook(parser: var YamlParser; v: var bool)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="yaml: proc parseHook[T](parser: var YamlParser; v: var CritBitTree[T])" href="openparser/yaml.html#parseHook%2CYamlParser%2CCritBitTree%5BT%5D">yaml: proc parseHook[T](parser: var YamlParser; v: var CritBitTree[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="yaml: proc parseHook[T](parser: var YamlParser; v: var seq[T])" href="openparser/yaml.html#parseHook%2CYamlParser%2Cseq%5BT%5D">yaml: proc parseHook[T](parser: var YamlParser; v: var seq[T])</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseHook[T](parser: var YamlParser; v: var set[T])" href="openparser/yaml.html#parseHook%2CYamlParser%2Cset%5BT%5D">yaml: proc parseHook[T](parser: var YamlParser; v: var set[T])</a></li>
           <li><a class="reference external"
@@ -407,9 +445,17 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseHook[T: float | float32 | float64](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT">yaml: proc parseHook[T: float | float32 | float64](parser: var YamlParser; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[T: Integers](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_2">yaml: proc parseHook[T: Integers](parser: var YamlParser; v: var T)</a></li>
+          data-doc-search-tag="yaml: proc parseHook[T: ref object](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_2">yaml: proc parseHook[T: ref object](parser: var YamlParser; v: var T)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseHook[T: enum](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_3">yaml: proc parseHook[T: enum](parser: var YamlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="yaml: proc parseHook[T: tuple](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_4">yaml: proc parseHook[T: tuple](parser: var YamlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="yaml: proc parseHook[T: distinct](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_5">yaml: proc parseHook[T: distinct](parser: var YamlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="yaml: proc parseHook[T: Integers](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_6">yaml: proc parseHook[T: Integers](parser: var YamlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="yaml: proc parseHook[T: object](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_7">yaml: proc parseHook[T: object](parser: var YamlParser; v: var T)</a></li>
           </ul></dd>
 <dt><a name="parseRss" href="#parseRss"><span>parseRss:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -623,7 +669,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-07 10:43:26 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-09 21:22:31 UTC</small>
       </div>
     </div>
   </div>
