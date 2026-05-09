@@ -14,7 +14,8 @@
 ## write self-documenting Nim code that can be easily converted to YAML
 ## configuration files
 
-import std/[tables, strutils, macros]
+import std/[tables, critbits, strutils, macros,
+        typetraits, enumutils]
 
 import ./private/types
 import ./json
@@ -605,8 +606,19 @@ proc parseSequence(p: var YamlParser, indent: int): seq[YamlNode] =
       break
 
     if p.curr.line == dashLine:
-      if p.curr.kind == ytkIdentifier and p.next.kind == ytkColon:
-        let obj = parseMapping(p, p.curr.indent)
+      if p.curr.kind in {ytkIdentifier, ytkString} and p.next.kind == ytkColon:
+        # Sequence item like:
+        # - name: Bob
+        #   age: 25
+        # First parse keys at current indent (e.g. "name"),
+        # then merge continuation keys indented deeper than the dash indent (e.g. "age").
+        var obj = parseMapping(p, p.curr.indent)
+
+        while p.curr.kind in {ytkIdentifier, ytkString} and p.curr.indent > indent:
+          let more = parseMapping(p, p.curr.indent)
+          for k, v in more.pairs:
+            obj[k] = v
+
         result.add(YamlNode(kind: yamlObject, objValue: obj))
       else:
         result.add(parseValue(p, indent))
@@ -619,31 +631,31 @@ proc parseSequence(p: var YamlParser, indent: int): seq[YamlNode] =
 
 proc parseMapping(p: var YamlParser, indent: int): YAMLObject =
   result = newOrderedTable[string, YamlNode]()
-  while p.curr.kind == ytkIdentifier and p.curr.indent >= indent:
+  while p.curr.kind in {ytkIdentifier, ytkString} and p.curr.indent == indent:
     let key = p.curr.value
     advance(p)
-    
+
     if p.curr.kind != ytkColon:
       raise newException(ValueError,
         "Expected ':' after key '" & key & "' at line " & $p.curr.line & ", col " & $p.curr.col)
-    
+
     let colonLine = p.curr.line
     advance(p)
 
     if p.curr.kind == ytkEOF:
       result[key] = YamlNode(kind: yamlNull)
       break
-    
+
     # Handle value on the same line (e.g. "key: value")
     if p.curr.line == colonLine:
       result[key] = parseValue(p, indent)
       continue
-    
+
     # Handle block string with '|' or '>'
     if p.curr.kind == ytkGT or p.curr.kind == ytkPipe:
       result[key] = parseBlockString(p, indent, folded = (p.curr.kind == ytkGT))
       continue
-    
+
     # Handle nested mapping or sequence
     if p.curr.indent > indent:
       result[key] = parseValue(p, indent)
@@ -679,7 +691,11 @@ proc parseValue(p: var YamlParser, parentIndent: int): YamlNode =
     )
 
 proc parseRoot(p: var YamlParser): YAMLObject =
-  result = parseMapping(p, 0)
+  result = newOrderedTable[string, YamlNode]()
+  if p.curr.kind == ytkEOF:
+    return
+  # Accept indented top-level YAML (common in triple-quoted test strings).
+  result = parseMapping(p, p.curr.indent)
 
 proc nimStringLiteral(s: string): string =
   result = "\""
@@ -750,13 +766,65 @@ proc parseYAML*(input: YAML): YAMLObject =
 proc parseHook*(parser: var YamlParser, v: var string)
 proc parseHook*[T: float|float32|float64](parser: var YamlParser, v: var T)
 proc parseHook*(parser: var YamlParser, v: var bool)
-# proc parseHook*[T](parser: var YamlParser, v: var seq[T])
-# proc parseHook*[T: ref object](parser: var YamlParser, v: var T)
-# proc parseHook*[T: enum](parser: var YamlParser, v: var T)
-# proc parseHook*[K: string, V](parser: var YamlParser, v: var AnyTable[K, V])
-# proc parseHook*[T](parser: var YamlParser, v: var set[T])
-# proc parseHook*[T: Integers](parser: var YamlParser, v: var T)
-# proc parseHook*[T: tuple](parser: var YamlParser, v: var T)
+proc parseHook*[T: ref object](parser: var YamlParser, v: var T)
+proc parseHook*[T](parser: var YamlParser, v: var seq[T])
+proc parseHook*[T: enum](parser: var YamlParser, v: var T)
+proc parseHook*[K: string, V](parser: var YamlParser, v: var AnyTable[K, V])
+proc parseHook*[T](parser: var YamlParser, v: var set[T])
+proc parseHook*[T: tuple](parser: var YamlParser, v: var T)
+proc parseHook*[T: distinct](parser: var YamlParser, v: var T)
+proc parseHook*[T](parser: var YamlParser, v: var CritBitTree[T])
+
+template isYamlNullToken(tok: YamlToken): bool =
+  tok.kind == ytkIdentifier and (tok.value == "null" or tok.value == "~")
+
+template parseYamlMappingPairs(body: untyped) {.dirty.} =
+  ## Iterates YAML mapping entries for both:
+  ##   - inline: {k: v, ...}
+  ##   - block:
+  ##       k: v
+  ##       ...
+  ## Injects `key` into `body`.
+  if parser.curr.kind == ytkLC:
+    parser.advance() # '{'
+    while parser.curr.kind != ytkRC:
+      if parser.curr.kind == ytkEOF:
+        parser.error(errorEndOfFile % ["inline object"])
+      if parser.curr.kind notin {ytkIdentifier, ytkString}:
+        parser.error(unexpectedTokenExpected % [$parser.curr.kind, "mapping key"])
+
+      let key {.inject.} = parser.curr.value
+      let yamlMapIndent {.inject.} = -1
+      parser.advance()
+
+      if parser.curr.kind != ytkColon:
+        parser.error(unexpectedTokenExpected % [$parser.curr.kind, $ytkColon])
+      parser.advance()
+
+      body
+
+      if parser.curr.kind == ytkComma:
+        parser.advance()
+      elif parser.curr.kind != ytkRC:
+        parser.error(unexpectedTokenExpected % [$parser.curr.kind, "comma or }"])
+    parser.advance() # '}'
+  else:
+    if parser.curr.kind notin {ytkIdentifier, ytkString, ytkEOF}:
+      parser.error(unexpectedTokenExpected % [$parser.curr.kind, "mapping key"])
+    if parser.curr.kind == ytkEOF:
+      return
+
+    let baseIndent = parser.curr.indent
+    let yamlMapIndent {.inject.} = baseIndent
+    while parser.curr.kind in {ytkIdentifier, ytkString} and parser.curr.indent == baseIndent:
+      let key {.inject.} = parser.curr.value
+      parser.advance()
+
+      if parser.curr.kind != ytkColon:
+        parser.error(unexpectedTokenExpected % [$parser.curr.kind, $ytkColon])
+      parser.advance()
+
+      body
 
 #
 # Parse Hooks
@@ -778,8 +846,14 @@ proc parseHook*[T: float|float32|float64](parser: var YamlParser, v: var T) =
 
 proc parseHook*[T: Integers](parser: var YamlParser, v: var T) =
   ## A hook to parse integer fields
-  v = parser.curr.value.parseInt()
+  v = cast[v.type](parser.curr.value.parseInt())
   parser.advance()
+
+proc parseHook*[T: distinct](parser: var YamlParser, v: var T) =
+  ## A hook to parse distinct types by parsing their base type and then converting
+  var tmp: T.distinctBase
+  parser.parseHook(tmp)
+  v = T(tmp)
 
 proc parseHook*[T: enum](parser: var YamlParser, v: var T) =
   ## A hook to parse enum fields
@@ -805,13 +879,176 @@ proc parseHook*[T](parser: var YamlParser, v: var set[T]) =
       parser.advance()
   parser.expectSkip(ytkRB) # end of array
 
-proc parseYAML*[T: object|ref object](parser: var YamlParser, v: var T) =
+proc parseHook*[T](parser: var YamlParser, v: var seq[T]) =
+  ## Parse YAML sequence into seq[T]
+  v.setLen(0)
+
   case parser.curr.kind
   of ytkLB:
-    parser.parseHook(v)
+    # inline: [a, b, c]
+    parser.advance() # '['
+    while parser.curr.kind != ytkRB:
+      if parser.curr.kind == ytkEOF:
+        parser.error(errorEndOfFile % ["inline array"])
+      var item: T
+      parser.parseHook(item)
+      v.add(item)
+
+      if parser.curr.kind == ytkComma:
+        parser.advance()
+      elif parser.curr.kind != ytkRB:
+        parser.error(unexpectedTokenExpected % [$parser.curr.kind, "comma or ]"])
+    parser.advance() # ']'
+
+  of ytkDash:
+    # block:
+    # - a
+    # - b
+    let seqIndent = parser.curr.indent
+    while parser.curr.kind == ytkDash and parser.curr.indent == seqIndent:
+      let dashLine = parser.curr.line
+      parser.advance() # '-'
+
+      var item: T
+      if parser.curr.kind == ytkEOF:
+        discard
+      elif parser.curr.line == dashLine:
+        parser.parseHook(item)
+      elif parser.curr.indent > seqIndent:
+        parser.parseHook(item)
+      else:
+        discard # "-\n" => default(T)
+      v.add(item)
   else:
+    parser.error(unexpectedTokenExpected % [$parser.curr.kind, "sequence"])
+
+proc parseHook*[T: tuple](parser: var YamlParser, v: var T) =
+  ## Parse YAML mapping into tuple fields by name.
+  parseYamlMappingPairs do:
+    var matched = false
+    for fieldName, fieldVal in v.fieldPairs:
+      if key == fieldName:
+        matched = true
+        when compiles(parser.parseHook(fieldVal)):
+          parser.parseHook(fieldVal)
+        else:
+          var tmp: type(fieldVal)
+          parser.parseHook(tmp)
+          when compiles(fieldVal = tmp):
+            fieldVal = tmp
+          else:
+            parser.error("Field `" & fieldName & "` is immutable")
+        break
+
+    if not matched:
+      discard parseValue(parser, yamlMapIndent)
+
+proc parseHook*[K: string, V](parser: var YamlParser, v: var AnyTable[K, V]) =
+  ## Parse YAML mapping into Table/OrderedTable and ref variants.
+  when v is TableRef[K, V] or v is OrderedTableRef[K, V]:
+    if isYamlNullToken(parser.curr):
+      v = nil
+      parser.advance()
+      return
+
+    when v is TableRef[K, V]:
+      if v.isNil: v = newTable[K, V]() else: v[].clear()
+    else:
+      if v.isNil: v = newOrderedTable[K, V]() else: v[].clear()
+  else:
+    if isYamlNullToken(parser.curr):
+      when v is Table[K, V]:
+        v = initTable[K, V]()
+      else:
+        v = initOrderedTable[K, V]()
+      parser.advance()
+      return
+
+    when v is Table[K, V]:
+      v = initTable[K, V]()
+    else:
+      v = initOrderedTable[K, V]()
+
+  parseYamlMappingPairs do:
+    var item: V
+    parser.parseHook(item)
+    v[key] = item
+
+proc parseHook*[T](parser: var YamlParser, v: var CritBitTree[T]) =
+  ## Parse YAML mapping into CritBitTree[T] (string-keyed).
+  if isYamlNullToken(parser.curr):
+    when compiles(v.clear()):
+      v.clear()
+    else:
+      v = CritBitTree[T]()
+    parser.advance()
+    return
+
+  when compiles(v.clear()):
+    v.clear()
+  else:
+    v = CritBitTree[T]()
+
+  parseYamlMappingPairs do:
+    var item: T
+    parser.parseHook(item)
+    v[key] = item
+
+proc parseHook*[T: object](parser: var YamlParser, v: var T) =
+  ## Parse YAML mapping into a Nim object.
+  parseYamlMappingPairs do:
+    var handled = false
+
+    # variant discriminator handling: initialize correct branch early
+    when isObjectVariant(v):
+      if key == discriminatorFieldName(v):
+        var d: type(discriminatorField(v))
+        parser.parseHook(d)
+
+        let prev = v
+        new(v, d)
+        copyFieldsBeforeRecCase(v, prev)
+        handled = true
+
+    if not handled:
+      var matched = false
+      for objField, objVal in v.fieldPairs:
+        if key == objField:
+          matched = true
+          when compiles(parser.parseHook(objVal)):
+            parser.parseHook(objVal)
+          else:
+            var tmp: type(objVal)
+            parser.parseHook(tmp)
+            when compiles(objVal = tmp):
+              objVal = tmp
+            else:
+              parser.error("Field `" & objField & "` is immutable")
+          break
+
+      if not matched:
+        # Unknown key/value: parse and discard one YAML value.
+        discard parseValue(parser, yamlMapIndent)
+
+proc parseHook*[T: ref object](parser: var YamlParser, v: var T) =
+  ## A hook to parse ref object fields
+  if isYamlNullToken(parser.curr):
+    v = nil
+    parser.advance()
+  else:
+    if v.isNil:
+      new(v)
+    parser.parseHook(v[])
+
+proc parseYAML*[T: object|ref object](parser: var YamlParser, v: var T) =
+  ## Parse top-level YAML into object/ref object.
+  case parser.curr.kind
+  of ytkLC, ytkIdentifier, ytkString:
+    parser.parseHook(v)
+  of ytkEOF:
     discard
-    # parser.error(unexpectedToken % [$parser.curr.kind])
+  else:
+    parser.error(unexpectedTokenExpected % [$parser.curr.kind, "mapping/object"])
 
 macro parseYamlMacro(x: typed, str: typed): untyped =
   var objIdent = x.getTypeImpl()[1]
@@ -822,8 +1059,11 @@ macro parseYamlMacro(x: typed, str: typed): untyped =
     var
       tmp = `objIdent`()
       parser = YamlParser(lex: newYamlLexer(`str`))
+    
+    parser.lex.current = parser.lex.charAt(0)
     parser.curr = parser.nextToken()
     parser.next = parser.nextToken()
+    
     parser.parseYAML(tmp)
     ensureMove(tmp) # return the parsed object
   var blockStmt = newBlockStmt(blockStmtId, blockStmtList)
