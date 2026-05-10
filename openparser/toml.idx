@@ -1,0 +1,61 @@
+nimTitle	toml	openparser/toml.html	module openparser/toml		0
+nim	TOML	openparser/toml.html#TOML	type TOML		21
+nim	TomlLexer	openparser/toml.html#TomlLexer	object TomlLexer		23
+nim	ttkEOF	openparser/toml.html#ttkEOF	TomlTokenKind.ttkEOF		27
+nim	ttkError	openparser/toml.html#ttkError	TomlTokenKind.ttkError		27
+nim	ttkString	openparser/toml.html#ttkString	TomlTokenKind.ttkString		27
+nim	ttkInteger	openparser/toml.html#ttkInteger	TomlTokenKind.ttkInteger		27
+nim	ttkFloat	openparser/toml.html#ttkFloat	TomlTokenKind.ttkFloat		27
+nim	ttkBoolean	openparser/toml.html#ttkBoolean	TomlTokenKind.ttkBoolean		27
+nim	ttkDateTime	openparser/toml.html#ttkDateTime	TomlTokenKind.ttkDateTime		27
+nim	ttkIdentifier	openparser/toml.html#ttkIdentifier	TomlTokenKind.ttkIdentifier		27
+nim	ttkEquals	openparser/toml.html#ttkEquals	TomlTokenKind.ttkEquals		27
+nim	ttkDot	openparser/toml.html#ttkDot	TomlTokenKind.ttkDot		27
+nim	ttkComma	openparser/toml.html#ttkComma	TomlTokenKind.ttkComma		27
+nim	ttkLB	openparser/toml.html#ttkLB	TomlTokenKind.ttkLB		27
+nim	ttkRB	openparser/toml.html#ttkRB	TomlTokenKind.ttkRB		27
+nim	ttkLC	openparser/toml.html#ttkLC	TomlTokenKind.ttkLC		27
+nim	ttkRC	openparser/toml.html#ttkRC	TomlTokenKind.ttkRC		27
+nim	ttkComment	openparser/toml.html#ttkComment	TomlTokenKind.ttkComment		27
+nim	TomlTokenKind	openparser/toml.html#TomlTokenKind	enum TomlTokenKind		27
+nim	TomlToken	openparser/toml.html#TomlToken	type TomlToken		46
+nim	OpenParserTomlError	openparser/toml.html#OpenParserTomlError	object OpenParserTomlError		51
+nim	newTomlLexer	openparser/toml.html#newTomlLexer,string	proc newTomlLexer(input: string): TomlLexer		66
+nim	peekChar	openparser/toml.html#peekChar,TomlLexer,int	proc peekChar(lex: TomlLexer; offset: int): char		155
+nim	tvkString	openparser/toml.html#tvkString	TomlValueKind.tvkString		360
+nim	tvkInteger	openparser/toml.html#tvkInteger	TomlValueKind.tvkInteger		360
+nim	tvkFloat	openparser/toml.html#tvkFloat	TomlValueKind.tvkFloat		360
+nim	tvkBoolean	openparser/toml.html#tvkBoolean	TomlValueKind.tvkBoolean		360
+nim	tvkDateTime	openparser/toml.html#tvkDateTime	TomlValueKind.tvkDateTime		360
+nim	tvkArray	openparser/toml.html#tvkArray	TomlValueKind.tvkArray		360
+nim	tvkTable	openparser/toml.html#tvkTable	TomlValueKind.tvkTable		360
+nim	TomlValueKind	openparser/toml.html#TomlValueKind	enum TomlValueKind		360
+nim	TomlNode	openparser/toml.html#TomlNode	type TomlNode		369
+nim	TomlDocument	openparser/toml.html#TomlDocument	type TomlDocument		386
+nim	TomlParser	openparser/toml.html#TomlParser	object TomlParser		389
+nim	newTomlString	openparser/toml.html#newTomlString,string	proc newTomlString(s: string): TomlNode		395
+nim	newTomlInteger	openparser/toml.html#newTomlInteger,int64	proc newTomlInteger(i: int64): TomlNode		399
+nim	newTomlFloat	openparser/toml.html#newTomlFloat,float64	proc newTomlFloat(f: float64): TomlNode		403
+nim	newTomlBoolean	openparser/toml.html#newTomlBoolean,bool	proc newTomlBoolean(b: bool): TomlNode		407
+nim	newTomlDateTime	openparser/toml.html#newTomlDateTime,DateTime	proc newTomlDateTime(dt: DateTime): TomlNode		411
+nim	newTomlArray	openparser/toml.html#newTomlArray	proc newTomlArray(): TomlNode		415
+nim	newTomlTable	openparser/toml.html#newTomlTable	proc newTomlTable(): TomlNode		419
+nim	getStr	openparser/toml.html#getStr,TomlNode	proc getStr(n: TomlNode): string		423
+nim	getInt	openparser/toml.html#getInt,TomlNode	proc getInt(n: TomlNode): int64		428
+nim	getFloat	openparser/toml.html#getFloat,TomlNode	proc getFloat(n: TomlNode): float64		433
+nim	getBool	openparser/toml.html#getBool,TomlNode	proc getBool(n: TomlNode): bool		438
+nim	getArray	openparser/toml.html#getArray,TomlNode	proc getArray(n: TomlNode): seq[TomlNode]		443
+nim	getObject	openparser/toml.html#getObject,TomlNode	proc getObject(n: TomlNode): OrderedTableRef[string, TomlNode]		450
+nim	getValue	openparser/toml.html#getValue,TomlNode	proc getValue(v: TomlNode): string		457
+nim	get	openparser/toml.html#get,TomlNode,string	proc get(n: TomlNode; key: string): TomlNode		477
+nim	get	openparser/toml.html#get,OrderedTableRef[string,TomlNode],string	proc get(obj: OrderedTableRef[string, TomlNode]; key: string): TomlNode		499
+nim	put	openparser/toml.html#put,OrderedTableRef[string,TomlNode],string,TomlNode	proc put(obj: OrderedTableRef[string, TomlNode]; key: string; value: TomlNode)		506
+nim	nextToken	openparser/toml.html#nextToken,TomlParser	proc nextToken(p: var TomlParser): TomlToken		528
+nim	parseHook	openparser/toml.html#parseHook,TomlParser,TomlNode	proc parseHook(p: var TomlParser; v: var TomlNode)		644
+nim	parseObject	openparser/toml.html#parseObject,TomlParser,int	proc parseObject(p: var TomlParser; ln: int): TomlNode		645
+nim	parseRoot	openparser/toml.html#parseRoot,TomlParser	proc parseRoot(p: var TomlParser): TomlNode		720
+nim	parseTOML	openparser/toml.html#parseTOML,TOML	proc parseTOML(input: TOML): TomlDocument		763
+nim	parseTOML	openparser/toml.html#parseTOML,TomlParser,T	proc parseTOML[T: object | ref object](p: var TomlParser; v: var T)		775
+nim	parseTOML	openparser/toml.html#parseTOML,TOML,typedesc[T]	proc parseTOML[T](input: TOML; t: typedesc[T]): T		779
+nimgrp	parsetoml	openparser/toml.html#parseTOML-procs-all	proc		763
+nimgrp	get	openparser/toml.html#get-procs-all	proc		477

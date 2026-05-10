@@ -1,0 +1,15 @@
+nimTitle	bson	openparser/bson.html	module openparser/bson		0
+nim	BSONDocument	openparser/bson.html#BSONDocument	object BSONDocument		14
+nim	BSONDocMagic	openparser/bson.html#BSONDocMagic	const BSONDocMagic		25
+nim	toBson	openparser/bson.html#toBson,JsonNode	proc toBson(node: JsonNode): seq[byte]		33
+nim	fromBson	openparser/bson.html#fromBson,openArray[byte]	proc fromBson(data: openArray[byte]): JsonNode		34
+nim	encodeBson	openparser/bson.html#encodeBson,JsonNode	proc encodeBson(node: JsonNode): seq[byte]		275
+nim	decodeBson	openparser/bson.html#decodeBson,openArray[byte]	proc decodeBson(data: openArray[byte]): JsonNode		285
+nim	fromBson	openparser/bson.html#fromBson,BSONDocument	proc fromBson(s: BSONDocument): JsonNode		300
+nim	newBSONDocument	openparser/bson.html#newBSONDocument,JsonNode,int32	proc newBSONDocument(node: JsonNode; version: int32 = 1'i32): BSONDocument		305
+nim	toJsonNode	openparser/bson.html#toJsonNode,BSONDocument	proc toJsonNode(doc: BSONDocument): JsonNode		310
+nim	toBytes	openparser/bson.html#toBytes,BSONDocument	proc toBytes(doc: BSONDocument): seq[byte]		313
+nim	fromBytes	openparser/bson.html#fromBytes,openArray[byte]	proc fromBytes(data: openArray[byte]): BSONDocument		325
+nim	writeBSONDocument	openparser/bson.html#writeBSONDocument,string,BSONDocument	proc writeBSONDocument(path: string; doc: BSONDocument)		347
+nim	openBSONDocument	openparser/bson.html#openBSONDocument,string	proc openBSONDocument(path: string): BSONDocument		357
+nimgrp	frombson	openparser/bson.html#fromBson-procs-all	proc		34

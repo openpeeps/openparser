@@ -28,7 +28,7 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="index.html">openparser</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc `$`(f: CsvFieldSlice): string" href="openparser/csv.html#%24%2CCsvFieldSlice">csv: proc `$`(f: CsvFieldSlice): string</a></li>
@@ -46,6 +46,20 @@
 <dt><a name="AnyTable" href="#AnyTable"><span>AnyTable:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: type AnyTable" href="openparser/private/types.html#AnyTable">types: type AnyTable</a></li>
+          </ul></dd>
+<dt><a name="appendRaw" href="#appendRaw"><span>appendRaw:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc appendRaw(b: var Buffer; data: openArray[uint8])" href="openparser/fbe.html#appendRaw%2CBuffer%2CopenArray%5Buint8%5D">fbe: proc appendRaw(b: var Buffer; data: openArray[uint8])</a></li>
+          </ul></dd>
+<dt><a name="appendReserve" href="#appendReserve"><span>appendReserve:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc appendReserve(b: var Buffer; n: int): int" href="openparser/fbe.html#appendReserve%2CBuffer%2Cint">fbe: proc appendReserve(b: var Buffer; n: int): int</a></li>
+          </ul></dd>
+<dt><a name="applyDotenvProfile" href="#applyDotenvProfile"><span>applyDotenvProfile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dotenv: proc applyDotenvProfile(profiles: MultiDotEnv; envName: string; override = false): Table[
+    string, string]" href="openparser/dotenv.html#applyDotenvProfile%2CMultiDotEnv%2Cstring">dotenv: proc applyDotenvProfile(profiles: MultiDotEnv; envName: string; override = false): Table[
+    string, string]</a></li>
           </ul></dd>
 <dt><a name="arrayToJson" href="#arrayToJson"><span>arrayToJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -99,6 +113,46 @@
 <li><a class="reference external"
           data-doc-search-tag="feed: object AtomValidationError" href="openparser/feed.html#AtomValidationError">feed: object AtomValidationError</a></li>
           </ul></dd>
+<dt><a name="beginFinalInnerStruct" href="#beginFinalInnerStruct"><span>beginFinalInnerStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc beginFinalInnerStruct(b: var Buffer)" href="openparser/fbe.html#beginFinalInnerStruct%2CBuffer">fbe: proc beginFinalInnerStruct(b: var Buffer)</a></li>
+          </ul></dd>
+<dt><a name="beginFinalRootStruct" href="#beginFinalRootStruct"><span>beginFinalRootStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc beginFinalRootStruct(b: var Buffer)" href="openparser/fbe.html#beginFinalRootStruct%2CBuffer">fbe: proc beginFinalRootStruct(b: var Buffer)</a></li>
+          </ul></dd>
+<dt><a name="beginInnerStruct" href="#beginInnerStruct"><span>beginInnerStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc beginInnerStruct(b: var Buffer; version: uint32)" href="openparser/fbe.html#beginInnerStruct%2CBuffer%2Cuint32">fbe: proc beginInnerStruct(b: var Buffer; version: uint32)</a></li>
+          </ul></dd>
+<dt><a name="beginReadFinalRootStruct" href="#beginReadFinalRootStruct"><span>beginReadFinalRootStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc beginReadFinalRootStruct(b: var Buffer): uint32" href="openparser/fbe.html#beginReadFinalRootStruct%2CBuffer">fbe: proc beginReadFinalRootStruct(b: var Buffer): uint32</a></li>
+          </ul></dd>
+<dt><a name="beginReadInnerStruct" href="#beginReadInnerStruct"><span>beginReadInnerStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc beginReadInnerStruct(b: var Buffer): uint32" href="openparser/fbe.html#beginReadInnerStruct%2CBuffer">fbe: proc beginReadInnerStruct(b: var Buffer): uint32</a></li>
+          </ul></dd>
+<dt><a name="beginReadRootStruct" href="#beginReadRootStruct"><span>beginReadRootStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc beginReadRootStruct(b: var Buffer): uint32" href="openparser/fbe.html#beginReadRootStruct%2CBuffer">fbe: proc beginReadRootStruct(b: var Buffer): uint32</a></li>
+          </ul></dd>
+<dt><a name="beginRootStruct" href="#beginRootStruct"><span>beginRootStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc beginRootStruct(b: var Buffer; version: uint32)" href="openparser/fbe.html#beginRootStruct%2CBuffer%2Cuint32">fbe: proc beginRootStruct(b: var Buffer; version: uint32)</a></li>
+          </ul></dd>
+<dt><a name="BSONDocMagic" href="#BSONDocMagic"><span>BSONDocMagic:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: const BSONDocMagic" href="openparser/bson.html#BSONDocMagic">bson: const BSONDocMagic</a></li>
+          </ul></dd>
+<dt><a name="BSONDocument" href="#BSONDocument"><span>BSONDocument:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: object BSONDocument" href="openparser/bson.html#BSONDocument">bson: object BSONDocument</a></li>
+          </ul></dd>
+<dt><a name="Buffer" href="#Buffer"><span>Buffer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: object Buffer" href="openparser/fbe.html#Buffer">fbe: object Buffer</a></li>
+          </ul></dd>
 <dt><a name="CsvFieldSlice" href="#CsvFieldSlice"><span>CsvFieldSlice:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: object CsvFieldSlice" href="openparser/csv.html#CsvFieldSlice">csv: object CsvFieldSlice</a></li>
@@ -115,6 +169,40 @@
 <li><a class="reference external"
           data-doc-search-tag="csv: type CsvRowCallback" href="openparser/csv.html#CsvRowCallback">csv: type CsvRowCallback</a></li>
           </ul></dd>
+<dt><a name="decode" href="#decode"><span>decode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc decode[T](b: var Buffer; into: var T; fieldIdOf: proc (name: string): uint16;
+          outVersion: var uint32)" href="openparser/fbe.html#decode%2CBuffer%2CT%2Cproc%28string%29%2Cuint32">fbe: proc decode[T](b: var Buffer; into: var T; fieldIdOf: proc (name: string): uint16;
+          outVersion: var uint32)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc decode[T](b: var Buffer; into: var T; outVersion: var uint32)" href="openparser/fbe.html#decode%2CBuffer%2CT%2Cuint32">fbe: proc decode[T](b: var Buffer; into: var T; outVersion: var uint32)</a></li>
+          </ul></dd>
+<dt><a name="decodeBson" href="#decodeBson"><span>decodeBson:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: proc decodeBson(data: openArray[byte]): JsonNode" href="openparser/bson.html#decodeBson%2CopenArray%5Bbyte%5D">bson: proc decodeBson(data: openArray[byte]): JsonNode</a></li>
+          </ul></dd>
+<dt><a name="decodeFinal" href="#decodeFinal"><span>decodeFinal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc decodeFinal[T: tuple | object](b: var Buffer; into: var seq[T])" href="openparser/fbe.html#decodeFinal%2CBuffer%2Cseq%5BT%5D">fbe: proc decodeFinal[T: tuple | object](b: var Buffer; into: var seq[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc decodeFinal[T: tuple | object](b: var Buffer; into: var T)" href="openparser/fbe.html#decodeFinal%2CBuffer%2CT">fbe: proc decodeFinal[T: tuple | object](b: var Buffer; into: var T)</a></li>
+          </ul></dd>
+<dt><a name="decodeInnerInto" href="#decodeInnerInto"><span>decodeInnerInto:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc decodeInnerInto[T](b: var Buffer; into: var T; handleField: proc (
+    fieldId: uint16; fieldSize: int; b: var Buffer; into: var T);
+                   outVersion: var uint32)" href="openparser/fbe.html#decodeInnerInto%2CBuffer%2CT%2Cproc%28uint16%2Cint%2CBuffer%2CT%29%2Cuint32">fbe: proc decodeInnerInto[T](b: var Buffer; into: var T; handleField: proc (
+    fieldId: uint16; fieldSize: int; b: var Buffer; into: var T);
+                   outVersion: var uint32)</a></li>
+          </ul></dd>
+<dt><a name="decodeRootInto" href="#decodeRootInto"><span>decodeRootInto:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc decodeRootInto[T](b: var Buffer; into: var T; handleField: proc (
+    fieldId: uint16; fieldSize: int; b: var Buffer; into: var T);
+                  outVersion: var uint32)" href="openparser/fbe.html#decodeRootInto%2CBuffer%2CT%2Cproc%28uint16%2Cint%2CBuffer%2CT%29%2Cuint32">fbe: proc decodeRootInto[T](b: var Buffer; into: var T; handleField: proc (
+    fieldId: uint16; fieldSize: int; b: var Buffer; into: var T);
+                  outVersion: var uint32)</a></li>
+          </ul></dd>
 <dt><a name="defaultCsvOptions" href="#defaultCsvOptions"><span>defaultCsvOptions:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc defaultCsvOptions(): CsvOptions" href="openparser/csv.html#defaultCsvOptions">csv: proc defaultCsvOptions(): CsvOptions</a></li>
@@ -130,6 +218,10 @@
 <dt><a name="discriminatorFieldName" href="#discriminatorFieldName"><span>discriminatorFieldName:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: macro discriminatorFieldName(v: typed): untyped" href="openparser/private/types.html#discriminatorFieldName.m%2Ctyped">types: macro discriminatorFieldName(v: typed): untyped</a></li>
+          </ul></dd>
+<dt><a name="DotenvEntry" href="#DotenvEntry"><span>DotenvEntry:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dotenv: tuple DotenvEntry" href="openparser/dotenv.html#DotenvEntry">dotenv: tuple DotenvEntry</a></li>
           </ul></dd>
 <dt><a name="dumpHook" href="#dumpHook"><span>dumpHook:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -173,6 +265,124 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc dumpHook(s: var string; v: YamlNode)" href="openparser/yaml.html#dumpHook%2Cstring%2CYamlNode">yaml: proc dumpHook(s: var string; v: YamlNode)</a></li>
           </ul></dd>
+<dt><a name="encode" href="#encode"><span>encode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc encode[T](items: seq[T]; version: uint32 = 1): Buffer" href="openparser/fbe.html#encode%2Cseq%5BT%5D%2Cuint32">fbe: proc encode[T](items: seq[T]; version: uint32 = 1): Buffer</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encode[T](items: seq[T]; version: uint32; fieldIdOf: proc (name: string): uint16): Buffer" href="openparser/fbe.html#encode%2Cseq%5BT%5D%2Cuint32%2Cproc%28string%29">fbe: proc encode[T](items: seq[T]; version: uint32; fieldIdOf: proc (name: string): uint16): Buffer</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encode[T](obj: T; version: uint32 = 1): Buffer" href="openparser/fbe.html#encode%2CT%2Cuint32">fbe: proc encode[T](obj: T; version: uint32 = 1): Buffer</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encode[T](obj: T; version: uint32; fieldIdOf: proc (name: string): uint16): Buffer" href="openparser/fbe.html#encode%2CT%2Cuint32%2Cproc%28string%29">fbe: proc encode[T](obj: T; version: uint32; fieldIdOf: proc (name: string): uint16): Buffer</a></li>
+          </ul></dd>
+<dt><a name="encodeBson" href="#encodeBson"><span>encodeBson:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: proc encodeBson(node: JsonNode): seq[byte]" href="openparser/bson.html#encodeBson%2CJsonNode">bson: proc encodeBson(node: JsonNode): seq[byte]</a></li>
+          </ul></dd>
+<dt><a name="encodeFinal" href="#encodeFinal"><span>encodeFinal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeFinal[T: tuple | object](items: seq[T]): Buffer" href="openparser/fbe.html#encodeFinal%2Cseq%5BT%5D">fbe: proc encodeFinal[T: tuple | object](items: seq[T]): Buffer</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeFinal[T: tuple | object](obj: T): Buffer" href="openparser/fbe.html#encodeFinal%2CT">fbe: proc encodeFinal[T: tuple | object](obj: T): Buffer</a></li>
+          </ul></dd>
+<dt><a name="encodeHook" href="#encodeHook"><span>encodeHook:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: bool)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cbool">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: bool)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: float32)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cfloat32">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: float32)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: float64)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cfloat64">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: float64)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: int16)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cint16">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: int16)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: int32)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cint32">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: int32)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: int64)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cint64">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: int64)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: int8)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cint8">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: int8)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: seq[uint8])" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cseq%5Buint8%5D">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: seq[uint8])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: string)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cstring">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: uint16)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cuint16">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: uint16)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: uint32)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cuint32">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: uint32)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: uint64)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cuint64">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: uint64)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: uint8)" href="openparser/fbe.html#encodeHook%2CBuffer%2Cuint16%2Cuint8">fbe: proc encodeHook(b: var Buffer; fieldId: uint16; v: uint8)</a></li>
+          </ul></dd>
+<dt><a name="encodeHookDecimal" href="#encodeHookDecimal"><span>encodeHookDecimal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHookDecimal(b: var Buffer; fieldId: uint16; v: openArray[uint8])" href="openparser/fbe.html#encodeHookDecimal%2CBuffer%2Cuint16%2CopenArray%5Buint8%5D">fbe: proc encodeHookDecimal(b: var Buffer; fieldId: uint16; v: openArray[uint8])</a></li>
+          </ul></dd>
+<dt><a name="encodeHookUUID" href="#encodeHookUUID"><span>encodeHookUUID:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHookUUID(b: var Buffer; fieldId: uint16; v: openArray[uint8])" href="openparser/fbe.html#encodeHookUUID%2CBuffer%2Cuint16%2CopenArray%5Buint8%5D">fbe: proc encodeHookUUID(b: var Buffer; fieldId: uint16; v: openArray[uint8])</a></li>
+          </ul></dd>
+<dt><a name="encodeHookVector" href="#encodeHookVector"><span>encodeHookVector:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHookVector[T](b: var Buffer; fieldId: uint16; items: seq[T];
+                    writeElem: proc (b: var Buffer; v: T))" href="openparser/fbe.html#encodeHookVector%2CBuffer%2Cuint16%2Cseq%5BT%5D%2Cproc%28Buffer%2CT%29">fbe: proc encodeHookVector[T](b: var Buffer; fieldId: uint16; items: seq[T];
+                    writeElem: proc (b: var Buffer; v: T))</a></li>
+          </ul></dd>
+<dt><a name="encodeHookWith" href="#encodeHookWith"><span>encodeHookWith:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeHookWith[T](b: var Buffer; fieldId: uint16; v: T;
+                  writer: proc (b: var Buffer; x: T))" href="openparser/fbe.html#encodeHookWith%2CBuffer%2Cuint16%2CT%2Cproc%28Buffer%2CT%29">fbe: proc encodeHookWith[T](b: var Buffer; fieldId: uint16; v: T;
+                  writer: proc (b: var Buffer; x: T))</a></li>
+          </ul></dd>
+<dt><a name="encodeInnerFrom" href="#encodeInnerFrom"><span>encodeInnerFrom:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeInnerFrom[T](b: var Buffer; from: T;
+                   writeFields: proc (b: var Buffer; from: T); version: uint32)" href="openparser/fbe.html#encodeInnerFrom%2CBuffer%2CT%2Cproc%28Buffer%2CT%29%2Cuint32">fbe: proc encodeInnerFrom[T](b: var Buffer; from: T;
+                   writeFields: proc (b: var Buffer; from: T); version: uint32)</a></li>
+          </ul></dd>
+<dt><a name="encodeRootFrom" href="#encodeRootFrom"><span>encodeRootFrom:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc encodeRootFrom[T](b: var Buffer; from: T;
+                  writeFields: proc (b: var Buffer; from: T); version: uint32)" href="openparser/fbe.html#encodeRootFrom%2CBuffer%2CT%2Cproc%28Buffer%2CT%29%2Cuint32">fbe: proc encodeRootFrom[T](b: var Buffer; from: T;
+                  writeFields: proc (b: var Buffer; from: T); version: uint32)</a></li>
+          </ul></dd>
+<dt><a name="endFinalInnerStruct" href="#endFinalInnerStruct"><span>endFinalInnerStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc endFinalInnerStruct(b: var Buffer)" href="openparser/fbe.html#endFinalInnerStruct%2CBuffer">fbe: proc endFinalInnerStruct(b: var Buffer)</a></li>
+          </ul></dd>
+<dt><a name="endFinalRootStruct" href="#endFinalRootStruct"><span>endFinalRootStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc endFinalRootStruct(b: var Buffer)" href="openparser/fbe.html#endFinalRootStruct%2CBuffer">fbe: proc endFinalRootStruct(b: var Buffer)</a></li>
+          </ul></dd>
+<dt><a name="endInnerStruct" href="#endInnerStruct"><span>endInnerStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc endInnerStruct(b: var Buffer)" href="openparser/fbe.html#endInnerStruct%2CBuffer">fbe: proc endInnerStruct(b: var Buffer)</a></li>
+          </ul></dd>
+<dt><a name="endReadFinalRootStruct" href="#endReadFinalRootStruct"><span>endReadFinalRootStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc endReadFinalRootStruct(b: var Buffer)" href="openparser/fbe.html#endReadFinalRootStruct%2CBuffer">fbe: proc endReadFinalRootStruct(b: var Buffer)</a></li>
+          </ul></dd>
+<dt><a name="endReadInnerStruct" href="#endReadInnerStruct"><span>endReadInnerStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc endReadInnerStruct(b: var Buffer)" href="openparser/fbe.html#endReadInnerStruct%2CBuffer">fbe: proc endReadInnerStruct(b: var Buffer)</a></li>
+          </ul></dd>
+<dt><a name="endReadRootStruct" href="#endReadRootStruct"><span>endReadRootStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc endReadRootStruct(b: var Buffer)" href="openparser/fbe.html#endReadRootStruct%2CBuffer">fbe: proc endReadRootStruct(b: var Buffer)</a></li>
+          </ul></dd>
+<dt><a name="endRootStruct" href="#endRootStruct"><span>endRootStruct:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc endRootStruct(b: var Buffer)" href="openparser/fbe.html#endRootStruct%2CBuffer">fbe: proc endRootStruct(b: var Buffer)</a></li>
+          </ul></dd>
+<dt><a name="ensureRead" href="#ensureRead"><span>ensureRead:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc ensureRead(b: Buffer; n: int)" href="openparser/fbe.html#ensureRead%2CBuffer%2Cint">fbe: proc ensureRead(b: Buffer; n: int)</a></li>
+          </ul></dd>
+<dt><a name="expandValue" href="#expandValue"><span>expandValue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dotenv: proc expandValue(value: string; local: var Table[string, string];
+            cmdCache: var Table[string, string]): string" href="openparser/dotenv.html#expandValue%2Cstring%2CTable%5Bstring%2Cstring%5D%2CTable%5Bstring%2Cstring%5D">dotenv: proc expandValue(value: string; local: var Table[string, string];
+            cmdCache: var Table[string, string]): string</a></li>
+          </ul></dd>
 <dt><a name="fetchAtom" href="#fetchAtom"><span>fetchAtom:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="feed: proc fetchAtom(url: string): AtomFeed" href="openparser/feed.html#fetchAtom%2Cstring">feed: proc fetchAtom(url: string): AtomFeed</a></li>
@@ -184,6 +394,24 @@
 <dt><a name="fieldPairs" href="#fieldPairs"><span>fieldPairs:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: template fieldPairs[T: ref object](x: T): untyped" href="openparser/private/types.html#fieldPairs.t%2CT">types: template fieldPairs[T: ref object](x: T): untyped</a></li>
+          </ul></dd>
+<dt><a name="FINAL_INNER_HEADER_SIZE" href="#FINAL_INNER_HEADER_SIZE"><span>FINAL_INNER_HEADER_SIZE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: const FINAL_INNER_HEADER_SIZE" href="openparser/fbe.html#FINAL_INNER_HEADER_SIZE">fbe: const FINAL_INNER_HEADER_SIZE</a></li>
+          </ul></dd>
+<dt><a name="FINAL_ROOT_HEADER_SIZE" href="#FINAL_ROOT_HEADER_SIZE"><span>FINAL_ROOT_HEADER_SIZE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: const FINAL_ROOT_HEADER_SIZE" href="openparser/fbe.html#FINAL_ROOT_HEADER_SIZE">fbe: const FINAL_ROOT_HEADER_SIZE</a></li>
+          </ul></dd>
+<dt><a name="fromBson" href="#fromBson"><span>fromBson:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: proc fromBson(s: BSONDocument): JsonNode" href="openparser/bson.html#fromBson%2CBSONDocument">bson: proc fromBson(s: BSONDocument): JsonNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="bson: proc fromBson(data: openArray[byte]): JsonNode" href="openparser/bson.html#fromBson%2CopenArray%5Bbyte%5D">bson: proc fromBson(data: openArray[byte]): JsonNode</a></li>
+          </ul></dd>
+<dt><a name="fromBytes" href="#fromBytes"><span>fromBytes:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: proc fromBytes(data: openArray[byte]): BSONDocument" href="openparser/bson.html#fromBytes%2CopenArray%5Bbyte%5D">bson: proc fromBytes(data: openArray[byte]): BSONDocument</a></li>
           </ul></dd>
 <dt><a name="fromJson" href="#fromJson"><span>fromJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -209,41 +437,67 @@
           </ul></dd>
 <dt><a name="get" href="#get"><span>get:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="toml: proc get(obj: OrderedTableRef[string, TomlNode]; key: string): TomlNode" href="openparser/toml.html#get%2COrderedTableRef%5Bstring%2CTomlNode%5D%2Cstring">toml: proc get(obj: OrderedTableRef[string, TomlNode]; key: string): TomlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc get(n: TomlNode; key: string): TomlNode" href="openparser/toml.html#get%2CTomlNode%2Cstring">toml: proc get(n: TomlNode; key: string): TomlNode</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc get(n: YamlNode; key: string): YamlNode" href="openparser/yaml.html#get%2CYamlNode%2Cstring">yaml: proc get(n: YamlNode; key: string): YamlNode</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc get(obj: YAMLObject; key: string): YamlNode" href="openparser/yaml.html#get%2CYAMLObject%2Cstring">yaml: proc get(obj: YAMLObject; key: string): YamlNode</a></li>
           </ul></dd>
 <dt><a name="getArray" href="#getArray"><span>getArray:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="toml: proc getArray(n: TomlNode): seq[TomlNode]" href="openparser/toml.html#getArray%2CTomlNode">toml: proc getArray(n: TomlNode): seq[TomlNode]</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc getArray(n: YamlNode): seq[YamlNode]" href="openparser/yaml.html#getArray%2CYamlNode">yaml: proc getArray(n: YamlNode): seq[YamlNode]</a></li>
           </ul></dd>
 <dt><a name="getBool" href="#getBool"><span>getBool:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="toml: proc getBool(n: TomlNode): bool" href="openparser/toml.html#getBool%2CTomlNode">toml: proc getBool(n: TomlNode): bool</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc getBool(n: YamlNode): bool" href="openparser/yaml.html#getBool%2CYamlNode">yaml: proc getBool(n: YamlNode): bool</a></li>
           </ul></dd>
 <dt><a name="getFloat" href="#getFloat"><span>getFloat:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="toml: proc getFloat(n: TomlNode): float64" href="openparser/toml.html#getFloat%2CTomlNode">toml: proc getFloat(n: TomlNode): float64</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc getFloat(n: YamlNode): float64" href="openparser/yaml.html#getFloat%2CYamlNode">yaml: proc getFloat(n: YamlNode): float64</a></li>
           </ul></dd>
 <dt><a name="getInt" href="#getInt"><span>getInt:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="toml: proc getInt(n: TomlNode): int64" href="openparser/toml.html#getInt%2CTomlNode">toml: proc getInt(n: TomlNode): int64</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc getInt(n: YamlNode): int64" href="openparser/yaml.html#getInt%2CYamlNode">yaml: proc getInt(n: YamlNode): int64</a></li>
           </ul></dd>
 <dt><a name="getObject" href="#getObject"><span>getObject:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="toml: proc getObject(n: TomlNode): OrderedTableRef[string, TomlNode]" href="openparser/toml.html#getObject%2CTomlNode">toml: proc getObject(n: TomlNode): OrderedTableRef[string, TomlNode]</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc getObject(n: YamlNode): OrderedTableRef[string, YamlNode]" href="openparser/yaml.html#getObject%2CYamlNode">yaml: proc getObject(n: YamlNode): OrderedTableRef[string, YamlNode]</a></li>
           </ul></dd>
 <dt><a name="getStr" href="#getStr"><span>getStr:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="toml: proc getStr(n: TomlNode): string" href="openparser/toml.html#getStr%2CTomlNode">toml: proc getStr(n: TomlNode): string</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc getStr(n: YamlNode): string" href="openparser/yaml.html#getStr%2CYamlNode">yaml: proc getStr(n: YamlNode): string</a></li>
           </ul></dd>
 <dt><a name="getValue" href="#getValue"><span>getValue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="toml: proc getValue(v: TomlNode): string" href="openparser/toml.html#getValue%2CTomlNode">toml: proc getValue(v: TomlNode): string</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc getValue(v: YamlNode): string" href="openparser/yaml.html#getValue%2CYamlNode">yaml: proc getValue(v: YamlNode): string</a></li>
           </ul></dd>
 <dt><a name="hasKind" href="#hasKind"><span>hasKind:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: proc hasKind(node: NimNode; kind: NimNodeKind): bool" href="openparser/private/types.html#hasKind%2CNimNode%2CNimNodeKind">types: proc hasKind(node: NimNode; kind: NimNodeKind): bool</a></li>
+          </ul></dd>
+<dt><a name="initBuffer" href="#initBuffer"><span>initBuffer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc initBuffer(capacity = 256): Buffer" href="openparser/fbe.html#initBuffer%2Cint">fbe: proc initBuffer(capacity = 256): Buffer</a></li>
+          </ul></dd>
+<dt><a name="INNER_HEADER_SIZE" href="#INNER_HEADER_SIZE"><span>INNER_HEADER_SIZE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: const INNER_HEADER_SIZE" href="openparser/fbe.html#INNER_HEADER_SIZE">fbe: const INNER_HEADER_SIZE</a></li>
           </ul></dd>
 <dt><a name="Integers" href="#Integers"><span>Integers:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -321,9 +575,65 @@
 <li><a class="reference external"
           data-doc-search-tag="json: JsonTokenKind.jtkTrue" href="openparser/json.html#jtkTrue">json: JsonTokenKind.jtkTrue</a></li>
           </ul></dd>
+<dt><a name="len" href="#len"><span>len:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc len(b: Buffer): int" href="openparser/fbe.html#len%2CBuffer">fbe: proc len(b: Buffer): int</a></li>
+          </ul></dd>
+<dt><a name="loadDotenvFile" href="#loadDotenvFile"><span>loadDotenvFile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dotenv: proc loadDotenvFile(path: string; override = false): Table[string, string]" href="openparser/dotenv.html#loadDotenvFile%2Cstring">dotenv: proc loadDotenvFile(path: string; override = false): Table[string, string]</a></li>
+          </ul></dd>
+<dt><a name="loadDotenvFiles" href="#loadDotenvFiles"><span>loadDotenvFiles:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dotenv: proc loadDotenvFiles(paths: openArray[string]; override = false): MultiDotEnv" href="openparser/dotenv.html#loadDotenvFiles%2CopenArray%5Bstring%5D">dotenv: proc loadDotenvFiles(paths: openArray[string]; override = false): MultiDotEnv</a></li>
+          </ul></dd>
+<dt><a name="loadDotenvForEnv" href="#loadDotenvForEnv"><span>loadDotenvForEnv:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dotenv: proc loadDotenvForEnv(envName: string; override = false)" href="openparser/dotenv.html#loadDotenvForEnv%2Cstring">dotenv: proc loadDotenvForEnv(envName: string; override = false)</a></li>
+          </ul></dd>
+<dt><a name="MultiDotEnv" href="#MultiDotEnv"><span>MultiDotEnv:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dotenv: type MultiDotEnv" href="openparser/dotenv.html#MultiDotEnv">dotenv: type MultiDotEnv</a></li>
+          </ul></dd>
 <dt><a name="new" href="#new"><span>new:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: macro new(v: typed; d: typed): untyped" href="openparser/private/types.html#new.m%2Ctyped%2Ctyped">types: macro new(v: typed; d: typed): untyped</a></li>
+          </ul></dd>
+<dt><a name="newBSONDocument" href="#newBSONDocument"><span>newBSONDocument:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: proc newBSONDocument(node: JsonNode; version: int32 = 1'i32): BSONDocument" href="openparser/bson.html#newBSONDocument%2CJsonNode%2Cint32">bson: proc newBSONDocument(node: JsonNode; version: int32 = 1'i32): BSONDocument</a></li>
+          </ul></dd>
+<dt><a name="newTomlArray" href="#newTomlArray"><span>newTomlArray:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc newTomlArray(): TomlNode" href="openparser/toml.html#newTomlArray">toml: proc newTomlArray(): TomlNode</a></li>
+          </ul></dd>
+<dt><a name="newTomlBoolean" href="#newTomlBoolean"><span>newTomlBoolean:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc newTomlBoolean(b: bool): TomlNode" href="openparser/toml.html#newTomlBoolean%2Cbool">toml: proc newTomlBoolean(b: bool): TomlNode</a></li>
+          </ul></dd>
+<dt><a name="newTomlDateTime" href="#newTomlDateTime"><span>newTomlDateTime:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc newTomlDateTime(dt: DateTime): TomlNode" href="openparser/toml.html#newTomlDateTime%2CDateTime">toml: proc newTomlDateTime(dt: DateTime): TomlNode</a></li>
+          </ul></dd>
+<dt><a name="newTomlFloat" href="#newTomlFloat"><span>newTomlFloat:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc newTomlFloat(f: float64): TomlNode" href="openparser/toml.html#newTomlFloat%2Cfloat64">toml: proc newTomlFloat(f: float64): TomlNode</a></li>
+          </ul></dd>
+<dt><a name="newTomlInteger" href="#newTomlInteger"><span>newTomlInteger:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc newTomlInteger(i: int64): TomlNode" href="openparser/toml.html#newTomlInteger%2Cint64">toml: proc newTomlInteger(i: int64): TomlNode</a></li>
+          </ul></dd>
+<dt><a name="newTomlLexer" href="#newTomlLexer"><span>newTomlLexer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc newTomlLexer(input: string): TomlLexer" href="openparser/toml.html#newTomlLexer%2Cstring">toml: proc newTomlLexer(input: string): TomlLexer</a></li>
+          </ul></dd>
+<dt><a name="newTomlString" href="#newTomlString"><span>newTomlString:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc newTomlString(s: string): TomlNode" href="openparser/toml.html#newTomlString%2Cstring">toml: proc newTomlString(s: string): TomlNode</a></li>
+          </ul></dd>
+<dt><a name="newTomlTable" href="#newTomlTable"><span>newTomlTable:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc newTomlTable(): TomlNode" href="openparser/toml.html#newTomlTable">toml: proc newTomlTable(): TomlNode</a></li>
           </ul></dd>
 <dt><a name="newYamlArray" href="#newYamlArray"><span>newYamlArray:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -359,11 +669,17 @@
           </ul></dd>
 <dt><a name="nextToken" href="#nextToken"><span>nextToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="toml: proc nextToken(p: var TomlParser): TomlToken" href="openparser/toml.html#nextToken%2CTomlParser">toml: proc nextToken(p: var TomlParser): TomlToken</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc nextToken(p: var YamlParser): YamlToken" href="openparser/yaml.html#nextToken%2CYamlParser">yaml: proc nextToken(p: var YamlParser): YamlToken</a></li>
           </ul></dd>
 <dt><a name="objectToJson" href="#objectToJson"><span>objectToJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc objectToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode" href="openparser/json.html#objectToJson%2CNimNode%2CNimNode%2CJsonOptions">json: proc objectToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode</a></li>
+          </ul></dd>
+<dt><a name="openBSONDocument" href="#openBSONDocument"><span>openBSONDocument:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: proc openBSONDocument(path: string): BSONDocument" href="openparser/bson.html#openBSONDocument%2Cstring">bson: proc openBSONDocument(path: string): BSONDocument</a></li>
           </ul></dd>
 <dt><a name="OpenLexer" href="#OpenLexer"><span>OpenLexer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -372,6 +688,10 @@
 <dt><a name="OpenParserJsonError" href="#OpenParserJsonError"><span>OpenParserJsonError:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: object OpenParserJsonError" href="openparser/json.html#OpenParserJsonError">json: object OpenParserJsonError</a></li>
+          </ul></dd>
+<dt><a name="OpenParserTomlError" href="#OpenParserTomlError"><span>OpenParserTomlError:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: object OpenParserTomlError" href="openparser/toml.html#OpenParserTomlError">toml: object OpenParserTomlError</a></li>
           </ul></dd>
 <dt><a name="OpenParserYamlError" href="#OpenParserYamlError"><span>OpenParserYamlError:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -394,6 +714,10 @@
           data-doc-search-tag="csv: proc parseCsv(mfile: MemFile; onRow: CsvRowCallback;
          options: CsvOptions = defaultCsvOptions())" href="openparser/csv.html#parseCsv%2CMemFile%2CCsvRowCallback%2CCsvOptions">csv: proc parseCsv(mfile: MemFile; onRow: CsvRowCallback;
          options: CsvOptions = defaultCsvOptions())</a></li>
+          </ul></dd>
+<dt><a name="parseEnv" href="#parseEnv"><span>parseEnv:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dotenv: proc parseEnv(content: string): seq[DotenvEntry]" href="openparser/dotenv.html#parseEnv%2Cstring">dotenv: proc parseEnv(content: string): seq[DotenvEntry]</a></li>
           </ul></dd>
 <dt><a name="parseFile" href="#parseFile"><span>parseFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -431,6 +755,8 @@
           <li><a class="reference external"
           data-doc-search-tag="json: proc parseHook[T: ref object](parser: var JsonParser; v: var T)" href="openparser/json.html#parseHook%2CJsonParser%2CT_7">json: proc parseHook[T: ref object](parser: var JsonParser; v: var T)</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook(p: var TomlParser; v: var TomlNode)" href="openparser/toml.html#parseHook%2CTomlParser%2CTomlNode">toml: proc parseHook(p: var TomlParser; v: var TomlNode)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseHook[K: string; V](parser: var YamlParser; v: var AnyTable[K, V])" href="openparser/yaml.html#parseHook%2CYamlParser%2CAnyTable%5BK%3A%20string%2CV%5D">yaml: proc parseHook[K: string; V](parser: var YamlParser; v: var AnyTable[K, V])</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseHook(parser: var YamlParser; v: var bool)" href="openparser/yaml.html#parseHook%2CYamlParser%2Cbool">yaml: proc parseHook(parser: var YamlParser; v: var bool)</a></li>
@@ -457,9 +783,25 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseHook[T: object](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_7">yaml: proc parseHook[T: object](parser: var YamlParser; v: var T)</a></li>
           </ul></dd>
+<dt><a name="parseObject" href="#parseObject"><span>parseObject:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc parseObject(p: var TomlParser; ln: int): TomlNode" href="openparser/toml.html#parseObject%2CTomlParser%2Cint">toml: proc parseObject(p: var TomlParser; ln: int): TomlNode</a></li>
+          </ul></dd>
+<dt><a name="parseRoot" href="#parseRoot"><span>parseRoot:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc parseRoot(p: var TomlParser): TomlNode" href="openparser/toml.html#parseRoot%2CTomlParser">toml: proc parseRoot(p: var TomlParser): TomlNode</a></li>
+          </ul></dd>
 <dt><a name="parseRss" href="#parseRss"><span>parseRss:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="rss: proc parseRss(xml: string): RssFeed" href="openparser/rss.html#parseRss%2Cstring">rss: proc parseRss(xml: string): RssFeed</a></li>
+          </ul></dd>
+<dt><a name="parseTOML" href="#parseTOML"><span>parseTOML:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc parseTOML(input: TOML): TomlDocument" href="openparser/toml.html#parseTOML%2CTOML">toml: proc parseTOML(input: TOML): TomlDocument</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseTOML[T](input: TOML; t: typedesc[T]): T" href="openparser/toml.html#parseTOML%2CTOML%2Ctypedesc%5BT%5D">toml: proc parseTOML[T](input: TOML; t: typedesc[T]): T</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseTOML[T: object | ref object](p: var TomlParser; v: var T)" href="openparser/toml.html#parseTOML%2CTomlParser%2CT">toml: proc parseTOML[T: object | ref object](p: var TomlParser; v: var T)</a></li>
           </ul></dd>
 <dt><a name="parseYAML" href="#parseYAML"><span>parseYAML:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -469,17 +811,207 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseYAML[T: object | ref object](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseYAML%2CYamlParser%2CT">yaml: proc parseYAML[T: object | ref object](parser: var YamlParser; v: var T)</a></li>
           </ul></dd>
+<dt><a name="patchUint16At" href="#patchUint16At"><span>patchUint16At:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc patchUint16At(b: var Buffer; pos: int; v: uint16)" href="openparser/fbe.html#patchUint16At%2CBuffer%2Cint%2Cuint16">fbe: proc patchUint16At(b: var Buffer; pos: int; v: uint16)</a></li>
+          </ul></dd>
+<dt><a name="patchUint32At" href="#patchUint32At"><span>patchUint32At:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc patchUint32At(b: var Buffer; pos: int; v: uint32)" href="openparser/fbe.html#patchUint32At%2CBuffer%2Cint%2Cuint32">fbe: proc patchUint32At(b: var Buffer; pos: int; v: uint32)</a></li>
+          </ul></dd>
+<dt><a name="peekChar" href="#peekChar"><span>peekChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc peekChar(lex: TomlLexer; offset: int): char" href="openparser/toml.html#peekChar%2CTomlLexer%2Cint">toml: proc peekChar(lex: TomlLexer; offset: int): char</a></li>
+          </ul></dd>
 <dt><a name="put" href="#put"><span>put:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="toml: proc put(obj: OrderedTableRef[string, TomlNode]; key: string; value: TomlNode)" href="openparser/toml.html#put%2COrderedTableRef%5Bstring%2CTomlNode%5D%2Cstring%2CTomlNode">toml: proc put(obj: OrderedTableRef[string, TomlNode]; key: string; value: TomlNode)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc put(obj: YAMLObject; key: string; value: YamlNode)" href="openparser/yaml.html#put%2CYAMLObject%2Cstring%2CYamlNode">yaml: proc put(obj: YAMLObject; key: string; value: YamlNode)</a></li>
+          </ul></dd>
+<dt><a name="readArrayFixed" href="#readArrayFixed"><span>readArrayFixed:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readArrayFixed[T](b: var Buffer; count: int; readElem: proc (b: var Buffer): T): seq[
+    T]" href="openparser/fbe.html#readArrayFixed%2CBuffer%2Cint%2Cproc%28Buffer%29">fbe: proc readArrayFixed[T](b: var Buffer; count: int; readElem: proc (b: var Buffer): T): seq[
+    T]</a></li>
           </ul></dd>
 <dt><a name="readAtom" href="#readAtom"><span>readAtom:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="feed: proc readAtom(filePath: string): AtomFeed" href="openparser/feed.html#readAtom%2Cstring">feed: proc readAtom(filePath: string): AtomFeed</a></li>
           </ul></dd>
+<dt><a name="readBool" href="#readBool"><span>readBool:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readBool(b: var Buffer): bool" href="openparser/fbe.html#readBool%2CBuffer">fbe: proc readBool(b: var Buffer): bool</a></li>
+          </ul></dd>
+<dt><a name="readByte" href="#readByte"><span>readByte:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readByte(b: var Buffer): uint8" href="openparser/fbe.html#readByte%2CBuffer">fbe: proc readByte(b: var Buffer): uint8</a></li>
+          </ul></dd>
+<dt><a name="readBytes" href="#readBytes"><span>readBytes:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readBytes(b: var Buffer): seq[uint8]" href="openparser/fbe.html#readBytes%2CBuffer">fbe: proc readBytes(b: var Buffer): seq[uint8]</a></li>
+          </ul></dd>
+<dt><a name="readChar" href="#readChar"><span>readChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readChar(b: var Buffer): uint8" href="openparser/fbe.html#readChar%2CBuffer">fbe: proc readChar(b: var Buffer): uint8</a></li>
+          </ul></dd>
+<dt><a name="readDecimal" href="#readDecimal"><span>readDecimal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readDecimal(b: var Buffer): seq[uint8]" href="openparser/fbe.html#readDecimal%2CBuffer">fbe: proc readDecimal(b: var Buffer): seq[uint8]</a></li>
+          </ul></dd>
+<dt><a name="readEnum16" href="#readEnum16"><span>readEnum16:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readEnum16(b: var Buffer): int16" href="openparser/fbe.html#readEnum16%2CBuffer">fbe: proc readEnum16(b: var Buffer): int16</a></li>
+          </ul></dd>
+<dt><a name="readEnum16u" href="#readEnum16u"><span>readEnum16u:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readEnum16u(b: var Buffer): uint16" href="openparser/fbe.html#readEnum16u%2CBuffer">fbe: proc readEnum16u(b: var Buffer): uint16</a></li>
+          </ul></dd>
+<dt><a name="readEnum32" href="#readEnum32"><span>readEnum32:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readEnum32(b: var Buffer): int32" href="openparser/fbe.html#readEnum32%2CBuffer">fbe: proc readEnum32(b: var Buffer): int32</a></li>
+          </ul></dd>
+<dt><a name="readEnum32u" href="#readEnum32u"><span>readEnum32u:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readEnum32u(b: var Buffer): uint32" href="openparser/fbe.html#readEnum32u%2CBuffer">fbe: proc readEnum32u(b: var Buffer): uint32</a></li>
+          </ul></dd>
+<dt><a name="readEnum64" href="#readEnum64"><span>readEnum64:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readEnum64(b: var Buffer): int64" href="openparser/fbe.html#readEnum64%2CBuffer">fbe: proc readEnum64(b: var Buffer): int64</a></li>
+          </ul></dd>
+<dt><a name="readEnum64u" href="#readEnum64u"><span>readEnum64u:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readEnum64u(b: var Buffer): uint64" href="openparser/fbe.html#readEnum64u%2CBuffer">fbe: proc readEnum64u(b: var Buffer): uint64</a></li>
+          </ul></dd>
+<dt><a name="readEnum8" href="#readEnum8"><span>readEnum8:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readEnum8(b: var Buffer): int8" href="openparser/fbe.html#readEnum8%2CBuffer">fbe: proc readEnum8(b: var Buffer): int8</a></li>
+          </ul></dd>
+<dt><a name="readEnum8u" href="#readEnum8u"><span>readEnum8u:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readEnum8u(b: var Buffer): uint8" href="openparser/fbe.html#readEnum8u%2CBuffer">fbe: proc readEnum8u(b: var Buffer): uint8</a></li>
+          </ul></dd>
+<dt><a name="readFieldHeader" href="#readFieldHeader"><span>readFieldHeader:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readFieldHeader(b: var Buffer; fieldId: var uint16; valueSize: var int): bool" href="openparser/fbe.html#readFieldHeader%2CBuffer%2Cuint16%2Cint">fbe: proc readFieldHeader(b: var Buffer; fieldId: var uint16; valueSize: var int): bool</a></li>
+          </ul></dd>
+<dt><a name="readFieldValue" href="#readFieldValue"><span>readFieldValue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readFieldValue[T](b: var Buffer; valueSize: int; readFn: proc (b: var Buffer): T): T" href="openparser/fbe.html#readFieldValue%2CBuffer%2Cint%2Cproc%28Buffer%29">fbe: proc readFieldValue[T](b: var Buffer; valueSize: int; readFn: proc (b: var Buffer): T): T</a></li>
+          </ul></dd>
+<dt><a name="readFlags16" href="#readFlags16"><span>readFlags16:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readFlags16(b: var Buffer): uint16" href="openparser/fbe.html#readFlags16%2CBuffer">fbe: proc readFlags16(b: var Buffer): uint16</a></li>
+          </ul></dd>
+<dt><a name="readFlags32" href="#readFlags32"><span>readFlags32:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readFlags32(b: var Buffer): uint32" href="openparser/fbe.html#readFlags32%2CBuffer">fbe: proc readFlags32(b: var Buffer): uint32</a></li>
+          </ul></dd>
+<dt><a name="readFlags64" href="#readFlags64"><span>readFlags64:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readFlags64(b: var Buffer): uint64" href="openparser/fbe.html#readFlags64%2CBuffer">fbe: proc readFlags64(b: var Buffer): uint64</a></li>
+          </ul></dd>
+<dt><a name="readFlags8" href="#readFlags8"><span>readFlags8:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readFlags8(b: var Buffer): uint8" href="openparser/fbe.html#readFlags8%2CBuffer">fbe: proc readFlags8(b: var Buffer): uint8</a></li>
+          </ul></dd>
+<dt><a name="readFloat32LE" href="#readFloat32LE"><span>readFloat32LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readFloat32LE(b: var Buffer): float32" href="openparser/fbe.html#readFloat32LE%2CBuffer">fbe: proc readFloat32LE(b: var Buffer): float32</a></li>
+          </ul></dd>
+<dt><a name="readFloat64LE" href="#readFloat64LE"><span>readFloat64LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readFloat64LE(b: var Buffer): float64" href="openparser/fbe.html#readFloat64LE%2CBuffer">fbe: proc readFloat64LE(b: var Buffer): float64</a></li>
+          </ul></dd>
+<dt><a name="readHash" href="#readHash"><span>readHash:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readHash[K, V](b: var Buffer; readKey: proc (b: var Buffer): K;
+               readVal: proc (b: var Buffer): V): seq[tuple[key: K, val: V]]" href="openparser/fbe.html#readHash%2CBuffer%2Cproc%28Buffer%29%2Cproc%28Buffer%29">fbe: proc readHash[K, V](b: var Buffer; readKey: proc (b: var Buffer): K;
+               readVal: proc (b: var Buffer): V): seq[tuple[key: K, val: V]]</a></li>
+          </ul></dd>
+<dt><a name="readInt16LE" href="#readInt16LE"><span>readInt16LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readInt16LE(b: var Buffer): int16" href="openparser/fbe.html#readInt16LE%2CBuffer">fbe: proc readInt16LE(b: var Buffer): int16</a></li>
+          </ul></dd>
+<dt><a name="readInt32LE" href="#readInt32LE"><span>readInt32LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readInt32LE(b: var Buffer): int32" href="openparser/fbe.html#readInt32LE%2CBuffer">fbe: proc readInt32LE(b: var Buffer): int32</a></li>
+          </ul></dd>
+<dt><a name="readInt64LE" href="#readInt64LE"><span>readInt64LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readInt64LE(b: var Buffer): int64" href="openparser/fbe.html#readInt64LE%2CBuffer">fbe: proc readInt64LE(b: var Buffer): int64</a></li>
+          </ul></dd>
+<dt><a name="readInt8" href="#readInt8"><span>readInt8:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readInt8(b: var Buffer): int8" href="openparser/fbe.html#readInt8%2CBuffer">fbe: proc readInt8(b: var Buffer): int8</a></li>
+          </ul></dd>
+<dt><a name="readList" href="#readList"><span>readList:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readList[T](b: var Buffer; readElem: proc (b: var Buffer): T): seq[T]" href="openparser/fbe.html#readList%2CBuffer%2Cproc%28Buffer%29">fbe: proc readList[T](b: var Buffer; readElem: proc (b: var Buffer): T): seq[T]</a></li>
+          </ul></dd>
+<dt><a name="readMap" href="#readMap"><span>readMap:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readMap[K, V](b: var Buffer; readKey: proc (b: var Buffer): K;
+              readVal: proc (b: var Buffer): V): seq[tuple[key: K, val: V]]" href="openparser/fbe.html#readMap%2CBuffer%2Cproc%28Buffer%29%2Cproc%28Buffer%29">fbe: proc readMap[K, V](b: var Buffer; readKey: proc (b: var Buffer): K;
+              readVal: proc (b: var Buffer): V): seq[tuple[key: K, val: V]]</a></li>
+          </ul></dd>
+<dt><a name="readOptional" href="#readOptional"><span>readOptional:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readOptional[T](b: var Buffer; readVal: proc (b: var Buffer): T;
+                hasValue: var bool): T" href="openparser/fbe.html#readOptional%2CBuffer%2Cproc%28Buffer%29%2Cbool">fbe: proc readOptional[T](b: var Buffer; readVal: proc (b: var Buffer): T;
+                hasValue: var bool): T</a></li>
+          </ul></dd>
 <dt><a name="readRss" href="#readRss"><span>readRss:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="rss: proc readRss(filePath: string): RssFeed" href="openparser/rss.html#readRss%2Cstring">rss: proc readRss(filePath: string): RssFeed</a></li>
+          </ul></dd>
+<dt><a name="readString" href="#readString"><span>readString:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readString(b: var Buffer): string" href="openparser/fbe.html#readString%2CBuffer">fbe: proc readString(b: var Buffer): string</a></li>
+          </ul></dd>
+<dt><a name="readTimestamp" href="#readTimestamp"><span>readTimestamp:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readTimestamp(b: var Buffer): uint64" href="openparser/fbe.html#readTimestamp%2CBuffer">fbe: proc readTimestamp(b: var Buffer): uint64</a></li>
+          </ul></dd>
+<dt><a name="readUint16LE" href="#readUint16LE"><span>readUint16LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readUint16LE(b: var Buffer): uint16" href="openparser/fbe.html#readUint16LE%2CBuffer">fbe: proc readUint16LE(b: var Buffer): uint16</a></li>
+          </ul></dd>
+<dt><a name="readUint32LE" href="#readUint32LE"><span>readUint32LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readUint32LE(b: var Buffer): uint32" href="openparser/fbe.html#readUint32LE%2CBuffer">fbe: proc readUint32LE(b: var Buffer): uint32</a></li>
+          </ul></dd>
+<dt><a name="readUint64LE" href="#readUint64LE"><span>readUint64LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readUint64LE(b: var Buffer): uint64" href="openparser/fbe.html#readUint64LE%2CBuffer">fbe: proc readUint64LE(b: var Buffer): uint64</a></li>
+          </ul></dd>
+<dt><a name="readUUID" href="#readUUID"><span>readUUID:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readUUID(b: var Buffer): seq[uint8]" href="openparser/fbe.html#readUUID%2CBuffer">fbe: proc readUUID(b: var Buffer): seq[uint8]</a></li>
+          </ul></dd>
+<dt><a name="readVector" href="#readVector"><span>readVector:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readVector[T](b: var Buffer; readElem: proc (b: var Buffer): T): seq[T]" href="openparser/fbe.html#readVector%2CBuffer%2Cproc%28Buffer%29">fbe: proc readVector[T](b: var Buffer; readElem: proc (b: var Buffer): T): seq[T]</a></li>
+          </ul></dd>
+<dt><a name="readWChar" href="#readWChar"><span>readWChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readWChar(b: var Buffer): uint32" href="openparser/fbe.html#readWChar%2CBuffer">fbe: proc readWChar(b: var Buffer): uint32</a></li>
+          </ul></dd>
+<dt><a name="readWith" href="#readWith"><span>readWith:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc readWith[T](b: var Buffer; readFn: proc (b: var Buffer): T): T" href="openparser/fbe.html#readWith%2CBuffer%2Cproc%28Buffer%29">fbe: proc readWith[T](b: var Buffer; readFn: proc (b: var Buffer): T): T</a></li>
+          </ul></dd>
+<dt><a name="remaining" href="#remaining"><span>remaining:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc remaining(b: Buffer): int" href="openparser/fbe.html#remaining%2CBuffer">fbe: proc remaining(b: Buffer): int</a></li>
+          </ul></dd>
+<dt><a name="reset" href="#reset"><span>reset:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc reset(b: var Buffer)" href="openparser/fbe.html#reset%2CBuffer">fbe: proc reset(b: var Buffer)</a></li>
+          </ul></dd>
+<dt><a name="ROOT_HEADER_SIZE" href="#ROOT_HEADER_SIZE"><span>ROOT_HEADER_SIZE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: const ROOT_HEADER_SIZE" href="openparser/fbe.html#ROOT_HEADER_SIZE">fbe: const ROOT_HEADER_SIZE</a></li>
           </ul></dd>
 <dt><a name="RssFeed" href="#RssFeed"><span>RssFeed:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -501,6 +1033,10 @@
 <li><a class="reference external"
           data-doc-search-tag="rss: object RSSParsingError" href="openparser/rss.html#RSSParsingError">rss: object RSSParsingError</a></li>
           </ul></dd>
+<dt><a name="skipBytes" href="#skipBytes"><span>skipBytes:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc skipBytes(b: var Buffer; n: int)" href="openparser/fbe.html#skipBytes%2CBuffer%2Cint">fbe: proc skipBytes(b: var Buffer; n: int)</a></li>
+          </ul></dd>
 <dt><a name="skippable" href="#skippable"><span>skippable:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: template skippable()" href="openparser/json.html#skippable.t">json: template skippable()</a></li>
@@ -509,13 +1045,61 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc skipValue(parser: var JsonParser)" href="openparser/json.html#skipValue%2CJsonParser">json: proc skipValue(parser: var JsonParser)</a></li>
           </ul></dd>
+<dt><a name="StructCtx" href="#StructCtx"><span>StructCtx:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: object StructCtx" href="openparser/fbe.html#StructCtx">fbe: object StructCtx</a></li>
+          </ul></dd>
 <dt><a name="toAtomXml" href="#toAtomXml"><span>toAtomXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="feed: proc toAtomXml(feed: AtomFeed): string" href="openparser/feed.html#toAtomXml%2CAtomFeed">feed: proc toAtomXml(feed: AtomFeed): string</a></li>
           </ul></dd>
+<dt><a name="toBson" href="#toBson"><span>toBson:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: proc toBson(node: JsonNode): seq[byte]" href="openparser/bson.html#toBson%2CJsonNode">bson: proc toBson(node: JsonNode): seq[byte]</a></li>
+          </ul></dd>
+<dt><a name="toBytes" href="#toBytes"><span>toBytes:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: proc toBytes(doc: BSONDocument): seq[byte]" href="openparser/bson.html#toBytes%2CBSONDocument">bson: proc toBytes(doc: BSONDocument): seq[byte]</a></li>
+          </ul></dd>
 <dt><a name="toJson" href="#toJson"><span>toJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc toJson[T](v: T; opts: JsonOptions = nil): string" href="openparser/json.html#toJson%2CT%2CJsonOptions">json: proc toJson[T](v: T; opts: JsonOptions = nil): string</a></li>
+          </ul></dd>
+<dt><a name="toJsonNode" href="#toJsonNode"><span>toJsonNode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: proc toJsonNode(doc: BSONDocument): JsonNode" href="openparser/bson.html#toJsonNode%2CBSONDocument">bson: proc toJsonNode(doc: BSONDocument): JsonNode</a></li>
+          </ul></dd>
+<dt><a name="TOML" href="#TOML"><span>TOML:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: type TOML" href="openparser/toml.html#TOML">toml: type TOML</a></li>
+          </ul></dd>
+<dt><a name="TomlDocument" href="#TomlDocument"><span>TomlDocument:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: type TomlDocument" href="openparser/toml.html#TomlDocument">toml: type TomlDocument</a></li>
+          </ul></dd>
+<dt><a name="TomlLexer" href="#TomlLexer"><span>TomlLexer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: object TomlLexer" href="openparser/toml.html#TomlLexer">toml: object TomlLexer</a></li>
+          </ul></dd>
+<dt><a name="TomlNode" href="#TomlNode"><span>TomlNode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: type TomlNode" href="openparser/toml.html#TomlNode">toml: type TomlNode</a></li>
+          </ul></dd>
+<dt><a name="TomlParser" href="#TomlParser"><span>TomlParser:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: object TomlParser" href="openparser/toml.html#TomlParser">toml: object TomlParser</a></li>
+          </ul></dd>
+<dt><a name="TomlToken" href="#TomlToken"><span>TomlToken:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: type TomlToken" href="openparser/toml.html#TomlToken">toml: type TomlToken</a></li>
+          </ul></dd>
+<dt><a name="TomlTokenKind" href="#TomlTokenKind"><span>TomlTokenKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: enum TomlTokenKind" href="openparser/toml.html#TomlTokenKind">toml: enum TomlTokenKind</a></li>
+          </ul></dd>
+<dt><a name="TomlValueKind" href="#TomlValueKind"><span>TomlValueKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: enum TomlValueKind" href="openparser/toml.html#TomlValueKind">toml: enum TomlValueKind</a></li>
           </ul></dd>
 <dt><a name="toRssXml" href="#toRssXml"><span>toRssXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -528,6 +1112,268 @@
 <dt><a name="toString" href="#toString"><span>toString:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc toString(f: CsvFieldSlice): string" href="openparser/csv.html#toString%2CCsvFieldSlice">csv: proc toString(f: CsvFieldSlice): string</a></li>
+          </ul></dd>
+<dt><a name="ttkBoolean" href="#ttkBoolean"><span>ttkBoolean:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkBoolean" href="openparser/toml.html#ttkBoolean">toml: TomlTokenKind.ttkBoolean</a></li>
+          </ul></dd>
+<dt><a name="ttkComma" href="#ttkComma"><span>ttkComma:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkComma" href="openparser/toml.html#ttkComma">toml: TomlTokenKind.ttkComma</a></li>
+          </ul></dd>
+<dt><a name="ttkComment" href="#ttkComment"><span>ttkComment:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkComment" href="openparser/toml.html#ttkComment">toml: TomlTokenKind.ttkComment</a></li>
+          </ul></dd>
+<dt><a name="ttkDateTime" href="#ttkDateTime"><span>ttkDateTime:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkDateTime" href="openparser/toml.html#ttkDateTime">toml: TomlTokenKind.ttkDateTime</a></li>
+          </ul></dd>
+<dt><a name="ttkDot" href="#ttkDot"><span>ttkDot:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkDot" href="openparser/toml.html#ttkDot">toml: TomlTokenKind.ttkDot</a></li>
+          </ul></dd>
+<dt><a name="ttkEOF" href="#ttkEOF"><span>ttkEOF:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkEOF" href="openparser/toml.html#ttkEOF">toml: TomlTokenKind.ttkEOF</a></li>
+          </ul></dd>
+<dt><a name="ttkEquals" href="#ttkEquals"><span>ttkEquals:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkEquals" href="openparser/toml.html#ttkEquals">toml: TomlTokenKind.ttkEquals</a></li>
+          </ul></dd>
+<dt><a name="ttkError" href="#ttkError"><span>ttkError:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkError" href="openparser/toml.html#ttkError">toml: TomlTokenKind.ttkError</a></li>
+          </ul></dd>
+<dt><a name="ttkFloat" href="#ttkFloat"><span>ttkFloat:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkFloat" href="openparser/toml.html#ttkFloat">toml: TomlTokenKind.ttkFloat</a></li>
+          </ul></dd>
+<dt><a name="ttkIdentifier" href="#ttkIdentifier"><span>ttkIdentifier:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkIdentifier" href="openparser/toml.html#ttkIdentifier">toml: TomlTokenKind.ttkIdentifier</a></li>
+          </ul></dd>
+<dt><a name="ttkInteger" href="#ttkInteger"><span>ttkInteger:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkInteger" href="openparser/toml.html#ttkInteger">toml: TomlTokenKind.ttkInteger</a></li>
+          </ul></dd>
+<dt><a name="ttkLB" href="#ttkLB"><span>ttkLB:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkLB" href="openparser/toml.html#ttkLB">toml: TomlTokenKind.ttkLB</a></li>
+          </ul></dd>
+<dt><a name="ttkLC" href="#ttkLC"><span>ttkLC:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkLC" href="openparser/toml.html#ttkLC">toml: TomlTokenKind.ttkLC</a></li>
+          </ul></dd>
+<dt><a name="ttkRB" href="#ttkRB"><span>ttkRB:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkRB" href="openparser/toml.html#ttkRB">toml: TomlTokenKind.ttkRB</a></li>
+          </ul></dd>
+<dt><a name="ttkRC" href="#ttkRC"><span>ttkRC:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkRC" href="openparser/toml.html#ttkRC">toml: TomlTokenKind.ttkRC</a></li>
+          </ul></dd>
+<dt><a name="ttkString" href="#ttkString"><span>ttkString:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlTokenKind.ttkString" href="openparser/toml.html#ttkString">toml: TomlTokenKind.ttkString</a></li>
+          </ul></dd>
+<dt><a name="tvkArray" href="#tvkArray"><span>tvkArray:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlValueKind.tvkArray" href="openparser/toml.html#tvkArray">toml: TomlValueKind.tvkArray</a></li>
+          </ul></dd>
+<dt><a name="tvkBoolean" href="#tvkBoolean"><span>tvkBoolean:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlValueKind.tvkBoolean" href="openparser/toml.html#tvkBoolean">toml: TomlValueKind.tvkBoolean</a></li>
+          </ul></dd>
+<dt><a name="tvkDateTime" href="#tvkDateTime"><span>tvkDateTime:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlValueKind.tvkDateTime" href="openparser/toml.html#tvkDateTime">toml: TomlValueKind.tvkDateTime</a></li>
+          </ul></dd>
+<dt><a name="tvkFloat" href="#tvkFloat"><span>tvkFloat:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlValueKind.tvkFloat" href="openparser/toml.html#tvkFloat">toml: TomlValueKind.tvkFloat</a></li>
+          </ul></dd>
+<dt><a name="tvkInteger" href="#tvkInteger"><span>tvkInteger:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlValueKind.tvkInteger" href="openparser/toml.html#tvkInteger">toml: TomlValueKind.tvkInteger</a></li>
+          </ul></dd>
+<dt><a name="tvkString" href="#tvkString"><span>tvkString:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlValueKind.tvkString" href="openparser/toml.html#tvkString">toml: TomlValueKind.tvkString</a></li>
+          </ul></dd>
+<dt><a name="tvkTable" href="#tvkTable"><span>tvkTable:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: TomlValueKind.tvkTable" href="openparser/toml.html#tvkTable">toml: TomlValueKind.tvkTable</a></li>
+          </ul></dd>
+<dt><a name="writeArrayFixed" href="#writeArrayFixed"><span>writeArrayFixed:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeArrayFixed(b: var Buffer; count: int;
+                writeElem: proc (b: var Buffer; idx: int))" href="openparser/fbe.html#writeArrayFixed%2CBuffer%2Cint%2Cproc%28Buffer%2Cint%29">fbe: proc writeArrayFixed(b: var Buffer; count: int;
+                writeElem: proc (b: var Buffer; idx: int))</a></li>
+          </ul></dd>
+<dt><a name="writeBool" href="#writeBool"><span>writeBool:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeBool(b: var Buffer; v: bool)" href="openparser/fbe.html#writeBool%2CBuffer%2Cbool">fbe: proc writeBool(b: var Buffer; v: bool)</a></li>
+          </ul></dd>
+<dt><a name="writeBSONDocument" href="#writeBSONDocument"><span>writeBSONDocument:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="bson: proc writeBSONDocument(path: string; doc: BSONDocument)" href="openparser/bson.html#writeBSONDocument%2Cstring%2CBSONDocument">bson: proc writeBSONDocument(path: string; doc: BSONDocument)</a></li>
+          </ul></dd>
+<dt><a name="writeByte" href="#writeByte"><span>writeByte:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeByte(b: var Buffer; v: uint8)" href="openparser/fbe.html#writeByte%2CBuffer%2Cuint8">fbe: proc writeByte(b: var Buffer; v: uint8)</a></li>
+          </ul></dd>
+<dt><a name="writeBytes" href="#writeBytes"><span>writeBytes:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeBytes(b: var Buffer; data: seq[uint8])" href="openparser/fbe.html#writeBytes%2CBuffer%2Cseq%5Buint8%5D">fbe: proc writeBytes(b: var Buffer; data: seq[uint8])</a></li>
+          </ul></dd>
+<dt><a name="writeChar" href="#writeChar"><span>writeChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeChar(b: var Buffer; c: uint8)" href="openparser/fbe.html#writeChar%2CBuffer%2Cuint8">fbe: proc writeChar(b: var Buffer; c: uint8)</a></li>
+          </ul></dd>
+<dt><a name="writeDecimal" href="#writeDecimal"><span>writeDecimal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeDecimal(b: var Buffer; data: openArray[uint8])" href="openparser/fbe.html#writeDecimal%2CBuffer%2CopenArray%5Buint8%5D">fbe: proc writeDecimal(b: var Buffer; data: openArray[uint8])</a></li>
+          </ul></dd>
+<dt><a name="writeEnum16" href="#writeEnum16"><span>writeEnum16:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeEnum16(b: var Buffer; v: int16)" href="openparser/fbe.html#writeEnum16%2CBuffer%2Cint16">fbe: proc writeEnum16(b: var Buffer; v: int16)</a></li>
+          </ul></dd>
+<dt><a name="writeEnum16u" href="#writeEnum16u"><span>writeEnum16u:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeEnum16u(b: var Buffer; v: uint16)" href="openparser/fbe.html#writeEnum16u%2CBuffer%2Cuint16">fbe: proc writeEnum16u(b: var Buffer; v: uint16)</a></li>
+          </ul></dd>
+<dt><a name="writeEnum32" href="#writeEnum32"><span>writeEnum32:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeEnum32(b: var Buffer; v: int32)" href="openparser/fbe.html#writeEnum32%2CBuffer%2Cint32">fbe: proc writeEnum32(b: var Buffer; v: int32)</a></li>
+          </ul></dd>
+<dt><a name="writeEnum32u" href="#writeEnum32u"><span>writeEnum32u:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeEnum32u(b: var Buffer; v: uint32)" href="openparser/fbe.html#writeEnum32u%2CBuffer%2Cuint32">fbe: proc writeEnum32u(b: var Buffer; v: uint32)</a></li>
+          </ul></dd>
+<dt><a name="writeEnum64" href="#writeEnum64"><span>writeEnum64:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeEnum64(b: var Buffer; v: int64)" href="openparser/fbe.html#writeEnum64%2CBuffer%2Cint64">fbe: proc writeEnum64(b: var Buffer; v: int64)</a></li>
+          </ul></dd>
+<dt><a name="writeEnum64u" href="#writeEnum64u"><span>writeEnum64u:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeEnum64u(b: var Buffer; v: uint64)" href="openparser/fbe.html#writeEnum64u%2CBuffer%2Cuint64">fbe: proc writeEnum64u(b: var Buffer; v: uint64)</a></li>
+          </ul></dd>
+<dt><a name="writeEnum8" href="#writeEnum8"><span>writeEnum8:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeEnum8(b: var Buffer; v: int8)" href="openparser/fbe.html#writeEnum8%2CBuffer%2Cint8">fbe: proc writeEnum8(b: var Buffer; v: int8)</a></li>
+          </ul></dd>
+<dt><a name="writeEnum8u" href="#writeEnum8u"><span>writeEnum8u:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeEnum8u(b: var Buffer; v: uint8)" href="openparser/fbe.html#writeEnum8u%2CBuffer%2Cuint8">fbe: proc writeEnum8u(b: var Buffer; v: uint8)</a></li>
+          </ul></dd>
+<dt><a name="writeField" href="#writeField"><span>writeField:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeField(b: var Buffer; fieldId: uint16; writeVal: proc (b: var Buffer))" href="openparser/fbe.html#writeField%2CBuffer%2Cuint16%2Cproc%28Buffer%29">fbe: proc writeField(b: var Buffer; fieldId: uint16; writeVal: proc (b: var Buffer))</a></li>
+          </ul></dd>
+<dt><a name="writeFlags16" href="#writeFlags16"><span>writeFlags16:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeFlags16(b: var Buffer; v: uint16)" href="openparser/fbe.html#writeFlags16%2CBuffer%2Cuint16">fbe: proc writeFlags16(b: var Buffer; v: uint16)</a></li>
+          </ul></dd>
+<dt><a name="writeFlags32" href="#writeFlags32"><span>writeFlags32:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeFlags32(b: var Buffer; v: uint32)" href="openparser/fbe.html#writeFlags32%2CBuffer%2Cuint32">fbe: proc writeFlags32(b: var Buffer; v: uint32)</a></li>
+          </ul></dd>
+<dt><a name="writeFlags64" href="#writeFlags64"><span>writeFlags64:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeFlags64(b: var Buffer; v: uint64)" href="openparser/fbe.html#writeFlags64%2CBuffer%2Cuint64">fbe: proc writeFlags64(b: var Buffer; v: uint64)</a></li>
+          </ul></dd>
+<dt><a name="writeFlags8" href="#writeFlags8"><span>writeFlags8:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeFlags8(b: var Buffer; v: uint8)" href="openparser/fbe.html#writeFlags8%2CBuffer%2Cuint8">fbe: proc writeFlags8(b: var Buffer; v: uint8)</a></li>
+          </ul></dd>
+<dt><a name="writeFloat32LE" href="#writeFloat32LE"><span>writeFloat32LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeFloat32LE(b: var Buffer; x: float32)" href="openparser/fbe.html#writeFloat32LE%2CBuffer%2Cfloat32">fbe: proc writeFloat32LE(b: var Buffer; x: float32)</a></li>
+          </ul></dd>
+<dt><a name="writeFloat64LE" href="#writeFloat64LE"><span>writeFloat64LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeFloat64LE(b: var Buffer; x: float64)" href="openparser/fbe.html#writeFloat64LE%2CBuffer%2Cfloat64">fbe: proc writeFloat64LE(b: var Buffer; x: float64)</a></li>
+          </ul></dd>
+<dt><a name="writeHash" href="#writeHash"><span>writeHash:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeHash[K, V](b: var Buffer; items: seq[tuple[key: K, val: V]];
+                writeKey: proc (b: var Buffer; k: K);
+                writeVal: proc (b: var Buffer; v: V))" href="openparser/fbe.html#writeHash%2CBuffer%2Cseq%5Btuple%5BK%2CV%5D%5D%2Cproc%28Buffer%2CK%29%2Cproc%28Buffer%2CV%29">fbe: proc writeHash[K, V](b: var Buffer; items: seq[tuple[key: K, val: V]];
+                writeKey: proc (b: var Buffer; k: K);
+                writeVal: proc (b: var Buffer; v: V))</a></li>
+          </ul></dd>
+<dt><a name="writeInt16LE" href="#writeInt16LE"><span>writeInt16LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeInt16LE(b: var Buffer; v: int16)" href="openparser/fbe.html#writeInt16LE%2CBuffer%2Cint16">fbe: proc writeInt16LE(b: var Buffer; v: int16)</a></li>
+          </ul></dd>
+<dt><a name="writeInt32LE" href="#writeInt32LE"><span>writeInt32LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeInt32LE(b: var Buffer; v: int32)" href="openparser/fbe.html#writeInt32LE%2CBuffer%2Cint32">fbe: proc writeInt32LE(b: var Buffer; v: int32)</a></li>
+          </ul></dd>
+<dt><a name="writeInt64LE" href="#writeInt64LE"><span>writeInt64LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeInt64LE(b: var Buffer; v: int64)" href="openparser/fbe.html#writeInt64LE%2CBuffer%2Cint64">fbe: proc writeInt64LE(b: var Buffer; v: int64)</a></li>
+          </ul></dd>
+<dt><a name="writeInt8" href="#writeInt8"><span>writeInt8:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeInt8(b: var Buffer; v: int8)" href="openparser/fbe.html#writeInt8%2CBuffer%2Cint8">fbe: proc writeInt8(b: var Buffer; v: int8)</a></li>
+          </ul></dd>
+<dt><a name="writeList" href="#writeList"><span>writeList:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeList[T](b: var Buffer; items: seq[T]; writeElem: proc (b: var Buffer; v: T))" href="openparser/fbe.html#writeList%2CBuffer%2Cseq%5BT%5D%2Cproc%28Buffer%2CT%29">fbe: proc writeList[T](b: var Buffer; items: seq[T]; writeElem: proc (b: var Buffer; v: T))</a></li>
+          </ul></dd>
+<dt><a name="writeMap" href="#writeMap"><span>writeMap:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeMap[K, V](b: var Buffer; items: seq[tuple[key: K, val: V]];
+               writeKey: proc (b: var Buffer; k: K);
+               writeVal: proc (b: var Buffer; v: V))" href="openparser/fbe.html#writeMap%2CBuffer%2Cseq%5Btuple%5BK%2CV%5D%5D%2Cproc%28Buffer%2CK%29%2Cproc%28Buffer%2CV%29">fbe: proc writeMap[K, V](b: var Buffer; items: seq[tuple[key: K, val: V]];
+               writeKey: proc (b: var Buffer; k: K);
+               writeVal: proc (b: var Buffer; v: V))</a></li>
+          </ul></dd>
+<dt><a name="writeOptional" href="#writeOptional"><span>writeOptional:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeOptional[T](b: var Buffer; hasValue: bool; value: T;
+                 writeVal: proc (b: var Buffer; v: T))" href="openparser/fbe.html#writeOptional%2CBuffer%2Cbool%2CT%2Cproc%28Buffer%2CT%29">fbe: proc writeOptional[T](b: var Buffer; hasValue: bool; value: T;
+                 writeVal: proc (b: var Buffer; v: T))</a></li>
+          </ul></dd>
+<dt><a name="writeString" href="#writeString"><span>writeString:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeString(b: var Buffer; s: string)" href="openparser/fbe.html#writeString%2CBuffer%2Cstring">fbe: proc writeString(b: var Buffer; s: string)</a></li>
+          </ul></dd>
+<dt><a name="writeTimestamp" href="#writeTimestamp"><span>writeTimestamp:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeTimestamp(b: var Buffer; ns: uint64)" href="openparser/fbe.html#writeTimestamp%2CBuffer%2Cuint64">fbe: proc writeTimestamp(b: var Buffer; ns: uint64)</a></li>
+          </ul></dd>
+<dt><a name="writeUint16LE" href="#writeUint16LE"><span>writeUint16LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeUint16LE(b: var Buffer; v: uint16)" href="openparser/fbe.html#writeUint16LE%2CBuffer%2Cuint16">fbe: proc writeUint16LE(b: var Buffer; v: uint16)</a></li>
+          </ul></dd>
+<dt><a name="writeUint32LE" href="#writeUint32LE"><span>writeUint32LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeUint32LE(b: var Buffer; v: uint32)" href="openparser/fbe.html#writeUint32LE%2CBuffer%2Cuint32">fbe: proc writeUint32LE(b: var Buffer; v: uint32)</a></li>
+          </ul></dd>
+<dt><a name="writeUint64LE" href="#writeUint64LE"><span>writeUint64LE:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeUint64LE(b: var Buffer; v: uint64)" href="openparser/fbe.html#writeUint64LE%2CBuffer%2Cuint64">fbe: proc writeUint64LE(b: var Buffer; v: uint64)</a></li>
+          </ul></dd>
+<dt><a name="writeUUID" href="#writeUUID"><span>writeUUID:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeUUID(b: var Buffer; u: openArray[uint8])" href="openparser/fbe.html#writeUUID%2CBuffer%2CopenArray%5Buint8%5D">fbe: proc writeUUID(b: var Buffer; u: openArray[uint8])</a></li>
+          </ul></dd>
+<dt><a name="writeVector" href="#writeVector"><span>writeVector:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeVector[T](b: var Buffer; items: seq[T];
+               writeElem: proc (b: var Buffer; v: T))" href="openparser/fbe.html#writeVector%2CBuffer%2Cseq%5BT%5D%2Cproc%28Buffer%2CT%29">fbe: proc writeVector[T](b: var Buffer; items: seq[T];
+               writeElem: proc (b: var Buffer; v: T))</a></li>
+          </ul></dd>
+<dt><a name="writeWChar" href="#writeWChar"><span>writeWChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeWChar(b: var Buffer; wc: uint32)" href="openparser/fbe.html#writeWChar%2CBuffer%2Cuint32">fbe: proc writeWChar(b: var Buffer; wc: uint32)</a></li>
+          </ul></dd>
+<dt><a name="writeWith" href="#writeWith"><span>writeWith:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="fbe: proc writeWith(b: var Buffer; writeFn: proc (b: var Buffer))" href="openparser/fbe.html#writeWith%2CBuffer%2Cproc%28Buffer%29">fbe: proc writeWith(b: var Buffer; writeFn: proc (b: var Buffer))</a></li>
           </ul></dd>
 <dt><a name="YAML" href="#YAML"><span>YAML:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -669,7 +1515,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-09 21:22:31 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-10 07:49:48 UTC</small>
       </div>
     </div>
   </div>

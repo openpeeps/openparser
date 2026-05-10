@@ -1,0 +1,144 @@
+nimTitle	fbe	openparser/fbe.html	module openparser/fbe		0
+nim	StructCtx	openparser/fbe.html#StructCtx	object StructCtx		23
+nim	Buffer	openparser/fbe.html#Buffer	object Buffer		33
+nim	initBuffer	openparser/fbe.html#initBuffer,int	proc initBuffer(capacity = 256): Buffer		43
+nim	reset	openparser/fbe.html#reset,Buffer	proc reset(b: var Buffer)		57
+nim	len	openparser/fbe.html#len,Buffer	proc len(b: Buffer): int		63
+nim	remaining	openparser/fbe.html#remaining,Buffer	proc remaining(b: Buffer): int		67
+nim	ensureRead	openparser/fbe.html#ensureRead,Buffer,int	proc ensureRead(b: Buffer; n: int)		72
+nim	skipBytes	openparser/fbe.html#skipBytes,Buffer,int	proc skipBytes(b: var Buffer; n: int)		78
+nim	writeByte	openparser/fbe.html#writeByte,Buffer,uint8	proc writeByte(b: var Buffer; v: uint8)		85
+nim	readByte	openparser/fbe.html#readByte,Buffer	proc readByte(b: var Buffer): uint8		90
+nim	appendReserve	openparser/fbe.html#appendReserve,Buffer,int	proc appendReserve(b: var Buffer; n: int): int		98
+nim	writeUint16LE	openparser/fbe.html#writeUint16LE,Buffer,uint16	proc writeUint16LE(b: var Buffer; v: uint16)		109
+nim	readUint16LE	openparser/fbe.html#readUint16LE,Buffer	proc readUint16LE(b: var Buffer): uint16		114
+nim	writeUint32LE	openparser/fbe.html#writeUint32LE,Buffer,uint32	proc writeUint32LE(b: var Buffer; v: uint32)		121
+nim	readUint32LE	openparser/fbe.html#readUint32LE,Buffer	proc readUint32LE(b: var Buffer): uint32		128
+nim	writeUint64LE	openparser/fbe.html#writeUint64LE,Buffer,uint64	proc writeUint64LE(b: var Buffer; v: uint64)		137
+nim	readUint64LE	openparser/fbe.html#readUint64LE,Buffer	proc readUint64LE(b: var Buffer): uint64		142
+nim	writeInt8	openparser/fbe.html#writeInt8,Buffer,int8	proc writeInt8(b: var Buffer; v: int8)		151
+nim	readInt8	openparser/fbe.html#readInt8,Buffer	proc readInt8(b: var Buffer): int8		152
+nim	writeInt16LE	openparser/fbe.html#writeInt16LE,Buffer,int16	proc writeInt16LE(b: var Buffer; v: int16)		154
+nim	readInt16LE	openparser/fbe.html#readInt16LE,Buffer	proc readInt16LE(b: var Buffer): int16		157
+nim	writeInt32LE	openparser/fbe.html#writeInt32LE,Buffer,int32	proc writeInt32LE(b: var Buffer; v: int32)		160
+nim	readInt32LE	openparser/fbe.html#readInt32LE,Buffer	proc readInt32LE(b: var Buffer): int32		163
+nim	writeInt64LE	openparser/fbe.html#writeInt64LE,Buffer,int64	proc writeInt64LE(b: var Buffer; v: int64)		166
+nim	readInt64LE	openparser/fbe.html#readInt64LE,Buffer	proc readInt64LE(b: var Buffer): int64		169
+nim	writeBool	openparser/fbe.html#writeBool,Buffer,bool	proc writeBool(b: var Buffer; v: bool)		173
+nim	readBool	openparser/fbe.html#readBool,Buffer	proc readBool(b: var Buffer): bool		176
+nim	writeFloat32LE	openparser/fbe.html#writeFloat32LE,Buffer,float32	proc writeFloat32LE(b: var Buffer; x: float32)		180
+nim	readFloat32LE	openparser/fbe.html#readFloat32LE,Buffer	proc readFloat32LE(b: var Buffer): float32		185
+nim	writeFloat64LE	openparser/fbe.html#writeFloat64LE,Buffer,float64	proc writeFloat64LE(b: var Buffer; x: float64)		191
+nim	readFloat64LE	openparser/fbe.html#readFloat64LE,Buffer	proc readFloat64LE(b: var Buffer): float64		196
+nim	writeChar	openparser/fbe.html#writeChar,Buffer,uint8	proc writeChar(b: var Buffer; c: uint8)		203
+nim	readChar	openparser/fbe.html#readChar,Buffer	proc readChar(b: var Buffer): uint8		204
+nim	writeWChar	openparser/fbe.html#writeWChar,Buffer,uint32	proc writeWChar(b: var Buffer; wc: uint32)		206
+nim	readWChar	openparser/fbe.html#readWChar,Buffer	proc readWChar(b: var Buffer): uint32		207
+nim	writeBytes	openparser/fbe.html#writeBytes,Buffer,seq[uint8]	proc writeBytes(b: var Buffer; data: seq[uint8])		209
+nim	readBytes	openparser/fbe.html#readBytes,Buffer	proc readBytes(b: var Buffer): seq[uint8]		215
+nim	writeString	openparser/fbe.html#writeString,Buffer,string	proc writeString(b: var Buffer; s: string)		223
+nim	readString	openparser/fbe.html#readString,Buffer	proc readString(b: var Buffer): string		231
+nim	writeTimestamp	openparser/fbe.html#writeTimestamp,Buffer,uint64	proc writeTimestamp(b: var Buffer; ns: uint64)		241
+nim	readTimestamp	openparser/fbe.html#readTimestamp,Buffer	proc readTimestamp(b: var Buffer): uint64		242
+nim	writeUUID	openparser/fbe.html#writeUUID,Buffer,openArray[uint8]	proc writeUUID(b: var Buffer; u: openArray[uint8])		244
+nim	readUUID	openparser/fbe.html#readUUID,Buffer	proc readUUID(b: var Buffer): seq[uint8]		250
+nim	writeWith	openparser/fbe.html#writeWith,Buffer,proc(Buffer)	proc writeWith(b: var Buffer; writeFn: proc (b: var Buffer))		257
+nim	readWith	openparser/fbe.html#readWith,Buffer,proc(Buffer)	proc readWith[T](b: var Buffer; readFn: proc (b: var Buffer): T): T		260
+nim	appendRaw	openparser/fbe.html#appendRaw,Buffer,openArray[uint8]	proc appendRaw(b: var Buffer; data: openArray[uint8])		264
+nim	writeArrayFixed	openparser/fbe.html#writeArrayFixed,Buffer,int,proc(Buffer,int)	proc writeArrayFixed(b: var Buffer; count: int;\n                writeElem: proc (b: var Buffer; idx: int))		279
+nim	readArrayFixed	openparser/fbe.html#readArrayFixed,Buffer,int,proc(Buffer)	proc readArrayFixed[T](b: var Buffer; count: int; readElem: proc (b: var Buffer): T): seq[\n    T]		285
+nim	writeVector	openparser/fbe.html#writeVector,Buffer,seq[T],proc(Buffer,T)	proc writeVector[T](b: var Buffer; items: seq[T];\n               writeElem: proc (b: var Buffer; v: T))		291
+nim	readVector	openparser/fbe.html#readVector,Buffer,proc(Buffer)	proc readVector[T](b: var Buffer; readElem: proc (b: var Buffer): T): seq[T]		298
+nim	writeList	openparser/fbe.html#writeList,Buffer,seq[T],proc(Buffer,T)	proc writeList[T](b: var Buffer; items: seq[T]; writeElem: proc (b: var Buffer; v: T))		306
+nim	readList	openparser/fbe.html#readList,Buffer,proc(Buffer)	proc readList[T](b: var Buffer; readElem: proc (b: var Buffer): T): seq[T]		309
+nim	writeMap	openparser/fbe.html#writeMap,Buffer,seq[tuple[K,V]],proc(Buffer,K),proc(Buffer,V)	proc writeMap[K, V](b: var Buffer; items: seq[tuple[key: K, val: V]];\n               writeKey: proc (b: var Buffer; k: K);\n               writeVal: proc (b: var Buffer; v: V))		312
+nim	readMap	openparser/fbe.html#readMap,Buffer,proc(Buffer),proc(Buffer)	proc readMap[K, V](b: var Buffer; readKey: proc (b: var Buffer): K;\n              readVal: proc (b: var Buffer): V): seq[tuple[key: K, val: V]]		322
+nim	writeHash	openparser/fbe.html#writeHash,Buffer,seq[tuple[K,V]],proc(Buffer,K),proc(Buffer,V)	proc writeHash[K, V](b: var Buffer; items: seq[tuple[key: K, val: V]];\n                writeKey: proc (b: var Buffer; k: K);\n                writeVal: proc (b: var Buffer; v: V))		334
+nim	readHash	openparser/fbe.html#readHash,Buffer,proc(Buffer),proc(Buffer)	proc readHash[K, V](b: var Buffer; readKey: proc (b: var Buffer): K;\n               readVal: proc (b: var Buffer): V): seq[tuple[key: K, val: V]]		340
+nim	writeOptional	openparser/fbe.html#writeOptional,Buffer,bool,T,proc(Buffer,T)	proc writeOptional[T](b: var Buffer; hasValue: bool; value: T;\n                 writeVal: proc (b: var Buffer; v: T))		347
+nim	readOptional	openparser/fbe.html#readOptional,Buffer,proc(Buffer),bool	proc readOptional[T](b: var Buffer; readVal: proc (b: var Buffer): T;\n                hasValue: var bool): T		352
+nim	writeEnum8	openparser/fbe.html#writeEnum8,Buffer,int8	proc writeEnum8(b: var Buffer; v: int8)		362
+nim	readEnum8	openparser/fbe.html#readEnum8,Buffer	proc readEnum8(b: var Buffer): int8		363
+nim	writeEnum16	openparser/fbe.html#writeEnum16,Buffer,int16	proc writeEnum16(b: var Buffer; v: int16)		365
+nim	readEnum16	openparser/fbe.html#readEnum16,Buffer	proc readEnum16(b: var Buffer): int16		366
+nim	writeEnum32	openparser/fbe.html#writeEnum32,Buffer,int32	proc writeEnum32(b: var Buffer; v: int32)		368
+nim	readEnum32	openparser/fbe.html#readEnum32,Buffer	proc readEnum32(b: var Buffer): int32		369
+nim	writeEnum64	openparser/fbe.html#writeEnum64,Buffer,int64	proc writeEnum64(b: var Buffer; v: int64)		371
+nim	readEnum64	openparser/fbe.html#readEnum64,Buffer	proc readEnum64(b: var Buffer): int64		372
+nim	writeEnum8u	openparser/fbe.html#writeEnum8u,Buffer,uint8	proc writeEnum8u(b: var Buffer; v: uint8)		375
+nim	readEnum8u	openparser/fbe.html#readEnum8u,Buffer	proc readEnum8u(b: var Buffer): uint8		376
+nim	writeEnum16u	openparser/fbe.html#writeEnum16u,Buffer,uint16	proc writeEnum16u(b: var Buffer; v: uint16)		378
+nim	readEnum16u	openparser/fbe.html#readEnum16u,Buffer	proc readEnum16u(b: var Buffer): uint16		379
+nim	writeEnum32u	openparser/fbe.html#writeEnum32u,Buffer,uint32	proc writeEnum32u(b: var Buffer; v: uint32)		381
+nim	readEnum32u	openparser/fbe.html#readEnum32u,Buffer	proc readEnum32u(b: var Buffer): uint32		382
+nim	writeEnum64u	openparser/fbe.html#writeEnum64u,Buffer,uint64	proc writeEnum64u(b: var Buffer; v: uint64)		384
+nim	readEnum64u	openparser/fbe.html#readEnum64u,Buffer	proc readEnum64u(b: var Buffer): uint64		385
+nim	writeFlags8	openparser/fbe.html#writeFlags8,Buffer,uint8	proc writeFlags8(b: var Buffer; v: uint8)		389
+nim	readFlags8	openparser/fbe.html#readFlags8,Buffer	proc readFlags8(b: var Buffer): uint8		390
+nim	writeFlags16	openparser/fbe.html#writeFlags16,Buffer,uint16	proc writeFlags16(b: var Buffer; v: uint16)		392
+nim	readFlags16	openparser/fbe.html#readFlags16,Buffer	proc readFlags16(b: var Buffer): uint16		393
+nim	writeFlags32	openparser/fbe.html#writeFlags32,Buffer,uint32	proc writeFlags32(b: var Buffer; v: uint32)		395
+nim	readFlags32	openparser/fbe.html#readFlags32,Buffer	proc readFlags32(b: var Buffer): uint32		396
+nim	writeFlags64	openparser/fbe.html#writeFlags64,Buffer,uint64	proc writeFlags64(b: var Buffer; v: uint64)		398
+nim	readFlags64	openparser/fbe.html#readFlags64,Buffer	proc readFlags64(b: var Buffer): uint64		399
+nim	writeDecimal	openparser/fbe.html#writeDecimal,Buffer,openArray[uint8]	proc writeDecimal(b: var Buffer; data: openArray[uint8])		401
+nim	readDecimal	openparser/fbe.html#readDecimal,Buffer	proc readDecimal(b: var Buffer): seq[uint8]		407
+nim	patchUint32At	openparser/fbe.html#patchUint32At,Buffer,int,uint32	proc patchUint32At(b: var Buffer; pos: int; v: uint32)		418
+nim	patchUint16At	openparser/fbe.html#patchUint16At,Buffer,int,uint16	proc patchUint16At(b: var Buffer; pos: int; v: uint16)		425
+nim	ROOT_HEADER_SIZE	openparser/fbe.html#ROOT_HEADER_SIZE	const ROOT_HEADER_SIZE		432
+nim	INNER_HEADER_SIZE	openparser/fbe.html#INNER_HEADER_SIZE	const INNER_HEADER_SIZE		433
+nim	beginRootStruct	openparser/fbe.html#beginRootStruct,Buffer,uint32	proc beginRootStruct(b: var Buffer; version: uint32)		436
+nim	endRootStruct	openparser/fbe.html#endRootStruct,Buffer	proc endRootStruct(b: var Buffer)		458
+nim	beginInnerStruct	openparser/fbe.html#beginInnerStruct,Buffer,uint32	proc beginInnerStruct(b: var Buffer; version: uint32)		471
+nim	endInnerStruct	openparser/fbe.html#endInnerStruct,Buffer	proc endInnerStruct(b: var Buffer)		490
+nim	writeField	openparser/fbe.html#writeField,Buffer,uint16,proc(Buffer)	proc writeField(b: var Buffer; fieldId: uint16; writeVal: proc (b: var Buffer))		502
+nim	beginReadRootStruct	openparser/fbe.html#beginReadRootStruct,Buffer	proc beginReadRootStruct(b: var Buffer): uint32		521
+nim	endReadRootStruct	openparser/fbe.html#endReadRootStruct,Buffer	proc endReadRootStruct(b: var Buffer)		545
+nim	beginReadInnerStruct	openparser/fbe.html#beginReadInnerStruct,Buffer	proc beginReadInnerStruct(b: var Buffer): uint32		559
+nim	endReadInnerStruct	openparser/fbe.html#endReadInnerStruct,Buffer	proc endReadInnerStruct(b: var Buffer)		578
+nim	readFieldHeader	openparser/fbe.html#readFieldHeader,Buffer,uint16,int	proc readFieldHeader(b: var Buffer; fieldId: var uint16; valueSize: var int): bool		594
+nim	readFieldValue	openparser/fbe.html#readFieldValue,Buffer,int,proc(Buffer)	proc readFieldValue[T](b: var Buffer; valueSize: int; readFn: proc (b: var Buffer): T): T		611
+nim	decodeRootInto	openparser/fbe.html#decodeRootInto,Buffer,T,proc(uint16,int,Buffer,T),uint32	proc decodeRootInto[T](b: var Buffer; into: var T; handleField: proc (\n    fieldId: uint16; fieldSize: int; b: var Buffer; into: var T);\n                  outVersion: var uint32)		629
+nim	decodeInnerInto	openparser/fbe.html#decodeInnerInto,Buffer,T,proc(uint16,int,Buffer,T),uint32	proc decodeInnerInto[T](b: var Buffer; into: var T; handleField: proc (\n    fieldId: uint16; fieldSize: int; b: var Buffer; into: var T);\n                   outVersion: var uint32)		652
+nim	encodeRootFrom	openparser/fbe.html#encodeRootFrom,Buffer,T,proc(Buffer,T),uint32	proc encodeRootFrom[T](b: var Buffer; from: T;\n                  writeFields: proc (b: var Buffer; from: T); version: uint32)		673
+nim	encodeInnerFrom	openparser/fbe.html#encodeInnerFrom,Buffer,T,proc(Buffer,T),uint32	proc encodeInnerFrom[T](b: var Buffer; from: T;\n                   writeFields: proc (b: var Buffer; from: T); version: uint32)		680
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,string	proc encodeHook(b: var Buffer; fieldId: uint16; v: string)		690
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,bool	proc encodeHook(b: var Buffer; fieldId: uint16; v: bool)		693
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,int8	proc encodeHook(b: var Buffer; fieldId: uint16; v: int8)		696
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,uint8	proc encodeHook(b: var Buffer; fieldId: uint16; v: uint8)		699
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,int16	proc encodeHook(b: var Buffer; fieldId: uint16; v: int16)		702
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,uint16	proc encodeHook(b: var Buffer; fieldId: uint16; v: uint16)		705
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,int32	proc encodeHook(b: var Buffer; fieldId: uint16; v: int32)		708
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,uint32	proc encodeHook(b: var Buffer; fieldId: uint16; v: uint32)		711
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,int64	proc encodeHook(b: var Buffer; fieldId: uint16; v: int64)		714
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,uint64	proc encodeHook(b: var Buffer; fieldId: uint16; v: uint64)		717
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,float32	proc encodeHook(b: var Buffer; fieldId: uint16; v: float32)		720
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,float64	proc encodeHook(b: var Buffer; fieldId: uint16; v: float64)		723
+nim	encodeHook	openparser/fbe.html#encodeHook,Buffer,uint16,seq[uint8]	proc encodeHook(b: var Buffer; fieldId: uint16; v: seq[uint8])		727
+nim	encodeHookUUID	openparser/fbe.html#encodeHookUUID,Buffer,uint16,openArray[uint8]	proc encodeHookUUID(b: var Buffer; fieldId: uint16; v: openArray[uint8])		731
+nim	encodeHookDecimal	openparser/fbe.html#encodeHookDecimal,Buffer,uint16,openArray[uint8]	proc encodeHookDecimal(b: var Buffer; fieldId: uint16; v: openArray[uint8])		735
+nim	encodeHookVector	openparser/fbe.html#encodeHookVector,Buffer,uint16,seq[T],proc(Buffer,T)	proc encodeHookVector[T](b: var Buffer; fieldId: uint16; items: seq[T];\n                    writeElem: proc (b: var Buffer; v: T))		739
+nim	encodeHookWith	openparser/fbe.html#encodeHookWith,Buffer,uint16,T,proc(Buffer,T)	proc encodeHookWith[T](b: var Buffer; fieldId: uint16; v: T;\n                  writer: proc (b: var Buffer; x: T))		744
+nim	encode	openparser/fbe.html#encode,T,uint32,proc(string)	proc encode[T](obj: T; version: uint32; fieldIdOf: proc (name: string): uint16): Buffer		747
+nim	encode	openparser/fbe.html#encode,T,uint32	proc encode[T](obj: T; version: uint32 = 1): Buffer		760
+nim	encode	openparser/fbe.html#encode,seq[T],uint32,proc(string)	proc encode[T](items: seq[T]; version: uint32; fieldIdOf: proc (name: string): uint16): Buffer		775
+nim	encode	openparser/fbe.html#encode,seq[T],uint32	proc encode[T](items: seq[T]; version: uint32 = 1): Buffer		794
+nim	decode	openparser/fbe.html#decode,Buffer,T,proc(string),uint32	proc decode[T](b: var Buffer; into: var T; fieldIdOf: proc (name: string): uint16;\n          outVersion: var uint32)		816
+nim	decode	openparser/fbe.html#decode,Buffer,T,uint32	proc decode[T](b: var Buffer; into: var T; outVersion: var uint32)		858
+nim	FINAL_ROOT_HEADER_SIZE	openparser/fbe.html#FINAL_ROOT_HEADER_SIZE	const FINAL_ROOT_HEADER_SIZE		901
+nim	FINAL_INNER_HEADER_SIZE	openparser/fbe.html#FINAL_INNER_HEADER_SIZE	const FINAL_INNER_HEADER_SIZE		902
+nim	beginFinalRootStruct	openparser/fbe.html#beginFinalRootStruct,Buffer	proc beginFinalRootStruct(b: var Buffer)		904
+nim	endFinalRootStruct	openparser/fbe.html#endFinalRootStruct,Buffer	proc endFinalRootStruct(b: var Buffer)		921
+nim	beginFinalInnerStruct	openparser/fbe.html#beginFinalInnerStruct,Buffer	proc beginFinalInnerStruct(b: var Buffer)		931
+nim	endFinalInnerStruct	openparser/fbe.html#endFinalInnerStruct,Buffer	proc endFinalInnerStruct(b: var Buffer)		944
+nim	beginReadFinalRootStruct	openparser/fbe.html#beginReadFinalRootStruct,Buffer	proc beginReadFinalRootStruct(b: var Buffer): uint32		952
+nim	endReadFinalRootStruct	openparser/fbe.html#endReadFinalRootStruct,Buffer	proc endReadFinalRootStruct(b: var Buffer)		973
+nim	encodeFinal	openparser/fbe.html#encodeFinal,T	proc encodeFinal[T: tuple | object](obj: T): Buffer		1055
+nim	encodeFinal	openparser/fbe.html#encodeFinal,seq[T]	proc encodeFinal[T: tuple | object](items: seq[T]): Buffer		1063
+nim	decodeFinal	openparser/fbe.html#decodeFinal,Buffer,T	proc decodeFinal[T: tuple | object](b: var Buffer; into: var T)		1072
+nim	decodeFinal	openparser/fbe.html#decodeFinal,Buffer,seq[T]	proc decodeFinal[T: tuple | object](b: var Buffer; into: var seq[T])		1077
+nimgrp	decodefinal	openparser/fbe.html#decodeFinal-procs-all	proc		1072
+nimgrp	encode	openparser/fbe.html#encode-procs-all	proc		747
+nimgrp	encodefinal	openparser/fbe.html#encodeFinal-procs-all	proc		1055
+nimgrp	decode	openparser/fbe.html#decode-procs-all	proc		816
+nimgrp	encodehook	openparser/fbe.html#encodeHook-procs-all	proc		690
