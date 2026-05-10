@@ -297,6 +297,10 @@ proc fromBson*(data: openArray[byte]): JsonNode =
   ## Parse BSON data into a JsonNode. Returns JObject or JArray depending on the content.
   decodeBson(data)
 
+proc fromBson*(s: BSONDocument): JsonNode =
+  ## Parse a BSONDocument into a JsonNode. This is a convenience overload that allows clients to
+  ## directly convert a BSONDocument to a JsonNode without having to extract the raw bytes first.
+  fromBson(s.data)
 
 proc newBSONDocument*(node: JsonNode, version: int32 = 1'i32): BSONDocument =
   if version <= 0:
