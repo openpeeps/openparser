@@ -91,11 +91,11 @@ type
 template skippable*() {.pragma.}
 
 const
-  invalidToken = "Invalid token `$1`"
-  errorEndOfFile = "Unexpected EOF while parsing `$1`"
-  unexpectedToken = "Unexpected token `$1`"
-  unexpectedTokenExpected = "Got `$1`, expected $2"
-  unexpectedChar = "Unexpected character `$1`"
+  invalidToken* = "Invalid token `$1`"
+  errorEndOfFile* = "Unexpected EOF while parsing `$1`"
+  unexpectedToken* = "Unexpected token `$1`"
+  unexpectedTokenExpected* = "Got `$1`, expected $2"
+  unexpectedChar* = "Unexpected character `$1`"
 
 proc charAt(l: JsonLexer, idx: int): char {.inline.} =
   if idx < 0 or idx >= l.len: return '\0'
@@ -125,12 +125,12 @@ proc getContext(l: JsonLexer, posOverride: int = -1): string =
   let markerPos = max(0, min(snippet.len, atPos - lineStart))
   result = snippet & "\n" & " ".repeat(markerPos) & "^"
 
-proc error(l: var JsonLexer, msg: string) =
+proc error*(l: var JsonLexer, msg: string) =
   # Raise a lexer error
   let context = getContext(l)
   raise newException(OpenParserJsonError, ("\n" & context & "\n" & "Error ($1:$2) " % [$l.line, $l.col]) & msg)
 
-proc error(p: var JsonParser, msg: string) =
+proc error*(p: var JsonParser, msg: string) =
   # Prefer current token coordinates over lexer cursor (lookahead-safe).
   var atPos = p.lexer.pos
   var atLine = p.lexer.line
@@ -677,7 +677,7 @@ proc advance*(parser: var JsonParser): JsonToken {.discardable.} =
   parser.next = parser.nextToken()
   result = parser.curr
 
-proc expectSkip(parser: var JsonParser, tkind: JsonTokenKind) =
+proc expectSkip*(parser: var JsonParser, tkind: JsonTokenKind) =
   if parser.curr.kind != tkind:
     if parser.curr.kind == jtkEof:
       parser.error(errorEndOfFile % $tkind)
@@ -712,7 +712,7 @@ proc skipValue*(parser: var JsonParser) =
     while parser.curr.kind notin {jtkComma, jtkRBrace, jtkRBracket, jtkEof}:
       parser.advance()
 
-template ensureComma() {.inject.} =
+template ensureComma* {.inject.} =
   if parser.curr.kind == jtkComma:
     parser.advance()
   elif parser.curr.kind notin {jtkRBrace, jtkRBracket, jtkEOF}:
