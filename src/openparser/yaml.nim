@@ -64,7 +64,7 @@ type
   YamlParser* = object
     ## Parses a sequence of tokens from the YamlLexer to build a YAMLObject
     lex: YamlLexer
-    prev, curr, next: YamlToken
+    prev*, curr*, next*: YamlToken
 
   YAML* = string
     ## A simple alias for YAML strings
@@ -111,12 +111,12 @@ proc getContext(l: YamlLexer, posOverride: int = -1): string =
   let markerPos = max(0, min(snippet.len, atPos - lineStart))
   result = snippet & "\n" & " ".repeat(markerPos) & "^"
 
-proc error(l: var YamlLexer, msg: string) =
+proc error*(l: var YamlLexer, msg: string) =
   # Raise a lexer error
   let context = getContext(l)
   raise newException(OpenParserYamlError, ("\n" & context & "\n" & "Error ($1:$2) " % [$l.line, $l.col]) & msg)
 
-proc error(p: var YamlParser, msg: string) =
+proc error*(p: var YamlParser, msg: string) =
   # Prefer current token coordinates over lexer cursor (lookahead-safe).
   var atPos = p.lex.pos
   var atLine = p.lex.line
@@ -453,13 +453,24 @@ proc getValue*(v: YamlNode): string =
   of yamlObject: "{...}"
   of yamlArray: "[...]"
 
-proc advance(p: var YamlParser) {.inline.} =
+proc advance*(p: var YamlParser) =
+  ## Move to the next token, skipping comments
   p.prev = p.curr
   p.curr = p.next
   p.next = p.nextToken()
   while p.curr.kind == ytkComment:
     p.curr = p.next
     p.next = p.nextToken()
+
+proc expectSkip*(parser: var YamlParser, tkind: YamlTokenKind) =
+  ## Expect the current token to be of a specific kind, then advance
+  if parser.curr.kind != tkind:
+    if parser.curr.kind == ytkEof:
+      parser.error(errorEndOfFile % $tkind)
+    else:
+      parser.error(unexpectedTokenExpected % [$parser.curr.kind, $tkind])
+  else:
+    parser.advance()
 
 proc getScalarValue(t: YamlToken): YamlNode =
   # Convert a scalar token to a YamlNode based on its kind
@@ -778,7 +789,7 @@ proc parseHook*[T](parser: var YamlParser, v: var CritBitTree[T])
 template isYamlNullToken(tok: YamlToken): bool =
   tok.kind == ytkIdentifier and (tok.value == "null" or tok.value == "~")
 
-template parseYamlMappingPairs(body: untyped) {.dirty.} =
+template parseYamlMappingPairs*(body: untyped) {.dirty.} =
   ## Iterates YAML mapping entries for both:
   ##   - inline: {k: v, ...}
   ##   - block:
@@ -811,12 +822,21 @@ template parseYamlMappingPairs(body: untyped) {.dirty.} =
   else:
     if parser.curr.kind notin {ytkIdentifier, ytkString, ytkEOF}:
       parser.error(unexpectedTokenExpected % [$parser.curr.kind, "mapping key"])
+    
     if parser.curr.kind == ytkEOF:
-      return
+      return # allow empty document
 
     let baseIndent = parser.curr.indent
     let yamlMapIndent {.inject.} = baseIndent
-    while parser.curr.kind in {ytkIdentifier, ytkString} and parser.curr.indent == baseIndent:
+    var effectiveIndent = baseIndent
+
+    # Use effectiveIndent in the condition, NOT baseIndent.
+    # On the first key of a dash-inline item (e.g. "- name: foo"),
+    # effectiveIndent == baseIndent == dash-line indent.
+    # After parsing that key, effectiveIndent is promoted to the
+    # continuation indent (e.g. 4), and the loop continues correctly
+    while parser.curr.kind in {ytkIdentifier, ytkString} and
+        parser.curr.indent == effectiveIndent:
       let key {.inject.} = parser.curr.value
       parser.advance()
 
@@ -825,6 +845,13 @@ template parseYamlMappingPairs(body: untyped) {.dirty.} =
       parser.advance()
 
       body
+
+      # Promote effectiveIndent once when continuation keys
+      # sit deeper than the inline-after-dash first key.
+      if effectiveIndent == baseIndent and
+          parser.curr.kind in {ytkIdentifier, ytkString} and
+          parser.curr.indent > baseIndent:
+        effectiveIndent = parser.curr.indent
 
 #
 # Parse Hooks
@@ -836,7 +863,7 @@ proc parseHook*(parser: var YamlParser, v: var string) =
 
 proc parseHook*(parser: var YamlParser, v: var bool) =
   ## A hook to parse boolean fields
-  # v = parser.curr.kind == ytkBool
+  v = parser.curr.value.parseBool()
   parser.advance()
 
 proc parseHook*[T: float|float32|float64](parser: var YamlParser, v: var T) =
@@ -882,7 +909,6 @@ proc parseHook*[T](parser: var YamlParser, v: var set[T]) =
 proc parseHook*[T](parser: var YamlParser, v: var seq[T]) =
   ## Parse YAML sequence into seq[T]
   v.setLen(0)
-
   case parser.curr.kind
   of ytkLB:
     # inline: [a, b, c]
