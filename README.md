@@ -17,18 +17,19 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 
 ## 😍 Key Features
 - Parse **JSON**, **CSV**, **YAML**, **TOML**, **RSS**, Atom
-- BSON encoding and decoding from `JsonNode` objects
-- DotEnv parser for `.env` files
+- **BSON** encoding and decoding from `JsonNode` objects
+- **DotEnv** parser for `.env` files
 - [Fast Binary Encoding](https://github.com/chronoxor/FastBinaryEncoding) and Decoding
 - i18n [GNU Gettext](https://www.gnu.org/software/gettext/) PO and MO file parsing and dumping
 - **Zero-copy** JSON parsing via Memfiles for high performance and low memory usage
 - **Direct-to-object** parsing for JSON, YAML and TOML
+- **CSV** zero-copy parsing for **large files**
+- **RSS & Atom** feed reader and writer
+- **Regex Engine** with SIMD acceleration
+- **Context-aware error** reporting while deserializing data
 - Custom Hooks API for parsing and dumping
 - Scientific notation support
 - Dot notation access for nested data structures
-- CSV zero-copy parsing for **large files**
-- RSS & Atom feed reader and writer
-- **Context-aware error** reporting while deserializing data
 
 >[!NOTE]
 > Importing `openparser` directly will produce a compile-time error, you need to import the specific module for the data format you want to use, e.g. `openparser/json` for JSON parsing and dumping or `openparser/csv` for CSV parsing.
@@ -179,6 +180,13 @@ There is a **work-in-progress YAML parser** and dumper module that provides supp
 Another **work-in-progress parser** and dumper module, this one provides support for working with TOML documents. It parses the TOML input into a `TomlNode` tree structure or directly into Nim data structures using custom hooks.
 
 
+## SIMD-accelerated Regex engine
+OpenParser includes a regex engine that provides support for regular expresion matching and searching, with SIMD acceleration for improved performance.
+```nim
+import openparser/regex
+echo regex.match("hello world", "hello") # true
+```
+
 ## Roadmap
 - [ ] JSON depth/size limit to prevent DoS attacks
 - [ ] JSON schema validation support
@@ -187,6 +195,9 @@ Another **work-in-progress parser** and dumper module, this one provides support
 
 > [!NOTE]
 > Some implementations are made with the chatbot (dotenv, fbe, gettext) and may be buggy or incomplete, contributions are welcome to improve them!
+
+### Why?
+Initially I wanted to create a simple JSON parser with fine-grained control over the parsing process (jsonl, custom hooks, error reporting, zero-copy tokenization), then I thought it would be fun to add a YAML parser that parses YAML documents in the same way as JSON. Once I started talking with the chatbot I ended up creating a collection of parsers and dumpers for various data formats.
 
 ### ❤ Contributions & Support
 - 🐛 Found a bug? [Create a new Issue](https://github.com/openpeeps/openparser/issues)

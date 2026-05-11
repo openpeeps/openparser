@@ -4,9 +4,17 @@
 #          Made by Humans from OpenPeeps
 #          https://github.com/openpeeps/openparser
 
-when not defined(builddocs):
-  {.error:"Import the specific parser you need".}
-else:
+when defined(napibuild):
+  ## todo
+elif defined(builddocs):
   # For documentation purposes, we re-export all parsers here
   import ./openparser/[json, csv, rss, feed, yaml, dotenv, fbe, toml, bson]
-  export json, csv, rss, feed, yaml, dotenv, fbe, toml, bson
+  export json, csv, rss, feed, yaml, dotenv, fbe, toml, bson, 
+
+  import ./openparser/gettext/[po, mo]
+  export po, mo
+
+  import ./openparser/regex/[lexer, prefilter, parser, compiler, vm]
+  export lexer, prefilter, parser, compiler, vm
+else:
+  {.error:"Import the specific parser you need".}
