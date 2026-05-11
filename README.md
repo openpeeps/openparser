@@ -13,10 +13,10 @@
 </p>
 
 ## About
-OpenParser is a collection of parsers and dumpers (serializers) for various data formats, written in Nim language. It provides a simple and efficient way to parse and dump data in different formats, such as JSON, CSV, and more.
+OpenParser is a collection of parsers and dumpers (serializers) for various data formats, written in Nim language. It provides a simple and efficient way to parse and dump data in different formats, such as JSON, TOML, YAML, BSON, CSV, FBE and more
 
 ## 😍 Key Features
-- Parse **JSON**, **CSV**, **YAML**, **TOML**, **RSS**, Atom
+- Parse [JSON](#parse-json), [CSV](#parse-csv), [YAML](parse-yaml), [TOML](#parse-toml) documents and more
 - **BSON** encoding and decoding from `JsonNode` objects
 - **DotEnv** parser for `.env` files
 - [Fast Binary Encoding](https://github.com/chronoxor/FastBinaryEncoding) and Decoding
@@ -25,11 +25,14 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 - **Direct-to-object** parsing for JSON, YAML and TOML
 - **CSV** zero-copy parsing for **large files**
 - **RSS & Atom** feed reader and writer
-- **Regex Engine** with SIMD acceleration
+- [Regex Engine](#simd-accelerated-regex-engine) with SIMD acceleration
 - **Context-aware error** reporting while deserializing data
 - Custom Hooks API for parsing and dumping
 - Scientific notation support
 - Dot notation access for nested data structures
+
+### Why?
+Initially I wanted to create a simple JSON parser with fine-grained control over the parsing process (jsonl, custom hooks, error reporting, zero-copy tokenization), then I thought it would be fun to add a YAML parser that parses YAML documents in the same way as JSON. Once I started talking with the chatbot I ended up creating a collection of parsers and dumpers for various data formats.
 
 >[!NOTE]
 > Importing `openparser` directly will produce a compile-time error, you need to import the specific module for the data format you want to use, e.g. `openparser/json` for JSON parsing and dumping or `openparser/csv` for CSV parsing.
@@ -53,33 +56,11 @@ let jsonNode: JsonNode = fromJson(data)
 echo jsonNode["name"].getStr # Albush
 echo jsonNode["age"].getInt # 40
 ```
-
-### `fromJsonFile` into JsonNode with memfiles
-`fromJsonFile` function allows you to parse JSON data directly from a file using memfiles, which is a memory-mapped file that allows for zero-copy parsing:
-
-```nim
-let data = fromJsonFile("example.json")
-echo data.kind # JsonNode object
-```
-
-### `fromJsonL` for parsing JSON Lines (JSONL) files
-`fromJsonL` function allows you to parse JSON Lines (JSONL) files, which contain multiple JSON objects separated by newlines:
-```nim
-let peeps = fromJsonL("...")
-assert peeps.kind == JArray
-```
-
-### `fromJsonLFile` for parsing JSON Lines (JSONL) files with memfiles
-`fromJsonLFile` function allows you to parse JSON Lines (JSONL) files directly from a file using memfiles, which is a memory-mapped file that allows for zero-copy parsing:
-```nim
-let peeps = fromJsonLFile("people.jsonl")
-assert peeps.kind == JArray
-```
-
 ### `toJson` serialize Nim data structures into JSON strings
 `toJson` function allows you to serialize Nim data structures into JSON strings:
 ```nim
 import openparser/json
+
 var data = %*{
   "name": "Alice",
   "age": 30,
@@ -124,27 +105,8 @@ if parser.currentField.isSome:
   echo "Parsing field: ", fieldName
 ```
 
-
-A `dumpHook` is necessary to serialize custom Nim types back into JSON strings:
-```nim
-import openparser/json
-import std/times
-
-proc dumpHook*(s: var string, v: Time) =
-  s.add('"')
-  s.add(v.format("yyyy-MM-dd'T'hh:mm:ss'.'ffffffz", local()))
-  s.add('"')
-```
-
-### JSON error reporting
-OpenParser's JSON parser is context-aware and provides detailed error reporting including a snippet of the JSON data around the error location, making it easier to identify and fix issues in the JSON input, for example:
-
-```
-{"name":"Alice","age":"isMember":true}
-                                ^
-Error (1:33) Unexpected token `:`
-```
-
+- Check the [unit tests](https://github.com/openpeeps/openparser/blob/main/tests/test1.nim) for JSON parsing and dumping with custom hooks.
+- [JSON API Reference](https://openpeeps.github.io/openparser/openparser/json.html)
 
 ## CSV documents
 OpenParser can parse large CSV files efficiently without loading the entire file into memory, making it ideal for processing big datasets.
@@ -171,20 +133,68 @@ echo "Parsed ", i, " rows in ", elapsed, " seconds"
 # memory usage should be minimal due to zero-copy parsing with memfiles
 ```
 
-## YAML Documents
-There is a **work-in-progress YAML parser** and dumper module that provides support for dealing with YAML documents. Currently it parse the YAML input into a YamlObject (`TableRef` of `YamlNode` nodes).
+- Check the [unit tests](https://github.com/openpeeps/openparser/blob/main/tests/test2.nim) for CSV parsing.
+- [CSV API Reference](https://openpeeps.github.io/openparser/openparser/csv.html)
 
-...todo examples...
+## Parse YAML
+Parse YAML documents into a `YamlNode` tree structure or directly into Nim data structures using custom hooks, similar to JSON parsing and dumping.
+
+```
+import openparser/yaml
+let yamlData = """
+name: Alice
+age: 30
+isMember: true
+address:
+  street: 123 Main St
+  city: Anytown
+  zip: 12345
+friends:
+  - Bob
+  - Charlie
+"""
+
+let yamlNode: YamlNode = fromYaml(yamlData)
+let yamlNode2: Person = fromYaml(yamlData, Person) # using custom hooks to parse directly into Nim data structures
+```
+
+- Check the [unit tests](https://github.com/openpeeps/openparser/blob/main/tests/test3.nim)
+- [YAML API Reference](https://openpeeps.github.io/openparser/openparser/yaml.html)
 
 ## TOML Documents
 Another **work-in-progress parser** and dumper module, this one provides support for working with TOML documents. It parses the TOML input into a `TomlNode` tree structure or directly into Nim data structures using custom hooks.
-
 
 ## SIMD-accelerated Regex engine
 OpenParser includes a regex engine that provides support for regular expresion matching and searching, with SIMD acceleration for improved performance.
 ```nim
 import openparser/regex
 echo regex.match("hello world", "hello") # true
+```
+
+## BSON encoding and decoding
+You can combine OpenParser's JSON parsing capabilities with BSON encoding and decoding to efficiently convert between JSON and BSON formats
+```nim
+import openparser/[json, bson]
+
+# Convert JSON to BSON
+let jsonData = """{"name":"Alice","age":30,"isMember":true}"""
+let bsonDoc: seq[byte] = fromJson(jsonData).toBson()
+
+# To convert BSON back to JSON
+let jsonNode: JsonNode = fromBson(bsonDoc)
+echo jsonNode["name"].getStr # Alice
+```
+- Check the [unit tests](https://github.com/openpeeps/openparser/blob/main/tests/test6.nim)
+- [BSON API Reference](https://openpeeps.github.io/openparser/openparser/bson.html)
+
+## Error Reporting
+Most of the included parsers provide context-aware error reporting, including a snippet of the data around the error location, making it easier to identify and fix issues in the JSON input.
+
+#### JSON error reporting example
+```
+{"name":"Alice","age":"isMember":true}
+                                ^
+Error (1:33) Unexpected token `:`
 ```
 
 ## Roadmap
@@ -195,9 +205,6 @@ echo regex.match("hello world", "hello") # true
 
 > [!NOTE]
 > Some implementations are made with the chatbot (dotenv, fbe, gettext) and may be buggy or incomplete, contributions are welcome to improve them!
-
-### Why?
-Initially I wanted to create a simple JSON parser with fine-grained control over the parsing process (jsonl, custom hooks, error reporting, zero-copy tokenization), then I thought it would be fun to add a YAML parser that parses YAML documents in the same way as JSON. Once I started talking with the chatbot I ended up creating a collection of parsers and dumpers for various data formats.
 
 ### ❤ Contributions & Support
 - 🐛 Found a bug? [Create a new Issue](https://github.com/openpeeps/openparser/issues)
