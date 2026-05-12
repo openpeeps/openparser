@@ -5,7 +5,7 @@
 #          https://github.com/openpeeps/openparser
 
 when defined(napibuild):
-  ## todo
+  discard
 elif defined(builddocs):
   # For documentation purposes, we re-export all parsers here
   import ./openparser/[json, csv, rss, feed, yaml, dotenv, fbe, toml, bson]
