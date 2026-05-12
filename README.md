@@ -16,16 +16,18 @@
 OpenParser is a collection of parsers and dumpers (serializers) for various data formats, written in Nim language. It provides a simple and efficient way to parse and dump data in different formats, such as JSON, TOML, YAML, BSON, CSV, FBE and more
 
 ## 😍 Key Features
-- Parse [JSON](#parse-json), [CSV](#parse-csv), [YAML](parse-yaml), [TOML](#parse-toml) documents and more
-- **BSON** encoding and decoding from `JsonNode` objects
+- Parse [JSON](#parse-json), [CSV data](#parse-csv), [YAML](#parse-yaml), [TOML configs](#toml-configs) and more
 - **DotEnv** parser for `.env` files
-- [Fast Binary Encoding](https://github.com/chronoxor/FastBinaryEncoding) and Decoding
+- **BSON** encoding and decoding from `JsonNode` objects
+- [FBE](https://github.com/chronoxor/FastBinaryEncoding) for Fast Binary Encoding and Decoding
 - i18n [GNU Gettext](https://www.gnu.org/software/gettext/) PO and MO file parsing and dumping
+- **RSS & Atom** feed reader and writer
+- **CSV** zero-copy parsing for **large files**
+- [Regex Engine](#simd-accelerated-regex-engine) with SIMD acceleration
+
+### Other features
 - **Zero-copy** JSON parsing via Memfiles for high performance and low memory usage
 - **Direct-to-object** parsing for JSON, YAML and TOML
-- **CSV** zero-copy parsing for **large files**
-- **RSS & Atom** feed reader and writer
-- [Regex Engine](#simd-accelerated-regex-engine) with SIMD acceleration
 - **Context-aware error** reporting while deserializing data
 - Custom Hooks API for parsing and dumping
 - Scientific notation support
@@ -161,8 +163,8 @@ let yamlNode2: Person = fromYaml(yamlData, Person) # using custom hooks to parse
 - Check the [unit tests](https://github.com/openpeeps/openparser/blob/main/tests/test3.nim)
 - [YAML API Reference](https://openpeeps.github.io/openparser/openparser/yaml.html)
 
-## TOML Documents
-Another **work-in-progress parser** and dumper module, this one provides support for working with TOML documents. It parses the TOML input into a `TomlNode` tree structure or directly into Nim data structures using custom hooks.
+## TOML Configs
+Another **work-in-progress parser** and dumper module, this one provides support for working with TOML config files. It parses the TOML input into a `TomlNode` tree structure or directly into Nim data structures using custom hooks.
 
 ## SIMD-accelerated Regex engine
 OpenParser includes a regex engine that provides support for regular expresion matching and searching, with SIMD acceleration for improved performance.
