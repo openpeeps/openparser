@@ -54,6 +54,8 @@ type
     shape*:       PatternShape   ## set by compiler from AST
     hasLazy*:     bool
 
+  Regex* = Program
+
   RegexCompiler* = object
     prog: Program
 

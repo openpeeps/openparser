@@ -40,6 +40,7 @@ type
     of rnGroup:
       capture*: bool
       index*: int             # capture group index (0 = non-capturing)
+      groupName*: string
       child*: RegexNode
     of rnCharClass:
       negated*: bool
@@ -250,21 +251,45 @@ proc parseAtom(p: var RegexParser): RegexNode =
 
   of tkLParen:
     p.advance()
-    # Detect non-capturing group  (?:...)
     if p.current.kind == tkQuestion:
-      # Speculatively consume '?' and check for ':'
       p.advance()
       if p.current.kind == tkChar and p.current.lexeme == ":":
-        p.advance()   # consume ':'
+        # Non-capturing group (?:...)
+        p.advance()
         let inner = parseAlternation(p)
         eat(p, tkRParen)
         result = node(rnGroup, tok)
         result.capture = false
         result.index   = 0
         result.child   = inner
+      elif p.current.kind == tkChar and p.current.lexeme == "P" or
+           p.current.kind == tkChar and p.current.lexeme == "<":
+        # Named capture group (?P<name>...) or (?<name>...)
+        if p.current.lexeme == "P":
+          p.advance()   # consume 'P'
+        # expect '<'
+        if not (p.current.kind == tkChar and p.current.lexeme == "<"):
+          p.lexer.error("Expected '<' for named capture group, got '" & p.current.lexeme & "'")
+        p.advance()   # consume '<'
+        # collect name until '>'
+        var groupName = ""
+        while not p.atEnd() and
+              not (p.current.kind == tkChar and p.current.lexeme == ">"):
+          groupName.add(p.current.lexeme)
+          p.advance()
+        if p.current.kind != tkChar or p.current.lexeme != ">":
+          p.lexer.error("Unterminated named capture group name, expected '>'")
+        p.advance()   # consume '>'
+        let captureIdx = p.captureCount
+        inc p.captureCount
+        let inner = parseAlternation(p)
+        eat(p, tkRParen)
+        result = node(rnGroup, tok)
+        result.capture   = true
+        result.index     = captureIdx
+        result.groupName = groupName
+        result.child     = inner
       else:
-        # Not (?:...) — put back by parsing what we have as a quantifier
-        # on an empty group is an error; surface it clearly.
         p.lexer.error("Expected ':' after '(?' for non-capturing group, got '" &
                       p.current.lexeme & "'")
     else:

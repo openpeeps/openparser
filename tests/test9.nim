@@ -710,3 +710,50 @@ suite "VM – capture groups":
     let g = m.group(99)
     check not g.matched
     check g.str(src) == ""
+
+  test "groupCount is 0 for no-capture pattern":
+    let m = vm.find(r"\d+", "abc 123")
+    check m.matched
+    check m.groupCount == 0
+
+  test "groupCount matches number of groups":
+    let m = vm.find(r"(\d+)", "abc 123")
+    check m.matched
+    check m.groupCount == 1
+
+
+  test "out-of-range group returns unmatched":
+    let src = "hello"
+    let m = vm.find(r"\w+", src)
+    check m.matched
+    let g = m.group(99)
+    check not g.matched
+    check g.str(src) == ""
+
+  # --- Added tests for named groups (Python (?P<name>) and PCRE (?<name>)) ---
+  test "python-style named group (?P<name>...) creates capture slot":
+    var vm = initRegexVM(compile(r"/dashboard/categories/(?P<id>[0-9]+)$"))
+    let src = "/dashboard/categories/123"
+    let m = vm.find(src)
+    check m.matched
+    check m.groupCount == 1
+    check m.groupStr(src, 1) == "123"
+
+  test "pcre-style named group (?<name>...) creates capture slots in order":
+    var vm = initRegexVM(compile(r"(?<user>\w+)-(?<domain>\w+)"))
+    let src = "alice-web"
+    let m = vm.find(src)
+    check m.matched
+    check m.groupCount == 2
+    check m.groupStr(src, 1) == "alice"
+    check m.groupStr(src, 2) == "web"
+
+  test "mixed named and unnamed groups preserve left-to-right indexing":
+    var vm = initRegexVM(compile(r"(\d+)-(?P<name>\w+)-(\w+)"))
+    let src = "42-joe-x"
+    let m = vm.find(src)
+    check m.matched
+    check m.groupCount == 3
+    check m.groupStr(src, 1) == "42"
+    check m.groupStr(src, 2) == "joe"
+    check m.groupStr(src, 3) == "x"
