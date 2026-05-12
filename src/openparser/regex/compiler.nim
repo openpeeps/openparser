@@ -24,6 +24,8 @@ type
     opSplitLazy     ## fork execution (lazy:   try t2 first, then t1)
     opSave          ## save current position into capture slot
     opProgress      ## guard against zero-width infinite loops
+    opSkipTo   ## SIMD scan forward to first occurrence of arg1 char
+               ## Emitted for [^X]* and [^X]+ where X is a single literal char
 
   Instr* = object
     op*:     OpCode
@@ -218,8 +220,14 @@ proc compileNode(c: var RegexCompiler, n: RegexNode) =
       c.emit(Instr(op: opSave, arg1: closeSlot))
 
   of rnQuantifier:
+    let inner = n.operand
+    # Detect [^X]* / [^X]+ — emit opSkipTo instead of Split+CharClass loop
+    if inner.kind == rnCharClass and inner.negated and
+       inner.items.len == 1 and not inner.items[0].isRange:
+      let ch = inner.items[0].ch
+      c.emit(Instr(op: opSkipTo, arg1: ord(ch)))
+      return
     compileQuantifier(c, n)
-
 
 proc detectProgramShape(ast: RegexNode): PatternShape =
   ## Detect shape from the root AST node.
@@ -339,6 +347,7 @@ proc disassemble*(prog: Program): string =
       of opSplitLazy:    &"SPLIT_LAZY  {ins.arg1:04d}, {ins.arg2:04d}"
       of opSave:         &"SAVE        slot[{ins.arg1}]"
       of opProgress:     "PROGRESS"
+      of opSkipTo:       &"SKIP_TO      '{char(ins.arg1)}' (0x{ins.arg1:02x})"
     lines.add(prefix & s)
   result = lines.join("\n")
 

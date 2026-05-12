@@ -128,7 +128,6 @@ proc execFast(vm: var RegexVM, input: string, startPos: int): MatchResult =
 
   clearPcSet(vm.pcCur)
   clearPcSet(vm.pcNxt)
-
   inc vm.gen
   addEpsilon(vm, vm.pcCur, 0, startPos, inputLen)
 
@@ -138,27 +137,55 @@ proc execFast(vm: var RegexVM, input: string, startPos: int): MatchResult =
   while true:
     inc vm.gen
 
+    # Fast-path: if the ONLY active thread is opSkipTo, use SIMD to jump.
+    # Check before the full word loop.
+    block skipFastPath:
+      var count = 0
+      var onlyPc = -1
+      for wordIdx in 0 ..< vm.pcCur.bits.len:
+        var word = vm.pcCur.bits[wordIdx]
+        while word != 0:
+          let bit = countTrailingZeroBits(word)
+          onlyPc = wordIdx * 64 + bit
+          word   = word and (word - 1)
+          inc count
+          if count > 1: break skipFastPath
+      if count == 1 and onlyPc >= 0 and onlyPc < prog.instrs.len:
+        let ins = prog.instrs[onlyPc]
+        if ins.op == opSkipTo:
+          let stopCh = char(ins.arg1)
+          let hit    = scanByte(input, sp, inputLen, stopCh)
+          if hit < 0: break  # stop-char never found — no match possible
+          # Jump sp to the stop-char; opSkipTo consumed [^stopCh]* via SIMD
+          sp = hit
+          clearPcSet(vm.pcCur)
+          inc vm.gen
+          addEpsilon(vm, vm.pcCur, onlyPc + 1, sp, inputLen)
+          continue
+
     let ch    = if sp < inputLen: input[sp] else: '\0'
     let atEnd = sp == inputLen
-
     clearPcSet(vm.pcNxt)
 
-    ## Iterate only over set bits — O(active PCs), not O(program size)
     for wordIdx in 0 ..< vm.pcCur.bits.len:
       var word = vm.pcCur.bits[wordIdx]
       while word != 0:
         let bit = countTrailingZeroBits(word)
         let pc  = wordIdx * 64 + bit
-        word = word and (word - 1)   ## clear lowest set bit
-
+        word    = word and (word - 1)
         if pc >= prog.instrs.len: continue
         let ins = prog.instrs[pc]
-
         case ins.op
         of opMatch:
           if not result.matched or sp > result.stop:
             result = MatchResult(matched: true, start: startPos,
                                  stop: sp, captures: @[])
+        of opSkipTo:
+          # Multi-thread case: treat as [^X]* step-by-step
+          if not atEnd and ch != char(ins.arg1):
+            addEpsilon(vm, vm.pcNxt, pc, sp + 1, inputLen)  # stay in loop
+          elif not atEnd:
+            addEpsilon(vm, vm.pcNxt, pc + 1, sp + 1, inputLen)  # exit loop, consume stopCh at next instr
         of opChar:
           if not atEnd and ord(ch) == ins.arg1:
             addEpsilon(vm, vm.pcNxt, pc + 1, sp + 1, inputLen)
@@ -174,12 +201,9 @@ proc execFast(vm: var RegexVM, input: string, startPos: int): MatchResult =
         else: discard
 
     if atEnd: break
-    ## Early exit: no active threads remaining and we already have a match
-    if result.matched and not anyPc(vm.pcNxt): break
-
+    if not anyPc(vm.pcNxt): break
     swap(vm.pcCur, vm.pcNxt)
     inc sp
-
 #
 # Epsilon closure
 #
@@ -280,7 +304,7 @@ proc execFull(vm: var RegexVM, input: string, startPos: int): MatchResult =
       else: discard
 
     if atEnd: break
-    if result.matched and nxt.len == 0: break
+    if nxt.len == 0: break
     cur = nxt
     inc sp
 
@@ -367,84 +391,190 @@ proc match*(vm: var RegexVM, input: string): MatchResult =
   if result.matched and (result.start != 0 or result.stop != input.len):
     result = noMatch()
 
+proc injectEps(vm: var RegexVM, startOf: var seq[int],
+               pc, start, inputPos, inputLen: int, nxt: var PcSet) =
+  if pc < 0 or pc >= vm.prog.instrs.len: return
+  if vm.visited[pc] == vm.gen: return
+  vm.visited[pc] = vm.gen
+  startOf[pc] = start
+  let ins = vm.prog.instrs[pc]
+  case ins.op
+  of opJmp:
+    injectEps(vm, startOf, ins.arg1, start, inputPos, inputLen, nxt)
+  of opSplit:
+    injectEps(vm, startOf, ins.arg1, start, inputPos, inputLen, nxt)
+    injectEps(vm, startOf, ins.arg2, start, inputPos, inputLen, nxt)
+  of opSplitLazy:
+    injectEps(vm, startOf, ins.arg2, start, inputPos, inputLen, nxt)
+    injectEps(vm, startOf, ins.arg1, start, inputPos, inputLen, nxt)
+  of opSave, opProgress:
+    injectEps(vm, startOf, pc + 1, start, inputPos, inputLen, nxt)
+  of opAnchorStart:
+    if inputPos == 0:
+      injectEps(vm, startOf, pc + 1, start, inputPos, inputLen, nxt)
+  of opAnchorEnd:
+    if inputPos == inputLen:
+      injectEps(vm, startOf, pc + 1, start, inputPos, inputLen, nxt)
+  else:
+    nxt.inclPc(pc)
+
+proc backscanStart(input: string, anchorPos, minPos: int,
+                   bs: BackscanKind): int {.inline.} =
+  ## Walk backward from anchorPos-1 to find the NFA start position.
+  ## Returns -1 if no valid start found.
+  var s = anchorPos - 1
+  case bs
+  of bsAlphaWord:
+    # skip optional whitespace
+    while s >= minPos and input[s] in {' ', '\t'}: dec s
+    # skip word chars
+    while s >= minPos and input[s] in {'a'..'z','A'..'Z','0'..'9','_'}: dec s
+    inc s
+    if s < anchorPos and input[s] in {'a'..'z','A'..'Z','_'}: return s
+    return -1
+  of bsWordChar:
+    while s >= minPos and input[s] in {'a'..'z','A'..'Z','0'..'9','_'}: dec s
+    inc s
+    if s < anchorPos: return s
+    return -1
+  of bsNone:
+    return max(minPos, anchorPos - 1)
+
 proc find*(vm: var RegexVM, input: string): MatchResult =
   ## Leftmost match anywhere in input, using SIMD prefilter to skip positions.
   let inputLen = input.len
-  let pf       = vm.prefilter
-  var pos      = 0
+  let pf = vm.prefilter
+  var pos = 0
+
+  if pf.shape != psNone:
+    while pos <= inputLen:
+      pos = pf.nextCandidate(input, pos, inputLen)
+      if pos > inputLen: break
+      let r = execShape(pf, input, pos, inputLen)
+      if r.matched: return r
+      inc pos
+    return noMatch()
+  
+  # Literal prefix with fixed offset — common for identifiers
+  if pf.kind == pfLiteralAnchored:
+    let plen  = pf.prefix.len
+    let first = pf.prefix[0]
+    var i     = pf.offset
+    while i <= inputLen - plen:
+      let r = scanByte(input, i, inputLen - plen + 1, first)
+      if r < 0: break
+      var hit = true
+      for j in 1 ..< plen:
+        if input[r + j] != pf.prefix[j]: hit = false; break
+      if hit:
+        let startA = max(0, r - pf.offset)
+        if startA >= pos:
+          let ra = vm.exec(input, startA)
+          if ra.matched: return ra
+        let startB = max(0, r - pf.offset2)
+        if startB >= pos and startB != max(0, r - pf.offset):
+          let rb = vm.exec(input, startB)
+          if rb.matched: return rb
+      i = r + 1
+    return noMatch()
+
+  # Inner literal with backscan
+  if pf.kind == pfInnerLiteral:
+    var i = pos
+    while i < inputLen:
+      let r = scanByte(input, i, inputLen, pf.anchor)
+      if r < 0: break
+      let s = backscanStart(input, r, max(0, r - pf.maxLookback), pf.backscan)
+      if s >= pos and s < r:
+        let ra = vm.exec(input, s)
+        if ra.matched and ra.stop > r:
+          return ra
+      i = r + 1
+    return noMatch()
 
   while pos <= inputLen:
     pos = pf.nextCandidate(input, pos, inputLen)
     if pos > inputLen: break
-    if pf.shape != psNone:
-      let r = execShape(pf, input, pos, inputLen)
-      if r.matched: return r
-      inc pos
-    else:
-      let r = vm.exec(input, pos)
-      if r.matched: return r
-      inc pos
+    let r = vm.exec(input, pos)
+    if r.matched: return r
+    inc pos
   result = noMatch()
 
 proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
-  ## All non-overlapping matches, left to right.
+  ## Find all non-overlapping matches in input, using SIMD prefilter to skip positions.
   let inputLen = input.len
-  let pf       = vm.prefilter
-  var pos      = 0
+  let pf = vm.prefilter
+  var pos = 0
 
   if pf.shape != psNone:
-    # Pure SIMD path — no NFA involvement at all
     while pos <= inputLen:
       pos = pf.nextCandidate(input, pos, inputLen)
       if pos > inputLen: break
       let r = execShape(pf, input, pos, inputLen)
       if r.matched:
-        result.add(r)
-        pos = if r.stop > r.start: r.stop else: r.stop + 1
+        result.add r
+        pos = r.stop
       else:
         inc pos
-  else:
-    # NFA path (existing code)
-    while pos <= inputLen:
-      pos = pf.nextCandidate(input, pos, inputLen)
-      if pos > inputLen: break
-      let r = vm.exec(input, pos)
-      if r.matched:
-        result.add(r)
-        pos = if r.stop > r.start: r.stop else: r.stop + 1
-      else:
-        inc pos
+    return
+  
+  # Literal prefix with fixed offset — common for identifiers
+  if pf.kind == pfLiteralAnchored:
+    let plen  = pf.prefix.len
+    let first = pf.prefix[0]
+    var i     = pf.offset
+    while i <= inputLen - plen:
+      let r = scanByte(input, i, inputLen - plen + 1, first)
+      if r < 0: break
+      var hit = true
+      for j in 1 ..< plen:
+        if input[r + j] != pf.prefix[j]: hit = false; break
+      if hit:
+        let startA = max(0, r - pf.offset)
+        if startA >= pos:
+          let ra = vm.exec(input, startA)
+          if ra.matched:
+            result.add ra
+            pos = ra.stop
+            i = r + 1
+            continue
+        let startB = max(0, r - pf.offset2)
+        if startB >= pos and startB != max(0, r - pf.offset):
+          let rb = vm.exec(input, startB)
+          if rb.matched:
+            result.add rb
+            pos = rb.stop
+            i = r + 1
+            continue
+      i = r + 1
+    return
+  
+  # Inner literal with backscan
+  if pf.kind == pfInnerLiteral:
+    var i = pos
+    while i < inputLen:
+      let r = scanByte(input, i, inputLen, pf.anchor)
+      if r < 0: break
+      let s = backscanStart(input, r, max(0, r - pf.maxLookback), pf.backscan)
+      if s >= pos and s < r:
+        let ra = vm.exec(input, s)
+        if ra.matched and ra.stop > r:
+          result.add ra
+          pos = ra.stop
+          i = ra.stop
+          continue
+      i = r + 1
+    return
 
-# proc find*(vm: var RegexVM, input: string): MatchResult =
-#   ## Leftmost match anywhere in input, using SIMD prefilter to skip positions.
-#   let inputLen = input.len
-#   let pf       = vm.prefilter
-#   var pos      = 0
-
-#   while pos <= inputLen:
-#     pos = pf.nextCandidate(input, pos, inputLen)
-#     if pos > inputLen: break
-#     let r = vm.exec(input, pos)
-#     if r.matched: return r
-#     inc pos
-#   result = noMatch()
-
-# proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
-#   ## All non-overlapping matches, left to right.
-#   let inputLen = input.len
-#   let pf       = vm.prefilter
-#   var pos      = 0
-
-#   while pos <= inputLen:
-#     pos = pf.nextCandidate(input, pos, inputLen)
-#     if pos > inputLen: break
-#     let r = vm.exec(input, pos)
-#     if r.matched:
-#       result.add(r)
-#       pos = if r.stop > r.start: r.stop else: r.stop + 1
-#     else:
-#       inc pos
-
+  while pos <= inputLen:
+    pos = pf.nextCandidate(input, pos, inputLen)
+    if pos > inputLen: break
+    let r = vm.exec(input, pos)
+    if r.matched:
+      result.add r
+      pos = r.stop
+    else:
+      inc pos
 
 proc groupCount*(m: MatchResult): int {.inline.} =
   ## Number of capture groups (not counting the whole match at idx 0).
