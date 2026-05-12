@@ -351,6 +351,18 @@ type
   YAMLObject* = OrderedTableRef[string, YamlNode]
     ## Represents a simple 
 
+macro copyFieldsBeforeRecCase*(dst, src: typed): untyped =
+  ## Copies fields declared before the `case` (RecCase) node in a variant object.
+  result = newStmtList()
+  let impl = dst.getTypeImpl()
+  # impl[2] is the RecList for object types
+  for field in impl[2]:
+    if field.kind == nnkRecCase: break  # stop at the variant
+    if field.kind == nnkIdentDefs:
+      let fname = field[0]
+      result.add quote do:
+        `dst`.`fname` = `src`.`fname`
+
 proc newYamlString*(s: string): YamlNode =
   ## Create a new YamlNode of kind yamlString
   YamlNode(kind: yamlString, strValue: s)
