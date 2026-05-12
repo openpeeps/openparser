@@ -258,7 +258,7 @@ proc tokenText(t: YamlToken): string =
   of ytkIdentifier, ytkString, ytkFloat, ytkInteger: t.value
   else: $t.kind
 
-let tokens = {
+const tokens = {
   ':': ytkColon,
   ',': ytkComma,
   '-': ytkDash,
