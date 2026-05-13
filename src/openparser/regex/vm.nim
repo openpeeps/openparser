@@ -80,7 +80,9 @@ proc matchEscapeClass(cls: char, ch: char): bool {.inline.} =
 proc matchCharClass(cls: CompiledClass, ch: char): bool {.inline.} =
   var found = false
   for item in cls.items:
-    if item.isRange:
+    if item.isEscape:
+      if matchEscapeClass(item.escapeChar, ch): found = true; break
+    elif item.isRange:
       if ch >= item.lo and ch <= item.hi: found = true; break
     else:
       if ch == item.ch: found = true; break
@@ -155,7 +157,14 @@ proc execFast(vm: var RegexVM, input: string, startPos: int): MatchResult =
         if ins.op == opSkipTo:
           let stopCh = char(ins.arg1)
           let hit    = scanByte(input, sp, inputLen, stopCh)
-          if hit < 0: break  # stop-char never found — no match possible
+          if hit < 0:
+            # Stop-char not found: opSkipTo consumes to end of string,
+            # then transitions to the next instruction (e.g. opAnchorEnd/opMatch).
+            sp = inputLen
+            clearPcSet(vm.pcCur)
+            inc vm.gen
+            addEpsilon(vm, vm.pcCur, onlyPc + 1, sp, inputLen)
+            continue
           # Jump sp to the stop-char; opSkipTo consumed [^stopCh]* via SIMD
           sp = hit
           clearPcSet(vm.pcCur)

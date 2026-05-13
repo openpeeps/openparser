@@ -5,7 +5,7 @@ import std/[times, strutils, strformat, os, memfiles, monotimes, re]
 
 type
   EngineKind = enum
-    datregex, stdlib
+    openregex, stdlib
 
   BenchResult = object
     engine:    EngineKind
@@ -13,10 +13,10 @@ type
     inputDesc: string
     matches:   int
     cpuMs, wallMs, mbPerSec: float
-    shapeName: string    ## for datregex; "n/a" for stdlib
-    pfKindName: string   ## for datregex; "n/a" for stdlib
+    shapeName: string    ## for openregex; "n/a" for stdlib
+    pfKindName: string   ## for openregex; "n/a" for stdlib
 
-proc bench(pattern, inputDesc, input: string; engine = EngineKind.datregex; runs = 1): BenchResult =
+proc bench(pattern, inputDesc, input: string; engine = EngineKind.openregex; runs = 1): BenchResult =
   result.pattern   = pattern
   result.inputDesc = inputDesc
   result.engine    = engine
@@ -25,7 +25,7 @@ proc bench(pattern, inputDesc, input: string; engine = EngineKind.datregex; runs
   var bestCpu  = high(float)
   var bestWall = initDuration(seconds = int.high)
 
-  if engine == datregex:
+  if engine == openregex:
     let prog = compile(pattern)
     result.shapeName  = $prog.shape
     result.pfKindName = $extractPrefilter(prog).kind
@@ -123,57 +123,57 @@ echo &"Size   : {inputLen} bytes  ({inputLen.float/1_000_000:.2f} MB)  {lineCoun
 # ---------------------------------------------------------------------------
 
 section("Identifier patterns")
-printResult bench(r"[a-zA-Z_]\w*",           path, input, datregex)
+printResult bench(r"[a-zA-Z_]\w*",           path, input, openregex)
 printResult bench(r"[a-zA-Z_]\w*",           path, input, stdlib)
-printResult bench(r"[A-Z_][A-Z0-9_]{2,}",    path, input, datregex)  # macros / constants
+printResult bench(r"[A-Z_][A-Z0-9_]{2,}",    path, input, openregex)  # macros / constants
 printResult bench(r"[A-Z_][A-Z0-9_]{2,}",    path, input, stdlib)
 
 section("Type & declaration patterns")
-printResult bench(r"typedef\s+\w+\s+\w+",    path, input, datregex)
+printResult bench(r"typedef\s+\w+\s+\w+",    path, input, openregex)
 printResult bench(r"typedef\s+\w+\s+\w+",    path, input, stdlib)
-printResult bench(r"struct\s+[a-zA-Z_]\w*",  path, input, datregex)
+printResult bench(r"struct\s+[a-zA-Z_]\w*",  path, input, openregex)
 printResult bench(r"struct\s+[a-zA-Z_]\w*",  path, input, stdlib)
-printResult bench(r"enum\s+[a-zA-Z_]\w*",    path, input, datregex)
+printResult bench(r"enum\s+[a-zA-Z_]\w*",    path, input, openregex)
 printResult bench(r"enum\s+[a-zA-Z_]\w*",    path, input, stdlib)
-printResult bench(r"(unsigned|signed)\s+\w+", path, input, datregex)
+printResult bench(r"(unsigned|signed)\s+\w+", path, input, openregex)
 printResult bench(r"(unsigned|signed)\s+\w+", path, input, stdlib)
 
 section("Function signatures")
-printResult bench(r"[a-zA-Z_]\w*\s*\([^)]*\)", path, input, datregex)  # any call/decl
+printResult bench(r"[a-zA-Z_]\w*\s*\([^)]*\)", path, input, openregex)  # any call/decl
 printResult bench(r"[a-zA-Z_]\w*\s*\([^)]*\)", path, input, stdlib)
-printResult bench(r"\w+\s+\w+\s*\([^)]*\);",   path, input, datregex)  # forward decl
+printResult bench(r"\w+\s+\w+\s*\([^)]*\);",   path, input, openregex)  # forward decl
 printResult bench(r"\w+\s+\w+\s*\([^)]*\);",   path, input, stdlib)
 
 section("Preprocessor directives")
-printResult bench(r"#define\s+\w+",                    path, input, datregex)
+printResult bench(r"#define\s+\w+",                    path, input, openregex)
 printResult bench(r"#define\s+\w+",                    path, input, stdlib)
-printResult bench("\"#include\\s*[<\\\"][^>\\\"]+[>\\\"]\"", path, input, datregex)
+printResult bench("\"#include\\s*[<\\\"][^>\\\"]+[>\\\"]\"", path, input, openregex)
 printResult bench("\"#include\\s*[<\\\"][^>\\\"]+[>\\\"]\"", path, input, stdlib)
-printResult bench(r"#ifdef\s+\w+|#ifndef\s+\w+",       path, input, datregex)
+printResult bench(r"#ifdef\s+\w+|#ifndef\s+\w+",       path, input, openregex)
 printResult bench(r"#ifdef\s+\w+|#ifndef\s+\w+",       path, input, stdlib)
 
 section("Literals & constants")
-printResult bench(r"0[xX][0-9a-fA-F]+",   path, input, datregex)  # hex literals
+printResult bench(r"0[xX][0-9a-fA-F]+",   path, input, openregex)  # hex literals
 printResult bench(r"0[xX][0-9a-fA-F]+",   path, input, stdlib)
-printResult bench(r"\d+[uUlL]*",          path, input, datregex)  # int literals
+printResult bench(r"\d+[uUlL]*",          path, input, openregex)  # int literals
 printResult bench(r"\d+[uUlL]*",          path, input, stdlib)
-printResult bench("\"[^\"]*\"",           path, input, datregex)  # string literals  ← regular string
+printResult bench("\"[^\"]*\"",           path, input, openregex)  # string literals  ← regular string
 printResult bench("\"[^\"]*\"",           path, input, stdlib)
 
 section("Comments")
-printResult bench(r"//[^\n]*",               path, input, datregex)  # line comments
+printResult bench(r"//[^\n]*",               path, input, openregex)  # line comments
 printResult bench(r"//[^\n]*",               path, input, stdlib)
-printResult bench(r"/\*[^*]*\*+([^/*][^*]*\*+)*/", path, input, datregex)  # block comments
+printResult bench(r"/\*[^*]*\*+([^/*][^*]*\*+)*/", path, input, openregex)  # block comments
 printResult bench(r"/\*[^*]*\*+([^/*][^*]*\*+)*/", path, input, stdlib)
 
 section("Pointer & reference patterns")
-printResult bench(r"\w+\s*\*+\s*\w+",        path, input, datregex)
+printResult bench(r"\w+\s*\*+\s*\w+",        path, input, openregex)
 printResult bench(r"\w+\s*\*+\s*\w+",        path, input, stdlib)
-printResult bench(r"const\s+\w+\s*\*",       path, input, datregex)
+printResult bench(r"const\s+\w+\s*\*",       path, input, openregex)
 printResult bench(r"const\s+\w+\s*\*",       path, input, stdlib)
 
 section("Anchored / worst-case patterns")
-printResult bench(r"^#",                     path, input, datregex)  # lines starting with #
+printResult bench(r"^#",                     path, input, openregex)  # lines starting with #
 printResult bench(r"^#",                     path, input, stdlib)
-printResult bench(r";\s*$",                  path, input, datregex)  # lines ending with ;
+printResult bench(r";\s*$",                  path, input, openregex)  # lines ending with ;
 printResult bench(r";\s*$",                  path, input, stdlib)

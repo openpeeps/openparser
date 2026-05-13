@@ -413,6 +413,126 @@ suite "VM – greedy vs lazy match length":
     for m in ms:
       check (m.stop - m.start) == 1
 
+suite "Negated char class – [^x] basics":
+  test "[^a] matches non-a char":
+    var vm = initRegexVM(compile(r"[^a]"))
+    check vm.match("b").matched
+    check not vm.match("a").matched
+
+  test "[^\\n] matches any char except newline":
+    var vm = initRegexVM(compile(r"[^\n]"))
+    check vm.match("x").matched
+    check vm.match("/").matched
+    check not vm.match("\n").matched
+
+  test "[^\\n]* matches empty string":
+    var vm = initRegexVM(compile(r"^[^\n]*$"))
+    check vm.match("").matched
+
+  test "[^\\n]* matches string without newline":
+    var vm = initRegexVM(compile(r"^[^\n]*$"))
+    check vm.match("hello world").matched
+    check vm.match("// inline comment").matched
+
+  test "[^\\n]* does not match string with newline":
+    var vm = initRegexVM(compile(r"^[^\n]*$"))
+    check not vm.match("hello\nworld").matched
+
+  test "[^\\n]+ requires at least one non-newline":
+    var vm = initRegexVM(compile(r"^[^\n]+$"))
+    check not vm.match("").matched
+    check vm.match("x").matched
+
+suite "Line comment pattern – //[^\\n]*":
+  test "compile does not raise":
+    let prog = compile(r"//[^\n]*")
+    check prog.instrs.len > 0
+
+  test "negated class [^\\n] stored as negated":
+    let prog = compile(r"[^\n]")
+    check prog.classes.len == 1
+    check prog.classes[0].negated
+
+  test "match anchored //[^\\n]* on bare comment":
+    var vm = initRegexVM(compile(r"^//[^\n]*$"))
+    check vm.match("// inline comment").matched
+    check vm.match("//").matched
+    check vm.match("// foo bar baz").matched
+
+  test "find //[^\\n]* in line with prefix code":
+    var vm = initRegexVM(compile(r"//[^\n]*"))
+    let src = "int x = 1; // inline comment"
+    let m = vm.find(src)
+    check m.matched
+    check substr(src, m) == "// inline comment"
+
+  test "find // at start of line":
+    var vm = initRegexVM(compile(r"//[^\n]*"))
+    let src = "// full line comment"
+    let m = vm.find(src)
+    check m.matched
+    check substr(src, m) == "// full line comment"
+
+  test "find // with empty comment body":
+    var vm = initRegexVM(compile(r"//[^\n]*"))
+    let src = "int x = 0; //"
+    let m = vm.find(src)
+    check m.matched
+    check substr(src, m) == "//"
+
+  test "find // stops at newline":
+    var vm = initRegexVM(compile(r"//[^\n]*"))
+    let src = "// comment\nint x;"
+    let m = vm.find(src)
+    check m.matched
+    check substr(src, m) == "// comment"
+
+  test "findAll collects multiple line comments":
+    var vm = initRegexVM(compile(r"//[^\n]*"))
+    let src = "// first\nint x; // second\n// third"
+    let ms = vm.findAll(src)
+    check ms.len == 3
+    check substr(src, ms[0]) == "// first"
+    check substr(src, ms[1]) == "// second"
+    check substr(src, ms[2]) == "// third"
+
+  test "no match when no // present":
+    var vm = initRegexVM(compile(r"//[^\n]*"))
+    check not vm.find("int x = 1;").matched
+
+suite "Slash literal – matching / in patterns":
+  test "single / matches":
+    var vm = initRegexVM(compile(r"/"))
+    check vm.match("/").matched
+    check not vm.match("a").matched
+
+  test "double // matches":
+    var vm = initRegexVM(compile(r"//"))
+    check vm.match("//").matched
+    check not vm.match("/").matched
+
+  test "find // in string":
+    var vm = initRegexVM(compile(r"//"))
+    let m = vm.find("int x; // comment")
+    check m.matched
+    check m.start == 7
+
+suite "Negated class with escape sequences":
+  test "[^\\t] does not match tab":
+    var vm = initRegexVM(compile("[^\\t]"))
+    check vm.match("a").matched
+    check not vm.match("\t").matched
+
+  test "[^\\s] matches non-whitespace":
+    var vm = initRegexVM(compile(r"^[^\s]+$"))
+    check vm.match("hello").matched
+    check not vm.match("hel lo").matched
+
+  test "[^0-9] matches non-digit":
+    var vm = initRegexVM(compile(r"^[^0-9]+$"))
+    check vm.match("abc").matched
+    check not vm.match("abc1").matched
+
 #
 # VM – C-header patterns smoke tests
 #
@@ -433,13 +553,6 @@ suite "VM – C-header pattern smoke tests":
   test "define pattern matches":
     var vm = initRegexVM(compile(r"#define\s+\w+"))
     check vm.find("#define MAX_SIZE 1024").matched
-
-  test "line comment pattern matches":
-    var vm = initRegexVM(compile(r"//[^\n]*"))
-    let src = "int x = 1; // inline comment"
-    let m = vm.find(src)
-    check m.matched
-    check substr(src, m) == "// inline comment"
 
   test "hex literal in code":
     var vm = initRegexVM(compile(r"0[xX][0-9a-fA-F]+"))

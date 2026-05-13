@@ -58,6 +58,8 @@ type
       lo*, hi*: char
     of false:
       ch*: char
+    isEscape*:  bool   ## true when item is \d \w \s \D \W \S
+    escapeChar*: char  ## the escape letter, e.g. 's' for \s
 
   RegexParser* = object
     lexer*: RegexLexer
@@ -114,15 +116,21 @@ proc parseCharClass(p: var RegexParser): RegexNode =
       loChar = loTok.lexeme[0]
       p.advance()
     of tkEscaped:
-      # Resolve escape sequences inside character classes
-      loChar = case loTok.lexeme[0]
+      let ec = loTok.lexeme[0]
+      p.advance()
+      # Class-escape sequences (\d \D \w \W \s \S) — store as isEscape item
+      # and continue directly; they cannot form a range.
+      if ec in {'d', 'D', 'w', 'W', 's', 'S'}:
+        result.items.add(CharClassItem(isEscape: true, escapeChar: ec))
+        continue
+      # All other escapes resolve to a literal char
+      loChar = case ec
         of 'n': '\n'
         of 't': '\t'
         of 'r': '\r'
         of 'f': '\f'
         of 'v': '\v'
-        else:   loTok.lexeme[0]
-      p.advance()
+        else:   ec
     of tkDot:
       loChar = '.'
       p.advance()

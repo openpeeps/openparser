@@ -219,11 +219,24 @@ proc compileNode(c: var RegexCompiler, n: RegexNode) =
     if n.capture:
       c.emit(Instr(op: opSave, arg1: closeSlot))
 
+    # of rnQuantifier:
+    #   let inner = n.operand
+    #   # Detect [^X]* / [^X]+ — emit opSkipTo instead of Split+CharClass loop
+    #   if inner.kind == rnCharClass and inner.negated and
+    #      inner.items.len == 1 and not inner.items[0].isRange:
+    #     let ch = inner.items[0].ch
+    #     c.emit(Instr(op: opSkipTo, arg1: ord(ch)))
+    #     return
+    #   compileQuantifier(c, n)
   of rnQuantifier:
     let inner = n.operand
-    # Detect [^X]* / [^X]+ — emit opSkipTo instead of Split+CharClass loop
+    # Detect [^X]* ONLY (min=0) — emit opSkipTo instead of Split+CharClass loop.
+    # For [^X]+ (min=1) fall through to normal compilation so the mandatory
+    # first-char step is enforced.
     if inner.kind == rnCharClass and inner.negated and
-       inner.items.len == 1 and not inner.items[0].isRange:
+       inner.items.len == 1 and not inner.items[0].isRange and
+       not inner.items[0].isEscape and
+       n.min == 0:
       let ch = inner.items[0].ch
       c.emit(Instr(op: opSkipTo, arg1: ord(ch)))
       return
