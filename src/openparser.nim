@@ -9,7 +9,7 @@ when defined(napibuild):
 elif defined(builddocs):
   # For documentation purposes, we re-export all parsers here
   import ./openparser/[json, csv, rss, feed, yaml, dotenv, fbe, toml, bson]
-  export json, csv, rss, feed, yaml, dotenv, fbe, toml, bson, 
+  export json, csv, rss, feed, yaml, dotenv, fbe, toml, bson 
 
   import ./openparser/gettext/[po, mo]
   export po, mo
