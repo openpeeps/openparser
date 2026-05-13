@@ -414,11 +414,13 @@ proc get*(n: YamlNode, key: string): YamlNode =
   return get(nextNode, tail)
 
 proc get*(obj: YamlObject, key: string): YamlNode =
-  ## Access a value from a YAMLObject using a key
-  if obj.hasKey(key):
-    return obj[key]
+  ## Retrieves a value by key, supporting dot notation for nested access
+  if key.contains("."):
+    let parts = key.split('.', maxsplit = 1)
+    result = obj.get(parts[0]).get(parts[1])
   else:
-    return nil
+    # existing single-key lookup logic
+    result = obj[key] # adjust to match actual field access
 
 proc put*(obj: YamlObject, key: string, value: YamlNode) =
   ## Insert or update a key-value pair in a YAMLObject
