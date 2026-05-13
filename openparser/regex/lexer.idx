@@ -1,0 +1,32 @@
+nimTitle	lexer	openparser/regex/lexer.html	module openparser/regex/lexer		0
+nim	tkEof	openparser/regex/lexer.html#tkEof	RegexTokenKind.tkEof		11
+nim	tkChar	openparser/regex/lexer.html#tkChar	RegexTokenKind.tkChar		11
+nim	tkEscaped	openparser/regex/lexer.html#tkEscaped	RegexTokenKind.tkEscaped		11
+nim	tkNumber	openparser/regex/lexer.html#tkNumber	RegexTokenKind.tkNumber		11
+nim	tkDot	openparser/regex/lexer.html#tkDot	RegexTokenKind.tkDot		11
+nim	tkStar	openparser/regex/lexer.html#tkStar	RegexTokenKind.tkStar		11
+nim	tkPlus	openparser/regex/lexer.html#tkPlus	RegexTokenKind.tkPlus		11
+nim	tkQuestion	openparser/regex/lexer.html#tkQuestion	RegexTokenKind.tkQuestion		11
+nim	tkPipe	openparser/regex/lexer.html#tkPipe	RegexTokenKind.tkPipe		11
+nim	tkLParen	openparser/regex/lexer.html#tkLParen	RegexTokenKind.tkLParen		11
+nim	tkRParen	openparser/regex/lexer.html#tkRParen	RegexTokenKind.tkRParen		11
+nim	tkLBracket	openparser/regex/lexer.html#tkLBracket	RegexTokenKind.tkLBracket		11
+nim	tkRBracket	openparser/regex/lexer.html#tkRBracket	RegexTokenKind.tkRBracket		11
+nim	tkLBrace	openparser/regex/lexer.html#tkLBrace	RegexTokenKind.tkLBrace		11
+nim	tkRBrace	openparser/regex/lexer.html#tkRBrace	RegexTokenKind.tkRBrace		11
+nim	tkCaret	openparser/regex/lexer.html#tkCaret	RegexTokenKind.tkCaret		11
+nim	tkDollar	openparser/regex/lexer.html#tkDollar	RegexTokenKind.tkDollar		11
+nim	tkComma	openparser/regex/lexer.html#tkComma	RegexTokenKind.tkComma		11
+nim	tkHyphen	openparser/regex/lexer.html#tkHyphen	RegexTokenKind.tkHyphen		11
+nim	tkNewline	openparser/regex/lexer.html#tkNewline	RegexTokenKind.tkNewline		11
+nim	RegexTokenKind	openparser/regex/lexer.html#RegexTokenKind	enum RegexTokenKind		11
+nim	RegexLexer	openparser/regex/lexer.html#RegexLexer	object RegexLexer		33
+nim	RegexToken	openparser/regex/lexer.html#RegexToken	object RegexToken		44
+nim	OpenParserRegexError	openparser/regex/lexer.html#OpenParserRegexError	object OpenParserRegexError		51
+nim	getLexeme	openparser/regex/lexer.html#getLexeme,RegexLexer,int,int	proc getLexeme(l: RegexLexer; startPos: int; stopPos: int): string		71
+nim	error	openparser/regex/lexer.html#error,RegexLexer,string	proc error(l: var RegexLexer; msg: string)		109
+nim	getToken	openparser/regex/lexer.html#getToken,RegexLexer	proc getToken(l: var RegexLexer): RegexToken		114
+nim	initRegexLexer	openparser/regex/lexer.html#initRegexLexer,string	proc initRegexLexer(input: string): RegexLexer		166
+nim	initRegexLexer	openparser/regex/lexer.html#initRegexLexer,MemFile	proc initRegexLexer(mf: MemFile): RegexLexer		178
+nim	close	openparser/regex/lexer.html#close,RegexLexer	proc close(l: var RegexLexer)		193
+nimgrp	initregexlexer	openparser/regex/lexer.html#initRegexLexer-procs-all	proc		166

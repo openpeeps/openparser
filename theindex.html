@@ -28,10 +28,12 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc `$`(f: CsvFieldSlice): string" href="openparser/csv.html#%24%2CCsvFieldSlice">csv: proc `$`(f: CsvFieldSlice): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="parser: proc `$`(n: RegexNode; indent = 0): string" href="openparser/regex/parser.html#%24%2CRegexNode%2Cint">parser: proc `$`(n: RegexNode; indent = 0): string</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc `$`(yamlObject: YAMLObject): string" href="openparser/yaml.html#%24%2CYAMLObject">yaml: proc `$`(yamlObject: YAMLObject): string</a></li>
           </ul></dd>
@@ -44,6 +46,10 @@
           data-doc-search-tag="json: proc advance(parser: var JsonParser): JsonToken" href="openparser/json.html#advance%2CJsonParser">json: proc advance(parser: var JsonParser): JsonToken</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc advance(p: var YamlParser)" href="openparser/yaml.html#advance%2CYamlParser">yaml: proc advance(p: var YamlParser)</a></li>
+          </ul></dd>
+<dt><a name="allGroups" href="#allGroups"><span>allGroups:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc allGroups(m: MatchResult; input: string): seq[CaptureGroup]" href="openparser/regex/vm.html#allGroups%2CMatchResult%2Cstring">vm: proc allGroups(m: MatchResult; input: string): seq[CaptureGroup]</a></li>
           </ul></dd>
 <dt><a name="AnyTable" href="#AnyTable"><span>AnyTable:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -115,6 +121,10 @@
 <li><a class="reference external"
           data-doc-search-tag="feed: object AtomValidationError" href="openparser/feed.html#AtomValidationError">feed: object AtomValidationError</a></li>
           </ul></dd>
+<dt><a name="BackscanKind" href="#BackscanKind"><span>BackscanKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: enum BackscanKind" href="openparser/regex/prefilter.html#BackscanKind">prefilter: enum BackscanKind</a></li>
+          </ul></dd>
 <dt><a name="beginFinalInnerStruct" href="#beginFinalInnerStruct"><span>beginFinalInnerStruct:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc beginFinalInnerStruct(b: var Buffer)" href="openparser/fbe.html#beginFinalInnerStruct%2CBuffer">fbe: proc beginFinalInnerStruct(b: var Buffer)</a></li>
@@ -143,6 +153,14 @@
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc beginRootStruct(b: var Buffer; version: uint32)" href="openparser/fbe.html#beginRootStruct%2CBuffer%2Cuint32">fbe: proc beginRootStruct(b: var Buffer; version: uint32)</a></li>
           </ul></dd>
+<dt><a name="bsAlphaWord" href="#bsAlphaWord"><span>bsAlphaWord:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: BackscanKind.bsAlphaWord" href="openparser/regex/prefilter.html#bsAlphaWord">prefilter: BackscanKind.bsAlphaWord</a></li>
+          </ul></dd>
+<dt><a name="bsNone" href="#bsNone"><span>bsNone:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: BackscanKind.bsNone" href="openparser/regex/prefilter.html#bsNone">prefilter: BackscanKind.bsNone</a></li>
+          </ul></dd>
 <dt><a name="BSONDocMagic" href="#BSONDocMagic"><span>BSONDocMagic:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="bson: const BSONDocMagic" href="openparser/bson.html#BSONDocMagic">bson: const BSONDocMagic</a></li>
@@ -151,9 +169,61 @@
 <li><a class="reference external"
           data-doc-search-tag="bson: object BSONDocument" href="openparser/bson.html#BSONDocument">bson: object BSONDocument</a></li>
           </ul></dd>
+<dt><a name="bsWordChar" href="#bsWordChar"><span>bsWordChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: BackscanKind.bsWordChar" href="openparser/regex/prefilter.html#bsWordChar">prefilter: BackscanKind.bsWordChar</a></li>
+          </ul></dd>
 <dt><a name="Buffer" href="#Buffer"><span>Buffer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: object Buffer" href="openparser/fbe.html#Buffer">fbe: object Buffer</a></li>
+          </ul></dd>
+<dt><a name="captureCount" href="#captureCount"><span>captureCount:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: proc captureCount(p: RegexParser): lent int" href="openparser/regex/parser.html#captureCount%2CRegexParser">parser: proc captureCount(p: RegexParser): lent int</a></li>
+          </ul></dd>
+<dt><a name="CaptureGroup" href="#CaptureGroup"><span>CaptureGroup:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: object CaptureGroup" href="openparser/regex/vm.html#CaptureGroup">vm: object CaptureGroup</a></li>
+          </ul></dd>
+<dt><a name="Captures" href="#Captures"><span>Captures:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: type Captures" href="openparser/regex/vm.html#Captures">vm: type Captures</a></li>
+          </ul></dd>
+<dt><a name="CharClassItem" href="#CharClassItem"><span>CharClassItem:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: object CharClassItem" href="openparser/regex/parser.html#CharClassItem">parser: object CharClassItem</a></li>
+          </ul></dd>
+<dt><a name="close" href="#close"><span>close:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: proc close(cat: var MoCatalog)" href="openparser/gettext/mo.html#close%2CMoCatalog">mo: proc close(cat: var MoCatalog)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="po: proc close(cat: PoCatalog)" href="openparser/gettext/po.html#close%2CPoCatalog">po: proc close(cat: PoCatalog)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="lexer: proc close(l: var RegexLexer)" href="openparser/regex/lexer.html#close%2CRegexLexer">lexer: proc close(l: var RegexLexer)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="parser: proc close(p: var RegexParser)" href="openparser/regex/parser.html#close%2CRegexParser">parser: proc close(p: var RegexParser)</a></li>
+          </ul></dd>
+<dt><a name="compile" href="#compile"><span>compile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc compile(ast: RegexNode; numCaptures: int): Program" href="openparser/regex/compiler.html#compile%2CRegexNode%2Cint">compiler: proc compile(ast: RegexNode; numCaptures: int): Program</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="compiler: proc compile(input: string): Program" href="openparser/regex/compiler.html#compile%2Cstring">compiler: proc compile(input: string): Program</a></li>
+          </ul></dd>
+<dt><a name="CompiledClass" href="#CompiledClass"><span>CompiledClass:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: object CompiledClass" href="openparser/regex/compiler.html#CompiledClass">compiler: object CompiledClass</a></li>
+          </ul></dd>
+<dt><a name="compileMo" href="#compileMo"><span>compileMo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: proc compileMo(cat: MoCatalog): MoCompiledCatalog" href="openparser/gettext/mo.html#compileMo%2CMoCatalog">mo: proc compileMo(cat: MoCatalog): MoCompiledCatalog</a></li>
+          </ul></dd>
+<dt><a name="compilePo" href="#compilePo"><span>compilePo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: proc compilePo(cat: PoCatalog; skipFuzzy = true): PoCompiledCatalog" href="openparser/gettext/po.html#compilePo%2CPoCatalog">po: proc compilePo(cat: PoCatalog; skipFuzzy = true): PoCompiledCatalog</a></li>
+          </ul></dd>
+<dt><a name="copyFieldsBeforeRecCase" href="#copyFieldsBeforeRecCase"><span>copyFieldsBeforeRecCase:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: macro copyFieldsBeforeRecCase(dst, src: typed): untyped" href="openparser/yaml.html#copyFieldsBeforeRecCase.m%2Ctyped%2Ctyped">yaml: macro copyFieldsBeforeRecCase(dst, src: typed): untyped</a></li>
           </ul></dd>
 <dt><a name="CsvFieldSlice" href="#CsvFieldSlice"><span>CsvFieldSlice:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -183,6 +253,10 @@
 <li><a class="reference external"
           data-doc-search-tag="bson: proc decodeBson(data: openArray[byte]): JsonNode" href="openparser/bson.html#decodeBson%2CopenArray%5Bbyte%5D">bson: proc decodeBson(data: openArray[byte]): JsonNode</a></li>
           </ul></dd>
+<dt><a name="decodeField" href="#decodeField"><span>decodeField:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: proc decodeField(cat: PoCatalog; f: PoStringField): string" href="openparser/gettext/po.html#decodeField%2CPoCatalog%2CPoStringField">po: proc decodeField(cat: PoCatalog; f: PoStringField): string</a></li>
+          </ul></dd>
 <dt><a name="decodeFinal" href="#decodeFinal"><span>decodeFinal:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc decodeFinal[T: tuple | object](b: var Buffer; into: var seq[T])" href="openparser/fbe.html#decodeFinal%2CBuffer%2Cseq%5BT%5D">fbe: proc decodeFinal[T: tuple | object](b: var Buffer; into: var seq[T])</a></li>
@@ -197,6 +271,10 @@
     fieldId: uint16; fieldSize: int; b: var Buffer; into: var T);
                    outVersion: var uint32)</a></li>
           </ul></dd>
+<dt><a name="decodeMsgStr" href="#decodeMsgStr"><span>decodeMsgStr:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: proc decodeMsgStr(cat: PoCatalog; e: PoEntry; idx = 0): string" href="openparser/gettext/po.html#decodeMsgStr%2CPoCatalog%2CPoEntry%2Cint">po: proc decodeMsgStr(cat: PoCatalog; e: PoEntry; idx = 0): string</a></li>
+          </ul></dd>
 <dt><a name="decodeRootInto" href="#decodeRootInto"><span>decodeRootInto:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc decodeRootInto[T](b: var Buffer; into: var T; handleField: proc (
@@ -208,6 +286,10 @@
 <dt><a name="defaultCsvOptions" href="#defaultCsvOptions"><span>defaultCsvOptions:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc defaultCsvOptions(): CsvOptions" href="openparser/csv.html#defaultCsvOptions">csv: proc defaultCsvOptions(): CsvOptions</a></li>
+          </ul></dd>
+<dt><a name="disassemble" href="#disassemble"><span>disassemble:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc disassemble(prog: Program): string" href="openparser/regex/compiler.html#disassemble%2CProgram">compiler: proc disassemble(prog: Program): string</a></li>
           </ul></dd>
 <dt><a name="discriminator" href="#discriminator"><span>discriminator:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -266,6 +348,10 @@
           data-doc-search-tag="json: proc dumpHook[T: distinct](s: var string; v: T)" href="openparser/json.html#dumpHook%2Cstring%2CT">json: proc dumpHook[T: distinct](s: var string; v: T)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc dumpHook(s: var string; v: YamlNode)" href="openparser/yaml.html#dumpHook%2Cstring%2CYamlNode">yaml: proc dumpHook(s: var string; v: YamlNode)</a></li>
+          </ul></dd>
+<dt><a name="eachGroup" href="#eachGroup"><span>eachGroup:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: iterator eachGroup(m: MatchResult; input: string): (int, string)" href="openparser/regex/vm.html#eachGroup.i%2CMatchResult%2Cstring">vm: iterator eachGroup(m: MatchResult; input: string): (int, string)</a></li>
           </ul></dd>
 <dt><a name="encode" href="#encode"><span>encode:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -389,6 +475,8 @@
           <li><a class="reference external"
           data-doc-search-tag="json: proc error(p: var JsonParser; msg: string)" href="openparser/json.html#error%2CJsonParser%2Cstring">json: proc error(p: var JsonParser; msg: string)</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="lexer: proc error(l: var RegexLexer; msg: string)" href="openparser/regex/lexer.html#error%2CRegexLexer%2Cstring">lexer: proc error(l: var RegexLexer; msg: string)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc error(l: var YamlLexer; msg: string)" href="openparser/yaml.html#error%2CYamlLexer%2Cstring">yaml: proc error(l: var YamlLexer; msg: string)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc error(p: var YamlParser; msg: string)" href="openparser/yaml.html#error%2CYamlParser%2Cstring">yaml: proc error(p: var YamlParser; msg: string)</a></li>
@@ -409,6 +497,10 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc expectSkip(parser: var YamlParser; tkind: YamlTokenKind)" href="openparser/yaml.html#expectSkip%2CYamlParser%2CYamlTokenKind">yaml: proc expectSkip(parser: var YamlParser; tkind: YamlTokenKind)</a></li>
           </ul></dd>
+<dt><a name="extractPrefilter" href="#extractPrefilter"><span>extractPrefilter:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: proc extractPrefilter(prog: Program): Prefilter" href="openparser/regex/prefilter.html#extractPrefilter%2CProgram">prefilter: proc extractPrefilter(prog: Program): Prefilter</a></li>
+          </ul></dd>
 <dt><a name="fetchAtom" href="#fetchAtom"><span>fetchAtom:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="feed: proc fetchAtom(url: string): AtomFeed" href="openparser/feed.html#fetchAtom%2Cstring">feed: proc fetchAtom(url: string): AtomFeed</a></li>
@@ -428,6 +520,22 @@
 <dt><a name="FINAL_ROOT_HEADER_SIZE" href="#FINAL_ROOT_HEADER_SIZE"><span>FINAL_ROOT_HEADER_SIZE:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: const FINAL_ROOT_HEADER_SIZE" href="openparser/fbe.html#FINAL_ROOT_HEADER_SIZE">fbe: const FINAL_ROOT_HEADER_SIZE</a></li>
+          </ul></dd>
+<dt><a name="find" href="#find"><span>find:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc find(vm: var RegexVM; input: string): MatchResult" href="openparser/regex/vm.html#find%2CRegexVM%2Cstring">vm: proc find(vm: var RegexVM; input: string): MatchResult</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="vm: proc find(pattern, input: string): MatchResult" href="openparser/regex/vm.html#find%2Cstring%2Cstring">vm: proc find(pattern, input: string): MatchResult</a></li>
+          </ul></dd>
+<dt><a name="findAll" href="#findAll"><span>findAll:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc findAll(vm: var RegexVM; input: string): seq[MatchResult]" href="openparser/regex/vm.html#findAll%2CRegexVM%2Cstring">vm: proc findAll(vm: var RegexVM; input: string): seq[MatchResult]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="vm: proc findAll(pattern, input: string): seq[MatchResult]" href="openparser/regex/vm.html#findAll%2Cstring%2Cstring">vm: proc findAll(pattern, input: string): seq[MatchResult]</a></li>
+          </ul></dd>
+<dt><a name="form" href="#form"><span>form:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: proc form(cat: MoCatalog; msgid: string; formIdx: int; msgctxt = &quot;&quot;): string" href="openparser/gettext/mo.html#form%2CMoCatalog%2Cstring%2Cint%2Cstring">mo: proc form(cat: MoCatalog; msgid: string; formIdx: int; msgctxt = &quot;&quot;): string</a></li>
           </ul></dd>
 <dt><a name="fromBson" href="#fromBson"><span>fromBson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -495,6 +603,10 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc getInt(n: YamlNode): int64" href="openparser/yaml.html#getInt%2CYamlNode">yaml: proc getInt(n: YamlNode): int64</a></li>
           </ul></dd>
+<dt><a name="getLexeme" href="#getLexeme"><span>getLexeme:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: proc getLexeme(l: RegexLexer; startPos: int; stopPos: int): string" href="openparser/regex/lexer.html#getLexeme%2CRegexLexer%2Cint%2Cint">lexer: proc getLexeme(l: RegexLexer; startPos: int; stopPos: int): string</a></li>
+          </ul></dd>
 <dt><a name="getObject" href="#getObject"><span>getObject:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc getObject(n: TomlNode): OrderedTableRef[string, TomlNode]" href="openparser/toml.html#getObject%2CTomlNode">toml: proc getObject(n: TomlNode): OrderedTableRef[string, TomlNode]</a></li>
@@ -507,23 +619,75 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc getStr(n: YamlNode): string" href="openparser/yaml.html#getStr%2CYamlNode">yaml: proc getStr(n: YamlNode): string</a></li>
           </ul></dd>
+<dt><a name="getToken" href="#getToken"><span>getToken:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: proc getToken(l: var RegexLexer): RegexToken" href="openparser/regex/lexer.html#getToken%2CRegexLexer">lexer: proc getToken(l: var RegexLexer): RegexToken</a></li>
+          </ul></dd>
 <dt><a name="getValue" href="#getValue"><span>getValue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc getValue(v: TomlNode): string" href="openparser/toml.html#getValue%2CTomlNode">toml: proc getValue(v: TomlNode): string</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc getValue(v: YamlNode): string" href="openparser/yaml.html#getValue%2CYamlNode">yaml: proc getValue(v: YamlNode): string</a></li>
           </ul></dd>
+<dt><a name="group" href="#group"><span>group:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc group(m: MatchResult; idx: int): CaptureGroup" href="openparser/regex/vm.html#group%2CMatchResult%2Cint">vm: proc group(m: MatchResult; idx: int): CaptureGroup</a></li>
+          </ul></dd>
+<dt><a name="groupCount" href="#groupCount"><span>groupCount:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc groupCount(m: MatchResult): int" href="openparser/regex/vm.html#groupCount%2CMatchResult">vm: proc groupCount(m: MatchResult): int</a></li>
+          </ul></dd>
+<dt><a name="groups" href="#groups"><span>groups:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc groups(m: MatchResult; input: string): seq[string]" href="openparser/regex/vm.html#groups%2CMatchResult%2Cstring">vm: proc groups(m: MatchResult; input: string): seq[string]</a></li>
+          </ul></dd>
+<dt><a name="groupStr" href="#groupStr"><span>groupStr:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc groupStr(m: MatchResult; input: string; idx: int): string" href="openparser/regex/vm.html#groupStr%2CMatchResult%2Cstring%2Cint">vm: proc groupStr(m: MatchResult; input: string; idx: int): string</a></li>
+          </ul></dd>
+<dt><a name="hasAvx2" href="#hasAvx2"><span>hasAvx2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: const hasAvx2" href="openparser/regex/simd.html#hasAvx2">simd: const hasAvx2</a></li>
+          </ul></dd>
 <dt><a name="hasKind" href="#hasKind"><span>hasKind:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: proc hasKind(node: NimNode; kind: NimNodeKind): bool" href="openparser/private/types.html#hasKind%2CNimNode%2CNimNodeKind">types: proc hasKind(node: NimNode; kind: NimNodeKind): bool</a></li>
+          </ul></dd>
+<dt><a name="hasSse2" href="#hasSse2"><span>hasSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: const hasSse2" href="openparser/regex/simd.html#hasSse2">simd: const hasSse2</a></li>
+          </ul></dd>
+<dt><a name="headerEntryIndex" href="#headerEntryIndex"><span>headerEntryIndex:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: proc headerEntryIndex(cat: PoCatalog): int" href="openparser/gettext/po.html#headerEntryIndex%2CPoCatalog">po: proc headerEntryIndex(cat: PoCatalog): int</a></li>
           </ul></dd>
 <dt><a name="initBuffer" href="#initBuffer"><span>initBuffer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc initBuffer(capacity = 256): Buffer" href="openparser/fbe.html#initBuffer%2Cint">fbe: proc initBuffer(capacity = 256): Buffer</a></li>
           </ul></dd>
+<dt><a name="initRegexLexer" href="#initRegexLexer"><span>initRegexLexer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: proc initRegexLexer(mf: MemFile): RegexLexer" href="openparser/regex/lexer.html#initRegexLexer%2CMemFile">lexer: proc initRegexLexer(mf: MemFile): RegexLexer</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="lexer: proc initRegexLexer(input: string): RegexLexer" href="openparser/regex/lexer.html#initRegexLexer%2Cstring">lexer: proc initRegexLexer(input: string): RegexLexer</a></li>
+          </ul></dd>
+<dt><a name="initRegexParser" href="#initRegexParser"><span>initRegexParser:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: proc initRegexParser(mf: MemFile): RegexParser" href="openparser/regex/parser.html#initRegexParser%2CMemFile">parser: proc initRegexParser(mf: MemFile): RegexParser</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="parser: proc initRegexParser(input: string): RegexParser" href="openparser/regex/parser.html#initRegexParser%2Cstring">parser: proc initRegexParser(input: string): RegexParser</a></li>
+          </ul></dd>
+<dt><a name="initRegexVM" href="#initRegexVM"><span>initRegexVM:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc initRegexVM(prog: Program): RegexVM" href="openparser/regex/vm.html#initRegexVM%2CProgram">vm: proc initRegexVM(prog: Program): RegexVM</a></li>
+          </ul></dd>
 <dt><a name="INNER_HEADER_SIZE" href="#INNER_HEADER_SIZE"><span>INNER_HEADER_SIZE:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: const INNER_HEADER_SIZE" href="openparser/fbe.html#INNER_HEADER_SIZE">fbe: const INNER_HEADER_SIZE</a></li>
+          </ul></dd>
+<dt><a name="Instr" href="#Instr"><span>Instr:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: object Instr" href="openparser/regex/compiler.html#Instr">compiler: object Instr</a></li>
           </ul></dd>
 <dt><a name="Integers" href="#Integers"><span>Integers:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -621,6 +785,40 @@
 <li><a class="reference external"
           data-doc-search-tag="dotenv: proc loadDotenvForEnv(envName: string; override = false)" href="openparser/dotenv.html#loadDotenvForEnv%2Cstring">dotenv: proc loadDotenvForEnv(envName: string; override = false)</a></li>
           </ul></dd>
+<dt><a name="match" href="#match"><span>match:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc match(vm: var RegexVM; input: string): MatchResult" href="openparser/regex/vm.html#match%2CRegexVM%2Cstring">vm: proc match(vm: var RegexVM; input: string): MatchResult</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="vm: proc match(pattern, input: string): MatchResult" href="openparser/regex/vm.html#match%2Cstring%2Cstring">vm: proc match(pattern, input: string): MatchResult</a></li>
+          </ul></dd>
+<dt><a name="MatchResult" href="#MatchResult"><span>MatchResult:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: object MatchResult" href="openparser/regex/vm.html#MatchResult">vm: object MatchResult</a></li>
+          </ul></dd>
+<dt><a name="MoCatalog" href="#MoCatalog"><span>MoCatalog:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: type MoCatalog" href="openparser/gettext/mo.html#MoCatalog">mo: type MoCatalog</a></li>
+          </ul></dd>
+<dt><a name="MoCompiledCatalog" href="#MoCompiledCatalog"><span>MoCompiledCatalog:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: object MoCompiledCatalog" href="openparser/gettext/mo.html#MoCompiledCatalog">mo: object MoCompiledCatalog</a></li>
+          </ul></dd>
+<dt><a name="MoCompiledMessage" href="#MoCompiledMessage"><span>MoCompiledMessage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: object MoCompiledMessage" href="openparser/gettext/mo.html#MoCompiledMessage">mo: object MoCompiledMessage</a></li>
+          </ul></dd>
+<dt><a name="MoMessage" href="#MoMessage"><span>MoMessage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: object MoMessage" href="openparser/gettext/mo.html#MoMessage">mo: object MoMessage</a></li>
+          </ul></dd>
+<dt><a name="MoParseError" href="#MoParseError"><span>MoParseError:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: object MoParseError" href="openparser/gettext/mo.html#MoParseError">mo: object MoParseError</a></li>
+          </ul></dd>
+<dt><a name="MoSpan" href="#MoSpan"><span>MoSpan:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: object MoSpan" href="openparser/gettext/mo.html#MoSpan">mo: object MoSpan</a></li>
+          </ul></dd>
 <dt><a name="MultiDotEnv" href="#MultiDotEnv"><span>MultiDotEnv:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="dotenv: type MultiDotEnv" href="openparser/dotenv.html#MultiDotEnv">dotenv: type MultiDotEnv</a></li>
@@ -697,15 +895,53 @@
 <li><a class="reference external"
           data-doc-search-tag="yaml: proc newYamlString(s: string): YamlNode" href="openparser/yaml.html#newYamlString%2Cstring">yaml: proc newYamlString(s: string): YamlNode</a></li>
           </ul></dd>
+<dt><a name="nextCandidate" href="#nextCandidate"><span>nextCandidate:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: proc nextCandidate(pf: Prefilter; input: string; pos, inputLen: int): int" href="openparser/regex/prefilter.html#nextCandidate%2CPrefilter%2Cstring%2Cint%2Cint">prefilter: proc nextCandidate(pf: Prefilter; input: string; pos, inputLen: int): int</a></li>
+          </ul></dd>
 <dt><a name="nextToken" href="#nextToken"><span>nextToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc nextToken(p: var TomlParser): TomlToken" href="openparser/toml.html#nextToken%2CTomlParser">toml: proc nextToken(p: var TomlParser): TomlToken</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc nextToken(p: var YamlParser): YamlToken" href="openparser/yaml.html#nextToken%2CYamlParser">yaml: proc nextToken(p: var YamlParser): YamlToken</a></li>
           </ul></dd>
+<dt><a name="noMatch" href="#noMatch"><span>noMatch:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc noMatch(): MatchResult" href="openparser/regex/vm.html#noMatch">vm: proc noMatch(): MatchResult</a></li>
+          </ul></dd>
+<dt><a name="ntranslate" href="#ntranslate"><span>ntranslate:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: proc ntranslate(cc: MoCompiledCatalog; singular, plural: string; n: int; msgctxt = &quot;&quot;): string" href="openparser/gettext/mo.html#ntranslate%2CMoCompiledCatalog%2Cstring%2Cstring%2Cint%2Cstring">mo: proc ntranslate(cc: MoCompiledCatalog; singular, plural: string; n: int; msgctxt = &quot;&quot;): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="po: proc ntranslate(cc: PoCompiledCatalog; singular, plural: string; n: int; msgctxt = &quot;&quot;): string" href="openparser/gettext/po.html#ntranslate%2CPoCompiledCatalog%2Cstring%2Cstring%2Cint%2Cstring">po: proc ntranslate(cc: PoCompiledCatalog; singular, plural: string; n: int; msgctxt = &quot;&quot;): string</a></li>
+          </ul></dd>
 <dt><a name="objectToJson" href="#objectToJson"><span>objectToJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc objectToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode" href="openparser/json.html#objectToJson%2CNimNode%2CNimNode%2CJsonOptions">json: proc objectToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode</a></li>
+          </ul></dd>
+<dt><a name="opAnchorEnd" href="#opAnchorEnd"><span>opAnchorEnd:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opAnchorEnd" href="openparser/regex/compiler.html#opAnchorEnd">compiler: OpCode.opAnchorEnd</a></li>
+          </ul></dd>
+<dt><a name="opAnchorStart" href="#opAnchorStart"><span>opAnchorStart:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opAnchorStart" href="openparser/regex/compiler.html#opAnchorStart">compiler: OpCode.opAnchorStart</a></li>
+          </ul></dd>
+<dt><a name="opAnyChar" href="#opAnyChar"><span>opAnyChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opAnyChar" href="openparser/regex/compiler.html#opAnyChar">compiler: OpCode.opAnyChar</a></li>
+          </ul></dd>
+<dt><a name="opChar" href="#opChar"><span>opChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opChar" href="openparser/regex/compiler.html#opChar">compiler: OpCode.opChar</a></li>
+          </ul></dd>
+<dt><a name="opCharClass" href="#opCharClass"><span>opCharClass:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opCharClass" href="openparser/regex/compiler.html#opCharClass">compiler: OpCode.opCharClass</a></li>
+          </ul></dd>
+<dt><a name="OpCode" href="#OpCode"><span>OpCode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: enum OpCode" href="openparser/regex/compiler.html#OpCode">compiler: enum OpCode</a></li>
           </ul></dd>
 <dt><a name="openBSONDocument" href="#openBSONDocument"><span>openBSONDocument:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -715,9 +951,17 @@
 <li><a class="reference external"
           data-doc-search-tag="types: object OpenLexer" href="openparser/private/types.html#OpenLexer">types: object OpenLexer</a></li>
           </ul></dd>
+<dt><a name="openMoCatalog" href="#openMoCatalog"><span>openMoCatalog:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: proc openMoCatalog(path: string): MoCatalog" href="openparser/gettext/mo.html#openMoCatalog%2Cstring">mo: proc openMoCatalog(path: string): MoCatalog</a></li>
+          </ul></dd>
 <dt><a name="OpenParserJsonError" href="#OpenParserJsonError"><span>OpenParserJsonError:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: object OpenParserJsonError" href="openparser/json.html#OpenParserJsonError">json: object OpenParserJsonError</a></li>
+          </ul></dd>
+<dt><a name="OpenParserRegexError" href="#OpenParserRegexError"><span>OpenParserRegexError:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: object OpenParserRegexError" href="openparser/regex/lexer.html#OpenParserRegexError">lexer: object OpenParserRegexError</a></li>
           </ul></dd>
 <dt><a name="OpenParserTomlError" href="#OpenParserTomlError"><span>OpenParserTomlError:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -727,6 +971,10 @@
 <li><a class="reference external"
           data-doc-search-tag="yaml: object OpenParserYamlError" href="openparser/yaml.html#OpenParserYamlError">yaml: object OpenParserYamlError</a></li>
           </ul></dd>
+<dt><a name="openPoCatalog" href="#openPoCatalog"><span>openPoCatalog:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: proc openPoCatalog(path: string): PoCatalog" href="openparser/gettext/po.html#openPoCatalog%2Cstring">po: proc openPoCatalog(path: string): PoCatalog</a></li>
+          </ul></dd>
 <dt><a name="openReadOnly" href="#openReadOnly"><span>openReadOnly:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile" href="openparser/json.html#openReadOnly%2Cstring">json: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile</a></li>
@@ -734,6 +982,42 @@
 <dt><a name="OpenToken" href="#OpenToken"><span>OpenToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: object OpenToken" href="openparser/private/types.html#OpenToken">types: object OpenToken</a></li>
+          </ul></dd>
+<dt><a name="opEscapeClass" href="#opEscapeClass"><span>opEscapeClass:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opEscapeClass" href="openparser/regex/compiler.html#opEscapeClass">compiler: OpCode.opEscapeClass</a></li>
+          </ul></dd>
+<dt><a name="opJmp" href="#opJmp"><span>opJmp:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opJmp" href="openparser/regex/compiler.html#opJmp">compiler: OpCode.opJmp</a></li>
+          </ul></dd>
+<dt><a name="opMatch" href="#opMatch"><span>opMatch:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opMatch" href="openparser/regex/compiler.html#opMatch">compiler: OpCode.opMatch</a></li>
+          </ul></dd>
+<dt><a name="opProgress" href="#opProgress"><span>opProgress:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opProgress" href="openparser/regex/compiler.html#opProgress">compiler: OpCode.opProgress</a></li>
+          </ul></dd>
+<dt><a name="opSave" href="#opSave"><span>opSave:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opSave" href="openparser/regex/compiler.html#opSave">compiler: OpCode.opSave</a></li>
+          </ul></dd>
+<dt><a name="opSkipTo" href="#opSkipTo"><span>opSkipTo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opSkipTo" href="openparser/regex/compiler.html#opSkipTo">compiler: OpCode.opSkipTo</a></li>
+          </ul></dd>
+<dt><a name="opSplit" href="#opSplit"><span>opSplit:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opSplit" href="openparser/regex/compiler.html#opSplit">compiler: OpCode.opSplit</a></li>
+          </ul></dd>
+<dt><a name="opSplitLazy" href="#opSplitLazy"><span>opSplitLazy:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opSplitLazy" href="openparser/regex/compiler.html#opSplitLazy">compiler: OpCode.opSplitLazy</a></li>
+          </ul></dd>
+<dt><a name="parse" href="#parse"><span>parse:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: proc parse(p: var RegexParser): RegexNode" href="openparser/regex/parser.html#parse%2CRegexParser">parser: proc parse(p: var RegexParser): RegexNode</a></li>
           </ul></dd>
 <dt><a name="parseAtom" href="#parseAtom"><span>parseAtom:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -817,6 +1101,10 @@
 <li><a class="reference external"
           data-doc-search-tag="toml: proc parseObject(p: var TomlParser; ln: int): TomlNode" href="openparser/toml.html#parseObject%2CTomlParser%2Cint">toml: proc parseObject(p: var TomlParser; ln: int): TomlNode</a></li>
           </ul></dd>
+<dt><a name="parsePoHeaders" href="#parsePoHeaders"><span>parsePoHeaders:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: proc parsePoHeaders(cat: PoCatalog): Table[string, string]" href="openparser/gettext/po.html#parsePoHeaders%2CPoCatalog">po: proc parsePoHeaders(cat: PoCatalog): Table[string, string]</a></li>
+          </ul></dd>
 <dt><a name="parseRoot" href="#parseRoot"><span>parseRoot:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc parseRoot(p: var TomlParser): TomlNode" href="openparser/toml.html#parseRoot%2CTomlParser">toml: proc parseRoot(p: var TomlParser): TomlNode</a></li>
@@ -853,15 +1141,181 @@
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc patchUint32At(b: var Buffer; pos: int; v: uint32)" href="openparser/fbe.html#patchUint32At%2CBuffer%2Cint%2Cuint32">fbe: proc patchUint32At(b: var Buffer; pos: int; v: uint32)</a></li>
           </ul></dd>
+<dt><a name="PatternShape" href="#PatternShape"><span>PatternShape:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: enum PatternShape" href="openparser/regex/compiler.html#PatternShape">compiler: enum PatternShape</a></li>
+          </ul></dd>
+<dt><a name="pckExtracted" href="#pckExtracted"><span>pckExtracted:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: PoCommentKind.pckExtracted" href="openparser/gettext/po.html#pckExtracted">po: PoCommentKind.pckExtracted</a></li>
+          </ul></dd>
+<dt><a name="pckFlag" href="#pckFlag"><span>pckFlag:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: PoCommentKind.pckFlag" href="openparser/gettext/po.html#pckFlag">po: PoCommentKind.pckFlag</a></li>
+          </ul></dd>
+<dt><a name="pckOther" href="#pckOther"><span>pckOther:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: PoCommentKind.pckOther" href="openparser/gettext/po.html#pckOther">po: PoCommentKind.pckOther</a></li>
+          </ul></dd>
+<dt><a name="pckPrevious" href="#pckPrevious"><span>pckPrevious:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: PoCommentKind.pckPrevious" href="openparser/gettext/po.html#pckPrevious">po: PoCommentKind.pckPrevious</a></li>
+          </ul></dd>
+<dt><a name="pckReference" href="#pckReference"><span>pckReference:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: PoCommentKind.pckReference" href="openparser/gettext/po.html#pckReference">po: PoCommentKind.pckReference</a></li>
+          </ul></dd>
+<dt><a name="pckTranslator" href="#pckTranslator"><span>pckTranslator:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: PoCommentKind.pckTranslator" href="openparser/gettext/po.html#pckTranslator">po: PoCommentKind.pckTranslator</a></li>
+          </ul></dd>
 <dt><a name="peekChar" href="#peekChar"><span>peekChar:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc peekChar(lex: TomlLexer; offset: int): char" href="openparser/toml.html#peekChar%2CTomlLexer%2Cint">toml: proc peekChar(lex: TomlLexer; offset: int): char</a></li>
+          </ul></dd>
+<dt><a name="pfAlpha" href="#pfAlpha"><span>pfAlpha:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: PrefilterKind.pfAlpha" href="openparser/regex/prefilter.html#pfAlpha">prefilter: PrefilterKind.pfAlpha</a></li>
+          </ul></dd>
+<dt><a name="pfAnchorStart" href="#pfAnchorStart"><span>pfAnchorStart:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: PrefilterKind.pfAnchorStart" href="openparser/regex/prefilter.html#pfAnchorStart">prefilter: PrefilterKind.pfAnchorStart</a></li>
+          </ul></dd>
+<dt><a name="pfAnyOf2" href="#pfAnyOf2"><span>pfAnyOf2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: PrefilterKind.pfAnyOf2" href="openparser/regex/prefilter.html#pfAnyOf2">prefilter: PrefilterKind.pfAnyOf2</a></li>
+          </ul></dd>
+<dt><a name="pfByte" href="#pfByte"><span>pfByte:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: PrefilterKind.pfByte" href="openparser/regex/prefilter.html#pfByte">prefilter: PrefilterKind.pfByte</a></li>
+          </ul></dd>
+<dt><a name="pfByteRange" href="#pfByteRange"><span>pfByteRange:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: PrefilterKind.pfByteRange" href="openparser/regex/prefilter.html#pfByteRange">prefilter: PrefilterKind.pfByteRange</a></li>
+          </ul></dd>
+<dt><a name="pfInnerLiteral" href="#pfInnerLiteral"><span>pfInnerLiteral:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: PrefilterKind.pfInnerLiteral" href="openparser/regex/prefilter.html#pfInnerLiteral">prefilter: PrefilterKind.pfInnerLiteral</a></li>
+          </ul></dd>
+<dt><a name="pfLiteral" href="#pfLiteral"><span>pfLiteral:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: PrefilterKind.pfLiteral" href="openparser/regex/prefilter.html#pfLiteral">prefilter: PrefilterKind.pfLiteral</a></li>
+          </ul></dd>
+<dt><a name="pfLiteralAnchored" href="#pfLiteralAnchored"><span>pfLiteralAnchored:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: PrefilterKind.pfLiteralAnchored" href="openparser/regex/prefilter.html#pfLiteralAnchored">prefilter: PrefilterKind.pfLiteralAnchored</a></li>
+          </ul></dd>
+<dt><a name="pfNone" href="#pfNone"><span>pfNone:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: PrefilterKind.pfNone" href="openparser/regex/prefilter.html#pfNone">prefilter: PrefilterKind.pfNone</a></li>
+          </ul></dd>
+<dt><a name="pfUpperAlpha" href="#pfUpperAlpha"><span>pfUpperAlpha:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: PrefilterKind.pfUpperAlpha" href="openparser/regex/prefilter.html#pfUpperAlpha">prefilter: PrefilterKind.pfUpperAlpha</a></li>
+          </ul></dd>
+<dt><a name="pfWordChar" href="#pfWordChar"><span>pfWordChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: PrefilterKind.pfWordChar" href="openparser/regex/prefilter.html#pfWordChar">prefilter: PrefilterKind.pfWordChar</a></li>
+          </ul></dd>
+<dt><a name="pluralIndex" href="#pluralIndex"><span>pluralIndex:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: proc pluralIndex(cc: MoCompiledCatalog; n: int): int" href="openparser/gettext/mo.html#pluralIndex%2CMoCompiledCatalog%2Cint">mo: proc pluralIndex(cc: MoCompiledCatalog; n: int): int</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="po: proc pluralIndex(cc: PoCompiledCatalog; n: int): int" href="openparser/gettext/po.html#pluralIndex%2CPoCompiledCatalog%2Cint">po: proc pluralIndex(cc: PoCompiledCatalog; n: int): int</a></li>
+          </ul></dd>
+<dt><a name="PoCatalog" href="#PoCatalog"><span>PoCatalog:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: type PoCatalog" href="openparser/gettext/po.html#PoCatalog">po: type PoCatalog</a></li>
+          </ul></dd>
+<dt><a name="PoComment" href="#PoComment"><span>PoComment:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: object PoComment" href="openparser/gettext/po.html#PoComment">po: object PoComment</a></li>
+          </ul></dd>
+<dt><a name="PoCommentKind" href="#PoCommentKind"><span>PoCommentKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: enum PoCommentKind" href="openparser/gettext/po.html#PoCommentKind">po: enum PoCommentKind</a></li>
+          </ul></dd>
+<dt><a name="PoCompiledCatalog" href="#PoCompiledCatalog"><span>PoCompiledCatalog:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: object PoCompiledCatalog" href="openparser/gettext/po.html#PoCompiledCatalog">po: object PoCompiledCatalog</a></li>
+          </ul></dd>
+<dt><a name="PoCompiledMessage" href="#PoCompiledMessage"><span>PoCompiledMessage:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: object PoCompiledMessage" href="openparser/gettext/po.html#PoCompiledMessage">po: object PoCompiledMessage</a></li>
+          </ul></dd>
+<dt><a name="PoEntry" href="#PoEntry"><span>PoEntry:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: object PoEntry" href="openparser/gettext/po.html#PoEntry">po: object PoEntry</a></li>
+          </ul></dd>
+<dt><a name="PoMsgStr" href="#PoMsgStr"><span>PoMsgStr:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: object PoMsgStr" href="openparser/gettext/po.html#PoMsgStr">po: object PoMsgStr</a></li>
+          </ul></dd>
+<dt><a name="PoParseError" href="#PoParseError"><span>PoParseError:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: object PoParseError" href="openparser/gettext/po.html#PoParseError">po: object PoParseError</a></li>
+          </ul></dd>
+<dt><a name="PoStringField" href="#PoStringField"><span>PoStringField:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: object PoStringField" href="openparser/gettext/po.html#PoStringField">po: object PoStringField</a></li>
+          </ul></dd>
+<dt><a name="Prefilter" href="#Prefilter"><span>Prefilter:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: type Prefilter" href="openparser/regex/prefilter.html#Prefilter">prefilter: type Prefilter</a></li>
+          </ul></dd>
+<dt><a name="PrefilterKind" href="#PrefilterKind"><span>PrefilterKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="prefilter: enum PrefilterKind" href="openparser/regex/prefilter.html#PrefilterKind">prefilter: enum PrefilterKind</a></li>
+          </ul></dd>
+<dt><a name="Program" href="#Program"><span>Program:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: object Program" href="openparser/regex/compiler.html#Program">compiler: object Program</a></li>
+          </ul></dd>
+<dt><a name="psAlphaWordStar" href="#psAlphaWordStar"><span>psAlphaWordStar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psAlphaWordStar" href="openparser/regex/compiler.html#psAlphaWordStar">compiler: PatternShape.psAlphaWordStar</a></li>
+          </ul></dd>
+<dt><a name="psDigitPlus" href="#psDigitPlus"><span>psDigitPlus:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psDigitPlus" href="openparser/regex/compiler.html#psDigitPlus">compiler: PatternShape.psDigitPlus</a></li>
+          </ul></dd>
+<dt><a name="psDigitStar" href="#psDigitStar"><span>psDigitStar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psDigitStar" href="openparser/regex/compiler.html#psDigitStar">compiler: PatternShape.psDigitStar</a></li>
+          </ul></dd>
+<dt><a name="psNone" href="#psNone"><span>psNone:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psNone" href="openparser/regex/compiler.html#psNone">compiler: PatternShape.psNone</a></li>
+          </ul></dd>
+<dt><a name="psUpperDigitUnder2Plus" href="#psUpperDigitUnder2Plus"><span>psUpperDigitUnder2Plus:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psUpperDigitUnder2Plus" href="openparser/regex/compiler.html#psUpperDigitUnder2Plus">compiler: PatternShape.psUpperDigitUnder2Plus</a></li>
+          </ul></dd>
+<dt><a name="psUpperDigitUnderPlus" href="#psUpperDigitUnderPlus"><span>psUpperDigitUnderPlus:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psUpperDigitUnderPlus" href="openparser/regex/compiler.html#psUpperDigitUnderPlus">compiler: PatternShape.psUpperDigitUnderPlus</a></li>
+          </ul></dd>
+<dt><a name="psUpperDigitUnderStar" href="#psUpperDigitUnderStar"><span>psUpperDigitUnderStar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psUpperDigitUnderStar" href="openparser/regex/compiler.html#psUpperDigitUnderStar">compiler: PatternShape.psUpperDigitUnderStar</a></li>
+          </ul></dd>
+<dt><a name="psWordCharPlus" href="#psWordCharPlus"><span>psWordCharPlus:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psWordCharPlus" href="openparser/regex/compiler.html#psWordCharPlus">compiler: PatternShape.psWordCharPlus</a></li>
+          </ul></dd>
+<dt><a name="psWordCharStar" href="#psWordCharStar"><span>psWordCharStar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psWordCharStar" href="openparser/regex/compiler.html#psWordCharStar">compiler: PatternShape.psWordCharStar</a></li>
           </ul></dd>
 <dt><a name="put" href="#put"><span>put:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc put(obj: OrderedTableRef[string, TomlNode]; key: string; value: TomlNode)" href="openparser/toml.html#put%2COrderedTableRef%5Bstring%2CTomlNode%5D%2Cstring%2CTomlNode">toml: proc put(obj: OrderedTableRef[string, TomlNode]; key: string; value: TomlNode)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc put(obj: YAMLObject; key: string; value: YamlNode)" href="openparser/yaml.html#put%2CYAMLObject%2Cstring%2CYamlNode">yaml: proc put(obj: YAMLObject; key: string; value: YamlNode)</a></li>
+          </ul></dd>
+<dt><a name="re" href="#re"><span>re:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc re(input: string): Program" href="openparser/regex/compiler.html#re%2Cstring">compiler: proc re(input: string): Program</a></li>
           </ul></dd>
 <dt><a name="readArrayFixed" href="#readArrayFixed"><span>readArrayFixed:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1035,6 +1489,46 @@
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc readWith[T](b: var Buffer; readFn: proc (b: var Buffer): T): T" href="openparser/fbe.html#readWith%2CBuffer%2Cproc%28Buffer%29">fbe: proc readWith[T](b: var Buffer; readFn: proc (b: var Buffer): T): T</a></li>
           </ul></dd>
+<dt><a name="Regex" href="#Regex"><span>Regex:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: type Regex" href="openparser/regex/compiler.html#Regex">compiler: type Regex</a></li>
+          </ul></dd>
+<dt><a name="RegexCompiler" href="#RegexCompiler"><span>RegexCompiler:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: object RegexCompiler" href="openparser/regex/compiler.html#RegexCompiler">compiler: object RegexCompiler</a></li>
+          </ul></dd>
+<dt><a name="RegexLexer" href="#RegexLexer"><span>RegexLexer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: object RegexLexer" href="openparser/regex/lexer.html#RegexLexer">lexer: object RegexLexer</a></li>
+          </ul></dd>
+<dt><a name="RegexNode" href="#RegexNode"><span>RegexNode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: type RegexNode" href="openparser/regex/parser.html#RegexNode">parser: type RegexNode</a></li>
+          </ul></dd>
+<dt><a name="RegexNodeKind" href="#RegexNodeKind"><span>RegexNodeKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: enum RegexNodeKind" href="openparser/regex/parser.html#RegexNodeKind">parser: enum RegexNodeKind</a></li>
+          </ul></dd>
+<dt><a name="RegexParser" href="#RegexParser"><span>RegexParser:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: object RegexParser" href="openparser/regex/parser.html#RegexParser">parser: object RegexParser</a></li>
+          </ul></dd>
+<dt><a name="RegexQuantifierKind" href="#RegexQuantifierKind"><span>RegexQuantifierKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: enum RegexQuantifierKind" href="openparser/regex/parser.html#RegexQuantifierKind">parser: enum RegexQuantifierKind</a></li>
+          </ul></dd>
+<dt><a name="RegexToken" href="#RegexToken"><span>RegexToken:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: object RegexToken" href="openparser/regex/lexer.html#RegexToken">lexer: object RegexToken</a></li>
+          </ul></dd>
+<dt><a name="RegexTokenKind" href="#RegexTokenKind"><span>RegexTokenKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: enum RegexTokenKind" href="openparser/regex/lexer.html#RegexTokenKind">lexer: enum RegexTokenKind</a></li>
+          </ul></dd>
+<dt><a name="RegexVM" href="#RegexVM"><span>RegexVM:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: object RegexVM" href="openparser/regex/vm.html#RegexVM">vm: object RegexVM</a></li>
+          </ul></dd>
 <dt><a name="remaining" href="#remaining"><span>remaining:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc remaining(b: Buffer): int" href="openparser/fbe.html#remaining%2CBuffer">fbe: proc remaining(b: Buffer): int</a></li>
@@ -1043,9 +1537,65 @@
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc reset(b: var Buffer)" href="openparser/fbe.html#reset%2CBuffer">fbe: proc reset(b: var Buffer)</a></li>
           </ul></dd>
+<dt><a name="rnAlternation" href="#rnAlternation"><span>rnAlternation:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexNodeKind.rnAlternation" href="openparser/regex/parser.html#rnAlternation">parser: RegexNodeKind.rnAlternation</a></li>
+          </ul></dd>
+<dt><a name="rnAnchorEnd" href="#rnAnchorEnd"><span>rnAnchorEnd:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexNodeKind.rnAnchorEnd" href="openparser/regex/parser.html#rnAnchorEnd">parser: RegexNodeKind.rnAnchorEnd</a></li>
+          </ul></dd>
+<dt><a name="rnAnchorStart" href="#rnAnchorStart"><span>rnAnchorStart:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexNodeKind.rnAnchorStart" href="openparser/regex/parser.html#rnAnchorStart">parser: RegexNodeKind.rnAnchorStart</a></li>
+          </ul></dd>
+<dt><a name="rnChar" href="#rnChar"><span>rnChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexNodeKind.rnChar" href="openparser/regex/parser.html#rnChar">parser: RegexNodeKind.rnChar</a></li>
+          </ul></dd>
+<dt><a name="rnCharClass" href="#rnCharClass"><span>rnCharClass:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexNodeKind.rnCharClass" href="openparser/regex/parser.html#rnCharClass">parser: RegexNodeKind.rnCharClass</a></li>
+          </ul></dd>
+<dt><a name="rnConcat" href="#rnConcat"><span>rnConcat:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexNodeKind.rnConcat" href="openparser/regex/parser.html#rnConcat">parser: RegexNodeKind.rnConcat</a></li>
+          </ul></dd>
+<dt><a name="rnDot" href="#rnDot"><span>rnDot:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexNodeKind.rnDot" href="openparser/regex/parser.html#rnDot">parser: RegexNodeKind.rnDot</a></li>
+          </ul></dd>
+<dt><a name="rnEscaped" href="#rnEscaped"><span>rnEscaped:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexNodeKind.rnEscaped" href="openparser/regex/parser.html#rnEscaped">parser: RegexNodeKind.rnEscaped</a></li>
+          </ul></dd>
+<dt><a name="rnGroup" href="#rnGroup"><span>rnGroup:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexNodeKind.rnGroup" href="openparser/regex/parser.html#rnGroup">parser: RegexNodeKind.rnGroup</a></li>
+          </ul></dd>
+<dt><a name="rnQuantifier" href="#rnQuantifier"><span>rnQuantifier:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexNodeKind.rnQuantifier" href="openparser/regex/parser.html#rnQuantifier">parser: RegexNodeKind.rnQuantifier</a></li>
+          </ul></dd>
 <dt><a name="ROOT_HEADER_SIZE" href="#ROOT_HEADER_SIZE"><span>ROOT_HEADER_SIZE:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: const ROOT_HEADER_SIZE" href="openparser/fbe.html#ROOT_HEADER_SIZE">fbe: const ROOT_HEADER_SIZE</a></li>
+          </ul></dd>
+<dt><a name="rqPlus" href="#rqPlus"><span>rqPlus:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexQuantifierKind.rqPlus" href="openparser/regex/parser.html#rqPlus">parser: RegexQuantifierKind.rqPlus</a></li>
+          </ul></dd>
+<dt><a name="rqQuestion" href="#rqQuestion"><span>rqQuestion:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexQuantifierKind.rqQuestion" href="openparser/regex/parser.html#rqQuestion">parser: RegexQuantifierKind.rqQuestion</a></li>
+          </ul></dd>
+<dt><a name="rqRange" href="#rqRange"><span>rqRange:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexQuantifierKind.rqRange" href="openparser/regex/parser.html#rqRange">parser: RegexQuantifierKind.rqRange</a></li>
+          </ul></dd>
+<dt><a name="rqStar" href="#rqStar"><span>rqStar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: RegexQuantifierKind.rqStar" href="openparser/regex/parser.html#rqStar">parser: RegexQuantifierKind.rqStar</a></li>
           </ul></dd>
 <dt><a name="RssFeed" href="#RssFeed"><span>RssFeed:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1067,6 +1617,114 @@
 <li><a class="reference external"
           data-doc-search-tag="rss: object RSSParsingError" href="openparser/rss.html#RSSParsingError">rss: object RSSParsingError</a></li>
           </ul></dd>
+<dt><a name="scanAlphaUnderscore" href="#scanAlphaUnderscore"><span>scanAlphaUnderscore:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanAlphaUnderscore(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanAlphaUnderscore%2Cstring%2Cint%2Cint">simd: proc scanAlphaUnderscore(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanAlphaUnderscoreScalar" href="#scanAlphaUnderscoreScalar"><span>scanAlphaUnderscoreScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanAlphaUnderscoreScalar(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanAlphaUnderscoreScalar%2Cstring%2Cint%2Cint">simd: proc scanAlphaUnderscoreScalar(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanAlphaUnderscoreSse2" href="#scanAlphaUnderscoreSse2"><span>scanAlphaUnderscoreSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanAlphaUnderscoreSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanAlphaUnderscoreSse2%2Cstring%2Cint%2Cint">simd: proc scanAlphaUnderscoreSse2(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanAnyOf" href="#scanAnyOf"><span>scanAnyOf:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanAnyOf(s: string; start, stop: int; a, b: char): int" href="openparser/regex/simd.html#scanAnyOf%2Cstring%2Cint%2Cint%2Cchar%2Cchar">simd: proc scanAnyOf(s: string; start, stop: int; a, b: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanAnyOfScalar" href="#scanAnyOfScalar"><span>scanAnyOfScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanAnyOfScalar(s: string; start, stop: int; a, b: char): int" href="openparser/regex/simd.html#scanAnyOfScalar%2Cstring%2Cint%2Cint%2Cchar%2Cchar">simd: proc scanAnyOfScalar(s: string; start, stop: int; a, b: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanAnyOfSse2" href="#scanAnyOfSse2"><span>scanAnyOfSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanAnyOfSse2(s: string; start, stop: int; a, b: char): int" href="openparser/regex/simd.html#scanAnyOfSse2%2Cstring%2Cint%2Cint%2Cchar%2Cchar">simd: proc scanAnyOfSse2(s: string; start, stop: int; a, b: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanByte" href="#scanByte"><span>scanByte:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanByte(s: string; start, stop: int; b: char): int" href="openparser/regex/simd.html#scanByte%2Cstring%2Cint%2Cint%2Cchar">simd: proc scanByte(s: string; start, stop: int; b: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanByteRange" href="#scanByteRange"><span>scanByteRange:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanByteRange(s: string; start, stop: int; lo, hi: char): int" href="openparser/regex/simd.html#scanByteRange%2Cstring%2Cint%2Cint%2Cchar%2Cchar">simd: proc scanByteRange(s: string; start, stop: int; lo, hi: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanByteRangeSse2" href="#scanByteRangeSse2"><span>scanByteRangeSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanByteRangeSse2(s: string; start, stop: int; lo, hi: char): int" href="openparser/regex/simd.html#scanByteRangeSse2%2Cstring%2Cint%2Cint%2Cchar%2Cchar">simd: proc scanByteRangeSse2(s: string; start, stop: int; lo, hi: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanByteScalar" href="#scanByteScalar"><span>scanByteScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanByteScalar(s: string; start, stop: int; b: char): int" href="openparser/regex/simd.html#scanByteScalar%2Cstring%2Cint%2Cint%2Cchar">simd: proc scanByteScalar(s: string; start, stop: int; b: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanByteSetScalar" href="#scanByteSetScalar"><span>scanByteSetScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanByteSetScalar(s: string; start, stop: int; lo, hi: char): int" href="openparser/regex/simd.html#scanByteSetScalar%2Cstring%2Cint%2Cint%2Cchar%2Cchar">simd: proc scanByteSetScalar(s: string; start, stop: int; lo, hi: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanByteSse2" href="#scanByteSse2"><span>scanByteSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanByteSse2(s: string; start, stop: int; b: char): int" href="openparser/regex/simd.html#scanByteSse2%2Cstring%2Cint%2Cint%2Cchar">simd: proc scanByteSse2(s: string; start, stop: int; b: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonAlphaUnder" href="#scanNonAlphaUnder"><span>scanNonAlphaUnder:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonAlphaUnder(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonAlphaUnder%2Cstring%2Cint%2Cint">simd: proc scanNonAlphaUnder(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonAlphaUnderScalar" href="#scanNonAlphaUnderScalar"><span>scanNonAlphaUnderScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonAlphaUnderScalar(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonAlphaUnderScalar%2Cstring%2Cint%2Cint">simd: proc scanNonAlphaUnderScalar(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonAlphaUnderSse2" href="#scanNonAlphaUnderSse2"><span>scanNonAlphaUnderSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonAlphaUnderSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonAlphaUnderSse2%2Cstring%2Cint%2Cint">simd: proc scanNonAlphaUnderSse2(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonUpperDigitUnder" href="#scanNonUpperDigitUnder"><span>scanNonUpperDigitUnder:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonUpperDigitUnder(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonUpperDigitUnder%2Cstring%2Cint%2Cint">simd: proc scanNonUpperDigitUnder(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonUpperDigitUnderScalar" href="#scanNonUpperDigitUnderScalar"><span>scanNonUpperDigitUnderScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonUpperDigitUnderScalar(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonUpperDigitUnderScalar%2Cstring%2Cint%2Cint">simd: proc scanNonUpperDigitUnderScalar(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonUpperDigitUnderSse2" href="#scanNonUpperDigitUnderSse2"><span>scanNonUpperDigitUnderSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonUpperDigitUnderSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonUpperDigitUnderSse2%2Cstring%2Cint%2Cint">simd: proc scanNonUpperDigitUnderSse2(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonWordChar" href="#scanNonWordChar"><span>scanNonWordChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonWordChar(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonWordChar%2Cstring%2Cint%2Cint">simd: proc scanNonWordChar(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonWordCharScalar" href="#scanNonWordCharScalar"><span>scanNonWordCharScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonWordCharScalar(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonWordCharScalar%2Cstring%2Cint%2Cint">simd: proc scanNonWordCharScalar(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonWordCharSse2" href="#scanNonWordCharSse2"><span>scanNonWordCharSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonWordCharSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonWordCharSse2%2Cstring%2Cint%2Cint">simd: proc scanNonWordCharSse2(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanUpperDigitUnder" href="#scanUpperDigitUnder"><span>scanUpperDigitUnder:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanUpperDigitUnder(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanUpperDigitUnder%2Cstring%2Cint%2Cint">simd: proc scanUpperDigitUnder(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanUpperDigitUnderScalar" href="#scanUpperDigitUnderScalar"><span>scanUpperDigitUnderScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanUpperDigitUnderScalar(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanUpperDigitUnderScalar%2Cstring%2Cint%2Cint">simd: proc scanUpperDigitUnderScalar(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanUpperDigitUnderSse2" href="#scanUpperDigitUnderSse2"><span>scanUpperDigitUnderSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanUpperDigitUnderSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanUpperDigitUnderSse2%2Cstring%2Cint%2Cint">simd: proc scanUpperDigitUnderSse2(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanWordChar" href="#scanWordChar"><span>scanWordChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanWordChar(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanWordChar%2Cstring%2Cint%2Cint">simd: proc scanWordChar(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanWordCharScalar" href="#scanWordCharScalar"><span>scanWordCharScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanWordCharScalar(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanWordCharScalar%2Cstring%2Cint%2Cint">simd: proc scanWordCharScalar(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanWordCharSse2" href="#scanWordCharSse2"><span>scanWordCharSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanWordCharSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanWordCharSse2%2Cstring%2Cint%2Cint">simd: proc scanWordCharSse2(s: string; start, stop: int): int</a></li>
+          </ul></dd>
 <dt><a name="skipBytes" href="#skipBytes"><span>skipBytes:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc skipBytes(b: var Buffer; n: int)" href="openparser/fbe.html#skipBytes%2CBuffer%2Cint">fbe: proc skipBytes(b: var Buffer; n: int)</a></li>
@@ -1079,9 +1737,97 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc skipValue(parser: var JsonParser)" href="openparser/json.html#skipValue%2CJsonParser">json: proc skipValue(parser: var JsonParser)</a></li>
           </ul></dd>
+<dt><a name="Span" href="#Span"><span>Span:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: object Span" href="openparser/gettext/po.html#Span">po: object Span</a></li>
+          </ul></dd>
+<dt><a name="str" href="#str"><span>str:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc str(g: CaptureGroup; input: string): string" href="openparser/regex/vm.html#str%2CCaptureGroup%2Cstring">vm: proc str(g: CaptureGroup; input: string): string</a></li>
+          </ul></dd>
 <dt><a name="StructCtx" href="#StructCtx"><span>StructCtx:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: object StructCtx" href="openparser/fbe.html#StructCtx">fbe: object StructCtx</a></li>
+          </ul></dd>
+<dt><a name="tkCaret" href="#tkCaret"><span>tkCaret:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkCaret" href="openparser/regex/lexer.html#tkCaret">lexer: RegexTokenKind.tkCaret</a></li>
+          </ul></dd>
+<dt><a name="tkChar" href="#tkChar"><span>tkChar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkChar" href="openparser/regex/lexer.html#tkChar">lexer: RegexTokenKind.tkChar</a></li>
+          </ul></dd>
+<dt><a name="tkComma" href="#tkComma"><span>tkComma:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkComma" href="openparser/regex/lexer.html#tkComma">lexer: RegexTokenKind.tkComma</a></li>
+          </ul></dd>
+<dt><a name="tkDollar" href="#tkDollar"><span>tkDollar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkDollar" href="openparser/regex/lexer.html#tkDollar">lexer: RegexTokenKind.tkDollar</a></li>
+          </ul></dd>
+<dt><a name="tkDot" href="#tkDot"><span>tkDot:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkDot" href="openparser/regex/lexer.html#tkDot">lexer: RegexTokenKind.tkDot</a></li>
+          </ul></dd>
+<dt><a name="tkEof" href="#tkEof"><span>tkEof:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkEof" href="openparser/regex/lexer.html#tkEof">lexer: RegexTokenKind.tkEof</a></li>
+          </ul></dd>
+<dt><a name="tkEscaped" href="#tkEscaped"><span>tkEscaped:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkEscaped" href="openparser/regex/lexer.html#tkEscaped">lexer: RegexTokenKind.tkEscaped</a></li>
+          </ul></dd>
+<dt><a name="tkHyphen" href="#tkHyphen"><span>tkHyphen:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkHyphen" href="openparser/regex/lexer.html#tkHyphen">lexer: RegexTokenKind.tkHyphen</a></li>
+          </ul></dd>
+<dt><a name="tkLBrace" href="#tkLBrace"><span>tkLBrace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkLBrace" href="openparser/regex/lexer.html#tkLBrace">lexer: RegexTokenKind.tkLBrace</a></li>
+          </ul></dd>
+<dt><a name="tkLBracket" href="#tkLBracket"><span>tkLBracket:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkLBracket" href="openparser/regex/lexer.html#tkLBracket">lexer: RegexTokenKind.tkLBracket</a></li>
+          </ul></dd>
+<dt><a name="tkLParen" href="#tkLParen"><span>tkLParen:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkLParen" href="openparser/regex/lexer.html#tkLParen">lexer: RegexTokenKind.tkLParen</a></li>
+          </ul></dd>
+<dt><a name="tkNewline" href="#tkNewline"><span>tkNewline:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkNewline" href="openparser/regex/lexer.html#tkNewline">lexer: RegexTokenKind.tkNewline</a></li>
+          </ul></dd>
+<dt><a name="tkNumber" href="#tkNumber"><span>tkNumber:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkNumber" href="openparser/regex/lexer.html#tkNumber">lexer: RegexTokenKind.tkNumber</a></li>
+          </ul></dd>
+<dt><a name="tkPipe" href="#tkPipe"><span>tkPipe:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkPipe" href="openparser/regex/lexer.html#tkPipe">lexer: RegexTokenKind.tkPipe</a></li>
+          </ul></dd>
+<dt><a name="tkPlus" href="#tkPlus"><span>tkPlus:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkPlus" href="openparser/regex/lexer.html#tkPlus">lexer: RegexTokenKind.tkPlus</a></li>
+          </ul></dd>
+<dt><a name="tkQuestion" href="#tkQuestion"><span>tkQuestion:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkQuestion" href="openparser/regex/lexer.html#tkQuestion">lexer: RegexTokenKind.tkQuestion</a></li>
+          </ul></dd>
+<dt><a name="tkRBrace" href="#tkRBrace"><span>tkRBrace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkRBrace" href="openparser/regex/lexer.html#tkRBrace">lexer: RegexTokenKind.tkRBrace</a></li>
+          </ul></dd>
+<dt><a name="tkRBracket" href="#tkRBracket"><span>tkRBracket:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkRBracket" href="openparser/regex/lexer.html#tkRBracket">lexer: RegexTokenKind.tkRBracket</a></li>
+          </ul></dd>
+<dt><a name="tkRParen" href="#tkRParen"><span>tkRParen:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkRParen" href="openparser/regex/lexer.html#tkRParen">lexer: RegexTokenKind.tkRParen</a></li>
+          </ul></dd>
+<dt><a name="tkStar" href="#tkStar"><span>tkStar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: RegexTokenKind.tkStar" href="openparser/regex/lexer.html#tkStar">lexer: RegexTokenKind.tkStar</a></li>
           </ul></dd>
 <dt><a name="toAtomXml" href="#toAtomXml"><span>toAtomXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1146,6 +1892,18 @@
 <dt><a name="toString" href="#toString"><span>toString:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc toString(f: CsvFieldSlice): string" href="openparser/csv.html#toString%2CCsvFieldSlice">csv: proc toString(f: CsvFieldSlice): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="mo: proc toString(cat: MoCatalog; s: MoSpan): string" href="openparser/gettext/mo.html#toString%2CMoCatalog%2CMoSpan">mo: proc toString(cat: MoCatalog; s: MoSpan): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="po: proc toString(cat: PoCatalog; s: Span): string" href="openparser/gettext/po.html#toString%2CPoCatalog%2CSpan">po: proc toString(cat: PoCatalog; s: Span): string</a></li>
+          </ul></dd>
+<dt><a name="translate" href="#translate"><span>translate:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="mo: proc translate(cat: MoCatalog; msgid: string; msgctxt = &quot;&quot;): string" href="openparser/gettext/mo.html#translate%2CMoCatalog%2Cstring%2Cstring">mo: proc translate(cat: MoCatalog; msgid: string; msgctxt = &quot;&quot;): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="mo: proc translate(cc: MoCompiledCatalog; msgid: string; msgctxt = &quot;&quot;): string" href="openparser/gettext/mo.html#translate%2CMoCompiledCatalog%2Cstring%2Cstring">mo: proc translate(cc: MoCompiledCatalog; msgid: string; msgctxt = &quot;&quot;): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="po: proc translate(cc: PoCompiledCatalog; msgid: string; msgctxt = &quot;&quot;): string" href="openparser/gettext/po.html#translate%2CPoCompiledCatalog%2Cstring%2Cstring">po: proc translate(cc: PoCompiledCatalog; msgid: string; msgctxt = &quot;&quot;): string</a></li>
           </ul></dd>
 <dt><a name="ttkBoolean" href="#ttkBoolean"><span>ttkBoolean:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1377,6 +2135,10 @@
                writeKey: proc (b: var Buffer; k: K);
                writeVal: proc (b: var Buffer; v: V))</a></li>
           </ul></dd>
+<dt><a name="writeMoFile" href="#writeMoFile"><span>writeMoFile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="po: proc writeMoFile(cat: PoCompiledCatalog; path: string)" href="openparser/gettext/po.html#writeMoFile%2CPoCompiledCatalog%2Cstring">po: proc writeMoFile(cat: PoCompiledCatalog; path: string)</a></li>
+          </ul></dd>
 <dt><a name="writeOptional" href="#writeOptional"><span>writeOptional:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc writeOptional[T](b: var Buffer; hasValue: bool; value: T;
@@ -1561,7 +2323,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-11 13:06:33 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-13 09:29:04 UTC</small>
       </div>
     </div>
   </div>

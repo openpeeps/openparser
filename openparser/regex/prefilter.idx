@@ -1,0 +1,20 @@
+nimTitle	prefilter	openparser/regex/prefilter.html	module openparser/regex/prefilter		0
+nim	bsNone	openparser/regex/prefilter.html#bsNone	BackscanKind.bsNone		13
+nim	bsAlphaWord	openparser/regex/prefilter.html#bsAlphaWord	BackscanKind.bsAlphaWord		13
+nim	bsWordChar	openparser/regex/prefilter.html#bsWordChar	BackscanKind.bsWordChar		13
+nim	BackscanKind	openparser/regex/prefilter.html#BackscanKind	enum BackscanKind		13
+nim	pfNone	openparser/regex/prefilter.html#pfNone	PrefilterKind.pfNone		16
+nim	pfByte	openparser/regex/prefilter.html#pfByte	PrefilterKind.pfByte		16
+nim	pfLiteral	openparser/regex/prefilter.html#pfLiteral	PrefilterKind.pfLiteral		16
+nim	pfByteRange	openparser/regex/prefilter.html#pfByteRange	PrefilterKind.pfByteRange		16
+nim	pfAnyOf2	openparser/regex/prefilter.html#pfAnyOf2	PrefilterKind.pfAnyOf2		16
+nim	pfAnchorStart	openparser/regex/prefilter.html#pfAnchorStart	PrefilterKind.pfAnchorStart		16
+nim	pfAlpha	openparser/regex/prefilter.html#pfAlpha	PrefilterKind.pfAlpha		16
+nim	pfWordChar	openparser/regex/prefilter.html#pfWordChar	PrefilterKind.pfWordChar		16
+nim	pfUpperAlpha	openparser/regex/prefilter.html#pfUpperAlpha	PrefilterKind.pfUpperAlpha		16
+nim	pfLiteralAnchored	openparser/regex/prefilter.html#pfLiteralAnchored	PrefilterKind.pfLiteralAnchored		16
+nim	pfInnerLiteral	openparser/regex/prefilter.html#pfInnerLiteral	PrefilterKind.pfInnerLiteral		16
+nim	PrefilterKind	openparser/regex/prefilter.html#PrefilterKind	enum PrefilterKind		16
+nim	Prefilter	openparser/regex/prefilter.html#Prefilter	type Prefilter		29
+nim	extractPrefilter	openparser/regex/prefilter.html#extractPrefilter,Program	proc extractPrefilter(prog: Program): Prefilter		152
+nim	nextCandidate	openparser/regex/prefilter.html#nextCandidate,Prefilter,string,int,int	proc nextCandidate(pf: Prefilter; input: string; pos, inputLen: int): int		284

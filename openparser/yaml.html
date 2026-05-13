@@ -229,6 +229,18 @@
 </li>
 <li>
   <details open>
+    <summary><a class="reference reference-toplevel" href="#17" id="67">Macros</a></summary>
+    <ul class="simple simple-toc-section">
+      <ul class="simple nested-toc-section">copyFieldsBeforeRecCase
+  <li><a class="reference" href="#copyFieldsBeforeRecCase.m%2Ctyped%2Ctyped" title="copyFieldsBeforeRecCase(dst, src: typed): untyped">copyFieldsBeforeRecCase(dst, src: typed): untyped</a></li>
+
+</ul>
+
+    </ul>
+  </details>
+</li>
+<li>
+  <details open>
     <summary><a class="reference reference-toplevel" href="#18" id="68">Templates</a></summary>
     <ul class="simple simple-toc-section">
       <ul class="simple nested-toc-section">parseYamlMappingPairs
@@ -449,7 +461,7 @@
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Access a value from a YAMLObject using a key
+    Retrieves a value by key, supporting dot notation for nested access
     
   </dd>
 </div>
@@ -785,6 +797,23 @@
 
   </dl>
 </div>
+<div class="section" id="17">
+  <h1><a class="toc-backref" href="#17">Macros</a></h1>
+  <dl class="item">
+    <div id="copyFieldsBeforeRecCase-macros-all">
+  <div id="copyFieldsBeforeRecCase.m,typed,typed">
+  <dt><pre><span class="Keyword">macro</span> <a href="#copyFieldsBeforeRecCase.m%2Ctyped%2Ctyped"><span class="Identifier">copyFieldsBeforeRecCase</span></a><span class="Other">(</span><span class="Identifier">dst</span><span class="Other">,</span> <span class="Identifier">src</span><span class="Other">:</span> <span class="Identifier">typed</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+  <dd>
+    
+    Copies fields declared before the <tt class="docutils literal"><span class="pre"><span class="Keyword">case</span></span></tt> (RecCase) node in a variant object.
+    
+  </dd>
+</div>
+
+</div>
+
+  </dl>
+</div>
 <div class="section" id="18">
   <h1><a class="toc-backref" href="#18">Templates</a></h1>
   <dl class="item">
@@ -813,7 +842,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-11 13:06:33 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-13 09:29:04 UTC</small>
       </div>
     </div>
   </div>

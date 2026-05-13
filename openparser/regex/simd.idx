@@ -1,0 +1,30 @@
+nimTitle	simd	openparser/regex/simd.html	module openparser/regex/simd		0
+nim	hasAvx2	openparser/regex/simd.html#hasAvx2	const hasAvx2		17
+nim	hasSse2	openparser/regex/simd.html#hasSse2	const hasSse2		18
+nim	scanByteScalar	openparser/regex/simd.html#scanByteScalar,string,int,int,char	proc scanByteScalar(s: string; start, stop: int; b: char): int		27
+nim	scanByteSetScalar	openparser/regex/simd.html#scanByteSetScalar,string,int,int,char,char	proc scanByteSetScalar(s: string; start, stop: int; lo, hi: char): int		32
+nim	scanAnyOfScalar	openparser/regex/simd.html#scanAnyOfScalar,string,int,int,char,char	proc scanAnyOfScalar(s: string; start, stop: int; a, b: char): int		37
+nim	scanAlphaUnderscoreScalar	openparser/regex/simd.html#scanAlphaUnderscoreScalar,string,int,int	proc scanAlphaUnderscoreScalar(s: string; start, stop: int): int		42
+nim	scanWordCharScalar	openparser/regex/simd.html#scanWordCharScalar,string,int,int	proc scanWordCharScalar(s: string; start, stop: int): int		48
+nim	scanNonWordCharScalar	openparser/regex/simd.html#scanNonWordCharScalar,string,int,int	proc scanNonWordCharScalar(s: string; start, stop: int): int		54
+nim	scanNonAlphaUnderScalar	openparser/regex/simd.html#scanNonAlphaUnderScalar,string,int,int	proc scanNonAlphaUnderScalar(s: string; start, stop: int): int		61
+nim	scanUpperDigitUnderScalar	openparser/regex/simd.html#scanUpperDigitUnderScalar,string,int,int	proc scanUpperDigitUnderScalar(s: string; start, stop: int): int		68
+nim	scanNonUpperDigitUnderScalar	openparser/regex/simd.html#scanNonUpperDigitUnderScalar,string,int,int	proc scanNonUpperDigitUnderScalar(s: string; start, stop: int): int		75
+nim	scanByteSse2	openparser/regex/simd.html#scanByteSse2,string,int,int,char	proc scanByteSse2(s: string; start, stop: int; b: char): int		92
+nim	scanByteRangeSse2	openparser/regex/simd.html#scanByteRangeSse2,string,int,int,char,char	proc scanByteRangeSse2(s: string; start, stop: int; lo, hi: char): int		105
+nim	scanAnyOfSse2	openparser/regex/simd.html#scanAnyOfSse2,string,int,int,char,char	proc scanAnyOfSse2(s: string; start, stop: int; a, b: char): int		117
+nim	scanAlphaUnderscoreSse2	openparser/regex/simd.html#scanAlphaUnderscoreSse2,string,int,int	proc scanAlphaUnderscoreSse2(s: string; start, stop: int): int		154
+nim	scanWordCharSse2	openparser/regex/simd.html#scanWordCharSse2,string,int,int	proc scanWordCharSse2(s: string; start, stop: int): int		166
+nim	scanNonWordCharSse2	openparser/regex/simd.html#scanNonWordCharSse2,string,int,int	proc scanNonWordCharSse2(s: string; start, stop: int): int		178
+nim	scanNonAlphaUnderSse2	openparser/regex/simd.html#scanNonAlphaUnderSse2,string,int,int	proc scanNonAlphaUnderSse2(s: string; start, stop: int): int		194
+nim	scanUpperDigitUnderSse2	openparser/regex/simd.html#scanUpperDigitUnderSse2,string,int,int	proc scanUpperDigitUnderSse2(s: string; start, stop: int): int		208
+nim	scanNonUpperDigitUnderSse2	openparser/regex/simd.html#scanNonUpperDigitUnderSse2,string,int,int	proc scanNonUpperDigitUnderSse2(s: string; start, stop: int): int		220
+nim	scanByte	openparser/regex/simd.html#scanByte,string,int,int,char	proc scanByte(s: string; start, stop: int; b: char): int		383
+nim	scanByteRange	openparser/regex/simd.html#scanByteRange,string,int,int,char,char	proc scanByteRange(s: string; start, stop: int; lo, hi: char): int		387
+nim	scanAnyOf	openparser/regex/simd.html#scanAnyOf,string,int,int,char,char	proc scanAnyOf(s: string; start, stop: int; a, b: char): int		391
+nim	scanAlphaUnderscore	openparser/regex/simd.html#scanAlphaUnderscore,string,int,int	proc scanAlphaUnderscore(s: string; start, stop: int): int		395
+nim	scanWordChar	openparser/regex/simd.html#scanWordChar,string,int,int	proc scanWordChar(s: string; start, stop: int): int		400
+nim	scanNonWordChar	openparser/regex/simd.html#scanNonWordChar,string,int,int	proc scanNonWordChar(s: string; start, stop: int): int		405
+nim	scanNonAlphaUnder	openparser/regex/simd.html#scanNonAlphaUnder,string,int,int	proc scanNonAlphaUnder(s: string; start, stop: int): int		410
+nim	scanUpperDigitUnder	openparser/regex/simd.html#scanUpperDigitUnder,string,int,int	proc scanUpperDigitUnder(s: string; start, stop: int): int		415
+nim	scanNonUpperDigitUnder	openparser/regex/simd.html#scanNonUpperDigitUnder,string,int,int	proc scanNonUpperDigitUnder(s: string; start, stop: int): int		420

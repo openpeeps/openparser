@@ -1,0 +1,23 @@
+nimTitle	vm	openparser/regex/vm.html	module openparser/regex/vm		0
+nim	Captures	openparser/regex/vm.html#Captures	type Captures		12
+nim	CaptureGroup	openparser/regex/vm.html#CaptureGroup	object CaptureGroup		14
+nim	MatchResult	openparser/regex/vm.html#MatchResult	object MatchResult		20
+nim	RegexVM	openparser/regex/vm.html#RegexVM	object RegexVM		37
+nim	noMatch	openparser/regex/vm.html#noMatch	proc noMatch(): MatchResult		67
+nim	initRegexVM	openparser/regex/vm.html#initRegexVM,Program	proc initRegexVM(prog: Program): RegexVM		91
+nim	match	openparser/regex/vm.html#match,RegexVM,string	proc match(vm: var RegexVM; input: string): MatchResult		397
+nim	find	openparser/regex/vm.html#find,RegexVM,string	proc find(vm: var RegexVM; input: string): MatchResult		452
+nim	findAll	openparser/regex/vm.html#findAll,RegexVM,string	proc findAll(vm: var RegexVM; input: string): seq[MatchResult]		512
+nim	groupCount	openparser/regex/vm.html#groupCount,MatchResult	proc groupCount(m: MatchResult): int		588
+nim	group	openparser/regex/vm.html#group,MatchResult,int	proc group(m: MatchResult; idx: int): CaptureGroup		592
+nim	str	openparser/regex/vm.html#str,CaptureGroup,string	proc str(g: CaptureGroup; input: string): string		611
+nim	groupStr	openparser/regex/vm.html#groupStr,MatchResult,string,int	proc groupStr(m: MatchResult; input: string; idx: int): string		616
+nim	groups	openparser/regex/vm.html#groups,MatchResult,string	proc groups(m: MatchResult; input: string): seq[string]		621
+nim	allGroups	openparser/regex/vm.html#allGroups,MatchResult,string	proc allGroups(m: MatchResult; input: string): seq[CaptureGroup]		629
+nim	eachGroup	openparser/regex/vm.html#eachGroup.i,MatchResult,string	iterator eachGroup(m: MatchResult; input: string): (int, string)		636
+nim	match	openparser/regex/vm.html#match,string,string	proc match(pattern, input: string): MatchResult		645
+nim	find	openparser/regex/vm.html#find,string,string	proc find(pattern, input: string): MatchResult		648
+nim	findAll	openparser/regex/vm.html#findAll,string,string	proc findAll(pattern, input: string): seq[MatchResult]		651
+nimgrp	findall	openparser/regex/vm.html#findAll-procs-all	proc		512
+nimgrp	match	openparser/regex/vm.html#match-procs-all	proc		397
+nimgrp	find	openparser/regex/vm.html#find-procs-all	proc		452

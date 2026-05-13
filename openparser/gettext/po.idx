@@ -1,0 +1,29 @@
+nimTitle	po	openparser/gettext/po.html	module openparser/gettext/po		0
+nim	Span	openparser/gettext/po.html#Span	object Span		4
+nim	pckTranslator	openparser/gettext/po.html#pckTranslator	PoCommentKind.pckTranslator		9
+nim	pckExtracted	openparser/gettext/po.html#pckExtracted	PoCommentKind.pckExtracted		9
+nim	pckReference	openparser/gettext/po.html#pckReference	PoCommentKind.pckReference		9
+nim	pckFlag	openparser/gettext/po.html#pckFlag	PoCommentKind.pckFlag		9
+nim	pckPrevious	openparser/gettext/po.html#pckPrevious	PoCommentKind.pckPrevious		9
+nim	pckOther	openparser/gettext/po.html#pckOther	PoCommentKind.pckOther		9
+nim	PoCommentKind	openparser/gettext/po.html#PoCommentKind	enum PoCommentKind		9
+nim	PoComment	openparser/gettext/po.html#PoComment	object PoComment		17
+nim	PoStringField	openparser/gettext/po.html#PoStringField	object PoStringField		21
+nim	PoMsgStr	openparser/gettext/po.html#PoMsgStr	object PoMsgStr		25
+nim	PoEntry	openparser/gettext/po.html#PoEntry	object PoEntry		29
+nim	PoCatalog	openparser/gettext/po.html#PoCatalog	type PoCatalog		61
+nim	PoParseError	openparser/gettext/po.html#PoParseError	object PoParseError		70
+nim	toString	openparser/gettext/po.html#toString,PoCatalog,Span	proc toString(cat: PoCatalog; s: Span): string		115
+nim	decodeField	openparser/gettext/po.html#decodeField,PoCatalog,PoStringField	proc decodeField(cat: PoCatalog; f: PoStringField): string		263
+nim	decodeMsgStr	openparser/gettext/po.html#decodeMsgStr,PoCatalog,PoEntry,int	proc decodeMsgStr(cat: PoCatalog; e: PoEntry; idx = 0): string		270
+nim	openPoCatalog	openparser/gettext/po.html#openPoCatalog,string	proc openPoCatalog(path: string): PoCatalog		473
+nim	close	openparser/gettext/po.html#close,PoCatalog	proc close(cat: PoCatalog)		483
+nim	PoCompiledMessage	openparser/gettext/po.html#PoCompiledMessage	object PoCompiledMessage		509
+nim	PoCompiledCatalog	openparser/gettext/po.html#PoCompiledCatalog	object PoCompiledCatalog		515
+nim	headerEntryIndex	openparser/gettext/po.html#headerEntryIndex,PoCatalog	proc headerEntryIndex(cat: PoCatalog): int		801
+nim	parsePoHeaders	openparser/gettext/po.html#parsePoHeaders,PoCatalog	proc parsePoHeaders(cat: PoCatalog): Table[string, string]		812
+nim	compilePo	openparser/gettext/po.html#compilePo,PoCatalog	proc compilePo(cat: PoCatalog; skipFuzzy = true): PoCompiledCatalog		821
+nim	pluralIndex	openparser/gettext/po.html#pluralIndex,PoCompiledCatalog,int	proc pluralIndex(cc: PoCompiledCatalog; n: int): int		877
+nim	translate	openparser/gettext/po.html#translate,PoCompiledCatalog,string,string	proc translate(cc: PoCompiledCatalog; msgid: string; msgctxt = ""): string		884
+nim	ntranslate	openparser/gettext/po.html#ntranslate,PoCompiledCatalog,string,string,int,string	proc ntranslate(cc: PoCompiledCatalog; singular, plural: string; n: int; msgctxt = ""): string		891
+nim	writeMoFile	openparser/gettext/po.html#writeMoFile,PoCompiledCatalog,string	proc writeMoFile(cat: PoCompiledCatalog; path: string)		901

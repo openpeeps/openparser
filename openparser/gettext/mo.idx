@@ -1,0 +1,17 @@
+nimTitle	mo	openparser/gettext/mo.html	module openparser/gettext/mo		0
+nim	MoParseError	openparser/gettext/mo.html#MoParseError	object MoParseError		4
+nim	MoSpan	openparser/gettext/mo.html#MoSpan	object MoSpan		6
+nim	MoMessage	openparser/gettext/mo.html#MoMessage	object MoMessage		10
+nim	MoCatalog	openparser/gettext/mo.html#MoCatalog	type MoCatalog		16
+nim	toString	openparser/gettext/mo.html#toString,MoCatalog,MoSpan	proc toString(cat: MoCatalog; s: MoSpan): string		42
+nim	openMoCatalog	openparser/gettext/mo.html#openMoCatalog,string	proc openMoCatalog(path: string): MoCatalog		115
+nim	close	openparser/gettext/mo.html#close,MoCatalog	proc close(cat: var MoCatalog)		187
+nim	translate	openparser/gettext/mo.html#translate,MoCatalog,string,string	proc translate(cat: MoCatalog; msgid: string; msgctxt = ""): string		196
+nim	form	openparser/gettext/mo.html#form,MoCatalog,string,int,string	proc form(cat: MoCatalog; msgid: string; formIdx: int; msgctxt = ""): string		206
+nim	MoCompiledMessage	openparser/gettext/mo.html#MoCompiledMessage	object MoCompiledMessage		230
+nim	MoCompiledCatalog	openparser/gettext/mo.html#MoCompiledCatalog	object MoCompiledCatalog		236
+nim	compileMo	openparser/gettext/mo.html#compileMo,MoCatalog	proc compileMo(cat: MoCatalog): MoCompiledCatalog		448
+nim	pluralIndex	openparser/gettext/mo.html#pluralIndex,MoCompiledCatalog,int	proc pluralIndex(cc: MoCompiledCatalog; n: int): int		479
+nim	translate	openparser/gettext/mo.html#translate,MoCompiledCatalog,string,string	proc translate(cc: MoCompiledCatalog; msgid: string; msgctxt = ""): string		486
+nim	ntranslate	openparser/gettext/mo.html#ntranslate,MoCompiledCatalog,string,string,int,string	proc ntranslate(cc: MoCompiledCatalog; singular, plural: string; n: int; msgctxt = ""): string		493
+nimgrp	translate	openparser/gettext/mo.html#translate-procs-all	proc		196
