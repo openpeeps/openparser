@@ -1205,3 +1205,11 @@ proc fromJson*[T](s: string, x: typedesc[T]): T =
     return fromJson(s)
   else:
     return fromJsonMacro(x, s)
+
+#
+# JsonNode to Nim Object conversion
+#
+proc toJsonNode*[T](v: T): JsonNode =
+  ## Convert any Nim value (object, table, seq, etc.) to a `JsonNode`
+  ## by serializing to a JSON string and parsing it back
+  result = fromJson(toJson(v))
