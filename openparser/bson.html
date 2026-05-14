@@ -55,12 +55,14 @@
     </div>
     <ul class="simple simple-toc" id="toc-list">
   <li>
+  <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
+</li>
+<li>
   <details open>
     <summary><a class="reference reference-toplevel" href="#7" id="57">Types</a></summary>
     <ul class="simple simple-toc-section">
       <li><a class="reference" href="#BSONDocument" title="BSONDocument = object
-  version*: int32 ## Version number for the BSON document format. This allows for future extensions
-                  ## and compatibility checks when reading/writing BSON data.
+  version*: int32            ## Version number for the BSON document format.
   data*: seq[byte]           ## A BSONDocument is a wrapper around raw BSON bytes">BSONDocument</a></li>
 
     </ul>
@@ -132,14 +134,31 @@
     
     <div id="tocRoot"></div>
     
-    <p class="module-desc">This module provides functions to encode and decode BSON (Binary JSON) data. It supports a subset of BSON types that can be represented in JSON, including objects, arrays, strings, numbers, booleans, and null.</p>
-    <div class="section" id="7">
+    <p class="module-desc"><p>This module provides functions to encode and decode BSON (Binary JSON) data. Implements BSON Specification Version 1.1.</p>
+<p>Extended JSON v2 notation is used to represent BSON-specific types in JsonNode:</p>
+<ul class="simple"><li>Binary:    <tt class="docutils literal"><span class="pre">{&quot;$binary&quot;: {&quot;base64&quot;: &quot;...&quot;, &quot;subType&quot;: &quot;00&quot;}}</span></tt></li>
+<li>ObjectId:  <tt class="docutils literal"><span class="pre">{&quot;$oid&quot;: &quot;507f1f77bcf86cd799439011&quot;}</span></tt></li>
+<li>Date:      <tt class="docutils literal"><span class="pre">{&quot;$date&quot;: 1234567890000}</span></tt> (UTC milliseconds)</li>
+<li>Regex:     <tt class="docutils literal"><span class="pre">{&quot;$regularExpression&quot;: {&quot;pattern&quot;: &quot;...&quot;, &quot;options&quot;: &quot;...&quot;}}</span></tt></li>
+<li>Timestamp: <tt class="docutils literal"><span class="pre">{&quot;$timestamp&quot;: {&quot;t&quot;: 123, &quot;i&quot;: 1}}</span></tt></li>
+<li>Code:      <tt class="docutils literal"><span class="pre">{&quot;$code&quot;: &quot;function() {}&quot;}</span></tt></li>
+<li>MinKey:    <tt class="docutils literal"><span class="pre">{&quot;$minKey&quot;: 1}</span></tt></li>
+<li>MaxKey:    <tt class="docutils literal"><span class="pre">{&quot;$maxKey&quot;: 1}</span></tt></li>
+<li>Decimal128:<tt class="docutils literal"><span class="pre">{&quot;$numberDecimal&quot;: &quot;hexbytes...&quot;}</span></tt></li>
+</ul>
+</p>
+    <div class="section" id="6">
+  <h1><a class="toc-backref" href="#6">Imports</a></h1>
+  <dl class="item">
+    <a class="reference external" href="json.html">json</a>
+  </dl>
+</div>
+<div class="section" id="7">
   <h1><a class="toc-backref" href="#7">Types</a></h1>
   <dl class="item">
     <div id="BSONDocument">
   <dt><pre><a href="#BSONDocument"><span class="Identifier">BSONDocument</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
-  <span class="Identifier">version</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int32</span> <span class="Comment">## Version number for the BSON document format. This allows for future extensions</span>
-                  <span class="Comment">## and compatibility checks when reading/writing BSON data.</span>
+  <span class="Identifier">version</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int32</span>            <span class="Comment">## Version number for the BSON document format.</span>
   <span class="Identifier">data</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">byte</span><span class="Other">]</span>           <span class="Comment">## A BSONDocument is a wrapper around raw BSON bytes</span></pre></dt>
   <dd>
     
@@ -157,7 +176,7 @@
   <dt><pre><a href="#BSONDocMagic"><span class="Identifier">BSONDocMagic</span></a> <span class="Other">=</span> <span class="StringLit">&quot;OPBSON1\x00&quot;</span></pre></dt>
   <dd>
     
-    Magic signature for BSON documents in Boogie. This is used to identify and validate BSON data stored in the document store. The null terminator ensures it's a valid C string for compatibility with C APIs.
+    Magic signature for BSON documents.
     
   </dd>
 </div>
@@ -173,7 +192,7 @@
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Decode BSON data into a JsonNode. Automatically detects if it's an object or array based on the content.
+    Decode BSON data into a JsonNode. Automatically detects object or array.
     
   </dd>
 </div>
@@ -181,11 +200,11 @@
 </div>
 <div id="encodeBson-procs-all">
   <div id="encodeBson,JsonNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#encodeBson%2CJsonNode"><span class="Identifier">encodeBson</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <span class="Identifier">JsonNode</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">byte</span><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#encodeBson%2CJsonNode"><span class="Identifier">encodeBson</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <span class="Identifier">JsonNode</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">byte</span><span class="Other">]</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Encode a JsonNode into BSON format. Only JObject and JArray are valid top-level types
+    Encode a JsonNode into BSON format. Only JObject and JArray are valid top-level types.
     
   </dd>
 </div>
@@ -206,7 +225,7 @@
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Parse a BSONDocument into a JsonNode. This is a convenience overload that allows clients to directly convert a BSONDocument to a JsonNode without having to extract the raw bytes first.
+    Parse a BSONDocument into a JsonNode.
     
   </dd>
 </div>
@@ -227,7 +246,7 @@
 <div id="newBSONDocument-procs-all">
   <div id="newBSONDocument,JsonNode,int32">
   <dt><pre><span class="Keyword">proc</span> <a href="#newBSONDocument%2CJsonNode%2Cint32"><span class="Identifier">newBSONDocument</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <span class="Identifier">JsonNode</span><span class="Other">;</span> <span class="Identifier">version</span><span class="Other">:</span> <span class="Identifier">int32</span> <span class="Other">=</span> <span class="DecNumber">1'i32</span><span class="Other">)</span><span class="Other">:</span> <a href="#BSONDocument"><span class="Identifier">BSONDocument</span></a> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -243,7 +262,7 @@
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Read a BSONDocument from a file. Validates the magic header and version before parsing the content.
+    Read a BSONDocument from a file.
     
   </dd>
 </div>
@@ -251,8 +270,8 @@
 </div>
 <div id="toBson-procs-all">
   <div id="toBson,JsonNode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#toBson%2CJsonNode"><span class="Identifier">toBson</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <span class="Identifier">JsonNode</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">byte</span><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#toBson%2CJsonNode"><span class="Identifier">toBson</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <span class="Identifier">JsonNode</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">byte</span><span class="Other">]</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -291,9 +310,7 @@
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WriteIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    <p>Write a BSONDocument to a file. The document is encoded in the custom Boogie BSON format, which includes a magic header and versioning information.</p>
-<p>This allows for future extensions and compatibility checks when reading the document back.</p>
-
+    Write a BSONDocument to a file.
     
   </dd>
 </div>
@@ -309,7 +326,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-14 09:43:41 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-14 10:29:12 UTC</small>
       </div>
     </div>
   </div>
