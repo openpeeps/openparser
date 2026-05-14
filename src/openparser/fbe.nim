@@ -155,19 +155,19 @@ proc writeInt16LE*(b: var Buffer; v: int16) =
   writeUint16LE(b, uint16(v))
 
 proc readInt16LE*(b: var Buffer): int16 =
-  int16(readUint16LE(b))
+  cast[int16](readUint16LE(b))
 
 proc writeInt32LE*(b: var Buffer; v: int32) =
   writeUint32LE(b, uint32(v))
 
 proc readInt32LE*(b: var Buffer): int32 =
-  int32(readUint32LE(b))
+  cast[int32](readUint32LE(b))
 
 proc writeInt64LE*(b: var Buffer; v: int64) =
   writeUint64LE(b, uint64(v))
 
 proc readInt64LE*(b: var Buffer): int64 =
-  int64(readUint64LE(b))
+  cast[int64](readUint64LE(b))
 
 # bool
 proc writeBool*(b: var Buffer; v: bool) =
