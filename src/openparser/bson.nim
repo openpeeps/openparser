@@ -543,12 +543,13 @@ proc fromBytes*(data: openArray[byte]): BSONDocument =
     result.data[i] = data[pos + i]
 
 proc writeBSONDocument*(path: string, doc: BSONDocument) =
-  ## Write a BSONDocument to a file.
+  ## Write a BSONDocument to a file. A `.bson` extension will be added to the path
   let blob = toBytes(doc)
-  writeFile(path, bytesToString(blob))
+  writeFile(path.changeFileExt("bson"), bytesToString(blob))
 
 proc openBSONDocument*(path: string): BSONDocument =
-  ## Read a BSONDocument from a file.
+  ## Read a BSONDocument from a file. The path should have a `.bson` extension
+  let path = path.changeFileExt("bson")
   if not fileExists(path):
     fail("BSONDocument file not found: " & path)
   let blob = readFile(path)

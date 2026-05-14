@@ -145,7 +145,7 @@ suite "BSON 1.1 encode/decode":
   test "BSONDocument file IO":
     let obj  = %*{"name": "openpeeps", "ok": true}
     let doc  = newBSONDocument(obj, version = 2'i32)
-    let path = "tests" / "data" / ("openparser_bson_" & $epochTime().int64 & ".bdoc")
+    let path = "tests" / "data" / ("openparser_bson_" & $epochTime().int64 & ".bson")
     writeBSONDocument(path, doc)
     check fileExists(path)
     let loaded = openBSONDocument(path)
