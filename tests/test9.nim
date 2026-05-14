@@ -852,6 +852,19 @@ suite "VM – capture groups":
     check m.groupCount == 1
     check m.groupStr(src, 1) == "123"
 
+  test r"\/ matches literal /":
+    var vm = initRegexVM(compile(r"\/"))
+    check vm.match("/").matched
+    check not vm.match("a").matched
+
+  test r"python-style named group with literal / in pattern":
+    var vm = initRegexVM(compile(r"\/user\/(?P<id>[0-9]+)$"))
+    let src = "/user/42"
+    let m = vm.find(src)
+    check m.matched
+    check m.groupCount == 1
+    check m.groupStr(src, 1) == "42"
+
   test "pcre-style named group (?<name>...) creates capture slots in order":
     var vm = initRegexVM(compile(r"(?<user>\w+)-(?<domain>\w+)"))
     let src = "alice-web"
@@ -870,3 +883,93 @@ suite "VM – capture groups":
     check m.groupStr(src, 1) == "42"
     check m.groupStr(src, 2) == "joe"
     check m.groupStr(src, 3) == "x"
+
+
+suite "Other Patterns":
+
+  test "slug pattern":
+    var vm = initRegexVM(compile(r"[0-9A-Za-z-_]+"))
+    check vm.match("valid-slug").matched
+    check vm.match("slug123").matched
+    check not vm.match("invalid/slug").matched
+    check not vm.match("slug!").matched
+
+  test "anySlug pattern":
+    var vm = initRegexVM(compile(r"[0-9A-Za-z-_/]+"))
+    check vm.match("valid/slug").matched
+    check vm.match("slug_123").matched
+    check not vm.match("slug!").matched
+
+  test "alphaSlug pattern":
+    var vm = initRegexVM(compile(r"[A-Za-z-_]+"))
+    check vm.match("alpha-slug").matched
+    check not vm.match("slug123").matched
+    check not vm.match("slug/invalid").matched
+
+  test "uuid pattern":
+    var vm = initRegexVM(compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))
+    check vm.match("123e4567-e89b-12d3-a456-426614174000").matched
+    check not vm.match("123e4567e89b12d3a456426614174000").matched
+    check not vm.match("invalid-uuid").matched
+
+  test "hex pattern":
+    var vm = initRegexVM(compile(r"[0-9a-fA-F]+"))
+    check vm.match("deadbeef").matched
+    check vm.match("123ABC").matched
+    check not vm.match("invalid_hex").matched
+
+  test "word pattern":
+    var vm = initRegexVM(compile(r"\w+"))
+    check vm.match("word123").matched
+    check vm.match("_underscore").matched
+    check not vm.match("invalid word").matched
+
+  test "wordWithDots pattern":
+    var vm = initRegexVM(compile(r"[\w\.]+"))
+    check vm.match("word.with.dots").matched
+    check vm.match("valid.word").matched
+    check not vm.match("invalid!word").matched
+
+  test "any pattern":
+    var vm = initRegexVM(compile(r".+"))
+    check vm.match("any string").matched
+    check vm.match("123").matched
+    check not vm.match("").matched
+
+  test "id pattern":
+    var vm = initRegexVM(compile(r"[0-9]+"))
+    check vm.match("12345").matched
+    check not vm.match("id123").matched
+    check not vm.match("abc").matched
+
+  test "version pattern":
+    var vm = initRegexVM(compile(r"\d+\.\d+\.\d+"))
+    check vm.match("1.0.0").matched
+    check vm.match("2.5.3").matched
+    check not vm.match("invalid_version").matched
+    check not vm.match("1.0").matched
+
+  test "date pattern":
+    var vm = initRegexVM(compile(r"\d{4}-\d{2}-\d{2}"))
+    check vm.match("2024-01-31").matched
+    check not vm.match("2024-1-31").matched
+    check not vm.match("invalid_date").matched
+
+  test "time pattern":
+    var vm = initRegexVM(compile(r"\d{2}:\d{2}:\d{2}"))
+    check vm.match("23:59:59").matched
+    check not vm.match("23:59").matched
+    check not vm.match("invalid_time").matched
+  
+  test "datetime pattern":
+    var vm = initRegexVM(compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"))
+    check vm.match("2024-01-31T23:59:59").matched
+    check not vm.match("2024-01-31 23:59:59").matched
+    check not vm.match("invalid_datetime").matched
+
+  test "slug with optional version":
+    var vm = initRegexVM(compile(r"[0-9A-Za-z-_]+(?:-\d+\.\d+\.\d+)?"))
+    check vm.match("valid-slug").matched
+    check vm.match("valid-slug-1.0.0").matched
+    check not vm.match("invalid-slug-1.0").matched
+    check not vm.match("invalid slug").matched
