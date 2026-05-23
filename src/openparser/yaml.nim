@@ -1112,7 +1112,3 @@ macro parseYamlMacro(x: typed, str: typed): untyped =
 proc parseYAML*[T](input: YAML, t: typedesc[T]): T =
   ## Parse YAML string into a Nim object or sequence of type `T`
   parseYamlMacro(T, input)
-
-# when isMainModule:
-#   echo parseYAML(readFile("test.yaml"))
-
