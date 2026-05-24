@@ -7,7 +7,7 @@ import ./json
 ## used for analysis, transformation, or code generation.
 ## 
 ## This implementation is pretty similar with the one from `pkg/parsesql`, except that it has been
-## refactored to use `std/strutils` instead of `std/lexbase`, and to support memory-mapped files for large SQL scripts,
+## refactored to use `std/strutils` instead of `std/lexbase`, and support memory-mapped files for large SQL scripts.
 ## 
 ## Also, this parser is designed to support multiple SQL dialects (PostgreSQL, MySQL, SQLite) with minimal changes,
 ## and to be easily extensible for additional syntax features.
