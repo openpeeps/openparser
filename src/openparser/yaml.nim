@@ -756,6 +756,126 @@ proc dumpHook*(s: var string, v: YamlNode) =
       dumpHook(s, item)
     s.add("]")
 
+proc dump*(json: JsonNode): YAML =
+  ## Dump from `JsonNode` to stringified YAML
+  var res: YAML
+
+  proc needsQuoting(s: string): bool =
+    if s.len == 0: return true
+    for ch in s:
+      if ch in {' ', ':', '-', '{', '}', '[', ']', ',', '#', '&', '*', '!', '|', '>', '\'', '\"', '%', '@', '`'}:
+        return true
+    # start/end with numeric-like or boolean-like might be ambiguous
+    if s[0].isDigit or s[0] == '-' or s[0] == '+':
+      return true
+    let keyw = s.toLowerAscii()
+    if keyw in ["null", "~", "true", "false", "y", "n", "yes", "no", "on", "off"]:
+      return true
+    false
+
+  proc emitIndent(n: int) =
+    if n > 0: res.add(repeat(' ', n))
+
+  proc emitScalar(s: string) =
+    if needsQuoting(s):
+      res.add(nimStringLiteral(s))
+    else:
+      res.add(s)
+
+  proc dumpNode(n: JsonNode, indent: int) =
+    ## Best-effort generic handling compatible with std/json-like JsonNode APIs.
+    when compiles(n.kind):
+      case n.kind
+      of JNull:
+        res.add("null")
+      of JBool:
+        when compiles(n.getBool):
+          res.add($n.getBool())
+        else:
+          res.add($n)
+      of JInt, JFloat:
+        # rely on default `$` for numbers
+        res.add($n)
+      of JString:
+        when compiles(n.getStr):
+          emitScalar(n.getStr())
+        else:
+          emitScalar($n)
+      of JArray:
+        # empty inline array
+        var isEmpty = true
+        when compiles(n.len):
+          isEmpty = n.len == 0
+        elif compiles(n.items):
+          isEmpty = n.items.len == 0
+        if isEmpty:
+          res.add("[]")
+          return
+
+        # block sequence
+        when compiles(for item in n: discard):
+          for item in n:
+            res.add("\n")
+            emitIndent(indent)
+            res.add("- ")
+            dumpNode(item, indent + 2)
+        else:
+          # fallback: try numeric indexing
+          var i = 0
+          while true:
+            try:
+              let item = n[i]
+              res.add("\n")
+              emitIndent(indent)
+              res.add("- ")
+              dumpNode(item, indent + 2)
+              inc i
+            except:
+              break
+
+      of JObject:
+        # empty inline object
+        var isEmpty = true
+        when compiles(n.len):
+          isEmpty = n.len == 0
+        elif compiles(n.items):
+          isEmpty = n.items.len == 0
+        if isEmpty:
+          res.add("{}")
+          return
+
+        # block mapping
+        when compiles(for k, v in n: discard):
+          for k, v in n:
+            res.add("\n")
+            emitIndent(indent)
+            res.add(k & ": ")
+            dumpNode(v, indent + 2)
+        else:
+          # fallback: try iteration over keys via `items` or `pairs`
+          when compiles(n.items):
+            for kv in n.items:
+              let k = kv[0]
+              let v = kv[1]
+              res.add("\n")
+              emitIndent(indent)
+              res.add(k & ": ")
+              dumpNode(v, indent + 2)
+          else:
+            # last resort: dump JSON text inline
+            res.add(nimStringLiteral($n))
+    else:
+      # If JsonNode doesn't expose .kind, fallback to toJson()
+      res.add(toJson(n))
+
+  dumpNode(json, 0)
+
+  # strip leading newline if present
+  if res.len > 0 and res[0] == '\n':
+    result = res[1 .. ^1]
+  else:
+    result = res
+
 proc `$`*(yamlObject: YAMLObject): string =
   ## Return a JSON string representation of the YAMLObject
   toJson(yamlObject)
