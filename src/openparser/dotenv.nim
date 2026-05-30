@@ -289,3 +289,10 @@ proc loadDotenvForEnv*(envName: string; override = false) =
   ]
   for f in files:
     discard loadDotenvFile(f, override = override)
+
+proc get*(key: string, defaultValue = ""): string =
+  ## Get an env var, returning default if not set.
+  if existsEnv(key):
+    getEnv(key)
+  else:
+    defaultValue
