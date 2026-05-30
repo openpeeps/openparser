@@ -59,26 +59,27 @@ nim	getValue	openparser/yaml.html#getValue,YamlNode	proc getValue(v: YamlNode): 
 nim	advance	openparser/yaml.html#advance,YamlParser	proc advance(p: var YamlParser)		442
 nim	expectSkip	openparser/yaml.html#expectSkip,YamlParser,YamlTokenKind	proc expectSkip(p: var YamlParser; tkind: YamlTokenKind)		451
 nim	dumpHook	openparser/yaml.html#dumpHook,string,YamlNode	proc dumpHook(s: var string; v: YamlNode)		731
-nim	`$`	openparser/yaml.html#$,YAMLObject	proc `$`(yamlObject: YAMLObject): string		759
-nim	parseYAML	openparser/yaml.html#parseYAML,YAML	proc parseYAML(input: YAML): YAMLObject		763
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,string	proc parseHook(p: var YamlParser; v: var string)		776
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T	proc parseHook[T: float | float32 | float64](p: var YamlParser; v: var T)		777
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,bool	proc parseHook(p: var YamlParser; v: var bool)		778
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_2	proc parseHook[T: ref object](p: var YamlParser; v: var T)		779
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,seq[T]	proc parseHook[T](p: var YamlParser; v: var seq[T])		780
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_3	proc parseHook[T: enum](p: var YamlParser; v: var T)		781
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,AnyTable[K: string,V]	proc parseHook[K: string; V](p: var YamlParser; v: var AnyTable[K, V])		782
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,set[T]	proc parseHook[T](p: var YamlParser; v: var set[T])		783
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_4	proc parseHook[T: tuple](p: var YamlParser; v: var T)		784
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_5	proc parseHook[T: distinct](p: var YamlParser; v: var T)		785
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,CritBitTree[T]	proc parseHook[T](p: var YamlParser; v: var CritBitTree[T])		786
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,Option[T]	proc parseHook[T](p: var YamlParser; v: var Option[T])		787
-nim	parseYamlMappingPairs	openparser/yaml.html#parseYamlMappingPairs.t,untyped	template parseYamlMappingPairs(body: untyped)		792
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_6	proc parseHook[T: Integers](p: var YamlParser; v: var T)		898
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_7	proc parseHook[T: object](p: var YamlParser; v: var T)		1050
-nim	parseYAML	openparser/yaml.html#parseYAML,YamlParser,T	proc parseYAML[T: object | ref object](p: var YamlParser; v: var T)		1096
-nim	parseYAML	openparser/yaml.html#parseYAML,YAML,typedesc[T]	proc parseYAML[T](input: YAML; t: typedesc[T]): T		1125
-nimgrp	parseyaml	openparser/yaml.html#parseYAML-procs-all	proc		763
-nimgrp	parsehook	openparser/yaml.html#parseHook-procs-all	proc		776
+nim	dump	openparser/yaml.html#dump,JsonNode	proc dump(json: JsonNode): YAML		759
+nim	`$`	openparser/yaml.html#$,YAMLObject	proc `$`(yamlObject: YAMLObject): string		875
+nim	parseYAML	openparser/yaml.html#parseYAML,YAML	proc parseYAML(input: YAML): YAMLObject		879
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,string	proc parseHook(p: var YamlParser; v: var string)		892
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T	proc parseHook[T: float | float32 | float64](p: var YamlParser; v: var T)		893
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,bool	proc parseHook(p: var YamlParser; v: var bool)		894
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_2	proc parseHook[T: ref object](p: var YamlParser; v: var T)		895
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,seq[T]	proc parseHook[T](p: var YamlParser; v: var seq[T])		896
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_3	proc parseHook[T: enum](p: var YamlParser; v: var T)		897
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,AnyTable[K: string,V]	proc parseHook[K: string; V](p: var YamlParser; v: var AnyTable[K, V])		898
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,set[T]	proc parseHook[T](p: var YamlParser; v: var set[T])		899
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_4	proc parseHook[T: tuple](p: var YamlParser; v: var T)		900
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_5	proc parseHook[T: distinct](p: var YamlParser; v: var T)		901
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,CritBitTree[T]	proc parseHook[T](p: var YamlParser; v: var CritBitTree[T])		902
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,Option[T]	proc parseHook[T](p: var YamlParser; v: var Option[T])		903
+nim	parseYamlMappingPairs	openparser/yaml.html#parseYamlMappingPairs.t,untyped	template parseYamlMappingPairs(body: untyped)		908
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_6	proc parseHook[T: Integers](p: var YamlParser; v: var T)		1014
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_7	proc parseHook[T: object](p: var YamlParser; v: var T)		1166
+nim	parseYAML	openparser/yaml.html#parseYAML,YamlParser,T	proc parseYAML[T: object | ref object](p: var YamlParser; v: var T)		1212
+nim	parseYAML	openparser/yaml.html#parseYAML,YAML,typedesc[T]	proc parseYAML[T](input: YAML; t: typedesc[T]): T		1241
+nimgrp	parseyaml	openparser/yaml.html#parseYAML-procs-all	proc		879
+nimgrp	parsehook	openparser/yaml.html#parseHook-procs-all	proc		892
 nimgrp	get	openparser/yaml.html#get-procs-all	proc		366
 nimgrp	error	openparser/yaml.html#error-procs-all	proc		86
