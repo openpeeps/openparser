@@ -80,6 +80,10 @@
             cmdCache: var Table[string, string]): string</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">get
+  <li><a class="reference" href="#get%2Cstring%2Cstring" title="get(key: string; defaultValue = &quot;&quot;): string">get(key: string; defaultValue = &quot;&quot;): string</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">loadDotenvFile
   <li><a class="reference" href="#loadDotenvFile%2Cstring" title="loadDotenvFile(path: string; override = false): Table[string, string]">loadDotenvFile(path: string; override = false): Table[string, string]</a></li>
 
@@ -165,6 +169,18 @@
 </div>
 
 </div>
+<div id="get-procs-all">
+  <div id="get,string,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#get%2Cstring%2Cstring"><span class="Identifier">get</span></a><span class="Other">(</span><span class="Identifier">key</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">defaultValue</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadEnvEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Get an env var, returning default if not set.
+    
+  </dd>
+</div>
+
+</div>
 <div id="loadDotenvFile-procs-all">
   <div id="loadDotenvFile,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#loadDotenvFile%2Cstring"><span class="Identifier">loadDotenvFile</span></a><span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">override</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">string</span><span class="Other">]</span> {.
@@ -227,7 +243,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-24 15:31:38 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-30 09:53:33 UTC</small>
       </div>
     </div>
   </div>

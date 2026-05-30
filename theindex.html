@@ -28,7 +28,7 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/lexutils.html">openparser/private/lexutils</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc `$`(f: CsvFieldSlice): string" href="openparser/csv.html#%24%2CCsvFieldSlice">csv: proc `$`(f: CsvFieldSlice): string</a></li>
@@ -44,6 +44,8 @@
 <dt><a name="advance" href="#advance"><span>advance:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc advance(parser: var JsonParser): JsonToken" href="openparser/json.html#advance%2CJsonParser">json: proc advance(parser: var JsonParser): JsonToken</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="lexutils: proc advance[T](l: var T)" href="openparser/private/lexutils.html#advance%2CT">lexutils: proc advance[T](l: var T)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc advance(p: var YamlParser)" href="openparser/yaml.html#advance%2CYamlParser">yaml: proc advance(p: var YamlParser)</a></li>
           </ul></dd>
@@ -188,6 +190,10 @@
 <dt><a name="Captures" href="#Captures"><span>Captures:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="vm: type Captures" href="openparser/regex/vm.html#Captures">vm: type Captures</a></li>
+          </ul></dd>
+<dt><a name="charAt" href="#charAt"><span>charAt:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexutils: proc charAt[T](l: T; idx: int): char" href="openparser/private/lexutils.html#charAt%2CT%2Cint">lexutils: proc charAt[T](l: T; idx: int): char</a></li>
           </ul></dd>
 <dt><a name="CharClassItem" href="#CharClassItem"><span>CharClassItem:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -495,7 +501,7 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc expectSkip(parser: var JsonParser; tkind: JsonTokenKind)" href="openparser/json.html#expectSkip%2CJsonParser%2CJsonTokenKind">json: proc expectSkip(parser: var JsonParser; tkind: JsonTokenKind)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc expectSkip(parser: var YamlParser; tkind: YamlTokenKind)" href="openparser/yaml.html#expectSkip%2CYamlParser%2CYamlTokenKind">yaml: proc expectSkip(parser: var YamlParser; tkind: YamlTokenKind)</a></li>
+          data-doc-search-tag="yaml: proc expectSkip(p: var YamlParser; tkind: YamlTokenKind)" href="openparser/yaml.html#expectSkip%2CYamlParser%2CYamlTokenKind">yaml: proc expectSkip(p: var YamlParser; tkind: YamlTokenKind)</a></li>
           </ul></dd>
 <dt><a name="extractPrefilter" href="#extractPrefilter"><span>extractPrefilter:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -571,6 +577,8 @@
           </ul></dd>
 <dt><a name="get" href="#get"><span>get:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="dotenv: proc get(key: string; defaultValue = &quot;&quot;): string" href="openparser/dotenv.html#get%2Cstring%2Cstring">dotenv: proc get(key: string; defaultValue = &quot;&quot;): string</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="toml: proc get(obj: OrderedTableRef[string, TomlNode]; key: string): TomlNode" href="openparser/toml.html#get%2COrderedTableRef%5Bstring%2CTomlNode%5D%2Cstring">toml: proc get(obj: OrderedTableRef[string, TomlNode]; key: string): TomlNode</a></li>
           <li><a class="reference external"
           data-doc-search-tag="toml: proc get(n: TomlNode; key: string): TomlNode" href="openparser/toml.html#get%2CTomlNode%2Cstring">toml: proc get(n: TomlNode; key: string): TomlNode</a></li>
@@ -590,6 +598,10 @@
           data-doc-search-tag="toml: proc getBool(n: TomlNode): bool" href="openparser/toml.html#getBool%2CTomlNode">toml: proc getBool(n: TomlNode): bool</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc getBool(n: YamlNode): bool" href="openparser/yaml.html#getBool%2CYamlNode">yaml: proc getBool(n: YamlNode): bool</a></li>
+          </ul></dd>
+<dt><a name="getContext" href="#getContext"><span>getContext:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexutils: proc getContext[T](l: T; posOverride: int = -1): string" href="openparser/private/lexutils.html#getContext%2CT%2Cint">lexutils: proc getContext[T](l: T; posOverride: int = -1): string</a></li>
           </ul></dd>
 <dt><a name="getFloat" href="#getFloat"><span>getFloat:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1071,31 +1083,33 @@
           <li><a class="reference external"
           data-doc-search-tag="toml: proc parseHook(p: var TomlParser; v: var TomlNode)" href="openparser/toml.html#parseHook%2CTomlParser%2CTomlNode">toml: proc parseHook(p: var TomlParser; v: var TomlNode)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[K: string; V](parser: var YamlParser; v: var AnyTable[K, V])" href="openparser/yaml.html#parseHook%2CYamlParser%2CAnyTable%5BK%3A%20string%2CV%5D">yaml: proc parseHook[K: string; V](parser: var YamlParser; v: var AnyTable[K, V])</a></li>
+          data-doc-search-tag="yaml: proc parseHook[K: string; V](p: var YamlParser; v: var AnyTable[K, V])" href="openparser/yaml.html#parseHook%2CYamlParser%2CAnyTable%5BK%3A%20string%2CV%5D">yaml: proc parseHook[K: string; V](p: var YamlParser; v: var AnyTable[K, V])</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook(parser: var YamlParser; v: var bool)" href="openparser/yaml.html#parseHook%2CYamlParser%2Cbool">yaml: proc parseHook(parser: var YamlParser; v: var bool)</a></li>
+          data-doc-search-tag="yaml: proc parseHook(p: var YamlParser; v: var bool)" href="openparser/yaml.html#parseHook%2CYamlParser%2Cbool">yaml: proc parseHook(p: var YamlParser; v: var bool)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[T](parser: var YamlParser; v: var CritBitTree[T])" href="openparser/yaml.html#parseHook%2CYamlParser%2CCritBitTree%5BT%5D">yaml: proc parseHook[T](parser: var YamlParser; v: var CritBitTree[T])</a></li>
+          data-doc-search-tag="yaml: proc parseHook[T](p: var YamlParser; v: var CritBitTree[T])" href="openparser/yaml.html#parseHook%2CYamlParser%2CCritBitTree%5BT%5D">yaml: proc parseHook[T](p: var YamlParser; v: var CritBitTree[T])</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[T](parser: var YamlParser; v: var seq[T])" href="openparser/yaml.html#parseHook%2CYamlParser%2Cseq%5BT%5D">yaml: proc parseHook[T](parser: var YamlParser; v: var seq[T])</a></li>
+          data-doc-search-tag="yaml: proc parseHook[T](p: var YamlParser; v: var Option[T])" href="openparser/yaml.html#parseHook%2CYamlParser%2COption%5BT%5D">yaml: proc parseHook[T](p: var YamlParser; v: var Option[T])</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[T](parser: var YamlParser; v: var set[T])" href="openparser/yaml.html#parseHook%2CYamlParser%2Cset%5BT%5D">yaml: proc parseHook[T](parser: var YamlParser; v: var set[T])</a></li>
+          data-doc-search-tag="yaml: proc parseHook[T](p: var YamlParser; v: var seq[T])" href="openparser/yaml.html#parseHook%2CYamlParser%2Cseq%5BT%5D">yaml: proc parseHook[T](p: var YamlParser; v: var seq[T])</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook(parser: var YamlParser; v: var string)" href="openparser/yaml.html#parseHook%2CYamlParser%2Cstring">yaml: proc parseHook(parser: var YamlParser; v: var string)</a></li>
+          data-doc-search-tag="yaml: proc parseHook[T](p: var YamlParser; v: var set[T])" href="openparser/yaml.html#parseHook%2CYamlParser%2Cset%5BT%5D">yaml: proc parseHook[T](p: var YamlParser; v: var set[T])</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[T: float | float32 | float64](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT">yaml: proc parseHook[T: float | float32 | float64](parser: var YamlParser; v: var T)</a></li>
+          data-doc-search-tag="yaml: proc parseHook(p: var YamlParser; v: var string)" href="openparser/yaml.html#parseHook%2CYamlParser%2Cstring">yaml: proc parseHook(p: var YamlParser; v: var string)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[T: ref object](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_2">yaml: proc parseHook[T: ref object](parser: var YamlParser; v: var T)</a></li>
+          data-doc-search-tag="yaml: proc parseHook[T: float | float32 | float64](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT">yaml: proc parseHook[T: float | float32 | float64](p: var YamlParser; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[T: enum](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_3">yaml: proc parseHook[T: enum](parser: var YamlParser; v: var T)</a></li>
+          data-doc-search-tag="yaml: proc parseHook[T: ref object](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_2">yaml: proc parseHook[T: ref object](p: var YamlParser; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[T: tuple](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_4">yaml: proc parseHook[T: tuple](parser: var YamlParser; v: var T)</a></li>
+          data-doc-search-tag="yaml: proc parseHook[T: enum](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_3">yaml: proc parseHook[T: enum](p: var YamlParser; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[T: distinct](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_5">yaml: proc parseHook[T: distinct](parser: var YamlParser; v: var T)</a></li>
+          data-doc-search-tag="yaml: proc parseHook[T: tuple](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_4">yaml: proc parseHook[T: tuple](p: var YamlParser; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[T: Integers](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_6">yaml: proc parseHook[T: Integers](parser: var YamlParser; v: var T)</a></li>
+          data-doc-search-tag="yaml: proc parseHook[T: distinct](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_5">yaml: proc parseHook[T: distinct](p: var YamlParser; v: var T)</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseHook[T: object](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_7">yaml: proc parseHook[T: object](parser: var YamlParser; v: var T)</a></li>
+          data-doc-search-tag="yaml: proc parseHook[T: Integers](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_6">yaml: proc parseHook[T: Integers](p: var YamlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="yaml: proc parseHook[T: object](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_7">yaml: proc parseHook[T: object](p: var YamlParser; v: var T)</a></li>
           </ul></dd>
 <dt><a name="parseObject" href="#parseObject"><span>parseObject:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1127,7 +1141,7 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseYAML[T](input: YAML; t: typedesc[T]): T" href="openparser/yaml.html#parseYAML%2CYAML%2Ctypedesc%5BT%5D">yaml: proc parseYAML[T](input: YAML; t: typedesc[T]): T</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="yaml: proc parseYAML[T: object | ref object](parser: var YamlParser; v: var T)" href="openparser/yaml.html#parseYAML%2CYamlParser%2CT">yaml: proc parseYAML[T: object | ref object](parser: var YamlParser; v: var T)</a></li>
+          data-doc-search-tag="yaml: proc parseYAML[T: object | ref object](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseYAML%2CYamlParser%2CT">yaml: proc parseYAML[T: object | ref object](p: var YamlParser; v: var T)</a></li>
           </ul></dd>
 <dt><a name="parseYamlMappingPairs" href="#parseYamlMappingPairs"><span>parseYamlMappingPairs:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1737,6 +1751,10 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc skipValue(parser: var JsonParser)" href="openparser/json.html#skipValue%2CJsonParser">json: proc skipValue(parser: var JsonParser)</a></li>
           </ul></dd>
+<dt><a name="skipWhitespace" href="#skipWhitespace"><span>skipWhitespace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexutils: proc skipWhitespace[T](l: var T)" href="openparser/private/lexutils.html#skipWhitespace%2CT">lexutils: proc skipWhitespace[T](l: var T)</a></li>
+          </ul></dd>
 <dt><a name="Span" href="#Span"><span>Span:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="po: object Span" href="openparser/gettext/po.html#Span">po: object Span</a></li>
@@ -2325,7 +2343,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-24 15:31:38 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-30 09:53:33 UTC</small>
       </div>
     </div>
   </div>

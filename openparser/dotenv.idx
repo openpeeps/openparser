@@ -7,3 +7,4 @@ nim	loadDotenvFile	openparser/dotenv.html#loadDotenvFile,string	proc loadDotenvF
 nim	loadDotenvFiles	openparser/dotenv.html#loadDotenvFiles,openArray[string]	proc loadDotenvFiles(paths: openArray[string]; override = false): MultiDotEnv		254
 nim	applyDotenvProfile	openparser/dotenv.html#applyDotenvProfile,MultiDotEnv,string	proc applyDotenvProfile(profiles: MultiDotEnv; envName: string; override = false): Table[\n    string, string]		269
 nim	loadDotenvForEnv	openparser/dotenv.html#loadDotenvForEnv,string	proc loadDotenvForEnv(envName: string; override = false)		282
+nim	get	openparser/dotenv.html#get,string,string	proc get(key: string; defaultValue = ""): string		293
