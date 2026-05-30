@@ -17,9 +17,9 @@ import std/[macros, macrocache, json, sequtils,
         strutils, options, tables, enumutils, memfiles,
         critbits, typetraits, strutils]
 
-import ./private/types
-
+import ./private/[types, lexutils]
 export json # re-exporting the standard JSON module for JsonNode and related types
+
 type
   JsonOptions* = ref object
     ## Options for JSON serialization
@@ -503,15 +503,6 @@ proc newJsonLexer(mem: pointer, size: int): JsonLexer =
   result = JsonLexer(data: cast[ptr UncheckedArray[char]](mem), len: size, pos: 0, line: 1, col: 1)
   result.current = result.charAt(0)
 
-proc advance(l: var JsonLexer) =
-  if l.pos < l.len - 1:
-    inc l.pos
-    l.current = l.charAt(l.pos)
-    inc l.col
-  else:
-    l.pos = l.len
-    l.current = '\0'
-
 proc matchKeyword(l: var JsonLexer, kw: string): bool =
   if l.pos + kw.len > l.len: return false
   for i, c in kw:
@@ -520,16 +511,6 @@ proc matchKeyword(l: var JsonLexer, kw: string): bool =
   for _ in 0..<kw.len:
     advance(l)
   result = true
-
-proc skipWhitespace(l: var JsonLexer) =
-  while true:
-    case l.current
-    of {' ', '\t', '\n', '\r'}:
-      if l.current == '\n':
-        inc l.line
-        l.col = 0
-      advance(l)
-    else: break
 
 proc readString(l: var JsonLexer): string =
   result = ""
@@ -1206,10 +1187,10 @@ proc fromJson*[T](s: string, x: typedesc[T]): T =
   else:
     return fromJsonMacro(x, s)
 
-#
 # JsonNode to Nim Object conversion
-#
 proc toJsonNode*[T](v: T): JsonNode =
   ## Convert any Nim value (object, table, seq, etc.) to a `JsonNode`
   ## by serializing to a JSON string and parsing it back
   result = fromJson(toJson(v))
+
+  
