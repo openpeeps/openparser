@@ -14,10 +14,7 @@ import std/[strutils, os, envvars, tables, osproc]
 type
   DotenvEntry* = tuple[key: string, value: string, expand: bool]
     ## A single entry from a .env file, with the key, raw value, and whether it should be expanded.
-  MultiDotEnv* = TableRef[string, TableRef[string, DotenvEntry]]
-    ## Keyed by env name: ".env.local" -> "local", ".env.production" -> "production".
-    ## Each entry has key, value, and whether it should be expanded.
-  
+
 proc findClosingQuote(s: string; quote: char): int =
   if quote == '\'':
     return s.find('\'')
@@ -102,8 +99,6 @@ proc parseEnv*(content: string): seq[DotenvEntry] =
         if closePos >= 0:
           value.add(chunk[0 ..< closePos])
           break
-
-          # If quote closed, ignore rest of that line (including comments)
         else:
           value.add(chunk)
           inc lineIdx
@@ -116,7 +111,7 @@ proc parseEnv*(content: string): seq[DotenvEntry] =
         value = unescapeDoubleQuoted(value)
         result.add((key, value, true))
       else:
-        result.add((key, value, false)) # single quoted: no expansion
+        result.add((key, value, false))
 
       i = lineIdx + 1
       continue
@@ -136,7 +131,6 @@ proc resolveVar(name: string; local: Table[string, string]): string =
 proc runCommandSub(cmd: string; cmdCache: var Table[string, string]): string =
   if cmdCache.hasKey(cmd):
     return cmdCache[cmd]
-
   try:
     let (outp, code) = execCmdEx(cmd, options = {poEvalCommand, poUsePath, poStdErrToStdOut})
     if code == 0:
@@ -145,7 +139,6 @@ proc runCommandSub(cmd: string; cmdCache: var Table[string, string]): string =
       result = ""
   except CatchableError:
     result = ""
-
   cmdCache[cmd] = result
 
 proc expandValue*(value: string; local: var Table[string, string]; cmdCache: var Table[string, string]): string =
@@ -193,7 +186,6 @@ proc expandValue*(value: string; local: var Table[string, string]; cmdCache: var
         elif value[j] == ')':
           dec depth
         inc j
-
       if depth == 0:
         let cmd = value[i + 2 ..< (j - 1)]
         result.add(runCommandSub(cmd, cmdCache))
@@ -216,83 +208,40 @@ proc expandValue*(value: string; local: var Table[string, string]; cmdCache: var
       result.add('$')
       inc i
 
-proc envKeyFromPath(path: string): string =
-  let name = extractFilename(path)
-  if name == ".env":
-    return "default"
-  if name.startsWith(".env."):
-    return name[5 .. ^1] # ".env.local" -> "local"
-  name
-
-proc resolveEntries(entries: seq[DotenvEntry]): Table[string, string] =
-  result = initTable[string, string]()
+proc applyEntries(entries: seq[DotenvEntry]; override = false) =
   var local = initTable[string, string]()
   var cmdCache = initTable[string, string]()
-
   for e in entries:
     let finalValue =
       if e.expand: expandValue(e.value, local, cmdCache)
       else: e.value
     local[e.key] = finalValue
-    result[e.key] = finalValue
+    if override or not existsEnv(e.key):
+      putEnv(e.key, finalValue)
 
-proc loadDotenvFile*(path: string; override = false): Table[string, string] =
-  ## Load one .env-like file into process env.
-  ## Returns key/value pairs that were set (or resolved while loading).
-  result = initTable[string, string]()
-  if not fileExists(path):
-    return
-
-  let resolved = resolveEntries(parseEnv(readFile(path)))
-  for k, v in resolved:
-    if override or not existsEnv(k):
-      putEnv(k, v)
-      result[k] = v
-    else:
-      result[k] = getEnv(k)
-
-proc loadDotenvFiles*(paths: openArray[string]; override = false): MultiDotEnv =
-  ## Load multiple dotenv files into isolated profiles (no process-env mutation).
-  ## Keyed by env name: ".env.local" -> "local", ".env.production" -> "production".
-  result = newTable[string, TableRef[string, DotenvEntry]]()
-
-  for p in paths:
-    if not fileExists(p): continue
-    let envKey = envKeyFromPath(p)
-    if not result.hasKey(envKey):
-      result[envKey] = newTable[string, DotenvEntry]()
-
-    let resolved = resolveEntries(parseEnv(readFile(p)))
-    for k, v in resolved:
-      result[envKey][k] = (key: k, value: v, expand: false)
-
-proc applyDotenvProfile*(profiles: MultiDotEnv; envName: string; override = false): Table[string, string] =
-  ## Apply one loaded profile to process env.
-  result = initTable[string, string]()
-  if profiles.isNil or not profiles.hasKey(envName):
-    return
-
-  for k, entry in profiles[envName]:
-    if override or not existsEnv(k):
-      putEnv(k, entry.value)
-      result[k] = entry.value
-    else:
-      result[k] = getEnv(k)
+proc loadDotenv*(path: string; override = false) =
+  ## Load a single .env-like file into process env.
+  if not fileExists(path): return
+  applyEntries(parseEnv(readFile(path)), override)
 
 proc loadDotenvForEnv*(envName: string; override = false) =
-  ## Apply selected layered files to process env.
-  let files = [
-    ".env",
-    ".env.local",
-    ".env." & envName,
-    ".env." & envName & ".local"
-  ]
-  for f in files:
-    discard loadDotenvFile(f, override = override)
+  ## Load layered .env files for the given environment name into process env.
+  ## Applies in order: .env, .env.local, .env.<envName>, .env.<envName>.local
+  for f in [".env", ".env.local", ".env." & envName, ".env." & envName & ".local"]:
+    loadDotenv(f, override = override)
 
-proc get*(key: string, defaultValue = ""): string =
-  ## Get an env var, returning default if not set.
-  if existsEnv(key):
-    getEnv(key)
-  else:
-    defaultValue
+proc get*(key: string; defaultValue = ""): string =
+  ## Get an env var, returning defaultValue if not set.
+  getEnv(key, defaultValue)
+
+proc set*(key, value: string) =
+  ## Set an env var.
+  putEnv(key, value)
+
+proc del*(key: string) =
+  ## Delete an env var.
+  delEnv(key)
+
+proc has*(key: string): bool =
+  ## Check if an env var is set.
+  existsEnv(key)

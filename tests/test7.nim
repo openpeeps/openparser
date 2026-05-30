@@ -51,37 +51,32 @@ suite "Dotenv parser and loader":
     let whoami = expandValue(entries[0].value, local, cmdCache)
     check whoami.len > 0
 
-  test "loadDotenvFile sets env vars":
+  test "loadDotenv sets env vars":
     let tmp = getTempDir() / "test.env"
-    writeFile(tmp, "FOO=bar\nBAR=baz")
-    discard loadDotenvFile(tmp, override=true)
-    check getEnv("FOO") == "bar"
-    check getEnv("BAR") == "baz"
+    writeFile(tmp, "DOTENV_FOO=bar\nDOTENV_BAR=baz")
+    loadDotenv(tmp, override = true)
+    check getEnv("DOTENV_FOO") == "bar"
+    check getEnv("DOTENV_BAR") == "baz"
     removeFile(tmp)
 
-  test "loadDotenvFiles keeps profiles isolated":
-    let d = getTempDir() / "openparser_dotenv_profiles"
-    createDir(d)
+  test "loadDotenv respects override flag":
+    putEnv("DOTENV_EXISTING", "original")
+    let tmp = getTempDir() / "test_override.env"
+    writeFile(tmp, "DOTENV_EXISTING=overridden")
 
-    let localFile = d / ".env.local"
-    let prodFile = d / ".env.production"
+    loadDotenv(tmp, override = false)
+    check getEnv("DOTENV_EXISTING") == "original"
 
-    writeFile(localFile, "OPENPARSER_MODE=local\nOPENPARSER_URL=http://localhost")
-    writeFile(prodFile, "OPENPARSER_MODE=production\nOPENPARSER_URL=https://example.com")
+    loadDotenv(tmp, override = true)
+    check getEnv("DOTENV_EXISTING") == "overridden"
 
-    let profiles = loadDotenvFiles([localFile, prodFile], override=true)
+    removeFile(tmp)
+    delEnv("DOTENV_EXISTING")
 
-    check profiles.hasKey("local")
-    check profiles.hasKey("production")
-    check profiles["local"]["OPENPARSER_MODE"].value == "local"
-    check profiles["production"]["OPENPARSER_MODE"].value == "production"
-
-    # Not applied yet:
-    check getEnv("OPENPARSER_MODE", "") == ""
-
-    discard applyDotenvProfile(profiles, "production", override=true)
-    check getEnv("OPENPARSER_MODE") == "production"
-    check getEnv("OPENPARSER_URL") == "https://example.com"
-
-    removeFile(localFile)
-    removeFile(prodFile)
+  test "get/set/has/del helpers":
+    set("DOTENV_HELPER", "hello")
+    check has("DOTENV_HELPER")
+    check get("DOTENV_HELPER") == "hello"
+    check get("DOTENV_MISSING", "fallback") == "fallback"
+    del("DOTENV_HELPER")
+    check not has("DOTENV_HELPER")
