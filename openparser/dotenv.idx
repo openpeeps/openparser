@@ -1,10 +1,10 @@
 nimTitle	dotenv	openparser/dotenv.html	module openparser/dotenv		0
 nim	DotenvEntry	openparser/dotenv.html#DotenvEntry	tuple DotenvEntry		15
-nim	MultiDotEnv	openparser/dotenv.html#MultiDotEnv	type MultiDotEnv		17
-nim	parseEnv	openparser/dotenv.html#parseEnv,string	proc parseEnv(content: string): seq[DotenvEntry]		65
-nim	expandValue	openparser/dotenv.html#expandValue,string,Table[string,string],Table[string,string]	proc expandValue(value: string; local: var Table[string, string];\n            cmdCache: var Table[string, string]): string		151
-nim	loadDotenvFile	openparser/dotenv.html#loadDotenvFile,string	proc loadDotenvFile(path: string; override = false): Table[string, string]		239
-nim	loadDotenvFiles	openparser/dotenv.html#loadDotenvFiles,openArray[string]	proc loadDotenvFiles(paths: openArray[string]; override = false): MultiDotEnv		254
-nim	applyDotenvProfile	openparser/dotenv.html#applyDotenvProfile,MultiDotEnv,string	proc applyDotenvProfile(profiles: MultiDotEnv; envName: string; override = false): Table[\n    string, string]		269
-nim	loadDotenvForEnv	openparser/dotenv.html#loadDotenvForEnv,string	proc loadDotenvForEnv(envName: string; override = false)		282
-nim	get	openparser/dotenv.html#get,string,string	proc get(key: string; defaultValue = ""): string		293
+nim	parseEnv	openparser/dotenv.html#parseEnv,string	proc parseEnv(content: string): seq[DotenvEntry]		62
+nim	expandValue	openparser/dotenv.html#expandValue,string,Table[string,string],Table[string,string]	proc expandValue(value: string; local: var Table[string, string];\n            cmdCache: var Table[string, string]): string		144
+nim	loadDotenv	openparser/dotenv.html#loadDotenv,string	proc loadDotenv(path: string; override = false)		222
+nim	loadDotenvForEnv	openparser/dotenv.html#loadDotenvForEnv,string	proc loadDotenvForEnv(envName: string; override = false)		227
+nim	get	openparser/dotenv.html#get,string,string	proc get(key: string; defaultValue = ""): string		233
+nim	set	openparser/dotenv.html#set,string,string	proc set(key, value: string)		237
+nim	del	openparser/dotenv.html#del,string	proc del(key: string)		241
+nim	has	openparser/dotenv.html#has,string	proc has(key: string): bool		245

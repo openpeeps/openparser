@@ -65,12 +65,6 @@
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc appendReserve(b: var Buffer; n: int): int" href="openparser/fbe.html#appendReserve%2CBuffer%2Cint">fbe: proc appendReserve(b: var Buffer; n: int): int</a></li>
           </ul></dd>
-<dt><a name="applyDotenvProfile" href="#applyDotenvProfile"><span>applyDotenvProfile:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="dotenv: proc applyDotenvProfile(profiles: MultiDotEnv; envName: string; override = false): Table[
-    string, string]" href="openparser/dotenv.html#applyDotenvProfile%2CMultiDotEnv%2Cstring">dotenv: proc applyDotenvProfile(profiles: MultiDotEnv; envName: string; override = false): Table[
-    string, string]</a></li>
-          </ul></dd>
 <dt><a name="arrayToJson" href="#arrayToJson"><span>arrayToJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc arrayToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode" href="openparser/json.html#arrayToJson%2CNimNode%2CNimNode%2CJsonOptions">json: proc arrayToJson(v, valImpl: NimNode; opts: JsonOptions = nil): NimNode</a></li>
@@ -292,6 +286,10 @@
 <dt><a name="defaultCsvOptions" href="#defaultCsvOptions"><span>defaultCsvOptions:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc defaultCsvOptions(): CsvOptions" href="openparser/csv.html#defaultCsvOptions">csv: proc defaultCsvOptions(): CsvOptions</a></li>
+          </ul></dd>
+<dt><a name="del" href="#del"><span>del:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dotenv: proc del(key: string)" href="openparser/dotenv.html#del%2Cstring">dotenv: proc del(key: string)</a></li>
           </ul></dd>
 <dt><a name="disassemble" href="#disassemble"><span>disassemble:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -657,6 +655,10 @@
 <li><a class="reference external"
           data-doc-search-tag="vm: proc groupStr(m: MatchResult; input: string; idx: int): string" href="openparser/regex/vm.html#groupStr%2CMatchResult%2Cstring%2Cint">vm: proc groupStr(m: MatchResult; input: string; idx: int): string</a></li>
           </ul></dd>
+<dt><a name="has" href="#has"><span>has:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dotenv: proc has(key: string): bool" href="openparser/dotenv.html#has%2Cstring">dotenv: proc has(key: string): bool</a></li>
+          </ul></dd>
 <dt><a name="hasAvx2" href="#hasAvx2"><span>hasAvx2:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="simd: const hasAvx2" href="openparser/regex/simd.html#hasAvx2">simd: const hasAvx2</a></li>
@@ -785,13 +787,9 @@
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc len(b: Buffer): int" href="openparser/fbe.html#len%2CBuffer">fbe: proc len(b: Buffer): int</a></li>
           </ul></dd>
-<dt><a name="loadDotenvFile" href="#loadDotenvFile"><span>loadDotenvFile:</span></a></dt><dd><ul class="simple">
+<dt><a name="loadDotenv" href="#loadDotenv"><span>loadDotenv:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="dotenv: proc loadDotenvFile(path: string; override = false): Table[string, string]" href="openparser/dotenv.html#loadDotenvFile%2Cstring">dotenv: proc loadDotenvFile(path: string; override = false): Table[string, string]</a></li>
-          </ul></dd>
-<dt><a name="loadDotenvFiles" href="#loadDotenvFiles"><span>loadDotenvFiles:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="dotenv: proc loadDotenvFiles(paths: openArray[string]; override = false): MultiDotEnv" href="openparser/dotenv.html#loadDotenvFiles%2CopenArray%5Bstring%5D">dotenv: proc loadDotenvFiles(paths: openArray[string]; override = false): MultiDotEnv</a></li>
+          data-doc-search-tag="dotenv: proc loadDotenv(path: string; override = false)" href="openparser/dotenv.html#loadDotenv%2Cstring">dotenv: proc loadDotenv(path: string; override = false)</a></li>
           </ul></dd>
 <dt><a name="loadDotenvForEnv" href="#loadDotenvForEnv"><span>loadDotenvForEnv:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -830,10 +828,6 @@
 <dt><a name="MoSpan" href="#MoSpan"><span>MoSpan:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="mo: object MoSpan" href="openparser/gettext/mo.html#MoSpan">mo: object MoSpan</a></li>
-          </ul></dd>
-<dt><a name="MultiDotEnv" href="#MultiDotEnv"><span>MultiDotEnv:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="dotenv: type MultiDotEnv" href="openparser/dotenv.html#MultiDotEnv">dotenv: type MultiDotEnv</a></li>
           </ul></dd>
 <dt><a name="new" href="#new"><span>new:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1739,6 +1733,10 @@
 <li><a class="reference external"
           data-doc-search-tag="simd: proc scanWordCharSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanWordCharSse2%2Cstring%2Cint%2Cint">simd: proc scanWordCharSse2(s: string; start, stop: int): int</a></li>
           </ul></dd>
+<dt><a name="set" href="#set"><span>set:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="dotenv: proc set(key, value: string)" href="openparser/dotenv.html#set%2Cstring%2Cstring">dotenv: proc set(key, value: string)</a></li>
+          </ul></dd>
 <dt><a name="skipBytes" href="#skipBytes"><span>skipBytes:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc skipBytes(b: var Buffer; n: int)" href="openparser/fbe.html#skipBytes%2CBuffer%2Cint">fbe: proc skipBytes(b: var Buffer; n: int)</a></li>
@@ -2343,7 +2341,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-30 09:53:33 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-05-30 10:14:44 UTC</small>
       </div>
     </div>
   </div>
