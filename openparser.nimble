@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.2"
+version       = "0.1.3"
 author        = "George Lemon"
 description   = "Tiny parsers and serializers for JSON, CSV, RSS, Atom feeds and more"
 license       = "MIT"
