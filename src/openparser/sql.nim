@@ -244,7 +244,7 @@ proc nextToken(p: var SqlParser): SqlToken {.discardable.} =
     # collect contiguous run of operator characters as single operator token
     result.kind = tkOperator
     var buf = newStringOfCap(4)
-    while p.lexer.current in {'+', '-', '*', '/', '%', '=', '<', '>', '!', '&', '|', '^', '~'}:
+    while p.lexer.current in {'+', '-', '*', '/', '%', '=', '<', '>', '!', '&', '|', '^', '~', '@', '#'}:
       buf.add(p.lexer.current)
       advance(p.lexer)
     result.value = buf
@@ -273,8 +273,13 @@ proc nextToken(p: var SqlParser): SqlToken {.discardable.} =
       advance(p.lexer)
     result.value = value
   of ':':
-    # Could be a named placeholder like :name or just a colon token.
-    if p.lexer.charAt(p.lexer.pos + 1) in {'a'..'z', 'A'..'Z', '_'}:
+    # Could be a named placeholder like :name, a cast operator ::, or just a colon token.
+    if p.lexer.charAt(p.lexer.pos + 1) == ':':
+      # PostgreSQL cast operator ::
+      result.kind = tkOperator
+      result.value = "::"
+      advance(p.lexer); advance(p.lexer)
+    elif p.lexer.charAt(p.lexer.pos + 1) in {'a'..'z', 'A'..'Z', '_'}:
       result.kind = tkPlaceholder
       var value = newStringOfCap(12)
       value.add(':')
@@ -697,6 +702,8 @@ proc getPrecedence(op: string): int =
   of "is", "in", "like", "ilike", "between": return 3
   of "+", "-": return 4
   of "*", "/": return 5
+  of "->", "->>", "#>", "#>>": return 6  # JSON operators
+  of "::": return 7  # PostgreSQL cast
   else: return 0
 
 proc parseExpression(p: var SqlParser; minPrec = 1): SqlNode {.discardable.} =
@@ -725,10 +732,36 @@ proc parseExpression(p: var SqlParser; minPrec = 1): SqlNode {.discardable.} =
     var prec = 0
     var tokensToConsume = 0
 
+
     if p.curr.kind == tkOperator:
       op = p.curr.value
       prec = getPrecedence(op)
       tokensToConsume = 1
+      # Handle PostgreSQL cast operator :: as postfix (right side is a type name, not expression)
+      if op == "::" and prec >= minPrec:
+        p.advance()
+        # read the cast type as a raw identifier/keyword sequence
+        var typeName = newStringOfCap(32)
+        while p.curr.kind in {tkIdentifier, tkKeyword}:
+          if typeName.len > 0: typeName.add(' ')
+          typeName.add(p.curr.value)
+          p.advance()
+          # handle type modifiers like int4, varchar(n) etc.
+          if p.curr.kind == tkLP:
+            typeName.add('(')
+            p.advance()
+            while p.curr.kind != tkRP and p.curr.kind != tkEOF:
+              typeName.add(p.curr.value)
+              p.advance()
+            typeName.add(')')
+            if p.curr.kind == tkRP: p.advance()
+          break
+        var castNode = newNode(nkInfix)
+        castNode.add(newNode(nkIdent, "::"))
+        castNode.add(left)
+        castNode.add(newNode(nkIdent, typeName))
+        left = castNode
+        continue
     elif p.curr.kind == tkKeyword:
       let low = p.curr.value.toLowerAscii
       if low == "is":
