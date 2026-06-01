@@ -424,7 +424,6 @@ proc defaulHtmlParsingPolicy*: HtmlParserPolicy =
 proc parseHtml*(input: string, policy: HtmlParserPolicy = defaulHtmlParsingPolicy()): HtmlDocument =
   ## Parses the given HTML string according to the specified policy
   ## and returns the root node of the resulting parse tree.
-  echo input
   var p = HtmlParser(
     lexer: HtmlLexer(input: input, data: nil, len: input.len, line: 1, col: 1),
     document: HtmlDocument(),
