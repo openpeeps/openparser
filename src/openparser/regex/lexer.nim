@@ -49,15 +49,21 @@ type
     pos*: int
 
   OpenParserRegexError* = object of CatchableError
+    ## Exception type for regex lexer errors, includes line and column information.
 
 proc charAt(l: RegexLexer, idx: int): char {.inline.} =
+  # Returns the character at the given index, or '\0' if out of bounds
   if idx < 0 or idx >= l.len: return '\0'
   if l.data != nil: l.data[idx] else: l.input[idx]
 
 proc current(l: RegexLexer): char {.inline.} =
+  # Returns the current character at the lexer's position,
+  # or '\0' if out of bounds
   l.charAt(l.pos)
 
 proc advance(l: var RegexLexer): char {.inline.} =
+  # Advance the lexer by one character, updating line and column numbers.
+  # Returns the character at the new position.
   result = l.current()
   if result == '\0':
     return
@@ -69,6 +75,7 @@ proc advance(l: var RegexLexer): char {.inline.} =
     inc l.col
 
 proc getLexeme*(l: RegexLexer, startPos: int, stopPos: int): string =
+  ## Extracts the substring from startPos to stopPos as a new string
   if l.data != nil:
     let n = stopPos - startPos
     result = newString(n)
