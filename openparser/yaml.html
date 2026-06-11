@@ -205,6 +205,7 @@
   <li><a class="reference" href="#parseHook%2CYamlParser%2Cbool" title="parseHook(p: var YamlParser; v: var bool)">parseHook(p: var YamlParser; v: var bool)</a></li>
 <li><a class="reference" href="#parseHook%2CYamlParser%2Cstring" title="parseHook(p: var YamlParser; v: var string)">parseHook(p: var YamlParser; v: var string)</a></li>
 <li><a class="reference" href="#parseHook%2CYamlParser%2CAnyTable%5BK%3A%20string%2CV%5D" title="parseHook[K: string; V](p: var YamlParser; v: var AnyTable[K, V])">parseHook[K: string; V](p: var YamlParser; v: var AnyTable[K, V])</a></li>
+<li><a class="reference" href="#parseHook%2CYamlParser%2Carray%5BN%2CT%5D" title="parseHook[N: static[int]; T](p: var YamlParser; v: var array[N, T])">parseHook[N: static[int]; T](p: var YamlParser; v: var array[N, T])</a></li>
 <li><a class="reference" href="#parseHook%2CYamlParser%2CT_5" title="parseHook[T: distinct](p: var YamlParser; v: var T)">parseHook[T: distinct](p: var YamlParser; v: var T)</a></li>
 <li><a class="reference" href="#parseHook%2CYamlParser%2CT_3" title="parseHook[T: enum](p: var YamlParser; v: var T)">parseHook[T: enum](p: var YamlParser; v: var T)</a></li>
 <li><a class="reference" href="#parseHook%2CYamlParser%2CT" title="parseHook[T: float | float32 | float64](p: var YamlParser; v: var T)">parseHook[T: float | float32 | float64](p: var YamlParser; v: var T)</a></li>
@@ -688,6 +689,14 @@
     
   </dd>
 </div>
+<div id="parseHook,YamlParser,array[N,T]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2Carray%5BN%2CT%5D"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">N</span><span class="Other">:</span> <span class="Identifier">static</span><span class="Other">[</span><span class="Identifier">int</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">array</span><span class="Other">[</span><span class="Identifier">N</span><span class="Other">,</span> <span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    Parse YAML sequence into fixed-size array. The sequence length must match the array size.
+    
+  </dd>
+</div>
 <div id="parseHook,YamlParser,T_5">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2CT_5"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">distinct</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
@@ -866,7 +875,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-06-01 12:47:45 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-06-11 17:06:28 UTC</small>
       </div>
     </div>
   </div>

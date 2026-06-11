@@ -23,10 +23,10 @@ nim	RegexTokenKind	openparser/regex/lexer.html#RegexTokenKind	enum RegexTokenKin
 nim	RegexLexer	openparser/regex/lexer.html#RegexLexer	object RegexLexer		33
 nim	RegexToken	openparser/regex/lexer.html#RegexToken	object RegexToken		44
 nim	OpenParserRegexError	openparser/regex/lexer.html#OpenParserRegexError	object OpenParserRegexError		51
-nim	getLexeme	openparser/regex/lexer.html#getLexeme,RegexLexer,int,int	proc getLexeme(l: RegexLexer; startPos: int; stopPos: int): string		71
-nim	error	openparser/regex/lexer.html#error,RegexLexer,string	proc error(l: var RegexLexer; msg: string)		109
-nim	getToken	openparser/regex/lexer.html#getToken,RegexLexer	proc getToken(l: var RegexLexer): RegexToken		114
-nim	initRegexLexer	openparser/regex/lexer.html#initRegexLexer,string	proc initRegexLexer(input: string): RegexLexer		166
-nim	initRegexLexer	openparser/regex/lexer.html#initRegexLexer,MemFile	proc initRegexLexer(mf: MemFile): RegexLexer		178
-nim	close	openparser/regex/lexer.html#close,RegexLexer	proc close(l: var RegexLexer)		193
-nimgrp	initregexlexer	openparser/regex/lexer.html#initRegexLexer-procs-all	proc		166
+nim	getLexeme	openparser/regex/lexer.html#getLexeme,RegexLexer,int,int	proc getLexeme(l: RegexLexer; startPos: int; stopPos: int): string		77
+nim	error	openparser/regex/lexer.html#error,RegexLexer,string	proc error(l: var RegexLexer; msg: string)		116
+nim	getToken	openparser/regex/lexer.html#getToken,RegexLexer	proc getToken(l: var RegexLexer): RegexToken		121
+nim	initRegexLexer	openparser/regex/lexer.html#initRegexLexer,string	proc initRegexLexer(input: string): RegexLexer		173
+nim	initRegexLexer	openparser/regex/lexer.html#initRegexLexer,MemFile	proc initRegexLexer(mf: MemFile): RegexLexer		185
+nim	close	openparser/regex/lexer.html#close,RegexLexer	proc close(l: var RegexLexer)		200
+nimgrp	initregexlexer	openparser/regex/lexer.html#initRegexLexer-procs-all	proc		173
