@@ -1091,6 +1091,63 @@ proc parseHook*[T](p: var YamlParser, v: var seq[T]) =
   else:
     p.error(unexpectedTokenExpected % [$p.curr.kind, "sequence"])
 
+
+proc parseHook*[N: static[int]; T](p: var YamlParser, v: var array[N, T]) =
+  ## Parse YAML sequence into fixed-size array. The sequence length must match the array size.
+  var idx = 0
+  
+  case p.curr.kind
+  of ytkLB:
+    # inline: [a, b, c]
+    p.advance() # '['
+    while p.curr.kind != ytkRB:
+      if p.curr.kind == ytkEOF:
+        p.error(errorEndOfFile % ["inline array"])
+      
+      if idx >= N:
+        p.error("Sequence has more items than array size (" & $N & ")")
+      
+      var item: T
+      p.parseHook(item)
+      v[idx] = item
+      inc idx
+
+      if p.curr.kind == ytkComma:
+        p.advance()
+      elif p.curr.kind != ytkRB:
+        p.error(unexpectedTokenExpected % [$p.curr.kind, "comma or ]"])
+    p.advance() # ']'
+
+  of ytkDash:
+    # block:
+    # - a
+    # - b
+    let seqIndent = p.curr.indent
+    while p.curr.kind == ytkDash and p.curr.indent == seqIndent:
+      if idx >= N:
+        p.error("Sequence has more items than array size (" & $N & ")")
+      
+      let dashLine = p.curr.line
+      p.advance() # '-'
+
+      var item: T
+      if p.curr.kind == ytkEOF:
+        discard
+      elif p.curr.line == dashLine:
+        p.parseHook(item)
+      elif p.curr.indent > seqIndent:
+        p.parseHook(item)
+      else:
+        discard # "-\n" => default(T)
+      
+      v[idx] = item
+      inc idx
+  else:
+    p.error(unexpectedTokenExpected % [$p.curr.kind, "sequence"])
+  
+  if idx < N:
+    p.error("Sequence has fewer items (" & $idx & ") than array size (" & $N & ")")
+
 proc parseHook*[T: tuple](p: var YamlParser, v: var T) =
   ## Parse YAML mapping into tuple fields by name.
   parseYamlMappingPairs do:
