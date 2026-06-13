@@ -11,7 +11,8 @@
 ## and pointer-based string access, avoiding unnecessary copying of the input string.
 ## 
 ## It also supports a flexible parsing policy that allows users to control how the parser handles
-## various HTML constructs and errors, making it suitable for both strict and lenient parsing scenarios.
+## various HTML constructs and errors, making it suitable for both strict and lenient parsing scenarios,
+## such as validating HTML or parsing real-world HTML (Markdown, web scraping, etc.)
 
 import std/[strutils, tables, options, memfiles]
 import ./json, ./html/ast
@@ -54,23 +55,40 @@ type
   HtmlParserPolicy* = object
     ## The parsing policy controls how the parser handles various HTML
     ## constructs and errors.
-    allowSelfClosingTags: bool
-    allowUnclosedTags: bool
-    allowComments: bool
-    allowDoctype: bool
-    allowProcessingInstructions: bool # e.g., <?xml version="1.0"?>
-    allowCdata: bool
-    allowScriptAndStyleContent: bool
-    allowEntities: bool
-    allowRawText: bool
-    allowHtmlInAttributes: bool
-    allowUnquotedAttributes: bool
-    allowDuplicateAttributes: bool
-    allowInvalidTags: bool
-    allowInvalidAttributeNames: bool
-    allowInvalidAttributeValues: bool
-    allowInvalidNesting: bool
-    allowInvalidSyntax: bool
+    allowSelfClosingTags*: bool
+      ## Whether to allow self-closing tags like `<br/>` or `<img />`. If false, these will be treated as syntax errors.
+    allowUnclosedTags*: bool
+      ## Whether to allow unclosed tags (e.g., `<div><p>Text</div>`). If false, the parser will raise an error on mismatched tags.
+    allowComments*: bool
+      ## Whether to allow HTML comments (`<!-- comment -->`). If false, comments will be treated as syntax errors.
+    allowDoctype*: bool
+      ## Whether to allow DOCTYPE declarations (e.g., `<!DOCTYPE html>`). If false, these will be treated as syntax errors.
+    allowProcessingInstructions*: bool # e.g., <?xml version="1.0"?>
+      ## Whether to allow processing instructions (e.g., `<?xml version="1.0"?>`). If false, these will be treated as syntax errors.
+    allowCdata*: bool
+      ## Whether to allow CDATA sections (e.g., `<![CDATA[ ... ]]>`). If false, these will be treated as syntax errors.
+    allowScriptAndStyleContent*: bool
+      ## Whether to allow raw text content inside `<script>` and `<style>` tags without parsing it as HTML. If false, the parser will attempt to parse the content of these tags as normal HTML, which may lead to errors if it contains characters that are not valid in HTML.
+    allowEntities*: bool
+      ## Whether to allow HTML entities (e.g., `&amp;`, `&lt;`, `&gt;`). If false, entities will be treated as syntax errors.
+    allowRawText*: bool
+      ## Whether to allow raw text content (e.g., text that is not inside any tags). If false, the parser will raise an error if it encounters text outside of tags.
+    allowHtmlInAttributes*: bool
+      ## Whether to allow HTML tags inside attribute values (e.g., `<div title="<b>bold</b>">`). If false, the parser will treat `<` and `>` characters inside attribute values as syntax errors.
+    allowUnquotedAttributes*: bool
+      ## Whether to allow unquoted attribute values (e.g., `<input type=text>`). If false, the parser will require all attribute values to be quoted and will raise an error if it encounters an unquoted attribute value.
+    allowDuplicateAttributes*: bool
+      ## Whether to allow duplicate attributes on the same tag (e.g., `<input type="text" type="password">`). If false, the parser will raise an error if it encounters duplicate attribute names within the same tag.
+    allowInvalidTags*: bool
+      ## Whether to allow invalid tag names (e.g., `<123>`, `<div!>`, `<div class="foo" id=bar>`). If false, the parser will raise an error if it encounters a tag name that does not conform to standard HTML tag naming rules.
+    allowInvalidAttributeNames*: bool
+      ## Whether to allow invalid attribute names (e.g., `<div 123="value">`, `<div class!>`, `<div class="foo" id=bar>`). If false, the parser will raise an error if it encounters an attribute name that does not conform to standard HTML attribute naming rules.
+    allowInvalidAttributeValues*: bool
+      ## Whether to allow invalid attribute values (e.g., unquoted values, values with illegal characters, etc.). If false, the parser will raise an error if it encounters an attribute value that does not conform to standard HTML attribute value rules.
+    allowInvalidNesting*: bool
+      ## Whether to allow invalid nesting of tags (e.g., `<div><p></div></p>`). If false, the parser will raise an error if it encounters tags that are not properly nested according to HTML rules.
+    allowInvalidSyntax*: bool
+      ## Whether to allow other forms of invalid syntax that don't fit into the above categories. If false, the parser will raise an error on any syntax that it considers invalid according to standard HTML parsing rules.
 
   HtmlParser* = object
     ## The parser maintains the current state of parsing, including the lexer,
@@ -95,6 +113,7 @@ const
   unexpectedChar* = "Unexpected character `$1`"
 
 proc charAt(l: HtmlLexer, idx: int): char {.inline.} =
+  # Safely get the character at the specified index, returning '\0' if out of bounds.
   if idx < 0 or idx >= l.len: return '\0'
   if l.data != nil: l.data[idx] else: l.input[idx]
 
@@ -323,8 +342,8 @@ proc parseAttributes(p: var HtmlParser, node: var HtmlNode) =
         discard p.advance()
 
 proc parseElement(p: var HtmlParser): HtmlNode =
-  ## Parse an HTML element, its attributes and all nested children.
-  ## Returns the constructed `HtmlNode`.
+  # Parse an HTML element, its attributes and all nested children.
+  # Returns the constructed `HtmlNode`.
   let tagName = p.curr.value
   discard p.advance()               # move past the tag‑name token
 
@@ -376,7 +395,7 @@ proc parseElement(p: var HtmlParser): HtmlNode =
   result = node
 
 proc parseNodes(p: var HtmlParser) =
-  ## Parses a sequence of HTML nodes until the end of input or a closing tag.
+  # Parses a sequence of HTML nodes until the end of input or a closing tag.
   while p.curr.kind != tkEOF:
     case p.curr.kind
     of tkText:

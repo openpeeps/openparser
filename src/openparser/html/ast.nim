@@ -223,6 +223,7 @@ proc innerText*(node: HtmlNode): string =
   else: discard
 
 proc innerText*(doc: HtmlDocument): string =
+  ## Gets the inner text of the entire document by concatenating the inner text of all top-level nodes
   for node in doc.nodes:
     let text = node.innerText()
     if text.len == 0: continue
