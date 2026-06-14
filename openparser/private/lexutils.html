@@ -67,7 +67,7 @@
 
 </ul>
 <ul class="simple nested-toc-section">getContext
-  <li><a class="reference" href="#getContext%2CT%2Cint" title="getContext[T](l: T; posOverride: int = -1): string">getContext[T](l: T; posOverride: int = -1): string</a></li>
+  <li><a class="reference" href="#getContext%2CT%2Cint%2Cint" title="getContext[T](l: T; posOverride: int = -1; maxContext: int = 80): string">getContext[T](l: T; posOverride: int = -1; maxContext: int = 80): string</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">skipWhitespace
@@ -113,11 +113,11 @@
 
 </div>
 <div id="getContext-procs-all">
-  <div id="getContext,T,int">
-  <dt><pre><span class="Keyword">proc</span> <a href="#getContext%2CT%2Cint"><span class="Identifier">getContext</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">l</span><span class="Other">:</span> <span class="Identifier">T</span><span class="Other">;</span> <span class="Identifier">posOverride</span><span class="Other">:</span> <span class="Identifier">int</span> <span class="Other">=</span> <span class="DecNumber">-1</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+  <div id="getContext,T,int,int">
+  <dt><pre><span class="Keyword">proc</span> <a href="#getContext%2CT%2Cint%2Cint"><span class="Identifier">getContext</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">l</span><span class="Other">:</span> <span class="Identifier">T</span><span class="Other">;</span> <span class="Identifier">posOverride</span><span class="Other">:</span> <span class="Identifier">int</span> <span class="Other">=</span> <span class="DecNumber">-1</span><span class="Other">;</span> <span class="Identifier">maxContext</span><span class="Other">:</span> <span class="Identifier">int</span> <span class="Other">=</span> <span class="DecNumber">80</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
   <dd>
     
-    
+    Show a window around the error position, capped to <tt class="docutils literal"><span class="pre"><span class="Identifier">maxContext</span></span></tt> chars on each side. Prevents dumping entire minified files on error.
     
   </dd>
 </div>
@@ -146,7 +146,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-06-13 20:25:32 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-06-14 04:29:03 UTC</small>
       </div>
     </div>
   </div>
