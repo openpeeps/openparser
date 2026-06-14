@@ -1,7 +1,23 @@
+# A collection of tiny parsers and dumpers
+#
+# (c) 2026 George Lemon | MIT License
+#          Made by Humans from OpenPeeps
+#          https://github.com/openpeeps/openparser
+
+## This is a high-performance CSS parser that supports CSS Syntax Level 3. It is designed to be fast, lightweight,
+## and easy to use. It can parse CSS stylesheets, rulesets, declarations, and values, and provides a
+## structured AST for further processing.
+## 
+## The parser is policy-driven, allowing you to specify which properties, at-rules, and functions are allowed or blocked.
+## It also supports minification and comment preservation options.
+## 
+## It can be used as a standalone parser or as part of a larger CSS processing pipeline. The AST can be serialized back to CSS text,
+## optionally minified.
+
 import std/[unicode, strutils, memfiles, math]
 
-import ../private/lexutils
 import ./ast
+import ../private/lexutils
 
 type
   CssTokenKind* = enum
@@ -125,25 +141,17 @@ proc isFunctionAllowed*(policy: CssPolicy, name: string): bool =
     return isInList(policy.allowedFunctions, name)
   return true
 
-proc validateValue*(node: CssNode, policy: CssPolicy): bool =
+proc validateValue*(val: CssValue, policy: CssPolicy): bool =
   ## Recursively check that all functions in a value are allowed.
-  case node.kind
-  of cssFunction:
-    if not policy.isFunctionAllowed(node.funcName):
-      return false
-    for arg in node.args:
-      if not validateValue(arg, policy):
-        return false
+  case val.kind
+  of cvkFunction:
+    if not policy.isFunctionAllowed(val.funcName): return false
+    for arg in val.args:
+      if not validateValue(arg, policy): return false
     return true
-  of cssBlock:
-    for v in node.values:
-      if not validateValue(v, policy):
-        return false
-    return true
-  of cssValue:
-    for comp in node.components:
-      if not validateValue(comp, policy):
-        return false
+  of cvkBlock:
+    for v in val.blockValues:
+      if not validateValue(v, policy): return false
     return true
   else:
     return true
@@ -430,9 +438,9 @@ proc skipAtRuleBlock(p: var CssParser) =
 # Component value consumption (CSS Syntax Level 3)
 #
 
-proc consumeComponentValue(p: var CssParser): CssNode
+proc consumeComponentValue(p: var CssParser): CssValue
 
-proc consumeSimpleBlock(p: var CssParser, closeKind: CssTokenKind, closeChar: char): seq[CssNode] =
+proc consumeSimpleBlock(p: var CssParser, closeKind: CssTokenKind, closeChar: char): seq[CssValue] =
   p.advance() # consume opening token
   while p.next.kind notin {closeKind, tkEOF}:
     result.add(p.consumeComponentValue())
@@ -441,34 +449,35 @@ proc consumeSimpleBlock(p: var CssParser, closeKind: CssTokenKind, closeChar: ch
   else:
     p.error("Unclosed block, expected " & $closeKind, p.next)
 
-proc consumeFunction(p: var CssParser, name: string): CssNode =
+proc consumeFunction(p: var CssParser, name: string): CssValue =
   p.advance() # consume function token
-  var args: seq[CssNode] = @[]
+  var args: seq[CssValue] = @[]
   while p.next.kind notin {tkParenClose, tkEOF}:
     args.add(p.consumeComponentValue())
   if p.next.kind == tkParenClose:
     p.advance()
   else:
     p.error("Unclosed function, expected )", p.next)
-  return CssNode(kind: cssFunction, funcName: name, args: args)
+  return CssValue(kind: cvkFunction, funcName: name, args: args)
 
-proc consumeComponentValue(p: var CssParser): CssNode =
+proc consumeComponentValue(p: var CssParser): CssValue =
   case p.next.kind
   of tkBraceOpen:
-    let values = p.consumeSimpleBlock(tkBraceClose, '}')
-    return CssNode(kind: cssBlock, blockKind: '{', values: values)
+    let vals = p.consumeSimpleBlock(tkBraceClose, '}')
+    return CssValue(kind: cvkBlock, blockKind: '{', blockValues: vals)
   of tkParenOpen:
-    let values = p.consumeSimpleBlock(tkParenClose, ')')
-    return CssNode(kind: cssBlock, blockKind: '(', values: values)
+    let vals = p.consumeSimpleBlock(tkParenClose, ')')
+    return CssValue(kind: cvkBlock, blockKind: '(', blockValues: vals)
   of tkBracketOpen:
-    let values = p.consumeSimpleBlock(tkBracketClose, ']')
-    return CssNode(kind: cssBlock, blockKind: '[', values: values)
+    let vals = p.consumeSimpleBlock(tkBracketClose, ']')
+    return CssValue(kind: cvkBlock, blockKind: '[', blockValues: vals)
   of tkFunction:
-    return p.consumeFunction(p.next.value)
+    let name = p.next.value
+    return p.consumeFunction(name)
   of tkNumber:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssNumber, numValue: val, numFloat: parseFloat(val))
+    return CssValue(kind: cvkNumber, numValue: val, numFloat: parseFloat(val))
   of tkPercentage:
     let val = p.next.value
     p.advance()
@@ -476,23 +485,17 @@ proc consumeComponentValue(p: var CssParser): CssNode =
     for ch in val:
       if ch == '%': break
       numPart.add(ch)
-    return CssNode(kind: cssPercentage, pctValue: val, pctFloat: parseFloat(numPart))
+    return CssValue(kind: cvkPercentage, pctValue: val, pctFloat: parseFloat(numPart))
   of tkDimension:
     let val = p.next.value
     p.advance()
-    # Properly split number from unit: scan the number part character by character.
-    # Scientific notation (e/E) is only part of the number if followed by digits.
     var numEnd = 0
     var i = 0
-    # Sign
     if i < val.len and val[i] in {'+', '-'}: inc i
-    # Integer part
     while i < val.len and val[i].isDigit(): inc i
-    # Fractional part
     if i < val.len and val[i] == '.':
       inc i
       while i < val.len and val[i].isDigit(): inc i
-    # Exponent part (e or E followed by optional sign and digits)
     if i < val.len and val[i] in {'e', 'E'}:
       let expStart = i
       inc i
@@ -500,94 +503,78 @@ proc consumeComponentValue(p: var CssParser): CssNode =
       if i < val.len and val[i].isDigit():
         while i < val.len and val[i].isDigit(): inc i
       else:
-        # Not a valid exponent — roll back, this 'e' is part of the unit
         i = expStart
     numEnd = i
     let numPart = val[0 ..< numEnd]
     let unitPart = val[numEnd ..< val.len]
-    return CssNode(kind: cssDimension, dimValue: val, dimUnit: unitPart, dimFloat: parseFloat(numPart))
+    return CssValue(kind: cvkDimension, dimValue: val,
+            dimUnit: unitPart, dimFloat: parseFloat(numPart))
   of tkString:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssString, strValue: val)
+    return CssValue(kind: cvkString, strValue: val)
   of tkIdent:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssIdent, identValue: val)
+    return CssValue(kind: cvkIdent, identValue: val)
   of tkHash:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssHash, hashValue: val, hashFlag: "id")
+    return CssValue(kind: cvkHash, hashValue: val, hashFlag: "id")
   of tkClass:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssPreserved, preservedValue: "." & val)
+    return CssValue(kind: cvkPreserved, preservedValue: "." & val)
   of tkUrl:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssUrl, urlValue: val)
+    return CssValue(kind: cvkUrl, urlValue: val)
   of tkDelim:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssPreserved, preservedValue: val)
+    return CssValue(kind: cvkPreserved, preservedValue: val)
   of tkColon, tkSemicolon, tkComma,
      tkIncludeMatch, tkDashMatch, tkPrefixMatch, tkSuffixMatch, tkSubstringMatch, tkColumn:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssPreserved, preservedValue: val)
+    return CssValue(kind: cvkPreserved, preservedValue: val)
   of tkComment:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssComment, text: val)
+    return CssValue(kind: cvkComment, commentText: val)
   of tkBadString:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssString, strValue: val)
+    return CssValue(kind: cvkString, strValue: val)
   of tkBadUrl:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssUrl, urlValue: val)
+    return CssValue(kind: cvkUrl, urlValue: val)
   of tkAtKeyword:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssPreserved, preservedValue: "@" & val)
+    return CssValue(kind: cvkPreserved, preservedValue: "@" & val)
   of tkCDO, tkCDC:
     p.advance()
-    return CssNode(kind: cssPreserved, preservedValue: "")
+    return CssValue(kind: cvkPreserved, preservedValue: "")
   of tkWhitespace:
     p.advance()
-    return CssNode(kind: cssPreserved, preservedValue: " ")
+    return CssValue(kind: cvkPreserved, preservedValue: " ")
   else:
     let val = p.next.value
     p.advance()
-    return CssNode(kind: cssPreserved, preservedValue: val)
+    return CssValue(kind: cvkPreserved, preservedValue: val)
 
 #
 # Value parsing
 #
 
 proc parseValue(p: var CssParser): CssNode =
-  var components: seq[CssNode] = @[]
+  var components: seq[CssValue] = @[]
   while p.next.kind notin {tkSemicolon, tkBraceClose, tkEOF}:
     components.add(p.consumeComponentValue())
   
-  var raw = ""
-  for i, comp in components:
-    if i > 0:
-      let prev = components[i-1]
-      let curr = comp
-      if curr.kind == cssPreserved and curr.preservedValue in [")", "]", "}", ","]:
-        discard
-      elif prev.kind == cssPreserved and prev.preservedValue in ["(", "[", "{"]:
-        discard
-      elif curr.kind == cssPreserved and curr.preservedValue in ["(", "[", "{"]:
-        discard
-      elif prev.kind == cssPreserved and prev.preservedValue in [")", "]", "}"]:
-        raw.add(" ")
-      else:
-        raw.add(" ")
-    raw.add(serializeComponentValue(comp))
-  
+  let raw = serializeComponentList(components)
   return CssNode(kind: cssValue, raw: raw, components: components)
 
 #
@@ -612,7 +599,7 @@ proc parseDeclaration(p: var CssParser): CssNode =
     p.error("Expected ':' after property name", p.next)
   p.advance()
   
-  var components: seq[CssNode] = @[]
+  var components: seq[CssValue] = @[]
   while p.next.kind notin {tkSemicolon, tkBraceClose, tkEOF}:
     components.add(p.consumeComponentValue())
   
@@ -620,18 +607,18 @@ proc parseDeclaration(p: var CssParser): CssNode =
   var important = false
   if components.len >= 2:
     var lastIdx = components.len - 1
-    while lastIdx >= 0 and components[lastIdx].kind == cssPreserved and 
+    while lastIdx >= 0 and components[lastIdx].kind == cvkPreserved and 
           components[lastIdx].preservedValue in [" ", "\t", "\n", "\r"]:
       dec lastIdx
     
-    if lastIdx >= 1 and components[lastIdx].kind == cssIdent and 
+    if lastIdx >= 1 and components[lastIdx].kind == cvkIdent and 
        components[lastIdx].identValue.cmpIgnoreCase("important") == 0:
       var secondLastIdx = lastIdx - 1
-      while secondLastIdx >= 0 and components[secondLastIdx].kind == cssPreserved and
+      while secondLastIdx >= 0 and components[secondLastIdx].kind == cvkPreserved and
             components[secondLastIdx].preservedValue in [" ", "\t", "\n", "\r"]:
         dec secondLastIdx
       
-      if secondLastIdx >= 0 and components[secondLastIdx].kind == cssPreserved and
+      if secondLastIdx >= 0 and components[secondLastIdx].kind == cvkPreserved and
          components[secondLastIdx].preservedValue == "!":
         important = true
         components.setLen(secondLastIdx)
@@ -641,33 +628,17 @@ proc parseDeclaration(p: var CssParser): CssNode =
     if p.policy.strictMode: p.error("!important is disallowed by policy", p.curr)
     important = false
 
-  var raw = ""
-  for i, comp in components:
-    if i > 0:
-      let prev = components[i-1]
-      if comp.kind == cssPreserved and comp.preservedValue in [")", "]", "}", ","]:
-        discard
-      elif prev.kind == cssPreserved and prev.preservedValue in ["(", "[", "{"]:
-        discard
-      elif comp.kind == cssPreserved and comp.preservedValue in ["(", "[", "{"]:
-        discard
-      elif prev.kind == cssPreserved and prev.preservedValue in [")", "]", "}"]:
-        raw.add(" ")
-      else:
-        raw.add(" ")
-    raw.add(serializeComponentValue(comp))
-  
-  let valueNode = CssNode(kind: cssValue, raw: raw, components: components)
-  
+  let raw = serializeComponentList(components)
   # Policy: validate functions in value
-  if not validateValue(valueNode, p.policy):
-    p.skipDeclaration()  # consume rest if any
-    return nil
-
+  for comp in components:
+    if not validateValue(comp, p.policy):
+      if p.policy.strictMode: p.error("Disallowed function in value", p.curr)
+      p.skipDeclaration()
+      return nil
   if p.next.kind == tkSemicolon:
-    p.advance()
-  
-  return CssNode(kind: cssDeclaration, property: property, value: valueNode, important: important)
+    p.advance()  
+  return CssNode(kind: cssDeclaration, property: property,
+                    rawValue: raw, valueComponents: components, important: important)
 
 #
 # Selector parsing
@@ -926,11 +897,11 @@ proc parseAtRule(p: var CssParser): CssNode =
       p.expectWalk(tkBraceClose)
       return CssNode(kind: cssAtRule, atName: name, prelude: prelude, atRules: inner)
     
-    var values: seq[CssNode] = @[]
+    var values: seq[CssValue] = @[]
     while p.next.kind notin {tkBraceClose, tkEOF}:
       values.add(p.consumeComponentValue())
     p.expectWalk(tkBraceClose)
-    return CssNode(kind: cssAtRule, atName: name, prelude: prelude, atRules: values)
+    return CssNode(kind: cssAtRule, atName: name, prelude: prelude, blockValues: values)
   
   p.error("Expected ';' or '{' after at-rule prelude", p.next)
 
@@ -940,7 +911,6 @@ proc parseAtRule(p: var CssParser): CssNode =
 
 proc parseRoot(p: var CssParser): seq[CssNode] =
   # Parse the root of a CSS stylesheet, collecting comments, at-rules, and rule sets.
-  result = @[]
   result.add(p.collectComments())
   while p.next.kind != tkEOF:
     if p.next.kind == tkComment:
