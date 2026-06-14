@@ -26,11 +26,13 @@ proc skipWhitespace*[T](l: var T) =
       l.col = 0
     l.advance()
 
-proc getContext*[T](l: T, posOverride: int = -1): string =
-  # Show the full current line and place caret at exact token position.
+proc getContext*[T](l: T, posOverride: int = -1, maxContext: int = 80): string =
+  ## Show a window around the error position, capped to `maxContext` chars on each side.
+  ## Prevents dumping entire minified files on error.
   let rawPos = if posOverride >= 0: posOverride else: l.pos
   let atPos = max(0, min(rawPos, l.len))
 
+  # Find line boundaries
   var lineStart = atPos
   while lineStart > 0 and l.charAt(lineStart - 1) != '\n':
     dec lineStart
@@ -39,16 +41,29 @@ proc getContext*[T](l: T, posOverride: int = -1): string =
   while lineEnd < l.len and l.charAt(lineEnd) notin {'\n', '\r'}:
     inc lineEnd
 
+  # Cap the window around the error position
+  let windowStart = max(lineStart, atPos - maxContext)
+  let windowEnd = min(lineEnd, atPos + maxContext)
+
   var snippet: string
   if l.input.len > 0:
-    snippet = l.input[lineStart ..< lineEnd]
+    snippet = l.input[windowStart ..< windowEnd]
   else:
-    snippet = newStringOfCap(max(0, lineEnd - lineStart))
-    for i in lineStart ..< lineEnd:
+    snippet = newStringOfCap(max(0, windowEnd - windowStart))
+    for i in windowStart ..< windowEnd:
       snippet.add(l.charAt(i))
 
-  let markerPos = max(0, min(snippet.len, atPos - lineStart))
-  result = snippet & "\n" & " ".repeat(markerPos) & "^"
+  let markerPos = max(0, min(snippet.len, atPos - windowStart))
+
+  # Add ellipsis if we truncated
+  var prefix = ""
+  var suffix = ""
+  if windowStart > lineStart:
+    prefix = "... "
+  if windowEnd < lineEnd:
+    suffix = " ..."
+
+  result = prefix & snippet & suffix & "\n" & " ".repeat(prefix.len + markerPos) & "^"
 
 # proc error*[T](l: var T, msg: string) =
 #   # Raise a lexer error
