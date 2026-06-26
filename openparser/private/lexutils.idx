@@ -2,4 +2,4 @@ nimTitle	lexutils	openparser/private/lexutils.html	module openparser/private/lex
 nim	charAt	openparser/private/lexutils.html#charAt,T,int	proc charAt[T](l: T; idx: int): char		1
 nim	advance	openparser/private/lexutils.html#advance,T	proc advance[T](l: var T)		8
 nim	skipWhitespace	openparser/private/lexutils.html#skipWhitespace,T	proc skipWhitespace[T](l: var T)		19
-nim	getContext	openparser/private/lexutils.html#getContext,T,int,int	proc getContext[T](l: T; posOverride: int = -1; maxContext: int = 80): string		29
+nim	getContext	openparser/private/lexutils.html#getContext,T,int	proc getContext[T](l: T; posOverride: int = -1): string		29
