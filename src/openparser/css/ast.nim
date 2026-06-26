@@ -199,8 +199,11 @@ proc toString*(node: CssNode, pos: int = 0, opts = defaultOpts()): string =
         result.add(",")
         if not opts.minify: result.add(" ")
       result.add(toString(sel, 0, opts))
-    result.add("{")
-    if not opts.minify: result.add("\n")
+    if not opts.minify:
+      result.add(" {")
+      result.add("\n")
+    else:
+      result.add("{")
     for decl in node.declarations:
       result.add(toString(decl, pos + opts.indent, opts))
     if not opts.minify: result.add(indent)
@@ -249,8 +252,11 @@ proc toString*(node: CssNode, pos: int = 0, opts = defaultOpts()): string =
     if node.prelude.len > 0:
       result.add(" " & node.prelude)
     if node.atRules.len > 0 or node.blockValues.len > 0:
-      result.add("{")
-      if not opts.minify: result.add("\n")
+      if not opts.minify:
+        result.add(" {")
+        result.add("\n")
+      else:
+        result.add("{") # No space before the opening brace in minified mode
       for r in node.atRules:
         result.add(toString(r, pos + opts.indent, opts))
       for v in node.blockValues:

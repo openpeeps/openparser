@@ -109,6 +109,11 @@ proc error*(p: var CssParser, msg: string, tok: CssToken = p.curr) =
   )
 
 proc defaultPolicy*: CssPolicy =
+  ## Returns the default CSS policy, which allows all properties, at-rules,
+  ## and functions, and does not limit nesting depth.
+  ## 
+  ## For stricter parsing, you can create a custom policy with specific
+  ## allowed/blocked lists and options
   result.allowImportant = true
   result.allowComments = true
   result.maxNestingDepth = -1
@@ -632,7 +637,8 @@ proc parseDeclaration(p: var CssParser): CssNode =
   # Policy: validate functions in value
   for comp in components:
     if not validateValue(comp, p.policy):
-      if p.policy.strictMode: p.error("Disallowed function in value", p.curr)
+      if p.policy.strictMode:
+        p.error("Disallowed CSS function", p.curr)
       p.skipDeclaration()
       return nil
   if p.next.kind == tkSemicolon:
