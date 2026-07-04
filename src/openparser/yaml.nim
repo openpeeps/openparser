@@ -161,7 +161,7 @@ proc skipWhitespace(l: var YamlLexer, wsBeforeToken: var int): int =
 
 proc readIdentifier(l: var YamlLexer): string =
   # Read an unquoted identifier (e.g. for keys or unquoted values)
-  while l.current in {'a'..'z', 'A'..'Z', '0'..'9', '_', '-'}:
+  while l.current in {'a'..'z', 'A'..'Z', '0'..'9', '_', '-', '/', '.'}:
     result.add(l.current)
     advance(l)
 
@@ -271,7 +271,7 @@ proc nextToken*(p: var YamlParser): YamlToken =
     advance(p.lex)
     result.kind = ytkString
     result.value = p.lex.readString(q)
-  of 'a'..'z', 'A'..'Z', '_':
+  of 'a'..'z', 'A'..'Z', '_', '/', '.':
     result.kind = ytkIdentifier
     result.value = p.lex.readIdentifier()
   of '#':
@@ -1038,16 +1038,44 @@ proc parseHook*[T: enum](p: var YamlParser, v: var T) =
   else:
     p.error(unexpectedTokenExpected % [$p.curr.kind, "string or number"])
 
-proc parseHook*[T](p: var YamlParser, v: var set[T]) = 
-  ## A hook to parse set fields from JSON arrays
-  p.expectSkip(ytkLB) # start of array
-  while p.curr.kind != ytkRB:
-    var item: T
-    p.parseHook(item)
-    v.incl(item)
-    if p.curr.kind == ytkComma:
-      p.advance()
-  p.expectSkip(ytkRB) # end of array
+proc parseHook*[T](p: var YamlParser, v: var set[T]) =
+  ## A hook to parse set fields from YAML sequences (inline or block)
+  v = {}
+  case p.curr.kind
+  of ytkLB:
+    # inline: [a, b, c]
+    p.advance() # '['
+    while p.curr.kind != ytkRB:
+      if p.curr.kind == ytkEOF:
+        p.error(errorEndOfFile % ["inline array"])
+      var item: T
+      p.parseHook(item)
+      v.incl(item)
+      if p.curr.kind == ytkComma:
+        p.advance()
+      elif p.curr.kind != ytkRB:
+        p.error(unexpectedTokenExpected % [$p.curr.kind, "comma or ]"])
+    p.advance() # ']'
+  of ytkDash:
+    # block:
+    # - a
+    # - b
+    let seqIndent = p.curr.indent
+    while p.curr.kind == ytkDash and p.curr.indent == seqIndent:
+      let dashLine = p.curr.line
+      p.advance() # '-'
+      var item: T
+      if p.curr.kind == ytkEOF:
+        discard
+      elif p.curr.line == dashLine:
+        p.parseHook(item)
+      elif p.curr.indent > seqIndent:
+        p.parseHook(item)
+      else:
+        discard
+      v.incl(item)
+  else:
+    p.error(unexpectedTokenExpected % [$p.curr.kind, "sequence"])
 
 proc parseHook*[T](p: var YamlParser, v: var seq[T]) =
   ## Parse YAML sequence into seq[T]
