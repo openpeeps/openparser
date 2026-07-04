@@ -136,3 +136,20 @@ suite "YAML Deserialization":
     let meta = cfg["meta"].objValue
     check meta["tags"].arrValue[2].strValue == "c"
     check meta["info"].objValue["author"].strValue == "George"
+
+  test "unquoted keys with slashes and dots":
+    let yaml = """
+      server:
+        port: 8000
+        threads: 1
+        routes:
+          /: "index"
+          /error: "error"
+        api.v1:
+          endpoint: "test"
+    """
+    let obj = parseYAML(yaml)
+    let routes = obj["server"].objValue["routes"].objValue
+    check routes["/"].strValue == "index"
+    check routes["/error"].strValue == "error"
+    check obj["server"].objValue["api.v1"].objValue["endpoint"].strValue == "test"
