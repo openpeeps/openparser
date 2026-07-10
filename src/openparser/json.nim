@@ -18,6 +18,8 @@ import std/[macros, macrocache, json, sequtils,
         critbits, typetraits, strutils]
 
 import ./private/[types, lexutils]
+when not defined(openparserJsonNoSimd) and (defined(amd64) or defined(i386)):
+  import ./private/json_simd
 export json # re-exporting the standard JSON module for JsonNode and related types
 
 type
@@ -485,45 +487,104 @@ proc matchKeyword(l: var JsonLexer, kw: string): bool =
   result = true
 
 proc readString(l: var JsonLexer): string =
-  result = ""
-  while true:
-    case l.current
-    of '\0':
-      l.error(errorEndOfFile % "string")
-    of '"':
-      advance(l) # consume closing quote
-      break
-    of '\\':
-      advance(l) # move to escape code
+  when not defined(openparserJsonNoSimd) and (defined(amd64) or defined(i386)):
+    result = newStringOfCap(64)
+    let buf = if l.data != nil: l.data else: cast[ptr UncheckedArray[char]](unsafeAddr l.input[0])
+    while true:
+      let found = scanStringEnd(cast[ptr char](buf), l.pos, l.len)
+      if found < 0:
+        l.error(errorEndOfFile % "string")
+      let copyLen = found - l.pos
+      if copyLen > 0:
+        let oldLen = result.len
+        result.setLen(oldLen + copyLen)
+        copyMem(addr result[oldLen], addr buf[l.pos], copyLen)
+        l.col += copyLen
+        l.pos = found
+      l.current = buf[l.pos]
       case l.current
-      of '"', '\\', '/':
-        result.add(l.current)
-      of 'b':
-        result.add('\b')
-      of 'f':
-        result.add('\f')
-      of 'n':
-        result.add('\n')
-      of 'r':
-        result.add('\r')
-      of 't':
-        result.add('\t')
-      of 'u':
-        # keep \uXXXX as-is for now (prevents tokenizer breakage)
-        result.add("\\u")
-        for _ in 0..<4:
-          advance(l)
-          if l.current notin {'0'..'9', 'a'..'f', 'A'..'F'}:
-            l.error("Invalid unicode escape sequence")
+      of '\0':
+        l.error(errorEndOfFile % "string")
+      of '"':
+        l.advance()
+        break
+      of '\\':
+        l.advance()
+        case l.current
+        of '"', '\\', '/':
           result.add(l.current)
+        of 'b': result.add('\b')
+        of 'f': result.add('\f')
+        of 'n': result.add('\n')
+        of 'r': result.add('\r')
+        of 't': result.add('\t')
+        of 'u':
+          result.add("\\u")
+          for _ in 0..<4:
+            l.advance()
+            if l.current notin {'0'..'9', 'a'..'f', 'A'..'F'}:
+              l.error("Invalid unicode escape sequence")
+            result.add(l.current)
+        else:
+          l.error("Invalid escape sequence `\\" & $l.current & "`")
+        l.advance()
+      of '\n', '\r':
+        l.error("Unescaped newline in string")
       else:
-        l.error("Invalid escape sequence `\\" & $l.current & "`")
-      advance(l) # move past escape code (or last hex digit for \uXXXX)
-    of '\n', '\r':
-      l.error("Unescaped newline in string")
+        l.error("scanner invariant broken")
+  else:
+    result = ""
+    while true:
+      case l.current
+      of '\0':
+        l.error(errorEndOfFile % "string")
+      of '"':
+        advance(l) # consume closing quote
+        break
+      of '\\':
+        advance(l) # move to escape code
+        case l.current
+        of '"', '\\', '/':
+          result.add(l.current)
+        of 'b':
+          result.add('\b')
+        of 'f':
+          result.add('\f')
+        of 'n':
+          result.add('\n')
+        of 'r':
+          result.add('\r')
+        of 't':
+          result.add('\t')
+        of 'u':
+          # keep \uXXXX as-is for now (prevents tokenizer breakage)
+          result.add("\\u")
+          for _ in 0..<4:
+            advance(l)
+            if l.current notin {'0'..'9', 'a'..'f', 'A'..'F'}:
+              l.error("Invalid unicode escape sequence")
+            result.add(l.current)
+        else:
+          l.error("Invalid escape sequence `\\" & $l.current & "`")
+        advance(l) # move past escape code (or last hex digit for \uXXXX)
+      of '\n', '\r':
+        l.error("Unescaped newline in string")
+      else:
+        result.add(l.current)
+        advance(l)
+
+when not defined(openparserJsonNoSimd) and (defined(amd64) or defined(i386)):
+  proc skipWhitespace(l: var JsonLexer) =
+    let buf = if l.data != nil: l.data else: cast[ptr UncheckedArray[char]](unsafeAddr l.input[0])
+    let (nextPos, nlCount, lastNL) = scanWhitespaceRun(cast[ptr char](buf), l.pos, l.len)
+    let oldPos = l.pos
+    l.pos = nextPos
+    l.line += nlCount
+    if lastNL >= 0:
+      l.col = l.pos - lastNL
     else:
-      result.add(l.current)
-      advance(l)
+      l.col += l.pos - oldPos
+    l.current = l.charAt(l.pos)
 
 proc readNumber(l: var JsonLexer): string =
   result = ""
