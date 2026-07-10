@@ -18,12 +18,13 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 ## 😍 Key Features
 - Parse [JSON](#parse-json), [CSV data](#parse-csv), [YAML](#parse-yaml), [TOML configs](#toml-configs) and more
 - **DotEnv** parser for `.env` files
-- **BSON** encoding and decoding from `JsonNode` objects
+- **BSON** encoding and decoding from `JsonNode` objects (supporting the [1.1 specification](https://bsonspec.org/spec.html))
 - [FBE](https://github.com/chronoxor/FastBinaryEncoding) for Fast Binary Encoding and Decoding
 - i18n [GNU Gettext](https://www.gnu.org/software/gettext/) PO and MO file parsing and dumping
 - **RSS & Atom** feed reader and writer
 - **CSV** zero-copy parsing for **large files**
 - [Regex Engine](#simd-accelerated-regex-engine) with SIMD acceleration
+- **SQL parser**, AST and query builder for supported databases (PostgreSQL, MySQL, SQLite)
 
 ### Other features
 - **Zero-copy** JSON parsing via Memfiles for high performance and low memory usage
@@ -34,10 +35,10 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 - Dot notation access for nested data structures
 
 ### Why?
-Initially I wanted to create a simple JSON parser with fine-grained control over the parsing process (jsonl, custom hooks, error reporting, zero-copy tokenization), then I thought it would be fun to add a YAML parser that parses YAML documents in the same way as JSON. Once I started talking with the chatbot I ended up creating a collection of parsers and dumpers for various data formats.
+Initially, I wanted to create a simple JSON parser with fine-grained control over the parsing process (jsonl, custom hooks, error reporting, zero-copy tokenization), then I thought it would be fun to add a YAML parser that parses YAML documents in the same way as JSON. Once I started talking with the chatbot I ended up creating a collection of parsers and dumpers for various data formats.
 
 >[!NOTE]
-> Importing `openparser` directly will produce a compile-time error, you need to import the specific module for the data format you want to use, e.g. `openparser/json` for JSON parsing and dumping or `openparser/csv` for CSV parsing.
+> Importing `openparser` directly will produce a compile-time error, you need to import the specific module for the data format you want to use, e.g. `openparser/json` for JSON parsing and dumping or `openparser/csv` for CSV parsing, and so on.
 
 ## Parse JSON
 
@@ -211,7 +212,10 @@ Error (1:33) Unexpected token `:`
 ### ❤ Contributions & Support
 - 🐛 Found a bug? [Create a new Issue](https://github.com/openpeeps/openparser/issues)
 - 👋 Wanna help? [Fork it!](https://github.com/openpeeps/openparser/fork)
-- 😎 [Get €20 in cloud credits from Hetzner](https://hetzner.cloud/?ref=Hm0mYGM9NxZ4)
+
+|  |  |
+|---|---|
+| <a href="https://opencode.ai/go?ref=BHMEEK48QX"><img src="https://github.com/openpeeps/pistachio/blob/main/.github/opencode.png" alt="OpenCode"></a> | Switch to **Open-Source LLMs** via OpenCode GO, choosing from a variety of powerful models such as DeepSeek, Qwen, Kimi, GLM-5, MiniMax, MiMo. 🍕 [Use our referral link to get started!](https://opencode.ai/go?ref=BHMEEK48QX)|
 
 ### 🎩 License
 MIT license. [Made by Humans from OpenPeeps](https://github.com/openpeeps).<br>

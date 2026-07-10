@@ -4,15 +4,15 @@
 #          Made by Humans from OpenPeeps
 #          https://github.com/openpeeps/openparser
 
-## This is a high-performance CSS parser that supports CSS Syntax Level 3. It is designed to be fast, lightweight,
-## and easy to use. It can parse CSS stylesheets, rulesets, declarations, and values, and provides a
-## structured AST for further processing.
+## This is a high-performance CSS parser that supports CSS Syntax Level 3. It is designed to be fast,
+## lightweight, and easy to use. It can parse CSS stylesheets, rulesets, declarations, and values,
+## and provides a structured AST for further processing.
 ## 
-## The parser is policy-driven, allowing you to specify which properties, at-rules, and functions are allowed or blocked.
-## It also supports minification and comment preservation options.
+## The parser is policy-driven, allowing you to specify which properties, at-rules, and functions
+## are allowed or blocked. It also supports minification and comment preservation options.
 ## 
-## It can be used as a standalone parser or as part of a larger CSS processing pipeline. The AST can be serialized back to CSS text,
-## optionally minified.
+## It can be used as a standalone parser or as part of a larger CSS processing pipeline. The AST can
+## be serialized back to CSS text, optionally minified.
 
 import std/[unicode, strutils, memfiles, math]
 
@@ -325,16 +325,7 @@ proc nextToken*(l: var CssLexer): CssToken =
     else:
       return tok(tkDelim, "@")
 
-  # Ident or function
-  if l.current.isIdentStart() or l.current in {'-', '_'} or
-     (l.current == '\\' and l.charAt(l.pos + 1) != '\n'):
-    let ident = l.consumeIdent()
-    if l.current == '(':
-      l.advance()
-      return tok(tkFunction, ident)
-    return tok(tkIdent, ident)
-
-  # Numbers, dimensions, percentages
+  # Numbers, dimensions, percentages (must precede ident check for -2px etc.)
   if l.current.isDigit() or (l.current == '.' and l.charAt(l.pos + 1).isDigit()) or
      (l.current in {'+', '-'} and (l.charAt(l.pos + 1).isDigit() or
       (l.charAt(l.pos + 1) == '.' and l.charAt(l.pos + 2).isDigit()))):
@@ -348,6 +339,15 @@ proc nextToken*(l: var CssLexer): CssToken =
       let unit = l.consumeIdent()
       return tok(tkDimension, numStr & unit)
     return tok(tkNumber, numStr)
+
+  # Ident or function
+  if l.current.isIdentStart() or l.current in {'-', '_'} or
+     (l.current == '\\' and l.charAt(l.pos + 1) != '\n'):
+    let ident = l.consumeIdent()
+    if l.current == '(':
+      l.advance()
+      return tok(tkFunction, ident)
+    return tok(tkIdent, ident)
 
   # Single-char tokens and match operators
   case l.current
@@ -512,7 +512,7 @@ proc consumeComponentValue(p: var CssParser): CssValue =
     numEnd = i
     let numPart = val[0 ..< numEnd]
     let unitPart = val[numEnd ..< val.len]
-    return CssValue(kind: cvkDimension, dimValue: val,
+    return CssValue(kind: cvkDimension, dimValue: numPart,
             dimUnit: unitPart, dimFloat: parseFloat(numPart))
   of tkString:
     let val = p.next.value

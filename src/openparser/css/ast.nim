@@ -13,7 +13,8 @@ import ../json
 
 type
   CssNodeKind* = enum
-    ## The kind of CSS node, representing different components of a CSS stylesheet.
+    ## The kind of CSS node, representing different components
+    ## of a CSS stylesheet.
     cssStyleSheet
     cssRuleSet
     cssSelector
@@ -23,7 +24,8 @@ type
     cssValue
 
   CSSSelectorKind* = enum
-    ## The kind of CSS selector, representing different types of selectors in CSS.
+    ## The kind of CSS selector, representing different
+    ## types of selectors in CSS.
     selectorClass
     selectorId
     selectorType
@@ -34,7 +36,8 @@ type
     selectorCombinator
 
   CssValueKind* = enum
-    ## The kind of CSS value, representing different types of values in CSS declarations.
+    ## The kind of CSS value, representing different types
+    ## of values in CSS declarations.
     cvkFunction
     cvkNumber
     cvkDimension
@@ -127,7 +130,7 @@ proc serializeComponentValue*(val: CssValue): string =
     result.add(serializeComponentList(val.args))
     result.add(")")
   of cvkNumber:       result = val.numValue
-  of cvkDimension:    result = val.dimValue
+  of cvkDimension:    result = val.dimValue & val.dimUnit
   of cvkPercentage:   result = val.pctValue
   of cvkString:       result = "\"" & val.strValue & "\""
   of cvkUrl:          result = "url(" & val.urlValue & ")"
@@ -183,9 +186,11 @@ proc defaultOpts*: CSSOpts =
   result.preserveComments = true
 
 proc toString*(val: CssValue): string =
+  ## Serialize CSSValue
   serializeComponentValue(val)
 
 proc toString*(node: CssNode, pos: int = 0, opts = defaultOpts()): string =
+  ## Transform `CSSNode` to stringified representation
   let indent = if opts.minify or pos == 0: "" else: repeat(' ', pos)
   case node.kind
   of cssStyleSheet:
@@ -273,5 +278,6 @@ proc toString*(node: CssNode, pos: int = 0, opts = defaultOpts()): string =
     result.add(node.raw)
 
 proc `$`*(style: CssStyleSheet): string =
+  ## Transform CSSStyleSheet to stringified CSS representation
   for rule in style.nodes:
     result.add(toString(rule))
