@@ -24,8 +24,8 @@ type
     opSplitLazy     ## fork execution (lazy:   try t2 first, then t1)
     opSave          ## save current position into capture slot
     opProgress      ## guard against zero-width infinite loops
-    opSkipTo   ## SIMD scan forward to first occurrence of arg1 char
-               ## Emitted for [^X]* and [^X]+ where X is a single literal char
+    opSkipTo        ## SIMD scan forward to first occurrence of arg1 char
+                    ## Emitted for [^X]* and [^X]+ where X is a single literal char
 
   Instr* = object
     op*:     OpCode
