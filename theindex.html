@@ -28,7 +28,7 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/lexutils.html">openparser/private/lexutils</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/json_simd.html">openparser/private/json_simd</a>, <a href="openparser/private/lexutils.html">openparser/private/lexutils</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc `$`(f: CsvFieldSlice): string" href="openparser/csv.html#%24%2CCsvFieldSlice">csv: proc `$`(f: CsvFieldSlice): string</a></li>
@@ -665,6 +665,8 @@
           </ul></dd>
 <dt><a name="hasAvx2" href="#hasAvx2"><span>hasAvx2:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="json_simd: const hasAvx2" href="openparser/private/json_simd.html#hasAvx2">json_simd: const hasAvx2</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="simd: const hasAvx2" href="openparser/regex/simd.html#hasAvx2">simd: const hasAvx2</a></li>
           </ul></dd>
 <dt><a name="hasKind" href="#hasKind"><span>hasKind:</span></a></dt><dd><ul class="simple">
@@ -673,6 +675,8 @@
           </ul></dd>
 <dt><a name="hasSse2" href="#hasSse2"><span>hasSse2:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="json_simd: const hasSse2" href="openparser/private/json_simd.html#hasSse2">json_simd: const hasSse2</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="simd: const hasSse2" href="openparser/regex/simd.html#hasSse2">simd: const hasSse2</a></li>
           </ul></dd>
 <dt><a name="headerEntryIndex" href="#headerEntryIndex"><span>headerEntryIndex:</span></a></dt><dd><ul class="simple">
@@ -1715,6 +1719,18 @@
 <li><a class="reference external"
           data-doc-search-tag="simd: proc scanNonWordCharSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonWordCharSse2%2Cstring%2Cint%2Cint">simd: proc scanNonWordCharSse2(s: string; start, stop: int): int</a></li>
           </ul></dd>
+<dt><a name="scanStringEnd" href="#scanStringEnd"><span>scanStringEnd:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json_simd: proc scanStringEnd(p: ptr char; start, stop: int): int" href="openparser/private/json_simd.html#scanStringEnd%2Cptr.char%2Cint%2Cint">json_simd: proc scanStringEnd(p: ptr char; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanStringEndScalar" href="#scanStringEndScalar"><span>scanStringEndScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json_simd: proc scanStringEndScalar(p: ptr char; start, stop: int): int" href="openparser/private/json_simd.html#scanStringEndScalar%2Cptr.char%2Cint%2Cint">json_simd: proc scanStringEndScalar(p: ptr char; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanStringEndSse2" href="#scanStringEndSse2"><span>scanStringEndSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json_simd: proc scanStringEndSse2(p: ptr char; start, stop: int): int" href="openparser/private/json_simd.html#scanStringEndSse2%2Cptr.char%2Cint%2Cint">json_simd: proc scanStringEndSse2(p: ptr char; start, stop: int): int</a></li>
+          </ul></dd>
 <dt><a name="scanUpperDigitUnder" href="#scanUpperDigitUnder"><span>scanUpperDigitUnder:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="simd: proc scanUpperDigitUnder(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanUpperDigitUnder%2Cstring%2Cint%2Cint">simd: proc scanUpperDigitUnder(s: string; start, stop: int): int</a></li>
@@ -1726,6 +1742,18 @@
 <dt><a name="scanUpperDigitUnderSse2" href="#scanUpperDigitUnderSse2"><span>scanUpperDigitUnderSse2:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="simd: proc scanUpperDigitUnderSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanUpperDigitUnderSse2%2Cstring%2Cint%2Cint">simd: proc scanUpperDigitUnderSse2(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanWhitespaceRun" href="#scanWhitespaceRun"><span>scanWhitespaceRun:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json_simd: proc scanWhitespaceRun(p: ptr char; start, stop: int): (int, int, int)" href="openparser/private/json_simd.html#scanWhitespaceRun%2Cptr.char%2Cint%2Cint">json_simd: proc scanWhitespaceRun(p: ptr char; start, stop: int): (int, int, int)</a></li>
+          </ul></dd>
+<dt><a name="scanWhitespaceRunScalar" href="#scanWhitespaceRunScalar"><span>scanWhitespaceRunScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json_simd: proc scanWhitespaceRunScalar(p: ptr char; start, stop: int): (int, int, int)" href="openparser/private/json_simd.html#scanWhitespaceRunScalar%2Cptr.char%2Cint%2Cint">json_simd: proc scanWhitespaceRunScalar(p: ptr char; start, stop: int): (int, int, int)</a></li>
+          </ul></dd>
+<dt><a name="scanWhitespaceRunSse2" href="#scanWhitespaceRunSse2"><span>scanWhitespaceRunSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json_simd: proc scanWhitespaceRunSse2(p: ptr char; start, stop: int): (int, int, int)" href="openparser/private/json_simd.html#scanWhitespaceRunSse2%2Cptr.char%2Cint%2Cint">json_simd: proc scanWhitespaceRunSse2(p: ptr char; start, stop: int): (int, int, int)</a></li>
           </ul></dd>
 <dt><a name="scanWordChar" href="#scanWordChar"><span>scanWordChar:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2347,7 +2375,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-10 09:37:02 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-10 09:37:52 UTC</small>
       </div>
     </div>
   </div>

@@ -1,0 +1,9 @@
+nimTitle	json_simd	openparser/private/json_simd.html	module openparser/private/json_simd		0
+nim	hasAvx2	openparser/private/json_simd.html#hasAvx2	const hasAvx2		9
+nim	hasSse2	openparser/private/json_simd.html#hasSse2	const hasSse2		10
+nim	scanStringEndScalar	openparser/private/json_simd.html#scanStringEndScalar,ptr.char,int,int	proc scanStringEndScalar(p: ptr char; start, stop: int): int		19
+nim	scanWhitespaceRunScalar	openparser/private/json_simd.html#scanWhitespaceRunScalar,ptr.char,int,int	proc scanWhitespaceRunScalar(p: ptr char; start, stop: int): (int, int, int)		27
+nim	scanStringEndSse2	openparser/private/json_simd.html#scanStringEndSse2,ptr.char,int,int	proc scanStringEndSse2(p: ptr char; start, stop: int): int		47
+nim	scanWhitespaceRunSse2	openparser/private/json_simd.html#scanWhitespaceRunSse2,ptr.char,int,int	proc scanWhitespaceRunSse2(p: ptr char; start, stop: int): (int, int, int)		65
+nim	scanStringEnd	openparser/private/json_simd.html#scanStringEnd,ptr.char,int,int	proc scanStringEnd(p: ptr char; start, stop: int): int		220
+nim	scanWhitespaceRun	openparser/private/json_simd.html#scanWhitespaceRun,ptr.char,int,int	proc scanWhitespaceRun(p: ptr char; start, stop: int): (int, int, int)		225
