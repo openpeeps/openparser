@@ -159,7 +159,7 @@ when hasAvx2:
       if bitset != 0:
         let tz = countTrailingZeroBits(bitset)
         if tz > 0:
-          let nlBits = mm256_movemask_epi8(mm256_cmpeq_epi8(chunk, nl)) and ((1 shl tz) - 1).uint32
+          let nlBits = cast[uint32](mm256_movemask_epi8(mm256_cmpeq_epi8(chunk, nl))) and ((1'u32 shl tz) - 1)
           let chunkNL = countSetBits(nlBits)
           nlCount += chunkNL
           if chunkNL > 0:
