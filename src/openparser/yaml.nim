@@ -1284,6 +1284,27 @@ proc parseHook*[T: object](p: var YamlParser, v: var T) =
         # Unknown key/value: parse and discard one YAML value.
         discard parseValue(p, yamlMapIndent)
 
+proc toJsonNode(y: YamlNode): JsonNode =
+  case y.kind
+  of yamlString: result = %(y.strValue)
+  of yamlInteger: result = %(y.intValue)
+  of yamlFloat: result = %(y.floatValue)
+  of yamlBoolean: result = %(y.boolValue)
+  of yamlNull: result = newJNull()
+  of yamlObject:
+    result = newJObject()
+    for k, v in y.objValue:
+      result[k] = toJsonNode(v)
+  of yamlArray:
+    result = newJArray()
+    for item in y.arrValue:
+      result.add(toJsonNode(item))
+
+proc parseHook*(p: var YamlParser, v: var JsonNode) =
+  ## Parse YAML value (scalar, array, or mapping) into a JsonNode
+  let node = parseValue(p, p.curr.indent)
+  v = toJsonNode(node)
+
 proc parseHook*[T: ref object](p: var YamlParser, v: var T) =
   ## A hook to parse ref object fields
   if isYamlNullToken(p.curr):
@@ -1317,6 +1338,9 @@ macro parseYamlMacro(x: typed, str: typed): untyped =
     p.lex.current = p.lex.charAt(0)
     p.curr = p.nextToken()
     p.next = p.nextToken()
+    while p.curr.kind == ytkComment:
+      p.curr = p.next
+      p.next = p.nextToken()
     
     p.parseYAML(tmp)
     ensureMove(tmp) # return the parsed object
