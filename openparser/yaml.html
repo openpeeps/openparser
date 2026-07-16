@@ -203,6 +203,7 @@
 </ul>
 <ul class="simple nested-toc-section">parseHook
   <li><a class="reference" href="#parseHook%2CYamlParser%2Cbool" title="parseHook(p: var YamlParser; v: var bool)">parseHook(p: var YamlParser; v: var bool)</a></li>
+<li><a class="reference" href="#parseHook%2CYamlParser%2CJsonNode" title="parseHook(p: var YamlParser; v: var JsonNode)">parseHook(p: var YamlParser; v: var JsonNode)</a></li>
 <li><a class="reference" href="#parseHook%2CYamlParser%2Cstring" title="parseHook(p: var YamlParser; v: var string)">parseHook(p: var YamlParser; v: var string)</a></li>
 <li><a class="reference" href="#parseHook%2CYamlParser%2CAnyTable%5BK%3A%20string%2CV%5D" title="parseHook[K: string; V](p: var YamlParser; v: var AnyTable[K, V])">parseHook[K: string; V](p: var YamlParser; v: var AnyTable[K, V])</a></li>
 <li><a class="reference" href="#parseHook%2CYamlParser%2Carray%5BN%2CT%5D" title="parseHook[N: static[int]; T](p: var YamlParser; v: var array[N, T])">parseHook[N: static[int]; T](p: var YamlParser; v: var array[N, T])</a></li>
@@ -672,6 +673,15 @@
     
   </dd>
 </div>
+<div id="parseHook,YamlParser,JsonNode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2CJsonNode"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">JsonNode</span><span class="Other">)</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Parse YAML value (scalar, array, or mapping) into a JsonNode
+    
+  </dd>
+</div>
 <div id="parseHook,YamlParser,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2Cstring"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">)</span> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
@@ -875,7 +885,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-11 17:03:01 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-16 11:47:13 UTC</small>
       </div>
     </div>
   </div>

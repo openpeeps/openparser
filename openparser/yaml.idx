@@ -78,8 +78,9 @@ nim	parseYamlMappingPairs	openparser/yaml.html#parseYamlMappingPairs.t,untyped	t
 nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_6	proc parseHook[T: Integers](p: var YamlParser; v: var T)		1014
 nim	parseHook	openparser/yaml.html#parseHook,YamlParser,array[N,T]	proc parseHook[N: static[int]; T](p: var YamlParser; v: var array[N, T])		1123
 nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_7	proc parseHook[T: object](p: var YamlParser; v: var T)		1251
-nim	parseYAML	openparser/yaml.html#parseYAML,YamlParser,T	proc parseYAML[T: object | ref object](p: var YamlParser; v: var T)		1297
-nim	parseYAML	openparser/yaml.html#parseYAML,YAML,typedesc[T]	proc parseYAML[T](input: YAML; t: typedesc[T]): T		1326
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,JsonNode	proc parseHook(p: var YamlParser; v: var JsonNode)		1303
+nim	parseYAML	openparser/yaml.html#parseYAML,YamlParser,T	proc parseYAML[T: object | ref object](p: var YamlParser; v: var T)		1318
+nim	parseYAML	openparser/yaml.html#parseYAML,YAML,typedesc[T]	proc parseYAML[T](input: YAML; t: typedesc[T]): T		1350
 nimgrp	parseyaml	openparser/yaml.html#parseYAML-procs-all	proc		879
 nimgrp	parsehook	openparser/yaml.html#parseHook-procs-all	proc		892
 nimgrp	get	openparser/yaml.html#get-procs-all	proc		366
