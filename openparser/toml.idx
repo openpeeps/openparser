@@ -53,9 +53,10 @@ nim	put	openparser/toml.html#put,OrderedTableRef[string,TomlNode],string,TomlNod
 nim	nextToken	openparser/toml.html#nextToken,TomlParser	proc nextToken(p: var TomlParser): TomlToken		528
 nim	parseHook	openparser/toml.html#parseHook,TomlParser,TomlNode	proc parseHook(p: var TomlParser; v: var TomlNode)		644
 nim	parseObject	openparser/toml.html#parseObject,TomlParser,int	proc parseObject(p: var TomlParser; ln: int): TomlNode		645
-nim	parseRoot	openparser/toml.html#parseRoot,TomlParser	proc parseRoot(p: var TomlParser): TomlNode		720
-nim	parseTOML	openparser/toml.html#parseTOML,TOML	proc parseTOML(input: TOML): TomlDocument		763
-nim	parseTOML	openparser/toml.html#parseTOML,TomlParser,T	proc parseTOML[T: object | ref object](p: var TomlParser; v: var T)		775
-nim	parseTOML	openparser/toml.html#parseTOML,TOML,typedesc[T]	proc parseTOML[T](input: TOML; t: typedesc[T]): T		779
-nimgrp	parsetoml	openparser/toml.html#parseTOML-procs-all	proc		763
+nim	parseRoot	openparser/toml.html#parseRoot,TomlParser	proc parseRoot(p: var TomlParser): TomlNode		760
+nim	parseTOML	openparser/toml.html#parseTOML,TOML	proc parseTOML(input: TOML): TomlDocument		817
+nim	parseTOML	openparser/toml.html#parseTOML,TomlParser,T	proc parseTOML[T: object | ref object](p: var TomlParser; v: var T)		829
+nim	parseTOML	openparser/toml.html#parseTOML,TOML,typedesc[T]	proc parseTOML[T](input: TOML; t: typedesc[T]): T		833
+nim	dumpTOML	openparser/toml.html#dumpTOML,TomlDocument	proc dumpTOML(doc: TomlDocument): string		843
+nimgrp	parsetoml	openparser/toml.html#parseTOML-procs-all	proc		817
 nimgrp	get	openparser/toml.html#get-procs-all	proc		477
