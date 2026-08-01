@@ -476,14 +476,14 @@ proc getValue*(v: TomlNode): string =
 
 proc get*(n: TomlNode, key: string): TomlNode =
   ## Recursively access nested TOML data using dot-separated keys.
-  ## Example: get(doc, "owner.name")
+  ## Example: get(doc, "owner.name"). An exact key match wins first, so keys
+  ## that themselves contain dots (e.g. `"a.b" = 1`) are addressable too.
   if n == nil or key.len == 0:
     return nil
+  if n.kind == tvkTable and n.tableVal.hasKey(key):
+    return n.tableVal[key]
   if '.' notin key:
-    if n.kind == tvkTable and n.tableVal.hasKey(key):
-      return n.tableVal[key]
-    else:
-      return nil
+    return nil
   let dotIdx = key.find('.')
   let head = key[0 ..< dotIdx]
   let tail = key[dotIdx+1 .. ^1]
@@ -644,17 +644,42 @@ proc parseTomlDateTime(s: string): DateTime =
 proc parseHook*(p: var TomlParser, v: var TomlNode)
 proc parseObject*(p: var TomlParser, ln: int): TomlNode
 
+proc keyPath(p: var TomlParser): seq[string] =
+  ## Consume a key path — bare or quoted identifiers separated by dots.
+  result = @[]
+  while p.curr.kind in {ttkIdentifier, ttkString}:
+    result.add(p.curr.value)
+    p.advance()
+    if p.curr.kind == ttkDot:
+      p.advance()
+      continue
+    break
+
+proc expectEquals(p: var TomlParser) =
+  if p.curr.kind != ttkEquals:
+    p.error("Expected '=' after key, got " & $p.curr.kind)
+  p.advance()
+
+proc setAtPath(tbl: TomlNode, path: seq[string], val: TomlNode) =
+  ## Set a value at a (possibly dotted) key path, creating intermediate tables.
+  var cur = tbl
+  for i, part in path:
+    if i == path.len - 1:
+      cur.tableVal[part] = val
+    else:
+      if not cur.tableVal.hasKey(part):
+        cur.tableVal[part] = newTomlTable()
+      cur = cur.tableVal[part]
+
 proc parseInlineObject(p: var TomlParser): TomlNode =
   p.advance() # consume '{'
   var obj = newTomlTable()
   while p.curr.kind != ttkRC:
     case p.curr.kind
-    of ttkIdentifier:
+    of ttkIdentifier, ttkString:
       let key = p.curr.value
-      p.advance() # consume identifier
-      if p.curr.kind != ttkEquals:
-        p.error("Expected '=' after key in inline table, got " & $p.curr.kind)
-      p.advance() # consume '='
+      p.advance()
+      expectEquals(p)
       var val: TomlNode
       p.parseHook(val)
       obj.tableVal[key] = val
@@ -670,7 +695,6 @@ proc parseInlineObject(p: var TomlParser): TomlNode =
   result = obj
 
 proc parseHook*(p: var TomlParser, v: var TomlNode) =
-  # echo "Hook: " & $p.curr.kind & " at line " & $p.curr.line & ", col " & $p.curr.col
   case p.curr.kind
   of ttkString:
     v = newTomlString(p.curr.value)
@@ -689,76 +713,106 @@ proc parseHook*(p: var TomlParser, v: var TomlNode) =
     p.advance()
   of ttkLC:
     v = p.parseInlineObject()
-  else: 
+  of ttkLB:
+    # array value: [ v1, v2, ... ]
+    p.advance() # consume '['
+    var arr = newTomlArray()
+    if p.curr.kind != ttkRB:
+      while true:
+        var item: TomlNode
+        p.parseHook(item)
+        arr.arrayVal.add(item)
+        if p.curr.kind == ttkComma:
+          p.advance()
+          if p.curr.kind == ttkRB:
+            break
+        elif p.curr.kind == ttkRB:
+          break
+        else:
+          p.error("Expected ',' or ']' in array, got " & $p.curr.kind)
+    p.advance() # consume ']'
+    v = arr
+  else:
     p.error("Expected a value, got " & $p.curr.kind)
 
-proc parseObject*(p: var TomlParser, ln: int): TomlNode =
-  ## Parse a sequence of key = value entries into a table and return it.
-  ## Stops when the next token is a table header ('[') or EOF.
-  result = newTomlTable()
-  # skip any leading comments
-  while p.curr.kind == ttkComment:
-    p.advance()
-
+proc parseObjectInto(p: var TomlParser, target: TomlNode) =
+  ## Parse key = value entries into `target`, stopping at a table header or EOF.
   while p.curr.kind != ttkEOF and p.curr.kind != ttkLB:
     case p.curr.kind
-    of ttkIdentifier:
-      if p.next.kind == ttkEquals:
-        let key = p.curr.value
-        p.advance() # consume identifier
-        p.advance() # consume '='
-        var val: TomlNode
-        p.parseHook(val)
-        result.tableVal[key] = val
-      else:
-        p.error("Expected '=' after key, got " & $p.next.kind)
+    of ttkIdentifier, ttkString:
+      let path = keyPath(p)
+      expectEquals(p)
+      var val: TomlNode
+      p.parseHook(val)
+      setAtPath(target, path, val)
     of ttkComment:
       p.advance()
     else:
       p.error("Expected a key or start of next table, got " & $p.curr.kind)
 
+proc parseObject*(p: var TomlParser, ln: int): TomlNode =
+  ## Parse a sequence of key = value entries into a table and return it.
+  result = newTomlTable()
+  while p.curr.kind == ttkComment:
+    p.advance()
+  parseObjectInto(p, result)
+
 proc parseRoot*(p: var TomlParser): TomlNode =
   ## Parses the entire TOML document and returns a TomlDocument
   result = newTomlTable()
   while p.curr.kind != ttkEOF:
-    var v: TomlNode
     case p.curr.kind
-    of ttkIdentifier:
-      if p.next.kind == ttkEquals:
-        let key = p.curr.value
-        p.advance() # consume identifier
-        p.advance() # consume '='
-        var val: TomlNode
-        p.parseHook(val)
-        result.tableVal[key] = val  
-      else:
-        p.error("Expected '=' after key, got " & $p.next.kind)
+    of ttkIdentifier, ttkString:
+      # top-level key = value (possibly dotted / quoted)
+      let path = keyPath(p)
+      expectEquals(p)
+      var val: TomlNode
+      p.parseHook(val)
+      setAtPath(result, path, val)
     of ttkLB:
-      # Handle table headers (e.g. [table] or [[array_of_tables]])
       p.advance() # consume '['
       if p.curr.kind == ttkLB:
+        # [[a.b]] array of tables
         p.advance() # consume second '['
-        if p.curr.kind != ttkIdentifier:
-          p.error("Expected identifier after '[[' for array of tables, got " & $p.curr.kind)
-        let key = p.curr.value
-        p.advance() # consume identifier
+        let path = keyPath(p)
         if p.curr.kind != ttkRB or p.next.kind != ttkRB:
-          p.error("Expected ']]' after array of tables identifier, got " & $p.curr.kind & " and " & $p.next.kind)
-        p.advance() # consume first ']
+          p.error("Expected ']]' after array of tables header, got " & $p.curr.kind & " and " & $p.next.kind)
+        p.advance() # consume first ']'
         p.advance() # consume second ']'
-        # For simplicity, we won't implement array of tables in this example
-        p.error("Array of tables not implemented in this example")
+        var parent = result
+        for i in 0 ..< path.len - 1:
+          let part = path[i]
+          if not parent.tableVal.hasKey(part):
+            parent.tableVal[part] = newTomlTable()
+          parent = parent.tableVal[part]
+        let last = path[^1]
+        if not parent.tableVal.hasKey(last):
+          parent.tableVal[last] = newTomlArray()
+        let arr = parent.tableVal[last]
+        if arr.kind != tvkArray:
+          p.error("'" & last & "' is not an array")
+        arr.arrayVal.add(newTomlTable())
+        parseObjectInto(p, arr.arrayVal[^1])
       else:
-        if likely(p.curr.kind == ttkIdentifier):
-          let key = p.curr
-          p.advance() # consume identifier / key
-          if p.curr.kind != ttkRB:
-            p.error("Expected ']' after table identifier, got " & $p.curr.kind)
-          p.advance() # consume ']'
-          result.tableVal[key.value] = p.parseObject(key.line)
-        else:
-          p.error("Expected identifier after '[', got " & $p.curr.kind)
-    else: discard # TODO
+        # [a.b.c] table header
+        let path = keyPath(p)
+        if p.curr.kind != ttkRB:
+          p.error("Expected ']' after table header, got " & $p.curr.kind)
+        p.advance() # consume ']'
+        var cur = result
+        for i, part in path:
+          if i == path.len - 1:
+            if not cur.tableVal.hasKey(part):
+              cur.tableVal[part] = newTomlTable()
+            parseObjectInto(p, cur.tableVal[part])
+          else:
+            if not cur.tableVal.hasKey(part):
+              cur.tableVal[part] = newTomlTable()
+            cur = cur.tableVal[part]
+    of ttkComment:
+      p.advance()
+    else:
+      p.error("Unexpected token in TOML document: " & $p.curr.kind)
 
 proc parseTOML*(input: TOML): TomlDocument =
   ## Parses a TOML string into a `TomlDocument`,
@@ -784,6 +838,69 @@ proc parseTOML*[T](input: TOML, t: typedesc[T]): T =
   parser.next = parser.nextToken()
   parser.parseTOML(tmp)
   result = ensureMove(tmp)
+
+
+proc dumpTOML*(doc: TomlDocument): string =
+  ## Serialize a `TomlDocument` back to TOML.
+  proc isBareKey(k: string): bool =
+    if k.len == 0: return false
+    for c in k:
+      if c notin {'a'..'z', 'A'..'Z', '0'..'9', '_', '-'}:
+        return false
+    true
+  proc qKey(k: string): string =
+    if isBareKey(k): k else: "\"" & k.replace("\\", "\\\\").replace("\"", "\\\"") & "\""
+  proc dumpValue(n: TomlNode, s: var string)
+  proc dumpTable(tbl: TomlNode, s: var string, path: string) =
+    if path.len > 0:
+      s.add("[" & path & "]\n")
+    for k, v in tbl.tableVal:
+      case v.kind
+      of tvkTable:
+        dumpTable(v, s, (if path.len == 0: k else: path & "." & k))
+      of tvkArray:
+        if v.arrayVal.len > 0 and v.arrayVal[0].kind == tvkTable:
+          let p = if path.len == 0: k else: path & "." & k
+          for item in v.arrayVal:
+            s.add("[[" & p & "]]\n")
+            dumpTable(item, s, "")
+        else:
+          s.add(qKey(k) & " = ")
+          dumpValue(v, s)
+          s.add("\n")
+      else:
+        s.add(qKey(k) & " = ")
+        dumpValue(v, s)
+        s.add("\n")
+  proc dumpValue(n: TomlNode, s: var string) =
+    case n.kind
+    of tvkString:
+      s.add("\"" & n.strVal.replace("\\", "\\\\").replace("\"", "\\\"") & "\"")
+    of tvkInteger:
+      s.add($n.intVal)
+    of tvkFloat:
+      s.add($n.floatVal)
+    of tvkBoolean:
+      s.add($n.boolVal)
+    of tvkDateTime:
+      s.add(n.dateTimeVal.format("yyyy-MM-dd'T'HH:mm:ss"))
+    of tvkArray:
+      s.add("[")
+      for i, item in n.arrayVal:
+        if i > 0: s.add(", ")
+        dumpValue(item, s)
+      s.add("]")
+    of tvkTable:
+      s.add("{")
+      var first = true
+      for kk, vv in n.tableVal:
+        if not first: s.add(", ")
+        first = false
+        s.add("\"" & kk & "\" = ")
+        dumpValue(vv, s)
+      s.add("}")
+  result = ""
+  dumpTable(doc, result, "")
 
 
 #
