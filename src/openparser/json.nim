@@ -134,6 +134,18 @@ proc isMapped*(m: MemFile): bool {.inline.} =
 proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode
 proc arrayToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode
 
+# `renameHook` is an optional user-defined hook for object
+# serialization/deserialization. There is no default: the object dump/parse
+# hooks below use `when compiles(renameHook(...))` so that a user-declared
+# `proc renameHook*(v: SomeType, fieldName: var string)` (e.g. mapping
+# ``_tag`` <-> ``tag``) is picked up at the instantiation site, and objects
+# serialize unchanged when no such hook is in scope. The hook receives the
+# object being (de)serialized as its first argument and rewrites the field
+# key. It is applied in both directions: when parsing (JSON -> Nim) it
+# rewrites the incoming JSON key so it matches the object field, and when
+# dumping (Nim -> JSON) the same rewrite is applied to the field name before
+# it is emitted (declare it as an involution to round-trip).
+
 proc dumpHook*(s: var string, val: string)
 proc dumpHook*(s: var string, val: Integers)
 proc dumpHook*(s: var string, val: float32|float64)
@@ -250,7 +262,11 @@ proc dumpHook*(s: var string, val: bool) =
   ## Converts a bool to JSON
   s.add($val)
 
-proc dumpHook*(s: var string, val: object) =
+proc dumpHook*[T, R](s: var string, val: T, renameVal: R) =
+  ## Shared object dumping. `renameVal` is the value handed to `renameHook` so
+  ## that ref objects can name their own type (e.g. a hook declared as
+  ## `proc renameHook(v: MyRef, fieldName: var string)`), while plain objects
+  ## pass themselves.
   when isObjectVariant(val):
     const discName = discriminatorFieldName(val)
 
@@ -261,7 +277,10 @@ proc dumpHook*(s: var string, val: object) =
     for fieldName, fieldVal in fieldPairs(val):
       if fieldName != discName:
         s.add(",")
-        s.add("\"" & fieldName & "\":")
+        var wireName = fieldName
+        when compiles(renameHook(renameVal, wireName)):
+          renameHook(renameVal, wireName)
+        s.add("\"" & wireName & "\":")
         dumpHook(s, fieldVal)
 
     s.add("}")
@@ -270,17 +289,23 @@ proc dumpHook*(s: var string, val: object) =
     var i = 0
     for fieldName, fieldVal in fieldPairs(val):
       if i > 0: s.add(",")
-      s.add("\"" & fieldName & "\":")
+      var wireName = fieldName
+      when compiles(renameHook(renameVal, wireName)):
+        renameHook(renameVal, wireName)
+      s.add("\"" & wireName & "\":")
       dumpHook(s, fieldVal)
       inc i
     s.add("}")
+
+proc dumpHook*(s: var string, val: object) =
+  dumpHook(s, val, val)
 
 proc dumpHook*[T](s: var string, val: ref T) =
   ## Converts a ref JSON by dereferencing it and dumping the contents.
   if val.isNil:
     s.add("null")
   else:
-    dumpHook(s, val[])
+    dumpHook(s, val[], val)
 
 proc dumpHook*(s: var string, val: pointer) =
   ## this is dumb for now. we can add a custom `dumpPtrHook` later
@@ -414,7 +439,13 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
           continue
       if i != 0 and i < len:
         strObj.add(newCall(ident"add", res, newLit(",")))
-      strObj.add(newCall(ident"add", res, newLit("\"" & fieldName & "\":")))
+      let fieldLit = newLit(fieldName)
+      let wireName = genSym(nskVar, "wireName")
+      strObj.add quote do:
+        var `wireName` = `fieldLit`
+        when compiles(renameHook(`v`, `wireName`)):
+          renameHook(`v`, `wireName`)
+        `res`.add("\"" & `wireName` & "\":")
       strObj.add(
         nnkWhenStmt.newTree(
           nnkElifBranch.newTree(
@@ -925,17 +956,24 @@ macro copyFieldsBeforeRecCase(dst, src: typed): untyped =
     else:
       discard
 
-proc parseHook*[T: object](parser: var JsonParser, v: var T) =
+proc parseObjectHook[T, R](parser: var JsonParser, v: var T, renameVal: R) =
+  ## Shared object parsing. `renameVal` is the value handed to `renameHook` so
+  ## that ref objects can name their own type (e.g. a hook declared as
+  ## `proc renameHook(v: MyRef, fieldName: var string)`), while plain objects
+  ## pass themselves.
   parser.expectSkip(jtkLBrace) # start of object
   while parser.curr.kind notin {jtkRBrace, jtkEof}:
     if parser.curr.kind != jtkString:
       parser.error(unexpectedTokenExpected % [$parser.curr.kind, $jtkString])
 
     let key = parser.curr.value
+    var wireKey = key
+    when compiles(renameHook(renameVal, wireKey)):
+      renameHook(renameVal, wireKey)
 
     # variant discriminator handling: initialize correct branch early
     when isObjectVariant(v):
-      if key == discriminatorFieldName(v):
+      if wireKey == discriminatorFieldName(v):
         parser.advance()
         parser.expectSkip(jtkColon)
 
@@ -951,7 +989,7 @@ proc parseHook*[T: object](parser: var JsonParser, v: var T) =
 
     var matched = false
     for objField, objVal in v.fieldPairs:
-      if key == objField:
+      if wireKey == objField:
         matched = true
         parser.advance()
         parser.expectSkip(jtkColon)
@@ -982,6 +1020,9 @@ proc parseHook*[T: object](parser: var JsonParser, v: var T) =
 
   parser.expectSkip(jtkRBrace)
 
+proc parseHook*[T: object](parser: var JsonParser, v: var T) =
+  parser.parseObjectHook(v, v)
+
 proc parseHook*[T: ref object](parser: var JsonParser, v: var T) =
   ## A hook to parse ref object fields
   if parser.curr.kind == jtkNull:
@@ -990,7 +1031,7 @@ proc parseHook*[T: ref object](parser: var JsonParser, v: var T) =
   else:
     if v.isNil:
       new(v)
-    parser.parseHook(v[])
+    parser.parseObjectHook(v[], v)
 
 proc parseHook*[T](parser: var JsonParser, v: var seq[T]) =
   ## A hook to parse sequence fields
