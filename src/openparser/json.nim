@@ -1227,6 +1227,26 @@ proc parseJson[T: object|ref object](parser: var JsonParser, v: var T) =
   else:
     parser.error(unexpectedToken % [$parser.curr.kind])
 
+proc parseJson[T](parser: var JsonParser, v: var seq[T]) =
+  ## Parse a JSON array into a Nim seq.
+  parser.parseHook(v)
+
+proc parseJson(parser: var JsonParser, v: var bool) =
+  ## Parse a JSON boolean.
+  parser.parseHook(v)
+
+proc parseJson(parser: var JsonParser, v: var string) =
+  ## Parse a JSON string.
+  parser.parseHook(v)
+
+proc parseJson[T: SomeInteger](parser: var JsonParser, v: var T) =
+  ## Parse a JSON integer.
+  parser.parseHook(v)
+
+proc parseJson[T: SomeFloat](parser: var JsonParser, v: var T) =
+  ## Parse a JSON float.
+  parser.parseHook(v)
+
 proc parseJson(parser: var JsonParser, v: var JsonNode) =
   # Parse a JSON value into a JsonNode, handling objects and arrays recursively.
   case parser.curr.kind
@@ -1239,13 +1259,13 @@ proc parseJson(parser: var JsonParser, v: var JsonNode) =
 
 macro fromJsonMacro(x: typed, str: typed): untyped =
   # macro to parse JSON string `str` into object of type `x`
-  var objIdent = x.getTypeImpl()[1]
+  var t = x.getTypeInst()[1]
   var
     blockStmtList = newStmtList()
     blockStmtId = genSym(nskLabel, "voodoo")
   add blockStmtList, quote do:
     var
-      tmp = `objIdent`()
+      tmp: `t`
       parser = JsonParser(lexer: newJsonLexer(`str`))
     parser.curr = parser.nextToken()
     parser.next = parser.nextToken()
