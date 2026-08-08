@@ -740,8 +740,9 @@ proc skipValue*(parser: var JsonParser) =
   of jtkLBrace:
     # skip object
     while parser.curr.kind != jtkRBrace:
-      parser.advance()
-      skipValue(parser)
+      parser.advance()            # consume the key
+      parser.advance()            # consume the key's colon
+      skipValue(parser)           # skip the actual value
       if parser.curr.kind == jtkComma:
         parser.advance()
     parser.expectSkip(jtkRBrace)
