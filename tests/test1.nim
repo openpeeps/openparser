@@ -89,6 +89,14 @@ suite "Deserializers":
     check person.`type` == mtAdmin
     check person.adminLevel == 5
 
+  test "Unknown keys with nested values are skipped correctly":
+    # Exercises `skipValue`: a type that matches no keys must still skip nested
+    # arrays/objects without misaligning on internal commas.
+    type Opaque = ref object of RootObj
+    let jsonStr = """{"id":"string","labels":["a","b"],"files":[{"id":"x"}],"links":[{"href":"h","rel":"r","method":"GET"}],"type":"SOCIAL_SECURITY_NUMBER"}"""
+    let opaque = fromJson(jsonStr, Opaque)
+    check opaque != nil
+
 suite "Serializers":
   test "Object serialization":
     let person = Person(name: "Albush", age: 40, address: Address(street: "456 Elm St", city: "Othertown", zip: 67890), friends: @[])
