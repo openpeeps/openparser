@@ -735,28 +735,30 @@ proc expectSkip*(parser: var JsonParser, tkind: JsonTokenKind) =
 # Skip Values
 #
 proc skipValue*(parser: var JsonParser) =
-  ## Skip the current value in the parser
+  ## Skip the current value in the parser. After returning, `parser.curr`
+  ## points at the token *following* the skipped value (a comma or a closing
+  ## brace/bracket), so callers can continue with `ensureComma`.
   case parser.curr.kind
   of jtkLBrace:
     # skip object
+    parser.advance() # consume the opening `{`
     while parser.curr.kind != jtkRBrace:
       parser.advance()            # consume the key
-      parser.advance()            # consume the key's colon
+      parser.expectSkip(jtkColon) # consume the key's colon
       skipValue(parser)           # skip the actual value
       if parser.curr.kind == jtkComma:
         parser.advance()
     parser.expectSkip(jtkRBrace)
   of jtkLBracket:
     # skip array
+    parser.advance() # consume the opening `[`
     while parser.curr.kind != jtkRBracket:
-      parser.advance()
-      skipValue(parser)
+      skipValue(parser)           # skip the element
       if parser.curr.kind == jtkComma:
         parser.advance()
     parser.expectSkip(jtkRBracket)
   else:
-    while parser.curr.kind notin {jtkComma, jtkRBrace, jtkRBracket, jtkEof}:
-      parser.advance()
+    parser.advance()
 
 template ensureComma* {.inject.} =
   if parser.curr.kind == jtkComma:
