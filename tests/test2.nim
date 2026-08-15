@@ -320,7 +320,7 @@ suite "Zero-copy parsing":
     # Fields are views into the memory-mapped file. We sum numeric columns
     # directly from the slices, reusing a fixed buffer every row. No string
     # is ever allocated inside the callback, so heap stays flat.
-    var buffer: array[9, CsvFieldSlice] # reused for every row
+    var buffer: seq[CsvFieldSlice] # reused for every row (grows only if a wider row shows up)
     var totalPrep = 0
     var totalCook = 0
     var dataRows = 0
@@ -328,6 +328,8 @@ suite "Zero-copy parsing":
     parseFile(exampleCsv, proc(fields: openArray[CsvFieldSlice], row: int): bool =
       if row == 1:
         return true # skip header row
+      if buffer.len < fields.len:
+        buffer.setLen(fields.len) # one-time growth, then fully reused
       for i, f in fields:
         buffer[i] = f # copy 16-byte slices only, no new memory
       # columns: name, ingredients, diet, prep_time, cook_time, ...
@@ -346,10 +348,12 @@ suite "Zero-copy parsing":
   test "slice aggregation matches toString-based parsing":
     # Sanity check: the zero-copy path must produce identical numbers to the
     # toString() path, proving the slices point at the right bytes.
-    var buffer: array[9, CsvFieldSlice]
+    var buffer: seq[CsvFieldSlice]
     var sliceSum = 0
     parseFile(exampleCsv, proc(fields: openArray[CsvFieldSlice], row: int): bool =
       if row > 1:
+        if buffer.len < fields.len:
+          buffer.setLen(fields.len)
         for i, f in fields:
           buffer[i] = f
         sliceSum += parseSliceInt(buffer[3]) + parseSliceInt(buffer[4])
@@ -363,3 +367,41 @@ suite "Zero-copy parsing":
 
     check sliceSum == strSum
     echo "Zero-copy sum ", sliceSum, " == toString sum ", strSum
+
+  when defined(testCsvLocal):
+    # https://www.kaggle.com/datasets/stefanoleone992/tripadvisor-european-restaurants
+    test "600MB tripadvisor CSV parses end-to-end with zero-copy":
+      const huge = "./tests/data/tripadvisor_european_restaurants.csv"
+      if fileExists(huge):
+        var buffer: seq[CsvFieldSlice]
+        var rows = 0
+        var fieldCount = -1
+        var totalReviews = 0 # total_reviews_count (col 28)
+        var heapBefore = getOccupiedMem()
+        let t = cpuTime()
+        parseFile(huge, proc(fields: openArray[CsvFieldSlice], row: int): bool =
+          inc rows
+          if buffer.len < fields.len:
+            buffer.setLen(fields.len)
+          for i, f in fields:
+            buffer[i] = f
+          
+          echo buffer # will print all lines, one by one!
+          
+          if fieldCount < 0: fieldCount = fields.len
+          totalReviews += parseSliceInt(buffer[28])
+          true
+        )
+        let elapsed = cpuTime() - t
+        let heapDelta = getOccupiedMem() - heapBefore
+        echo "Parsed ", huge, " (", getFileSize(huge) div (1024*1024),
+            " MiB): ", rows, " rows, ", fieldCount, " columns, ",
+            totalReviews, " total reviews, in ", elapsed, " seconds, ",
+            "heap delta ", heapDelta, " bytes"
+
+        check rows > 1_000_000
+        check fieldCount == 42
+        check totalReviews > 0
+        check heapDelta <= 2048 # reused buffer => no per-row allocations
+      else:
+        echo "SKIP: ", huge, " not present"
