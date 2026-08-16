@@ -1,6 +1,6 @@
 <p align="center">
   A tiny collection of high-performance parsers and dumpers<br>
-  👑 Written in Nim language
+  Written in Nim language
 </p>
 
 <p align="center">
@@ -13,187 +13,361 @@
 </p>
 
 ## About
-OpenParser is a collection of parsers and dumpers (serializers) for various data formats, written in Nim language. It provides a simple and efficient way to parse and dump data in different formats, such as JSON, TOML, YAML, BSON, CSV, FBE and more
 
-## 😍 Key Features
-- Parse [JSON](#parse-json), [CSV data](#parse-csv), [YAML](#parse-yaml), [TOML configs](#toml-configs) and more
-- **DotEnv** parser for `.env` files
-- **BSON** encoding and decoding from `JsonNode` objects (supporting the [1.1 specification](https://bsonspec.org/spec.html))
-- [FBE](https://github.com/chronoxor/FastBinaryEncoding) for Fast Binary Encoding and Decoding
-- i18n [GNU Gettext](https://www.gnu.org/software/gettext/) PO and MO file parsing and dumping
-- **RSS & Atom** feed reader and writer
-- **CSV** zero-copy parsing for **large files**
-- [Regex Engine](#simd-accelerated-regex-engine) with SIMD acceleration
-- **SQL parser**, AST and query builder for supported databases (PostgreSQL, MySQL, SQLite)
+OpenParser is a collection of parsers and dumpers (serializers) for various data formats, written in Nim. Each module provides zero-copy parsing via memory-mapped files, direct-to-object deserialization, custom hooks for extending type support, and context-aware error reporting.
 
-### Other features
-- **Zero-copy** JSON parsing via Memfiles for high performance and low memory usage
-- **Direct-to-object** parsing for JSON, YAML and TOML
-- **Context-aware error** reporting while deserializing data
-- Custom Hooks API for parsing and dumping
-- Scientific notation support
-- Dot notation access for nested data structures
+> [!NOTE]
+> Importing `openparser` directly will produce a compile-time error. Import the specific module you need, e.g. `openparser/json` for JSON.
 
-### Why?
-Initially, I wanted to create a simple JSON parser with fine-grained control over the parsing process (jsonl, custom hooks, error reporting, zero-copy tokenization), then I thought it would be fun to add a YAML parser that parses YAML documents in the same way as JSON. Once I started talking with the chatbot I ended up creating a collection of parsers and dumpers for various data formats.
+---
 
->[!NOTE]
-> Importing `openparser` directly will produce a compile-time error, you need to import the specific module for the data format you want to use, e.g. `openparser/json` for JSON parsing and dumping or `openparser/csv` for CSV parsing, and so on.
+## JSON
 
-## Parse JSON
+Zero-copy JSON parser with SIMD-accelerated tokenization, direct-to-object parsing, and full hook support. Exports `std/json` for `JsonNode` compatibility.
 
-OpenParser provide a simple and efficient module for parsing JSON data using the zero-copy parsing approach, which allows you to parse JSOn data without copying it into memory, making it faster and more memory-efficient.
-
->[!NOTE]
->OpenParser's JSON parser is exporting the `std/json` module by default.
-
-### `fromJson` string into JsonNode or Nim data structures
-
-Here a simple example taking a stringified JSON and parsing it into a `JsonNode` tree structure:
 ```nim
 import openparser/json
 
-let data = """{"name":"Albush","age":40,"address":{"street":"456 Elm St","city":"Othertown","zip":67890},"friends":[]}"""
+type
+  Person = object
+    name: string
+    age: int
+    email: string
 
-let jsonNode: JsonNode = fromJson(data)
-echo jsonNode["name"].getStr # Albush
-echo jsonNode["age"].getInt # 40
+# Parse to JsonNode
+let data = """{"name":"Albush","age":40,"email":"al@ex.com"}"""
+let node: JsonNode = fromJson(data)
+echo node["name"].getStr  # Albush
+
+# Parse directly into Nim objects
+let person: Person = fromJson(data, Person)
+echo person.name  # Albush
+
+# Serialize back to JSON
+echo toJson(person)  # {"name":"Albush","age":40,"email":"al@ex.com"}
+
+# Memfile-based parsing for large files
+let bigNode = fromJsonFile("huge.json")
 ```
-### `toJson` serialize Nim data structures into JSON strings
-`toJson` function allows you to serialize Nim data structures into JSON strings:
+
+**Features:** `parseHook`/`dumpHook` for custom types, `renameHook` for field name mapping, `currentField` context, `skipValue`, `toStaticJson` compile-time optimization, line-delimited JSON (`fromJsonL`), `Option[T]` support.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_json_skip_value.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/json.html)
+
+---
+
+## YAML
+
+YAML 1.2 parser with block and inline syntax, comments, block scalars, and the same hook-based API as JSON.
+
 ```nim
-import openparser/json
+import openparser/yaml
 
-var data = %*{
-  "name": "Alice",
-  "age": 30,
-  "isMember": true,
-  "address": {
-    "street": "123 Main St",
-    "city": "Anytown",
-    "zip": 12345
-  },
-  "friends": ["Bob"]
-}
+type
+  Config = object
+    host: string
+    port: int
+    debug: bool
 
-echo toJson(data) # {"name":"Alice"...}
+let yaml = """
+host: localhost
+port: 8080
+debug: true
+"""
+
+# Parse to YAMLObject tree
+let obj: YAMLObject = parseYAML(yaml)
+echo obj["host"].strValue  # localhost
+
+# Parse directly into Nim objects
+let config: Config = parseYAML(yaml, Config)
+echo config.port  # 8080
 ```
 
-### `toJson` pretty-printing
-A **todo** for the future is to add support for pretty printing JSON while serializing, which would allow you to generate more human-readable JSON output with indentation and line breaks.
+**Features:** Inline and block sequences/mappings, nested structures, comments, block scalars (`|`, `>`), dot-notation access, direct-to-object parsing via `parseHook`/`dumpHook`, `renameHook`, `currentField`.
 
-## JSON custom hooks
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test3.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/yaml.html)
 
-Here an example of how to use a custom `parseHook` to parse JSON data into Nim types that are not natively supported by the default parser:
+---
+
+## XML
+
+Full-featured XML parser with element/attribute mapping to Nim objects, CDATA, comments, entities, self-closing tags, and memfile support. Same hook-based API as JSON/YAML.
+
 ```nim
-import std/times
+import openparser/xml
 
-import openparser/json
-import semver
+type
+  Person = object
+    name: string
+    age: int
+    email: string
 
-proc parseHook*(parser: var JsonParser, v: var Semver) =
-  v = parseVersion(parser.curr.value)
-  parser.walk() # move the parser forward after parsing the value
+let xml = """
+<person name="Alice" age="30">
+  <email>alice@example.com</email>
+</person>
+"""
 
-proc parseHook*(parser: var JsonParser, v: var Time) =
-  v = parseTime(str, "yyyy-MM-dd'T'hh:mm:ss'.'ffffffz", local())
-  parser.walk() # move the parser forward after parsing the value
+# Parse to XmlNode tree
+let node: XmlNode = fromXml(xml)
+echo node["email"].children[0].text  # alice@example.com
+
+# Parse directly into Nim objects (attributes + child elements)
+let person: Person = fromXml(xml, Person)
+echo person.name  # Alice
+
+# Serialize back to XML
+echo toXml(person, XmlOptions(rootTag: "person"))
+# <person><name>Alice</name><age>30</age><email>alice@example.com</email></person>
+
+# Memfile-based parsing
+let doc = fromXmlFile("large.xml")
 ```
 
-To determine the field name being parsed in the `parseHook`, you can use the `currentField` property
-available in the `JsonParser` object. This is a `Option[string]` that holds the name of the current field being parsed, if available:
+**Features:** Attributes and child elements both map to object fields, repeated child tags -> `seq[T]`, enum/discriminator attributes for variant objects, `parseHook`/`dumpHook` for custom types, `renameHook`, `xmlAttrHook` for attribute vs element control, entity decoding (`&amp;`, `&#xHH;`), CDATA, comments, processing instructions, `XmlNode` DOM tree.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_xml.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/xml.html)
+
+---
+
+## TOML
+
+TOML config file parser with datetime support, inline tables, arrays, and the same hook-based direct-to-object API.
+
+```nim
+import openparser/toml
+
+type
+  ServerConfig = object
+    host: string
+    port: int
+
+let toml = """
+[server]
+host = "localhost"
+port = 8080
+"""
+
+# Parse to TomlDocument
+let doc: TomlDocument = parseTOML(toml)
+
+# Parse directly into Nim objects
+let config: ServerConfig = parseTOML(toml, ServerConfig)
+echo config.port  # 8080
 ```
-if parser.currentField.isSome:
-  let fieldName = parser.currentField.get()
-  echo "Parsing field: ", fieldName
-```
 
-- Check the [unit tests](https://github.com/openpeeps/openparser/blob/main/tests/test1.nim) for JSON parsing and dumping with custom hooks.
-- [JSON API Reference](https://openpeeps.github.io/openparser/openparser/json.html)
+**Features:** Sections, inline tables, arrays, datetime types, `parseHook`/`dumpHook`, direct-to-object parsing.
 
-## CSV documents
-OpenParser can parse large CSV files efficiently without loading the entire file into memory, making it ideal for processing big datasets.
+- [API Reference](https://openpeeps.github.io/openparser/openparser/toml.html)
 
-For example, here will use a ~680MB CSV dataset from [Kaggle - TripAdvisor European restaurants](https://www.kaggle.com/datasets/stefanoleone992/tripadvisor-european-restaurants/data) that contains around 1 million rows and 42 columns.
+---
+
+## CSV
+
+Zero-copy CSV parser using memory-mapped files. Processes rows via callback without loading the entire file into memory.
 
 ```nim
 import openparser/csv
 
+# Stream-parse a large CSV file
 var i = 0
-let t = cpuTime()
-parseFile("tripadvisor_european_restaurants.csv",
+parseFile("data.csv",
   proc(fields: openArray[CsvFieldSlice], row: int): bool =
     inc i
     for field in fields:
-      discard # do something with the fields, e.g. print them
-    true
+      echo field.toString()
+    true  # return true to continue, false to stop
 )
-
-let elapsed = cpuTime() - t
-
-echo "Parsed ", i, " rows in ", elapsed, " seconds"
-# ~0.783363 seconds on my machine
-# memory usage should be minimal due to zero-copy parsing with memfiles
+echo "Parsed ", i, " rows"
 ```
 
-- Check the [unit tests](https://github.com/openpeeps/openparser/blob/main/tests/test2.nim) for CSV parsing.
-- [CSV API Reference](https://openpeeps.github.io/openparser/openparser/csv.html)
+**Features:** Zero-copy parsing via `MemFile`, configurable delimiters and quote characters, streaming row callback, handles ~600MB+ files efficiently.
 
-## Parse YAML
-Parse YAML documents into a `YamlNode` tree structure or directly into Nim data structures using custom hooks, similar to JSON parsing and dumping.
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test2.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/csv.html)
 
-```
-import openparser/yaml
-let yamlData = """
-name: Alice
-age: 30
-isMember: true
-address:
-  street: 123 Main St
-  city: Anytown
-  zip: 12345
-friends:
-  - Bob
-  - Charlie
-"""
+---
 
-let yamlNode: YamlNode = fromYaml(yamlData)
-let yamlNode2: Person = fromYaml(yamlData, Person) # using custom hooks to parse directly into Nim data structures
-```
+## BSON
 
-- Check the [unit tests](https://github.com/openpeeps/openparser/blob/main/tests/test3.nim)
-- [YAML API Reference](https://openpeeps.github.io/openparser/openparser/yaml.html)
+Binary JSON encoding/decoding following the [BSON 1.1 spec](https://bsonspec.org/spec.html). Converts between `JsonNode` and raw BSON bytes.
 
-## TOML Configs
-Another **work-in-progress parser** and dumper module, this one provides support for working with TOML config files. It parses the TOML input into a `TomlNode` tree structure or directly into Nim data structures using custom hooks.
-
-## SIMD-accelerated Regex engine
-OpenParser includes a regex engine that provides support for regular expresion matching and searching, with SIMD acceleration for improved performance.
-```nim
-import openparser/regex
-echo regex.match("hello world", "hello") # true
-```
-
-## BSON encoding and decoding
-You can combine OpenParser's JSON parsing capabilities with BSON encoding and decoding to efficiently convert between JSON and BSON formats
 ```nim
 import openparser/[json, bson]
 
-# Convert JSON to BSON
-let jsonData = """{"name":"Alice","age":30,"isMember":true}"""
-let bsonDoc: seq[byte] = fromJson(jsonData).toBson()
+# Encode JSON to BSON
+let json = fromJson("""{"name":"Alice","age":30,"active":true}""")
+let bsonBytes: seq[byte] = json.toBson()
 
-# To convert BSON back to JSON
-let jsonNode: JsonNode = fromBson(bsonDoc)
-echo jsonNode["name"].getStr # Alice
+# Decode BSON back to JSON
+let decoded: JsonNode = fromBson(bsonBytes)
+echo decoded["name"].getStr  # Alice
 ```
-- Check the [unit tests](https://github.com/openpeeps/openparser/blob/main/tests/test6.nim)
-- [BSON API Reference](https://openpeeps.github.io/openparser/openparser/bson.html)
+
+**Features:** Full BSON type support (ObjectId, Date, Binary, Regex, Timestamp, Code, Decimal128), extended JSON v2 notation, streaming encode/decode.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test6.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/bson.html)
+
+---
+
+## HTML
+
+HTML5 parser with configurable parsing policies, memfile support, and a DOM tree output. Handles real-world HTML gracefully.
+
+```nim
+import openparser/html
+
+let html = """<html><body><h1>Hello</h1><p>World</p></body></html>"""
+
+# Parse with default policy (tolerant)
+let doc = parseHtml(html)
+
+# Parse a file with a strict policy
+let policy = defaulHtmlParsingPolicy()
+let doc2 = parseHtmlFile("page.html", policy)
+```
+
+**Features:** Configurable parsing policy (self-closing tags, unclosed tags, comments, CDATA, entities, etc.), memfile-based file parsing, `HtmlDocument` DOM tree.
+
+- [API Reference](https://openpeeps.github.io/openparser/openparser/html.html)
+
+---
+
+## RSS & Atom Feeds
+
+Parse, read, fetch, and serialize RSS and Atom feeds.
+
+```nim
+import openparser/rss
+import openparser/feed
+
+# RSS
+let feed = parseRss(rssXmlString)
+echo feed.title
+let xml = toRssXml(feed)
+
+# Atom
+let atom = parseAtom(atomXmlString)
+echo atom.title
+let atomXml = toAtomXml(atom)
+
+# Read from file or fetch from URL
+let rssFromFile = readRss("feed.xml")
+let rssFromUrl = fetchRss("https://example.com/feed.xml")
+```
+
+**Features:** Parse from string/file/URL, serialize back to XML, full feed metadata and entry access.
+
+---
+
+## DotEnv
+
+Parse and load `.env` files with variable expansion, command substitution, and environment-specific overrides.
+
+```nim
+import openparser/dotenv
+
+# Load a .env file into the environment
+loadDotenv(".env")
+
+# Parse without loading
+let entries = parseEnv("DB_HOST=localhost\nDB_PORT=5432")
+for entry in entries:
+  echo entry.key, "=", entry.value
+
+# Access loaded values
+echo get("DB_HOST")  # localhost
+
+# Environment-specific loading
+loadDotenvForEnv("production")
+```
+
+**Features:** Variable expansion (`${VAR}`), command substitution (`${CMD:default}`), override control, `get`/`set`/`del`/`has` API.
+
+- [API Reference](https://openpeeps.github.io/openparser/openparser/dotenv.html)
+
+---
+
+## SQL
+
+SQL parser and AST builder supporting PostgreSQL, MySQL, and SQLite dialects.
+
+```nim
+import openparser/sql
+
+let ast = parseSql("SELECT name, age FROM users WHERE active = true ORDER BY name")
+echo ast  # select name, age from users where active = true order by name
+```
+
+**Features:** SELECT/INSERT/UPDATE/DELETE, JOINs, subqueries, GROUP BY, HAVING, ORDER BY, LIMIT, AST manipulation, query builder.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test11.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/sql.html)
+
+---
+
+## Regex Engine
+
+SIMD-accelerated regex engine with a full parser, compiler, and VM.
+
+```nim
+import openparser/regex
+
+let result = match("hello world", "hello")
+echo result.matched  # true
+echo result.start    # 0
+echo result.stop     # 5
+```
+
+**Features:** SSE2/AVX2 acceleration, character classes, quantifiers, alternation, capture groups, anchoring.
+
+---
+
+## i18n (GNU Gettext)
+
+Parse and dump PO and MO translation files.
+
+```nim
+import openparser/gettext/[po, mo]
+
+# Parse a .po file
+let catalog = parsePo("messages.po")
+
+# Parse a .mo binary file
+let moCatalog = parseMo("messages.mo")
+```
+
+---
+
+## FBE (Fast Binary Encoding)
+
+Encode and decode data using [Fast Binary Encoding](https://github.com/chronoxor/FastBinaryEncoding).
+
+---
+
+## Cross-cutting Features
+
+| Feature | JSON | YAML | XML | TOML | CSV |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Zero-copy / Memfiles | x | | x | | x |
+| Direct-to-object | x | x | x | x | |
+| `parseHook` / `dumpHook` | x | x | x | x | |
+| `renameHook` | x | x | x | x | |
+| `currentField` context | x | x | x | x | |
+| `skipValue` | x | x | x | x | |
+| `XmlNode` / `JsonNode` tree | x | x | x | x | |
+| SIMD acceleration | x | | x | | |
+| Context-aware errors | x | x | x | x | x |
 
 ## Error Reporting
-Most of the included parsers provide context-aware error reporting, including a snippet of the data around the error location, making it easier to identify and fix issues in the JSON input.
 
-#### JSON error reporting example
+Most parsers provide context-aware error reporting with a snippet of the input around the error location:
+
+```
+<person name="Alice" age="30"/>
+                           ^
+Error (1:26) Unexpected EOF while parsing `element`
+```
+
 ```
 {"name":"Alice","age":"isMember":true}
                                 ^
@@ -201,22 +375,20 @@ Error (1:33) Unexpected token `:`
 ```
 
 ## Roadmap
+
 - [ ] JSON depth/size limit to prevent DoS attacks
 - [ ] JSON schema validation support
-- [ ] JSON skippable fields
 - [ ] JSON custom field mapping
 
 > [!NOTE]
-> Some implementations are made with the chatbot (dotenv, fbe, gettext) and may be buggy or incomplete, contributions are welcome to improve them!
+> Some implementations (dotenv, fbe, gettext) may be incomplete. Contributions are welcome!
 
-### ❤ Contributions & Support
-- 🐛 Found a bug? [Create a new Issue](https://github.com/openpeeps/openparser/issues)
-- 👋 Wanna help? [Fork it!](https://github.com/openpeeps/openparser/fork)
+### Contributions & Support
 
-|  |  |
-|---|---|
-| <a href="https://opencode.ai/go?ref=BHMEEK48QX"><img src="https://github.com/openpeeps/pistachio/blob/main/.github/opencode.png" alt="OpenCode"></a> | Switch to **Open-Source LLMs** via OpenCode GO, choosing from a variety of powerful models such as DeepSeek, Qwen, Kimi, GLM-5, MiniMax, MiMo. 🍕 [Use our referral link to get started!](https://opencode.ai/go?ref=BHMEEK48QX)|
+- Found a bug? [Create a new Issue](https://github.com/openpeeps/openparser/issues)
+- Want to help? [Fork it!](https://github.com/openpeeps/openparser/fork)
 
-### 🎩 License
+### License
+
 MIT license. [Made by Humans from OpenPeeps](https://github.com/openpeeps).<br>
 Copyright OpenPeeps & Contributors &mdash; All rights reserved.
