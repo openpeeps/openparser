@@ -340,7 +340,40 @@ let moCatalog = parseMo("messages.mo")
 
 ## FBE (Fast Binary Encoding)
 
-Encode and decode data using [Fast Binary Encoding](https://github.com/chronoxor/FastBinaryEncoding).
+Encode and decode structured data using [Fast Binary Encoding](https://github.com/chronoxor/FastBinaryEncoding). Supports both a high-level compact API and a low-level field-based API with custom field IDs.
+
+```nim
+import openparser/fbe
+
+type
+  Person = object
+    name: string
+    age: int32
+    bio: string
+
+# High-level: encodeFinal/decodeFinal (compact, automatic field ordering)
+let alice = Person(name: "Alice", age: 30, bio: "hello")
+let buf = encodeFinal(alice)        # -> Buffer
+var decoded = Person()
+decodeFinal(buf, decoded)            # round-trip
+assert decoded.name == "Alice"
+
+# Encode/decode sequences
+let people = @[Person(name: "Bob", age: 25), Person(name: "Carol", age: 28)]
+let seqBuf = encodeFinal(people)
+var decodedPeople: seq[Person]
+decodeFinal(seqBuf, decodedPeople)
+
+# Low-level: custom field IDs and versioning
+let buf2 = encode(alice, 7'u32, proc (fieldName: string): uint16 =
+  if fieldName == "name": 1'u16
+  elif fieldName == "age": 2'u16
+  elif fieldName == "bio": 3'u16
+  else: 0'u16
+)
+```
+
+**Features:** Zero-copy buffer-based encoding, custom field IDs, struct versioning, disk round-trip, UUID/timestamp/decimal/vector support, UTF-8 strings, inner structs, benchmarked at 10K+ objects.
 
 ---
 
