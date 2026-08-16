@@ -15,7 +15,7 @@ type
     opChar          ## match exact character
     opAnyChar       ## match any character (.)
     opCharClass     ## match character class [abc] [^a-z]
-    opEscapeClass   ## match \d \w \s \D \W \S \b \B
+    opEscapeClass   ## match \d \w \s \D \W \S
     opAnchorStart   ## assert position ^ 
     opAnchorEnd     ## assert position $
     opMatch         ## successful match
@@ -24,8 +24,7 @@ type
     opSplitLazy     ## fork execution (lazy:   try t2 first, then t1)
     opSave          ## save current position into capture slot
     opProgress      ## guard against zero-width infinite loops
-    opSkipTo        ## SIMD scan forward to first occurrence of arg1 char
-                    ## Emitted for [^X]* and [^X]+ where X is a single literal char
+    opWordBoundary  ## assert word boundary: \b (neg=false) or \B (neg=true)
 
   Instr* = object
     op*:     OpCode
@@ -170,11 +169,13 @@ proc compileNode(c: var RegexCompiler, n: RegexNode) =
 
   of rnEscaped:
     ## \d \D \w \W \s \S  → escape class
-    ## \b \B              → anchor-like escape
+    ## \b \B              → word boundary assertion
     ## anything else      → literal char
     case n.escape
     of 'd', 'D', 'w', 'W', 's', 'S':
       c.emit(Instr(op: opEscapeClass, arg1: ord(n.escape)))
+    of 'b': c.emit(Instr(op: opWordBoundary))
+    of 'B': c.emit(Instr(op: opWordBoundary, neg: true))
     of 'n': c.emit(Instr(op: opChar, arg1: ord('\n')))
     of 'r': c.emit(Instr(op: opChar, arg1: ord('\r')))
     of 't': c.emit(Instr(op: opChar, arg1: ord('\t')))
@@ -218,28 +219,7 @@ proc compileNode(c: var RegexCompiler, n: RegexNode) =
     compileNode(c, n.child)
     if n.capture:
       c.emit(Instr(op: opSave, arg1: closeSlot))
-
-    # of rnQuantifier:
-    #   let inner = n.operand
-    #   # Detect [^X]* / [^X]+ — emit opSkipTo instead of Split+CharClass loop
-    #   if inner.kind == rnCharClass and inner.negated and
-    #      inner.items.len == 1 and not inner.items[0].isRange:
-    #     let ch = inner.items[0].ch
-    #     c.emit(Instr(op: opSkipTo, arg1: ord(ch)))
-    #     return
-    #   compileQuantifier(c, n)
   of rnQuantifier:
-    let inner = n.operand
-    # Detect [^X]* ONLY (min=0) — emit opSkipTo instead of Split+CharClass loop.
-    # For [^X]+ (min=1) fall through to normal compilation so the mandatory
-    # first-char step is enforced.
-    if inner.kind == rnCharClass and inner.negated and
-       inner.items.len == 1 and not inner.items[0].isRange and
-       not inner.items[0].isEscape and
-       n.min == 0:
-      let ch = inner.items[0].ch
-      c.emit(Instr(op: opSkipTo, arg1: ord(ch)))
-      return
     compileQuantifier(c, n)
 
 proc detectProgramShape(ast: RegexNode): PatternShape =
@@ -360,7 +340,8 @@ proc disassemble*(prog: Program): string =
       of opSplitLazy:    &"SPLIT_LAZY  {ins.arg1:04d}, {ins.arg2:04d}"
       of opSave:         &"SAVE        slot[{ins.arg1}]"
       of opProgress:     "PROGRESS"
-      of opSkipTo:       &"SKIP_TO      '{char(ins.arg1)}' (0x{ins.arg1:02x})"
+      of opWordBoundary:
+        if ins.neg: "WORD_BOUNDARY \\B" else: "WORD_BOUNDARY \\b"
     lines.add(prefix & s)
   result = lines.join("\n")
 

@@ -9,6 +9,9 @@ import ./[compiler, prefilter, simd]
 export compiler
 
 type
+  SkipLoop = tuple[stopCh: char, exit: int, ok: bool]
+
+type
   Captures*    = seq[int]
 
   CaptureGroup* = object
@@ -25,7 +28,6 @@ type
 
   RThread = object
     pc:   int
-    pos:  int
     caps: Captures
 
   #
@@ -88,6 +90,44 @@ proc matchCharClass(cls: CompiledClass, ch: char): bool {.inline.} =
       if ch == item.ch: found = true; break
   result = if cls.negated: not found else: found
 
+proc isWordChar(ch: char): bool {.inline.} =
+  ch in {'a'..'z', 'A'..'Z', '0'..'9', '_'}
+
+proc wordBoundaryAt(input: string, pos, inputLen: int): bool {.inline.} =
+  ## True when pos sits on a \b boundary: exactly one side holds a word char.
+  let left  = pos > 0 and isWordChar(input[pos - 1])
+  let right = pos < inputLen and isWordChar(input[pos])
+  left != right
+
+proc skipLoopInfo(prog: Program, pc: int): SkipLoop =
+  ## Recognize the compiled form of `[^X]*` (greedy star of a single negated
+  ## char class):  split(body, exit); charclass; jmp(split).
+  ## Returns the stop char and the exit pc when the pattern matches.
+  result.ok = false
+  if pc < 0 or pc + 2 >= prog.instrs.len: return
+  let ins = prog.instrs[pc]
+  if ins.op != opSplit: return
+  let body = prog.instrs[pc + 1]
+  if body.op != opCharClass: return
+  let back = prog.instrs[pc + 2]
+  if back.op != opJmp or back.arg1 != pc: return
+  let cls = prog.classes[body.arg1]
+  if not cls.negated or cls.items.len != 1: return
+  let item = cls.items[0]
+  if item.isRange or item.isEscape: return
+  result.stopCh = item.ch
+  result.exit   = ins.arg2
+  result.ok     = true
+
+proc skipLoopIsSafe(prog: Program, stopCh: char, exit: int): bool =
+  ## The SIMD jump is sound only when the loop's exit successor consumes the
+  ## stop char or is terminal — otherwise `[^X]*` needs NFA backtracking.
+  if exit < 0 or exit >= prog.instrs.len: return false
+  case prog.instrs[exit].op
+  of opChar:      return prog.instrs[exit].arg1 == ord(stopCh)
+  of opMatch, opAnchorEnd: return true
+  else: return false
+
 proc initRegexVM*(prog: Program): RegexVM =
   let n = prog.instrs.len + 1
   result.prog      = prog
@@ -98,7 +138,7 @@ proc initRegexVM*(prog: Program): RegexVM =
   result.pcNxt     = initPcSet(n)
 
 proc addEpsilon(vm: var RegexVM, nxt: var PcSet,
-                pc, inputPos, inputLen: int) =
+                pc, inputPos, inputLen: int; input: string) =
   # Follow all epsilon transitions from `pc`, parking consuming PCs into `nxt`.
   # vm.visited[pc] == vm.gen prevents re-entry within a single closure step.
   if pc < 0 or pc >= vm.prog.instrs.len: return
@@ -108,19 +148,23 @@ proc addEpsilon(vm: var RegexVM, nxt: var PcSet,
   let ins = vm.prog.instrs[pc]
   case ins.op
   of opJmp:
-    addEpsilon(vm, nxt, ins.arg1, inputPos, inputLen)
+    addEpsilon(vm, nxt, ins.arg1, inputPos, inputLen, input)
   of opSplit:
-    addEpsilon(vm, nxt, ins.arg1, inputPos, inputLen)
-    addEpsilon(vm, nxt, ins.arg2, inputPos, inputLen)
+    addEpsilon(vm, nxt, ins.arg1, inputPos, inputLen, input)
+    addEpsilon(vm, nxt, ins.arg2, inputPos, inputLen, input)
   of opSplitLazy:
-    addEpsilon(vm, nxt, ins.arg2, inputPos, inputLen)
-    addEpsilon(vm, nxt, ins.arg1, inputPos, inputLen)
+    addEpsilon(vm, nxt, ins.arg2, inputPos, inputLen, input)
+    addEpsilon(vm, nxt, ins.arg1, inputPos, inputLen, input)
   of opSave, opProgress:
-    addEpsilon(vm, nxt, pc + 1, inputPos, inputLen)
+    addEpsilon(vm, nxt, pc + 1, inputPos, inputLen, input)
   of opAnchorStart:
-    if inputPos == 0: addEpsilon(vm, nxt, pc + 1, inputPos, inputLen)
+    if inputPos == 0: addEpsilon(vm, nxt, pc + 1, inputPos, inputLen, input)
   of opAnchorEnd:
-    if inputPos == inputLen: addEpsilon(vm, nxt, pc + 1, inputPos, inputLen)
+    if inputPos == inputLen: addEpsilon(vm, nxt, pc + 1, inputPos, inputLen, input)
+  of opWordBoundary:
+    let isBnd = wordBoundaryAt(input, inputPos, inputLen)
+    if isBnd != ins.neg:   ## \b needs isBnd=true, \B needs isBnd=false
+      addEpsilon(vm, nxt, pc + 1, inputPos, inputLen, input)
   else:
     nxt.inclPc(pc)   ## consuming instruction — park for character step
 
@@ -131,7 +175,7 @@ proc execFast(vm: var RegexVM, input: string, startPos: int): MatchResult =
   clearPcSet(vm.pcCur)
   clearPcSet(vm.pcNxt)
   inc vm.gen
-  addEpsilon(vm, vm.pcCur, 0, startPos, inputLen)
+  addEpsilon(vm, vm.pcCur, 0, startPos, inputLen, input)
 
   result = noMatch()
   var sp = startPos
@@ -139,8 +183,9 @@ proc execFast(vm: var RegexVM, input: string, startPos: int): MatchResult =
   while true:
     inc vm.gen
 
-    # Fast-path: if the ONLY active thread is opSkipTo, use SIMD to jump.
-    # Check before the full word loop.
+    # Fast-path: if the ONLY active thread is a greedy `[^X]*` loop whose exit
+    # successor is safe, use SIMD to jump straight to the stop char.
+    # Any other shape (multi-thread, backtracking needed) runs the generic NFA.
     block skipFastPath:
       var count = 0
       var onlyPc = -1
@@ -153,23 +198,15 @@ proc execFast(vm: var RegexVM, input: string, startPos: int): MatchResult =
           inc count
           if count > 1: break skipFastPath
       if count == 1 and onlyPc >= 0 and onlyPc < prog.instrs.len:
-        let ins = prog.instrs[onlyPc]
-        if ins.op == opSkipTo:
-          let stopCh = char(ins.arg1)
-          let hit    = scanByte(input, sp, inputLen, stopCh)
-          if hit < 0:
-            # Stop-char not found: opSkipTo consumes to end of string,
-            # then transitions to the next instruction (e.g. opAnchorEnd/opMatch).
-            sp = inputLen
-            clearPcSet(vm.pcCur)
-            inc vm.gen
-            addEpsilon(vm, vm.pcCur, onlyPc + 1, sp, inputLen)
-            continue
-          # Jump sp to the stop-char; opSkipTo consumed [^stopCh]* via SIMD
-          sp = hit
+        let loop = skipLoopInfo(prog[], onlyPc)
+        if loop.ok and skipLoopIsSafe(prog[], loop.stopCh, loop.exit):
+          let hit = scanByte(input, sp, inputLen, loop.stopCh)
+          # Jump sp to the stop-char (or end of input); the exit successor
+          # consumes it (opChar) or is terminal (opMatch/opAnchorEnd).
+          sp = if hit < 0: inputLen else: hit
           clearPcSet(vm.pcCur)
           inc vm.gen
-          addEpsilon(vm, vm.pcCur, onlyPc + 1, sp, inputLen)
+          addEpsilon(vm, vm.pcCur, loop.exit, sp, inputLen, input)
           continue
 
     let ch    = if sp < inputLen: input[sp] else: '\0'
@@ -189,24 +226,18 @@ proc execFast(vm: var RegexVM, input: string, startPos: int): MatchResult =
           if not result.matched or sp > result.stop:
             result = MatchResult(matched: true, start: startPos,
                                  stop: sp, captures: @[])
-        of opSkipTo:
-          # Multi-thread case: treat as [^X]* step-by-step
-          if not atEnd and ch != char(ins.arg1):
-            addEpsilon(vm, vm.pcNxt, pc, sp + 1, inputLen)  # stay in loop
-          elif not atEnd:
-            addEpsilon(vm, vm.pcNxt, pc + 1, sp + 1, inputLen)  # exit loop, consume stopCh at next instr
         of opChar:
           if not atEnd and ord(ch) == ins.arg1:
-            addEpsilon(vm, vm.pcNxt, pc + 1, sp + 1, inputLen)
+            addEpsilon(vm, vm.pcNxt, pc + 1, sp + 1, inputLen, input)
         of opAnyChar:
           if not atEnd and ch != '\n':
-            addEpsilon(vm, vm.pcNxt, pc + 1, sp + 1, inputLen)
+            addEpsilon(vm, vm.pcNxt, pc + 1, sp + 1, inputLen, input)
         of opEscapeClass:
           if not atEnd and matchEscapeClass(char(ins.arg1), ch):
-            addEpsilon(vm, vm.pcNxt, pc + 1, sp + 1, inputLen)
+            addEpsilon(vm, vm.pcNxt, pc + 1, sp + 1, inputLen, input)
         of opCharClass:
           if not atEnd and matchCharClass(prog.classes[ins.arg1], ch):
-            addEpsilon(vm, vm.pcNxt, pc + 1, sp + 1, inputLen)
+            addEpsilon(vm, vm.pcNxt, pc + 1, sp + 1, inputLen, input)
         else: discard
 
     if atEnd: break
@@ -217,17 +248,17 @@ proc execFast(vm: var RegexVM, input: string, startPos: int): MatchResult =
 # Epsilon closure
 #
 proc addRThread(vm: var RegexVM, queue: var seq[RThread],
-                t: RThread, inputPos, inputLen: int) =
+                t: RThread, inputPos, inputLen: int; input: string) =
   if t.pc < 0 or t.pc >= vm.prog.instrs.len: return
   if vm.visited[t.pc] == vm.gen: return
   vm.visited[t.pc] = vm.gen
 
   let ins = vm.prog.instrs[t.pc]
   template next(newPc: int) =
-    addRThread(vm, queue, RThread(pc: newPc, pos: t.pos, caps: t.caps),
-               inputPos, inputLen)
+    addRThread(vm, queue, RThread(pc: newPc, caps: t.caps),
+               inputPos, inputLen, input)
   template nextT(th: RThread) =
-    addRThread(vm, queue, th, inputPos, inputLen)
+    addRThread(vm, queue, th, inputPos, inputLen, input)
 
   case ins.op
   of opJmp:      next(ins.arg1)
@@ -240,6 +271,10 @@ proc addRThread(vm: var RegexVM, queue: var seq[RThread],
     if inputPos == 0: next(t.pc + 1)
   of opAnchorEnd:
     if inputPos == inputLen: next(t.pc + 1)
+  of opWordBoundary:
+    let isBnd = wordBoundaryAt(input, inputPos, inputLen)
+    if isBnd != ins.neg:
+      next(t.pc + 1)
   else:
     queue.add(t)
 
@@ -252,8 +287,8 @@ proc execFull(vm: var RegexVM, input: string, startPos: int): MatchResult =
   let initCaps = newSeqWith(vm.prog.numCaptures * 2, -1)
 
   inc vm.gen
-  addRThread(vm, cur, RThread(pc: 0, pos: startPos, caps: initCaps),
-             startPos, inputLen)
+  addRThread(vm, cur, RThread(pc: 0, caps: initCaps),
+             startPos, inputLen, input)
 
   result = noMatch()
   var sp = startPos
@@ -292,23 +327,23 @@ proc execFull(vm: var RegexVM, input: string, startPos: int): MatchResult =
                                  stop: sp, captures: t.caps)
       of opChar:
         if not atEnd and ord(ch) == ins.arg1:
-          addRThread(vm, nxt, RThread(pc: t.pc+1, pos: sp+1, caps: t.caps),
-                     sp+1, inputLen)
+          addRThread(vm, nxt, RThread(pc: t.pc+1, caps: t.caps),
+                     sp+1, inputLen, input)
           nxtHasThread = true
       of opAnyChar:
         if not atEnd and ch != '\n':
-          addRThread(vm, nxt, RThread(pc: t.pc+1, pos: sp+1, caps: t.caps),
-                     sp+1, inputLen)
+          addRThread(vm, nxt, RThread(pc: t.pc+1, caps: t.caps),
+                     sp+1, inputLen, input)
           nxtHasThread = true
       of opEscapeClass:
         if not atEnd and matchEscapeClass(char(ins.arg1), ch):
-          addRThread(vm, nxt, RThread(pc: t.pc+1, pos: sp+1, caps: t.caps),
-                     sp+1, inputLen)
+          addRThread(vm, nxt, RThread(pc: t.pc+1, caps: t.caps),
+                     sp+1, inputLen, input)
           nxtHasThread = true
       of opCharClass:
         if not atEnd and matchCharClass(vm.prog.classes[ins.arg1], ch):
-          addRThread(vm, nxt, RThread(pc: t.pc+1, pos: sp+1, caps: t.caps),
-                     sp+1, inputLen)
+          addRThread(vm, nxt, RThread(pc: t.pc+1, caps: t.caps),
+                     sp+1, inputLen, input)
           nxtHasThread = true
       else: discard
 
@@ -399,33 +434,6 @@ proc match*(vm: var RegexVM, input: string): MatchResult =
   result = vm.exec(input, 0)
   if result.matched and (result.start != 0 or result.stop != input.len):
     result = noMatch()
-
-proc injectEps(vm: var RegexVM, startOf: var seq[int],
-               pc, start, inputPos, inputLen: int, nxt: var PcSet) =
-  if pc < 0 or pc >= vm.prog.instrs.len: return
-  if vm.visited[pc] == vm.gen: return
-  vm.visited[pc] = vm.gen
-  startOf[pc] = start
-  let ins = vm.prog.instrs[pc]
-  case ins.op
-  of opJmp:
-    injectEps(vm, startOf, ins.arg1, start, inputPos, inputLen, nxt)
-  of opSplit:
-    injectEps(vm, startOf, ins.arg1, start, inputPos, inputLen, nxt)
-    injectEps(vm, startOf, ins.arg2, start, inputPos, inputLen, nxt)
-  of opSplitLazy:
-    injectEps(vm, startOf, ins.arg2, start, inputPos, inputLen, nxt)
-    injectEps(vm, startOf, ins.arg1, start, inputPos, inputLen, nxt)
-  of opSave, opProgress:
-    injectEps(vm, startOf, pc + 1, start, inputPos, inputLen, nxt)
-  of opAnchorStart:
-    if inputPos == 0:
-      injectEps(vm, startOf, pc + 1, start, inputPos, inputLen, nxt)
-  of opAnchorEnd:
-    if inputPos == inputLen:
-      injectEps(vm, startOf, pc + 1, start, inputPos, inputLen, nxt)
-  else:
-    nxt.inclPc(pc)
 
 proc backscanStart(input: string, anchorPos, minPos: int,
                    bs: BackscanKind): int {.inline.} =
