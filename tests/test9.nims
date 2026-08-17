@@ -1,4 +1,0 @@
---define:release
---define:avx2
---passC:"-mavx2"
---passL:"-mavx2"

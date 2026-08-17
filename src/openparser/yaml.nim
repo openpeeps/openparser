@@ -266,6 +266,15 @@ proc nextToken*(p: var YamlParser): YamlToken =
       advance(p.lex)
     else:
       result.value = p.lex.readNumber(result.kind)
+      while p.lex.current == '.' and
+            p.lex.pos + 1 < p.lex.len and
+            p.lex.charAt(p.lex.pos + 1) in {'0'..'9'}:
+        result.kind = ytkIdentifier
+        result.value.add('.')
+        advance(p.lex)
+        while p.lex.current in {'0'..'9'}:
+          result.value.add(p.lex.current)
+          advance(p.lex)
   of '"', '\'':
     let q = p.lex.current
     advance(p.lex)
