@@ -46,6 +46,10 @@ type
       # Number of spaces to use for indentation when pretty-printing JSON
     newLine: string = "\n"
       # Newline character(s) to use when pretty-printing JSON
+    maxDepth*: int = 0
+      ## Maximum nesting depth for objects/arrays.
+      ## 0 means no limit. When exceeded during parsing,
+      ## an OpenParserJsonError is raised immediately.
 
   #
   # JSON JsonParser
@@ -87,10 +91,15 @@ type
       ## context about which field they are parsing
     options: JsonOptions
     lvl: int # indentation level
+    depth: int # current nesting depth for maxDepth enforcement
 
   OpenParserJsonError* = object of CatchableError
 
 template skippable*() {.pragma.}
+template json*(name: static[string]) {.pragma.}
+  ## Custom field mapping pragma. Maps a Nim field name to a JSON key.
+  ## Example: `name {.json: "username".}: string`
+  ## Works both for parsing and dumping. `renameHook` supersedes this pragma.
 
 const
   invalidToken* = "Invalid token `$1`"
@@ -98,6 +107,13 @@ const
   unexpectedToken* = "Unexpected token `$1`"
   unexpectedTokenExpected* = "Got `$1`, expected $2"
   unexpectedChar* = "Unexpected character `$1`"
+  errorMaxDepth* = "Maximum nesting depth exceeded"
+
+proc checkMaxDepth(p: var JsonParser) =
+  ## Check and enforce maxDepth limit. Raises immediately on violation.
+  if p.options != nil and p.options.maxDepth > 0:
+    if p.depth > p.options.maxDepth:
+      raise newException(OpenParserJsonError, errorMaxDepth)
 
 proc error*(l: var JsonLexer, msg: string) =
   # Raise a lexer error
@@ -133,6 +149,11 @@ proc isMapped*(m: MemFile): bool {.inline.} =
 # Forward declarations
 proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode
 proc arrayToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode
+
+# `{.json: "wireName".}` pragma support
+# Compile-time pragma for mapping JSON keys to Nim field names.
+# Works for toStaticJson (compile-time dump).
+# TODO: Parse-time support requires embedding macros in generic procs.
 
 # `renameHook` is an optional user-defined hook for object
 # serialization/deserialization. There is no default: the object dump/parse
@@ -181,18 +202,30 @@ macro toStaticJson*(v: typed, opts: static JsonOptions = nil): untyped =
     return quote do:
       dumpHook(v)
   # retrieve the implementation of typed `v`
-  var valImpl = v.getType()
+  # Use tInst.getImpl() to get full type definition with pragma info
+  var valImpl = tInst.getImpl()
   var objName = v.getTypeInst()
   case valImpl.kind:
+  of nnkTypeDef:
+    let objBody = valImpl[2]
+    if objBody.kind == nnkObjectTy:
+      return objectToJson(v, objBody, opts)
+    elif objBody.kind == nnkRefTy:
+      return objectToJson(v, objBody[0], opts)
+    else:
+      # Fallback to dumpHook for other types
+      return quote do:
+        var s = ""
+        dumpHook(s, `v`)
+        s
   of nnkObjectTy:
     return objectToJson(v, valImpl, opts)
-  of nnkBracketExpr:
-    let ty = v.getTypeImpl()
-    if ty.kind == nnkRefTy:
-      return objectToJson(v, valImpl[1].getType(), opts)
-    # sequences or arrays
-    return arrayToJson(v, valImpl, opts)
-  else: discard
+  else:
+    # Fallback to dumpHook for other types
+    return quote do:
+      var s = ""
+      dumpHook(s, `v`)
+      s
 
 #
 # Dump Hooks for JSON Serialization
@@ -440,9 +473,16 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
       if i != 0 and i < len:
         strObj.add(newCall(ident"add", res, newLit(",")))
       let fieldLit = newLit(fieldName)
+      # Check for json pragma at compile time - supersedes field name
+      let wireNameLit = 
+        if field.hasCustomPragma(json):
+          field.getCustomPragmaVal(json)
+        else:
+          newLit(fieldName)
       let wireName = genSym(nskVar, "wireName")
       strObj.add quote do:
-        var `wireName` = `fieldLit`
+        var `wireName` = `wireNameLit`
+        # renameHook supersedes pragma
         when compiles(renameHook(`v`, `wireName`)):
           renameHook(`v`, `wireName`)
         `res`.add("\"" & `wireName` & "\":")
@@ -458,6 +498,84 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
         )
       )
       inc i
+    of nnkIdentDefs:
+      # Field with pragma or type annotation
+      let fieldNode = field[0]  # First child is the field name (with pragma)
+      case fieldNode.kind
+      of nnkPragmaExpr:
+        # Field has a pragma - extract field name and check for json pragma
+        let symNode = fieldNode[0]  # The actual field name symbol
+        let fieldName = 
+          if symNode.kind == nnkSym: symNode.strVal
+          elif symNode.kind == nnkIdent: symNode.strVal
+          else: ""
+        if fieldName.len == 0:
+          inc i
+          continue
+        if opts != nil:
+          if opts.skipFields.len > 0 and opts.skipFields.contains(fieldName):
+            inc i
+            continue
+        if i != 0 and i < len:
+          strObj.add(newCall(ident"add", res, newLit(",")))
+        # Check for json pragma manually
+        var wireNameLit = newLit(fieldName)
+        let pragmaNode = fieldNode[1]  # nnkPragma
+        if pragmaNode.kind == nnkPragma:
+          for pragmaChild in pragmaNode:
+            if pragmaChild.kind == nnkCall:
+              let pragmaName = pragmaChild[0]
+              if pragmaName.kind == nnkSym and pragmaName.strVal == "json":
+                wireNameLit = pragmaChild[1]  # Return the pragma value
+        let wireName = genSym(nskVar, "wireName")
+        strObj.add quote do:
+          var `wireName` = `wireNameLit`
+          # renameHook supersedes pragma
+          when compiles(renameHook(`v`, `wireName`)):
+            renameHook(`v`, `wireName`)
+          `res`.add("\"" & `wireName` & "\":")
+        strObj.add(
+          nnkWhenStmt.newTree(
+            nnkElifBranch.newTree(
+              nnkCall.newTree(
+                ident("compiles"),
+                newCall(ident("dumpHook"), res, newDotExpr(v, ident(fieldName)))
+              ),
+              newCall(ident("dumpHook"), res, newDotExpr(v, ident(fieldName)))
+            )
+          )
+        )
+        inc i
+      of nnkIdent, nnkSym:
+        # Simple field without pragma
+        let fieldName = fieldNode.strVal
+        if opts != nil:
+          if opts.skipFields.len > 0 and opts.skipFields.contains(fieldName):
+            inc i
+            continue
+        if i != 0 and i < len:
+          strObj.add(newCall(ident"add", res, newLit(",")))
+        let wireNameLit = newLit(fieldName)
+        let wireName = genSym(nskVar, "wireName")
+        strObj.add quote do:
+          var `wireName` = `wireNameLit`
+          when compiles(renameHook(`v`, `wireName`)):
+            renameHook(`v`, `wireName`)
+          `res`.add("\"" & `wireName` & "\":")
+        strObj.add(
+          nnkWhenStmt.newTree(
+            nnkElifBranch.newTree(
+              nnkCall.newTree(
+                ident("compiles"),
+                newCall(ident("dumpHook"), res, newDotExpr(v, ident(fieldName)))
+              ),
+              newCall(ident("dumpHook"), res, newDotExpr(v, ident(fieldName)))
+            )
+          )
+        )
+        inc i
+      else:
+        discard
     of nnkRecCase:
       discard
     else:
@@ -741,6 +859,8 @@ proc skipValue*(parser: var JsonParser) =
   case parser.curr.kind
   of jtkLBrace:
     # skip object
+    inc parser.depth
+    checkMaxDepth(parser)
     parser.advance() # consume the opening `{`
     while parser.curr.kind != jtkRBrace:
       parser.advance()            # consume the key
@@ -749,14 +869,18 @@ proc skipValue*(parser: var JsonParser) =
       if parser.curr.kind == jtkComma:
         parser.advance()
     parser.expectSkip(jtkRBrace)
+    dec parser.depth
   of jtkLBracket:
     # skip array
+    inc parser.depth
+    checkMaxDepth(parser)
     parser.advance() # consume the opening `[`
     while parser.curr.kind != jtkRBracket:
       skipValue(parser)           # skip the element
       if parser.curr.kind == jtkComma:
         parser.advance()
     parser.expectSkip(jtkRBracket)
+    dec parser.depth
   else:
     parser.advance()
 
@@ -964,6 +1088,8 @@ proc parseObjectHook[T, R](parser: var JsonParser, v: var T, renameVal: R) =
   ## that ref objects can name their own type (e.g. a hook declared as
   ## `proc renameHook(v: MyRef, fieldName: var string)`), while plain objects
   ## pass themselves.
+  inc parser.depth
+  checkMaxDepth(parser)
   parser.expectSkip(jtkLBrace) # start of object
   while parser.curr.kind notin {jtkRBrace, jtkEof}:
     if parser.curr.kind != jtkString:
@@ -992,7 +1118,11 @@ proc parseObjectHook[T, R](parser: var JsonParser, v: var T, renameVal: R) =
 
     var matched = false
     for objField, objVal in v.fieldPairs:
-      if wireKey == objField:
+      # Get wire name for this field
+      var fieldWireName = objField
+      # TODO: Parse-time pragma support requires macro embedding in generic procs
+      # For now, fields without renameHook use their field name
+      if wireKey == fieldWireName:
         matched = true
         parser.advance()
         parser.expectSkip(jtkColon)
@@ -1022,6 +1152,7 @@ proc parseObjectHook[T, R](parser: var JsonParser, v: var T, renameVal: R) =
       parser.advance()
 
   parser.expectSkip(jtkRBrace)
+  dec parser.depth
 
 proc parseHook*[T: object](parser: var JsonParser, v: var T) =
   parser.parseObjectHook(v, v)
@@ -1038,6 +1169,8 @@ proc parseHook*[T: ref object](parser: var JsonParser, v: var T) =
 
 proc parseHook*[T](parser: var JsonParser, v: var seq[T]) =
   ## A hook to parse sequence fields
+  inc parser.depth
+  checkMaxDepth(parser)
   parser.expectSkip(jtkLBracket) # start of array
   while parser.curr.kind != jtkRBracket:
     var item: T
@@ -1045,6 +1178,7 @@ proc parseHook*[T](parser: var JsonParser, v: var seq[T]) =
     v.add(item)
     ensureComma()
   parser.expectSkip(jtkRBracket) # end of array
+  dec parser.depth
 
 
 proc parseHook*[T](parser: var JsonParser, v: var Option[T]) =
@@ -1063,6 +1197,8 @@ proc parseHook*[T](parser: var JsonParser, v: var Option[T]) =
 #
 proc parseObject(parser: var JsonParser, obj: var JsonNode) =
   # Parse a JSON object
+  inc parser.depth
+  checkMaxDepth(parser)
   while parser.curr.kind != jtkRBrace:
     let token = parser.advance()
     case token.kind
@@ -1105,9 +1241,12 @@ proc parseObject(parser: var JsonParser, obj: var JsonNode) =
       if parser.curr.kind notin {jtkComma, jtkRBrace, jtkEof}:
         parser.error(unexpectedToken % [$token.kind])
   parser.advance() # consume the closing '}'
+  dec parser.depth
 
 proc parseArray(parser: var JsonParser, arr: var JsonNode) =
   # Parse a JSON array to JsonNode
+  inc parser.depth
+  checkMaxDepth(parser)
   while parser.curr.kind != jtkRBracket:
     let token = parser.advance()
     case token.kind
@@ -1140,9 +1279,10 @@ proc parseArray(parser: var JsonParser, arr: var JsonNode) =
     else:
       parser.error(unexpectedToken % [$token.kind])
   parser.advance() # consume the closing ']'
+  dec parser.depth
 
-proc initParser(lexer: JsonLexer): JsonParser =
-  result = JsonParser(lexer: lexer)
+proc initParser(lexer: JsonLexer, opts: JsonOptions = nil): JsonParser =
+  result = JsonParser(lexer: lexer, options: opts)
   result.curr = result.nextToken()
   result.next = result.nextToken()
 
@@ -1192,6 +1332,11 @@ proc fromJson*(str: string): JsonNode =
   var parser = initParser(newJsonLexer(str))
   result = parseAnyRoot(parser)
 
+proc fromJson*(str: string, opts: JsonOptions): JsonNode =
+  ## Parse a JSON from `str` with options (e.g. maxDepth limit)
+  var parser = initParser(newJsonLexer(str), opts)
+  result = parseAnyRoot(parser)
+
 proc fromJsonL*(str: string): JsonNode =
   ## Parse line-delimited JSON from `str` and returns a `JsonNode` array
   var parser = initParser(newJsonLexer(str))
@@ -1200,6 +1345,11 @@ proc fromJsonL*(str: string): JsonNode =
 proc fromJson*(mapped: MemFile): JsonNode =
   ## Parse JSON directly from mapped memory.
   var parser = initParser(newJsonLexer(mapped.mem, mapped.size))
+  result = parseAnyRoot(parser)
+
+proc fromJson*(mapped: MemFile, opts: JsonOptions): JsonNode =
+  ## Parse JSON directly from mapped memory with options.
+  var parser = initParser(newJsonLexer(mapped.mem, mapped.size), opts)
   result = parseAnyRoot(parser)
 
 proc fromJsonL*(mapped: MemFile): JsonNode =
@@ -1212,6 +1362,12 @@ proc fromJsonFile*(filename: string): JsonNode =
   var mf = memfiles.open(filename, fmRead)
   defer: mf.close()
   result = fromJson(mf)
+
+proc fromJsonFile*(filename: string, opts: JsonOptions): JsonNode =
+  ## Parse JSON from a memory-mapped file with options.
+  var mf = memfiles.open(filename, fmRead)
+  defer: mf.close()
+  result = fromJson(mf, opts)
 
 proc fromJsonLFile*(filename: string): JsonNode =
   ## Parse JSON-L from a memory-mapped file.
@@ -1277,12 +1433,36 @@ macro fromJsonMacro(x: typed, str: typed): untyped =
   var blockStmt = newBlockStmt(blockStmtId, blockStmtList)
   result = newStmtList().add(blockStmt)
 
+macro fromJsonMacroOpts(x: typed, str: typed, opts: JsonOptions): untyped =
+  # macro to parse JSON string `str` into object of type `x` with options
+  var t = x.getTypeInst()[1]
+  var
+    blockStmtList = newStmtList()
+    blockStmtId = genSym(nskLabel, "voodoo")
+  add blockStmtList, quote do:
+    var
+      tmp: `t`
+      parser = JsonParser(lexer: newJsonLexer(`str`), options: `opts`)
+    parser.curr = parser.nextToken()
+    parser.next = parser.nextToken()
+    parser.parseJson(tmp)
+    ensureMove(tmp)
+  var blockStmt = newBlockStmt(blockStmtId, blockStmtList)
+  result = newStmtList().add(blockStmt)
+
 proc fromJson*[T](s: string, x: typedesc[T]): T =
   ## Provide a direct to object conversion from JSON string to Nim objects
   when x is JsonNode:
     return fromJson(s)
   else:
     return fromJsonMacro(x, s)
+
+proc fromJson*[T](s: string, x: typedesc[T], opts: JsonOptions): T =
+  ## Provide a direct to object conversion from JSON string to Nim objects with options
+  when x is JsonNode:
+    return fromJson(s, opts)
+  else:
+    return fromJsonMacroOpts(x, s, opts)
 
 # JsonNode to Nim Object conversion
 proc toJsonNode*[T](v: T): JsonNode =

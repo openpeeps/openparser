@@ -50,7 +50,43 @@ echo toJson(person)  # {"name":"Albush","age":40,"email":"al@ex.com"}
 let bigNode = fromJsonFile("huge.json")
 ```
 
-**Features:** `parseHook`/`dumpHook` for custom types, `renameHook` for field name mapping, `currentField` context, `skipValue`, `toStaticJson` compile-time optimization, line-delimited JSON (`fromJsonL`), `Option[T]` support.
+**Features:** `parseHook`/`dumpHook` for custom types, `renameHook` for field name mapping, `currentField` context, `skipValue`, `toStaticJson` compile-time optimization, line-delimited JSON (`fromJsonL`), `Option[T]` support, `maxDepth` DoS protection.
+
+### Depth limit protection
+Protect against deeply nested JSON that could cause stack overflow:
+```nim
+import openparser/json
+
+# Limit nesting depth to prevent DoS attacks
+let opts = JsonOptions(maxDepth: 10)
+let data = """{"a":{"b":{"c":1}}}"""
+
+# Raises OpenParserJsonError if depth exceeds 10
+let node = fromJson(data, opts)
+
+# Also works with typed parsing
+let user = fromJson(data, User, opts)
+```
+
+### Custom field mapping via pragma
+Map JSON keys to Nim field names using the `{.json: "wireName".}` pragma (works for compile-time serialization):
+```nim
+import openparser/json
+
+type
+  User = object
+    name {.json: "username".}: string
+    age {.json: "user_age".}: int
+    email: string  # no pragma - uses field name
+
+# Dump: field "name" outputs as "username" using toStaticJson
+let user = User(name: "Alice", age: 30)
+let jsonStr = toStaticJson(user)
+echo jsonStr  # {"username":"Alice","user_age":30}
+```
+
+> [!NOTE]
+> The `{.json: "xx".}` pragma currently works for `toStaticJson` (compile-time dump). Runtime `toJson` and `fromJson` support is a TODO.
 
 - [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_json_skip_value.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/json.html)
 
@@ -312,10 +348,31 @@ SIMD-accelerated regex engine with a full parser, compiler, and VM.
 ```nim
 import openparser/regex
 
+# Simple match
 let result = match("hello world", "hello")
 echo result.matched  # true
 echo result.start    # 0
 echo result.stop     # 5
+
+# Find in string
+let found = find("hello world", r"world")
+echo found.matched   # true
+echo found.start     # 6
+
+# Find all occurrences
+let all = findAll("aabbcc", r"[a-c]+")
+echo all.len         # 3
+
+# Capture groups
+let m = match("2024-01-15", r"(\d{4})-(\d{2})-(\d{2})")
+if m.matched:
+  echo m.groupStr("2024-01-15", 1)  # "2024"
+  echo m.groupStr("2024-01-15", 2)  # "01"
+  echo m.groupStr("2024-01-15", 3)  # "15"
+
+# Character classes and quantifiers
+let email = match("user@example.com", r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
+echo email.matched  # true
 ```
 
 **Features:** SSE2/AVX2 acceleration, character classes, quantifiers, alternation, capture groups, anchoring.
@@ -324,17 +381,42 @@ echo result.stop     # 5
 
 ## i18n (GNU Gettext)
 
-Parse and dump PO and MO translation files.
+Parse and compile PO/MO translation files with plural form support.
 
 ```nim
 import openparser/gettext/[po, mo]
 
-# Parse a .po file
-let catalog = parsePo("messages.po")
+# Parse a .po file and compile it
+let cat = openPoCatalog("messages.po")
+let cc = compilePo(cat)
 
-# Parse a .mo binary file
-let moCatalog = parseMo("messages.mo")
+# Simple translation
+let greeting = cc.translate("Hello, world!")
+echo greeting
+
+# Plural forms (English: singular vs plural)
+let msg = cc.ntranslate("apple", "apples", 5)
+echo msg  # "apples"
+
+# Russian plural forms (3 forms)
+let ruMsg = cc.ntranslate("товар", "товара", 5)
+echo ruMsg  # "товаров"
+
+# Parse headers
+let headers = parsePoHeaders(cat)
+echo headers["Language"]  # "en"
+
+# Compile to .mo binary format
+writeMoFile(cc, "messages.mo")
+close(cat)
+
+# Or parse .mo directly
+let moCat = openMoCatalog("messages.mo")
+let moMsg = moCat.translate("Hello")
+close(moCat)
 ```
+
+**Features:** PO/MO parsing, plural form expressions, header extraction, binary MO compilation.
 
 ---
 
@@ -409,9 +491,9 @@ Error (1:33) Unexpected token `:`
 
 ## Roadmap
 
-- [ ] JSON depth/size limit to prevent DoS attacks
+- [x] JSON depth/size limit to prevent DoS attacks
 - [ ] JSON schema validation support
-- [ ] JSON custom field mapping
+- [x] JSON custom field mapping (compile-time `{.json: "xx".}` pragma)
 
 > [!NOTE]
 > Some implementations (dotenv, fbe, gettext) may be incomplete. Contributions are welcome!
