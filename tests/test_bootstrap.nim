@@ -1,7 +1,7 @@
-import std/[strutils, times]
+import std/[strutils, times, os]
 import openparser/css/[parser, ast, syntaxdata, validator]
 
-let sample = readFile("sample.css")
+let sample = readFile("tests" / "data" / "sample.css")
 let data = loadCssData()
 
 echo "Parsing Bootstrap CSS (", sample.len, " bytes)..."
