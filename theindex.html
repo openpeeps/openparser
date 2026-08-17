@@ -561,6 +561,10 @@
           <li><a class="reference external"
           data-doc-search-tag="xml: const errorEndOfFile" href="openparser/xml.html#errorEndOfFile">xml: const errorEndOfFile</a></li>
           </ul></dd>
+<dt><a name="errorMaxDepth" href="#errorMaxDepth"><span>errorMaxDepth:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: const errorMaxDepth" href="openparser/json.html#errorMaxDepth">json: const errorMaxDepth</a></li>
+          </ul></dd>
 <dt><a name="expandValue" href="#expandValue"><span>expandValue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="dotenv: proc expandValue(value: string; local: var Table[string, string];
@@ -629,13 +633,21 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc fromJson(mapped: MemFile): JsonNode" href="openparser/json.html#fromJson%2CMemFile">json: proc fromJson(mapped: MemFile): JsonNode</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="json: proc fromJson(mapped: MemFile; opts: JsonOptions): JsonNode" href="openparser/json.html#fromJson%2CMemFile%2CJsonOptions">json: proc fromJson(mapped: MemFile; opts: JsonOptions): JsonNode</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="json: proc fromJson(str: string): JsonNode" href="openparser/json.html#fromJson%2Cstring">json: proc fromJson(str: string): JsonNode</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="json: proc fromJson(str: string; opts: JsonOptions): JsonNode" href="openparser/json.html#fromJson%2Cstring%2CJsonOptions">json: proc fromJson(str: string; opts: JsonOptions): JsonNode</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="json: proc fromJson[T](s: string; x: typedesc[T]): T" href="openparser/json.html#fromJson%2Cstring%2Ctypedesc%5BT%5D">json: proc fromJson[T](s: string; x: typedesc[T]): T</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="json: proc fromJson[T](s: string; x: typedesc[T]; opts: JsonOptions): T" href="openparser/json.html#fromJson%2Cstring%2Ctypedesc%5BT%5D%2CJsonOptions">json: proc fromJson[T](s: string; x: typedesc[T]; opts: JsonOptions): T</a></li>
           </ul></dd>
 <dt><a name="fromJsonFile" href="#fromJsonFile"><span>fromJsonFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc fromJsonFile(filename: string): JsonNode" href="openparser/json.html#fromJsonFile%2Cstring">json: proc fromJsonFile(filename: string): JsonNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="json: proc fromJsonFile(filename: string; opts: JsonOptions): JsonNode" href="openparser/json.html#fromJsonFile%2Cstring%2CJsonOptions">json: proc fromJsonFile(filename: string; opts: JsonOptions): JsonNode</a></li>
           </ul></dd>
 <dt><a name="fromJsonL" href="#fromJsonL"><span>fromJsonL:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -830,6 +842,10 @@
 <dt><a name="items" href="#items"><span>items:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xml: proc items(elem: XmlNode): seq[XmlNode]" href="openparser/xml.html#items%2CXmlNode">xml: proc items(elem: XmlNode): seq[XmlNode]</a></li>
+          </ul></dd>
+<dt><a name="json" href="#json"><span>json:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: template json(name: static[string])" href="openparser/json.html#json.t%2Cstatic%5Bstring%5D">json: template json(name: static[string])</a></li>
           </ul></dd>
 <dt><a name="JsonOptions" href="#JsonOptions"><span>JsonOptions:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2719,7 +2735,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-17 06:56:38 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-17 07:17:13 UTC</small>
       </div>
     </div>
   </div>
