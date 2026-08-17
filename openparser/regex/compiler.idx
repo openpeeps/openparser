@@ -11,25 +11,25 @@ nim	opSplit	openparser/regex/compiler.html#opSplit	OpCode.opSplit		14
 nim	opSplitLazy	openparser/regex/compiler.html#opSplitLazy	OpCode.opSplitLazy		14
 nim	opSave	openparser/regex/compiler.html#opSave	OpCode.opSave		14
 nim	opProgress	openparser/regex/compiler.html#opProgress	OpCode.opProgress		14
-nim	opSkipTo	openparser/regex/compiler.html#opSkipTo	OpCode.opSkipTo		14
+nim	opWordBoundary	openparser/regex/compiler.html#opWordBoundary	OpCode.opWordBoundary		14
 nim	OpCode	openparser/regex/compiler.html#OpCode	enum OpCode		14
-nim	Instr	openparser/regex/compiler.html#Instr	object Instr		30
-nim	CompiledClass	openparser/regex/compiler.html#CompiledClass	object CompiledClass		36
-nim	psNone	openparser/regex/compiler.html#psNone	PatternShape.psNone		41
-nim	psAlphaWordStar	openparser/regex/compiler.html#psAlphaWordStar	PatternShape.psAlphaWordStar		41
-nim	psWordCharPlus	openparser/regex/compiler.html#psWordCharPlus	PatternShape.psWordCharPlus		41
-nim	psWordCharStar	openparser/regex/compiler.html#psWordCharStar	PatternShape.psWordCharStar		41
-nim	psUpperDigitUnderPlus	openparser/regex/compiler.html#psUpperDigitUnderPlus	PatternShape.psUpperDigitUnderPlus		41
-nim	psUpperDigitUnderStar	openparser/regex/compiler.html#psUpperDigitUnderStar	PatternShape.psUpperDigitUnderStar		41
-nim	psUpperDigitUnder2Plus	openparser/regex/compiler.html#psUpperDigitUnder2Plus	PatternShape.psUpperDigitUnder2Plus		41
-nim	psDigitPlus	openparser/regex/compiler.html#psDigitPlus	PatternShape.psDigitPlus		41
-nim	psDigitStar	openparser/regex/compiler.html#psDigitStar	PatternShape.psDigitStar		41
-nim	PatternShape	openparser/regex/compiler.html#PatternShape	enum PatternShape		41
-nim	Program	openparser/regex/compiler.html#Program	object Program		52
-nim	Regex	openparser/regex/compiler.html#Regex	type Regex		59
-nim	RegexCompiler	openparser/regex/compiler.html#RegexCompiler	object RegexCompiler		61
-nim	compile	openparser/regex/compiler.html#compile,RegexNode,int	proc compile(ast: RegexNode; numCaptures: int): Program		309
-nim	compile	openparser/regex/compiler.html#compile,string	proc compile(input: string): Program		320
-nim	re	openparser/regex/compiler.html#re,string	proc re(input: string): Program		326
-nim	disassemble	openparser/regex/compiler.html#disassemble,Program	proc disassemble(prog: Program): string		333
-nimgrp	compile	openparser/regex/compiler.html#compile-procs-all	proc		309
+nim	Instr	openparser/regex/compiler.html#Instr	object Instr		29
+nim	CompiledClass	openparser/regex/compiler.html#CompiledClass	object CompiledClass		35
+nim	psNone	openparser/regex/compiler.html#psNone	PatternShape.psNone		40
+nim	psAlphaWordStar	openparser/regex/compiler.html#psAlphaWordStar	PatternShape.psAlphaWordStar		40
+nim	psWordCharPlus	openparser/regex/compiler.html#psWordCharPlus	PatternShape.psWordCharPlus		40
+nim	psWordCharStar	openparser/regex/compiler.html#psWordCharStar	PatternShape.psWordCharStar		40
+nim	psUpperDigitUnderPlus	openparser/regex/compiler.html#psUpperDigitUnderPlus	PatternShape.psUpperDigitUnderPlus		40
+nim	psUpperDigitUnderStar	openparser/regex/compiler.html#psUpperDigitUnderStar	PatternShape.psUpperDigitUnderStar		40
+nim	psUpperDigitUnder2Plus	openparser/regex/compiler.html#psUpperDigitUnder2Plus	PatternShape.psUpperDigitUnder2Plus		40
+nim	psDigitPlus	openparser/regex/compiler.html#psDigitPlus	PatternShape.psDigitPlus		40
+nim	psDigitStar	openparser/regex/compiler.html#psDigitStar	PatternShape.psDigitStar		40
+nim	PatternShape	openparser/regex/compiler.html#PatternShape	enum PatternShape		40
+nim	Program	openparser/regex/compiler.html#Program	object Program		51
+nim	Regex	openparser/regex/compiler.html#Regex	type Regex		58
+nim	RegexCompiler	openparser/regex/compiler.html#RegexCompiler	object RegexCompiler		60
+nim	compile	openparser/regex/compiler.html#compile,RegexNode,int	proc compile(ast: RegexNode; numCaptures: int): Program		289
+nim	compile	openparser/regex/compiler.html#compile,string	proc compile(input: string): Program		300
+nim	re	openparser/regex/compiler.html#re,string	proc re(input: string): Program		306
+nim	disassemble	openparser/regex/compiler.html#disassemble,Program	proc disassemble(prog: Program): string		313
+nimgrp	compile	openparser/regex/compiler.html#compile-procs-all	proc		289

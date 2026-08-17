@@ -28,24 +28,40 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/json_simd.html">openparser/private/json_simd</a>, <a href="openparser/private/lexutils.html">openparser/private/lexutils</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/json_simd.html">openparser/private/json_simd</a>, <a href="openparser/private/lexutils.html">openparser/private/lexutils</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/private/xml_simd.html">openparser/private/xml_simd</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/xml.html">openparser/xml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc `$`(f: CsvFieldSlice): string" href="openparser/csv.html#%24%2CCsvFieldSlice">csv: proc `$`(f: CsvFieldSlice): string</a></li>
           <li><a class="reference external"
           data-doc-search-tag="parser: proc `$`(n: RegexNode; indent = 0): string" href="openparser/regex/parser.html#%24%2CRegexNode%2Cint">parser: proc `$`(n: RegexNode; indent = 0): string</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="xml: proc `$`(node: XmlNode): string" href="openparser/xml.html#%24%2CXmlNode">xml: proc `$`(node: XmlNode): string</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc `$`(yamlObject: YAMLObject): string" href="openparser/yaml.html#%24%2CYAMLObject">yaml: proc `$`(yamlObject: YAMLObject): string</a></li>
           </ul></dd>
 <dt><a name="%60%5B%5D%60" href="#%60%5B%5D%60"><span>`[]`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: proc `[]`(node: NimNode; kind: NimNodeKind): NimNode" href="openparser/private/types.html#%5B%5D%2CNimNode%2CNimNodeKind">types: proc `[]`(node: NimNode; kind: NimNodeKind): NimNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc `[]`(elem: XmlNode; index: int): XmlNode" href="openparser/xml.html#%5B%5D%2CXmlNode%2Cint">xml: proc `[]`(elem: XmlNode; index: int): XmlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc `[]`(elem: XmlNode; tag: string): XmlNode" href="openparser/xml.html#%5B%5D%2CXmlNode%2Cstring">xml: proc `[]`(elem: XmlNode; tag: string): XmlNode</a></li>
+          </ul></dd>
+<dt><a name="addAttr" href="#addAttr"><span>addAttr:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc addAttr(elem: XmlNode; key, value: string)" href="openparser/xml.html#addAttr%2CXmlNode%2Cstring%2Cstring">xml: proc addAttr(elem: XmlNode; key, value: string)</a></li>
+          </ul></dd>
+<dt><a name="addChild" href="#addChild"><span>addChild:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc addChild(elem: XmlNode; child: XmlNode)" href="openparser/xml.html#addChild%2CXmlNode%2CXmlNode">xml: proc addChild(elem: XmlNode; child: XmlNode)</a></li>
           </ul></dd>
 <dt><a name="advance" href="#advance"><span>advance:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc advance(parser: var JsonParser): JsonToken" href="openparser/json.html#advance%2CJsonParser">json: proc advance(parser: var JsonParser): JsonToken</a></li>
           <li><a class="reference external"
           data-doc-search-tag="lexutils: proc advance[T](l: var T)" href="openparser/private/lexutils.html#advance%2CT">lexutils: proc advance[T](l: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc advance(p: var XmlParser): XmlToken" href="openparser/xml.html#advance%2CXmlParser">xml: proc advance(p: var XmlParser): XmlToken</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc advance(p: var YamlParser)" href="openparser/yaml.html#advance%2CYamlParser">yaml: proc advance(p: var YamlParser)</a></li>
           </ul></dd>
@@ -357,6 +373,44 @@
           <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook[T, R](s: var string; val: T; renameVal: R)" href="openparser/json.html#dumpHook%2Cstring%2CT%2CR">json: proc dumpHook[T, R](s: var string; val: T; renameVal: R)</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook(s: var string; val: float32 | float64)" href="openparser/xml.html#dumpHook%2Cstring%2C">xml: proc dumpHook(s: var string; val: float32 | float64)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook(s: var string; val: tuple)" href="openparser/xml.html#dumpHook%2Cstring%2C_2">xml: proc dumpHook(s: var string; val: tuple)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook(s: var string; val: object)" href="openparser/xml.html#dumpHook%2Cstring%2C_3">xml: proc dumpHook(s: var string; val: object)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook(s: var string; v: enum)" href="openparser/xml.html#dumpHook%2Cstring%2C_4">xml: proc dumpHook(s: var string; v: enum)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook[K: string; V](s: var string; val: AnyTable[K, V])" href="openparser/xml.html#dumpHook%2Cstring%2CAnyTable%5BK%3A%20string%2CV%5D">xml: proc dumpHook[K: string; V](s: var string; val: AnyTable[K, V])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook[N, T](s: var string; v: array[N, T])" href="openparser/xml.html#dumpHook%2Cstring%2Carray%5BN%2CT%5D">xml: proc dumpHook[N, T](s: var string; v: array[N, T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook(s: var string; val: bool)" href="openparser/xml.html#dumpHook%2Cstring%2Cbool">xml: proc dumpHook(s: var string; val: bool)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook(s: var string; v: char)" href="openparser/xml.html#dumpHook%2Cstring%2Cchar">xml: proc dumpHook(s: var string; v: char)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook[T](s: var string; v: CritBitTree[T])" href="openparser/xml.html#dumpHook%2Cstring%2CCritBitTree%5BT%5D">xml: proc dumpHook[T](s: var string; v: CritBitTree[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook(s: var string; val: Integers)" href="openparser/xml.html#dumpHook%2Cstring%2CIntegers">xml: proc dumpHook(s: var string; val: Integers)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook[T](s: var string; v: Option[T])" href="openparser/xml.html#dumpHook%2Cstring%2COption%5BT%5D">xml: proc dumpHook[T](s: var string; v: Option[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook(s: var string; val: pointer)" href="openparser/xml.html#dumpHook%2Cstring%2Cpointer">xml: proc dumpHook(s: var string; val: pointer)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook[T](s: var string; val: ref T)" href="openparser/xml.html#dumpHook%2Cstring%2Cref.T">xml: proc dumpHook[T](s: var string; val: ref T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook[T](s: var string; v: seq[T])" href="openparser/xml.html#dumpHook%2Cstring%2Cseq%5BT%5D">xml: proc dumpHook[T](s: var string; v: seq[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook[T](s: var string; val: set[T])" href="openparser/xml.html#dumpHook%2Cstring%2Cset%5BT%5D">xml: proc dumpHook[T](s: var string; val: set[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook(s: var string; val: string)" href="openparser/xml.html#dumpHook%2Cstring%2Cstring">xml: proc dumpHook(s: var string; val: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook[T: distinct](s: var string; v: T)" href="openparser/xml.html#dumpHook%2Cstring%2CT">xml: proc dumpHook[T: distinct](s: var string; v: T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook[T, R](s: var string; val: T; renameVal: R; tag: string)" href="openparser/xml.html#dumpHook%2Cstring%2CT%2CR%2Cstring">xml: proc dumpHook[T, R](s: var string; val: T; renameVal: R; tag: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc dumpHook(s: var string; v: XmlNode)" href="openparser/xml.html#dumpHook%2Cstring%2CXmlNode">xml: proc dumpHook(s: var string; v: XmlNode)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc dumpHook(s: var string; v: YamlNode)" href="openparser/yaml.html#dumpHook%2Cstring%2CYamlNode">yaml: proc dumpHook(s: var string; v: YamlNode)</a></li>
           </ul></dd>
 <dt><a name="dumpTOML" href="#dumpTOML"><span>dumpTOML:</span></a></dt><dd><ul class="simple">
@@ -478,6 +532,8 @@
 <dt><a name="ensureComma" href="#ensureComma"><span>ensureComma:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: template ensureComma()" href="openparser/json.html#ensureComma.t">json: template ensureComma()</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: template ensureComma()" href="openparser/xml.html#ensureComma.t">xml: template ensureComma()</a></li>
           </ul></dd>
 <dt><a name="ensureRead" href="#ensureRead"><span>ensureRead:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -491,6 +547,10 @@
           <li><a class="reference external"
           data-doc-search-tag="lexer: proc error(l: var RegexLexer; msg: string)" href="openparser/regex/lexer.html#error%2CRegexLexer%2Cstring">lexer: proc error(l: var RegexLexer; msg: string)</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="xml: proc error(l: var XmlLexer; msg: string)" href="openparser/xml.html#error%2CXmlLexer%2Cstring">xml: proc error(l: var XmlLexer; msg: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc error(p: var XmlParser; msg: string)" href="openparser/xml.html#error%2CXmlParser%2Cstring">xml: proc error(p: var XmlParser; msg: string)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc error(l: var YamlLexer; msg: string)" href="openparser/yaml.html#error%2CYamlLexer%2Cstring">yaml: proc error(l: var YamlLexer; msg: string)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc error(p: var YamlParser; msg: string)" href="openparser/yaml.html#error%2CYamlParser%2Cstring">yaml: proc error(p: var YamlParser; msg: string)</a></li>
@@ -498,6 +558,8 @@
 <dt><a name="errorEndOfFile" href="#errorEndOfFile"><span>errorEndOfFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: const errorEndOfFile" href="openparser/json.html#errorEndOfFile">json: const errorEndOfFile</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: const errorEndOfFile" href="openparser/xml.html#errorEndOfFile">xml: const errorEndOfFile</a></li>
           </ul></dd>
 <dt><a name="expandValue" href="#expandValue"><span>expandValue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -508,6 +570,8 @@
 <dt><a name="expectSkip" href="#expectSkip"><span>expectSkip:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc expectSkip(parser: var JsonParser; tkind: JsonTokenKind)" href="openparser/json.html#expectSkip%2CJsonParser%2CJsonTokenKind">json: proc expectSkip(parser: var JsonParser; tkind: JsonTokenKind)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc expectSkip(p: var XmlParser; tkind: XmlTokenKind)" href="openparser/xml.html#expectSkip%2CXmlParser%2CXmlTokenKind">xml: proc expectSkip(p: var XmlParser; tkind: XmlTokenKind)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc expectSkip(p: var YamlParser; tkind: YamlTokenKind)" href="openparser/yaml.html#expectSkip%2CYamlParser%2CYamlTokenKind">yaml: proc expectSkip(p: var YamlParser; tkind: YamlTokenKind)</a></li>
           </ul></dd>
@@ -583,6 +647,22 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc fromJsonLFile(filename: string): JsonNode" href="openparser/json.html#fromJsonLFile%2Cstring">json: proc fromJsonLFile(filename: string): JsonNode</a></li>
           </ul></dd>
+<dt><a name="fromXml" href="#fromXml"><span>fromXml:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc fromXml(mapped: MemFile): XmlNode" href="openparser/xml.html#fromXml%2CMemFile">xml: proc fromXml(mapped: MemFile): XmlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc fromXml[T](mapped: MemFile; t: typedesc[T]): T" href="openparser/xml.html#fromXml%2CMemFile%2Ctypedesc%5BT%5D">xml: proc fromXml[T](mapped: MemFile; t: typedesc[T]): T</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc fromXml(s: string): XmlNode" href="openparser/xml.html#fromXml%2Cstring">xml: proc fromXml(s: string): XmlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc fromXml[T](s: string; t: typedesc[T]): T" href="openparser/xml.html#fromXml%2Cstring%2Ctypedesc%5BT%5D">xml: proc fromXml[T](s: string; t: typedesc[T]): T</a></li>
+          </ul></dd>
+<dt><a name="fromXmlFile" href="#fromXmlFile"><span>fromXmlFile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc fromXmlFile(filename: string): XmlNode" href="openparser/xml.html#fromXmlFile%2Cstring">xml: proc fromXmlFile(filename: string): XmlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc fromXmlFile[T](filename: string; t: typedesc[T]): T" href="openparser/xml.html#fromXmlFile%2Cstring%2Ctypedesc%5BT%5D">xml: proc fromXmlFile[T](filename: string; t: typedesc[T]): T</a></li>
+          </ul></dd>
 <dt><a name="get" href="#get"><span>get:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="dotenv: proc get(key: string; defaultValue = &quot;&quot;): string" href="openparser/dotenv.html#get%2Cstring%2Cstring">dotenv: proc get(key: string; defaultValue = &quot;&quot;): string</a></li>
@@ -600,6 +680,10 @@
           data-doc-search-tag="toml: proc getArray(n: TomlNode): seq[TomlNode]" href="openparser/toml.html#getArray%2CTomlNode">toml: proc getArray(n: TomlNode): seq[TomlNode]</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc getArray(n: YamlNode): seq[YamlNode]" href="openparser/yaml.html#getArray%2CYamlNode">yaml: proc getArray(n: YamlNode): seq[YamlNode]</a></li>
+          </ul></dd>
+<dt><a name="getAttr" href="#getAttr"><span>getAttr:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc getAttr(elem: XmlNode; key: string): string" href="openparser/xml.html#getAttr%2CXmlNode%2Cstring">xml: proc getAttr(elem: XmlNode; key: string): string</a></li>
           </ul></dd>
 <dt><a name="getBool" href="#getBool"><span>getBool:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -637,6 +721,8 @@
 <li><a class="reference external"
           data-doc-search-tag="toml: proc getStr(n: TomlNode): string" href="openparser/toml.html#getStr%2CTomlNode">toml: proc getStr(n: TomlNode): string</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="xml: proc getStr(node: XmlNode): string" href="openparser/xml.html#getStr%2CXmlNode">xml: proc getStr(node: XmlNode): string</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc getStr(n: YamlNode): string" href="openparser/yaml.html#getStr%2CYamlNode">yaml: proc getStr(n: YamlNode): string</a></li>
           </ul></dd>
 <dt><a name="getToken" href="#getToken"><span>getToken:</span></a></dt><dd><ul class="simple">
@@ -673,6 +759,8 @@
 <li><a class="reference external"
           data-doc-search-tag="json_simd: const hasAvx2" href="openparser/private/json_simd.html#hasAvx2">json_simd: const hasAvx2</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="xml_simd: const hasAvx2" href="openparser/private/xml_simd.html#hasAvx2">xml_simd: const hasAvx2</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="simd: const hasAvx2" href="openparser/regex/simd.html#hasAvx2">simd: const hasAvx2</a></li>
           </ul></dd>
 <dt><a name="hasKind" href="#hasKind"><span>hasKind:</span></a></dt><dd><ul class="simple">
@@ -682,6 +770,8 @@
 <dt><a name="hasSse2" href="#hasSse2"><span>hasSse2:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json_simd: const hasSse2" href="openparser/private/json_simd.html#hasSse2">json_simd: const hasSse2</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml_simd: const hasSse2" href="openparser/private/xml_simd.html#hasSse2">xml_simd: const hasSse2</a></li>
           <li><a class="reference external"
           data-doc-search-tag="simd: const hasSse2" href="openparser/regex/simd.html#hasSse2">simd: const hasSse2</a></li>
           </ul></dd>
@@ -724,14 +814,22 @@
 <dt><a name="invalidToken" href="#invalidToken"><span>invalidToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: const invalidToken" href="openparser/json.html#invalidToken">json: const invalidToken</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: const invalidToken" href="openparser/xml.html#invalidToken">xml: const invalidToken</a></li>
           </ul></dd>
 <dt><a name="isMapped" href="#isMapped"><span>isMapped:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc isMapped(m: MemFile): bool" href="openparser/json.html#isMapped%2CMemFile">json: proc isMapped(m: MemFile): bool</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc isMapped(m: MemFile): bool" href="openparser/xml.html#isMapped%2CMemFile">xml: proc isMapped(m: MemFile): bool</a></li>
           </ul></dd>
 <dt><a name="isObjectVariant" href="#isObjectVariant"><span>isObjectVariant:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="types: macro isObjectVariant(v: typed): bool" href="openparser/private/types.html#isObjectVariant.m%2Ctyped">types: macro isObjectVariant(v: typed): bool</a></li>
+          </ul></dd>
+<dt><a name="items" href="#items"><span>items:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc items(elem: XmlNode): seq[XmlNode]" href="openparser/xml.html#items%2CXmlNode">xml: proc items(elem: XmlNode): seq[XmlNode]</a></li>
           </ul></dd>
 <dt><a name="JsonOptions" href="#JsonOptions"><span>JsonOptions:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -800,6 +898,8 @@
 <dt><a name="len" href="#len"><span>len:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc len(b: Buffer): int" href="openparser/fbe.html#len%2CBuffer">fbe: proc len(b: Buffer): int</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc len(elem: XmlNode): int" href="openparser/xml.html#len%2CXmlNode">xml: proc len(elem: XmlNode): int</a></li>
           </ul></dd>
 <dt><a name="loadDotenv" href="#loadDotenv"><span>loadDotenv:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -882,6 +982,36 @@
 <dt><a name="newTomlTable" href="#newTomlTable"><span>newTomlTable:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc newTomlTable(): TomlNode" href="openparser/toml.html#newTomlTable">toml: proc newTomlTable(): TomlNode</a></li>
+          </ul></dd>
+<dt><a name="newXmlCdata" href="#newXmlCdata"><span>newXmlCdata:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc newXmlCdata(cdata: string): XmlNode" href="openparser/xml.html#newXmlCdata%2Cstring">xml: proc newXmlCdata(cdata: string): XmlNode</a></li>
+          </ul></dd>
+<dt><a name="newXmlComment" href="#newXmlComment"><span>newXmlComment:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc newXmlComment(comment: string): XmlNode" href="openparser/xml.html#newXmlComment%2Cstring">xml: proc newXmlComment(comment: string): XmlNode</a></li>
+          </ul></dd>
+<dt><a name="newXmlDoctype" href="#newXmlDoctype"><span>newXmlDoctype:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc newXmlDoctype(doctype: string): XmlNode" href="openparser/xml.html#newXmlDoctype%2Cstring">xml: proc newXmlDoctype(doctype: string): XmlNode</a></li>
+          </ul></dd>
+<dt><a name="newXmlElement" href="#newXmlElement"><span>newXmlElement:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc newXmlElement(tag: string): XmlNode" href="openparser/xml.html#newXmlElement%2Cstring">xml: proc newXmlElement(tag: string): XmlNode</a></li>
+          </ul></dd>
+<dt><a name="newXmlLexer" href="#newXmlLexer"><span>newXmlLexer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc newXmlLexer(mem: pointer; size: int): XmlLexer" href="openparser/xml.html#newXmlLexer%2Cpointer%2Cint">xml: proc newXmlLexer(mem: pointer; size: int): XmlLexer</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc newXmlLexer(input: string): XmlLexer" href="openparser/xml.html#newXmlLexer%2Cstring">xml: proc newXmlLexer(input: string): XmlLexer</a></li>
+          </ul></dd>
+<dt><a name="newXmlProlog" href="#newXmlProlog"><span>newXmlProlog:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc newXmlProlog(prolog: string): XmlNode" href="openparser/xml.html#newXmlProlog%2Cstring">xml: proc newXmlProlog(prolog: string): XmlNode</a></li>
+          </ul></dd>
+<dt><a name="newXmlText" href="#newXmlText"><span>newXmlText:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc newXmlText(text: string): XmlNode" href="openparser/xml.html#newXmlText%2Cstring">xml: proc newXmlText(text: string): XmlNode</a></li>
           </ul></dd>
 <dt><a name="newYamlArray" href="#newYamlArray"><span>newYamlArray:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -987,6 +1117,10 @@
 <li><a class="reference external"
           data-doc-search-tag="toml: object OpenParserTomlError" href="openparser/toml.html#OpenParserTomlError">toml: object OpenParserTomlError</a></li>
           </ul></dd>
+<dt><a name="OpenParserXmlError" href="#OpenParserXmlError"><span>OpenParserXmlError:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: object OpenParserXmlError" href="openparser/xml.html#OpenParserXmlError">xml: object OpenParserXmlError</a></li>
+          </ul></dd>
 <dt><a name="OpenParserYamlError" href="#OpenParserYamlError"><span>OpenParserYamlError:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="yaml: object OpenParserYamlError" href="openparser/yaml.html#OpenParserYamlError">yaml: object OpenParserYamlError</a></li>
@@ -998,6 +1132,8 @@
 <dt><a name="openReadOnly" href="#openReadOnly"><span>openReadOnly:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile" href="openparser/json.html#openReadOnly%2Cstring">json: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile" href="openparser/xml.html#openReadOnly%2Cstring">xml: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile</a></li>
           </ul></dd>
 <dt><a name="OpenToken" href="#OpenToken"><span>OpenToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1023,10 +1159,6 @@
 <li><a class="reference external"
           data-doc-search-tag="compiler: OpCode.opSave" href="openparser/regex/compiler.html#opSave">compiler: OpCode.opSave</a></li>
           </ul></dd>
-<dt><a name="opSkipTo" href="#opSkipTo"><span>opSkipTo:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="compiler: OpCode.opSkipTo" href="openparser/regex/compiler.html#opSkipTo">compiler: OpCode.opSkipTo</a></li>
-          </ul></dd>
 <dt><a name="opSplit" href="#opSplit"><span>opSplit:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="compiler: OpCode.opSplit" href="openparser/regex/compiler.html#opSplit">compiler: OpCode.opSplit</a></li>
@@ -1034,6 +1166,10 @@
 <dt><a name="opSplitLazy" href="#opSplitLazy"><span>opSplitLazy:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="compiler: OpCode.opSplitLazy" href="openparser/regex/compiler.html#opSplitLazy">compiler: OpCode.opSplitLazy</a></li>
+          </ul></dd>
+<dt><a name="opWordBoundary" href="#opWordBoundary"><span>opWordBoundary:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: OpCode.opWordBoundary" href="openparser/regex/compiler.html#opWordBoundary">compiler: OpCode.opWordBoundary</a></li>
           </ul></dd>
 <dt><a name="parse" href="#parse"><span>parse:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1090,6 +1226,38 @@
           data-doc-search-tag="json: proc parseHook[T: ref object](parser: var JsonParser; v: var T)" href="openparser/json.html#parseHook%2CJsonParser%2CT_7">json: proc parseHook[T: ref object](parser: var JsonParser; v: var T)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="toml: proc parseHook(p: var TomlParser; v: var TomlNode)" href="openparser/toml.html#parseHook%2CTomlParser%2CTomlNode">toml: proc parseHook(p: var TomlParser; v: var TomlNode)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[K: string; V](p: var XmlParser; v: var AnyTable[K, V])" href="openparser/xml.html#parseHook%2CXmlParser%2CAnyTable%5BK%3A%20string%2CV%5D">xml: proc parseHook[K: string; V](p: var XmlParser; v: var AnyTable[K, V])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[N: static[int]; T](p: var XmlParser; v: var array[N, T])" href="openparser/xml.html#parseHook%2CXmlParser%2Carray%5BN%2CT%5D">xml: proc parseHook[N: static[int]; T](p: var XmlParser; v: var array[N, T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook(p: var XmlParser; v: var bool)" href="openparser/xml.html#parseHook%2CXmlParser%2Cbool">xml: proc parseHook(p: var XmlParser; v: var bool)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[T](p: var XmlParser; v: var CritBitTree[T])" href="openparser/xml.html#parseHook%2CXmlParser%2CCritBitTree%5BT%5D">xml: proc parseHook[T](p: var XmlParser; v: var CritBitTree[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[T](p: var XmlParser; v: var Option[T])" href="openparser/xml.html#parseHook%2CXmlParser%2COption%5BT%5D">xml: proc parseHook[T](p: var XmlParser; v: var Option[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[T](p: var XmlParser; v: var seq[T])" href="openparser/xml.html#parseHook%2CXmlParser%2Cseq%5BT%5D">xml: proc parseHook[T](p: var XmlParser; v: var seq[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[T](p: var XmlParser; v: var set[T])" href="openparser/xml.html#parseHook%2CXmlParser%2Cset%5BT%5D">xml: proc parseHook[T](p: var XmlParser; v: var set[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook(p: var XmlParser; v: var string)" href="openparser/xml.html#parseHook%2CXmlParser%2Cstring">xml: proc parseHook(p: var XmlParser; v: var string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[T: float | float32 | float64](p: var XmlParser; v: var T)" href="openparser/xml.html#parseHook%2CXmlParser%2CT">xml: proc parseHook[T: float | float32 | float64](p: var XmlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[T: object](p: var XmlParser; v: var T)" href="openparser/xml.html#parseHook%2CXmlParser%2CT_2">xml: proc parseHook[T: object](p: var XmlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[T: ref object](p: var XmlParser; v: var T)" href="openparser/xml.html#parseHook%2CXmlParser%2CT_3">xml: proc parseHook[T: ref object](p: var XmlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[T: enum](p: var XmlParser; v: var T)" href="openparser/xml.html#parseHook%2CXmlParser%2CT_4">xml: proc parseHook[T: enum](p: var XmlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[T: Integers](p: var XmlParser; v: var T)" href="openparser/xml.html#parseHook%2CXmlParser%2CT_5">xml: proc parseHook[T: Integers](p: var XmlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[T: tuple](p: var XmlParser; v: var T)" href="openparser/xml.html#parseHook%2CXmlParser%2CT_6">xml: proc parseHook[T: tuple](p: var XmlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook[T: distinct](p: var XmlParser; v: var T)" href="openparser/xml.html#parseHook%2CXmlParser%2CT_7">xml: proc parseHook[T: distinct](p: var XmlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc parseHook(p: var XmlParser; v: var XmlNode)" href="openparser/xml.html#parseHook%2CXmlParser%2CXmlNode">xml: proc parseHook(p: var XmlParser; v: var XmlNode)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseHook[K: string; V](p: var YamlParser; v: var AnyTable[K, V])" href="openparser/yaml.html#parseHook%2CYamlParser%2CAnyTable%5BK%3A%20string%2CV%5D">yaml: proc parseHook[K: string; V](p: var YamlParser; v: var AnyTable[K, V])</a></li>
           <li><a class="reference external"
@@ -1667,6 +1835,18 @@
 <li><a class="reference external"
           data-doc-search-tag="simd: proc scanAnyOfSse2(s: string; start, stop: int; a, b: char): int" href="openparser/regex/simd.html#scanAnyOfSse2%2Cstring%2Cint%2Cint%2Cchar%2Cchar">simd: proc scanAnyOfSse2(s: string; start, stop: int; a, b: char): int</a></li>
           </ul></dd>
+<dt><a name="scanAttrValueEnd" href="#scanAttrValueEnd"><span>scanAttrValueEnd:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml_simd: proc scanAttrValueEnd(p: ptr char; start, stop: int; quote: char): int" href="openparser/private/xml_simd.html#scanAttrValueEnd%2Cptr.char%2Cint%2Cint%2Cchar">xml_simd: proc scanAttrValueEnd(p: ptr char; start, stop: int; quote: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanAttrValueEndScalar" href="#scanAttrValueEndScalar"><span>scanAttrValueEndScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml_simd: proc scanAttrValueEndScalar(p: ptr char; start, stop: int; quote: char): int" href="openparser/private/xml_simd.html#scanAttrValueEndScalar%2Cptr.char%2Cint%2Cint%2Cchar">xml_simd: proc scanAttrValueEndScalar(p: ptr char; start, stop: int; quote: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanAttrValueEndSse2" href="#scanAttrValueEndSse2"><span>scanAttrValueEndSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml_simd: proc scanAttrValueEndSse2(p: ptr char; start, stop: int; quote: char): int" href="openparser/private/xml_simd.html#scanAttrValueEndSse2%2Cptr.char%2Cint%2Cint%2Cchar">xml_simd: proc scanAttrValueEndSse2(p: ptr char; start, stop: int; quote: char): int</a></li>
+          </ul></dd>
 <dt><a name="scanByte" href="#scanByte"><span>scanByte:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="simd: proc scanByte(s: string; start, stop: int; b: char): int" href="openparser/regex/simd.html#scanByte%2Cstring%2Cint%2Cint%2Cchar">simd: proc scanByte(s: string; start, stop: int; b: char): int</a></li>
@@ -1690,6 +1870,18 @@
 <dt><a name="scanByteSse2" href="#scanByteSse2"><span>scanByteSse2:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="simd: proc scanByteSse2(s: string; start, stop: int; b: char): int" href="openparser/regex/simd.html#scanByteSse2%2Cstring%2Cint%2Cint%2Cchar">simd: proc scanByteSse2(s: string; start, stop: int; b: char): int</a></li>
+          </ul></dd>
+<dt><a name="scanNameEnd" href="#scanNameEnd"><span>scanNameEnd:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml_simd: proc scanNameEnd(p: ptr char; start, stop: int): int" href="openparser/private/xml_simd.html#scanNameEnd%2Cptr.char%2Cint%2Cint">xml_simd: proc scanNameEnd(p: ptr char; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNameEndScalar" href="#scanNameEndScalar"><span>scanNameEndScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml_simd: proc scanNameEndScalar(p: ptr char; start, stop: int): int" href="openparser/private/xml_simd.html#scanNameEndScalar%2Cptr.char%2Cint%2Cint">xml_simd: proc scanNameEndScalar(p: ptr char; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNameEndSse2" href="#scanNameEndSse2"><span>scanNameEndSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml_simd: proc scanNameEndSse2(p: ptr char; start, stop: int): int" href="openparser/private/xml_simd.html#scanNameEndSse2%2Cptr.char%2Cint%2Cint">xml_simd: proc scanNameEndSse2(p: ptr char; start, stop: int): int</a></li>
           </ul></dd>
 <dt><a name="scanNonAlphaUnder" href="#scanNonAlphaUnder"><span>scanNonAlphaUnder:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1739,6 +1931,18 @@
 <li><a class="reference external"
           data-doc-search-tag="json_simd: proc scanStringEndSse2(p: ptr char; start, stop: int): int" href="openparser/private/json_simd.html#scanStringEndSse2%2Cptr.char%2Cint%2Cint">json_simd: proc scanStringEndSse2(p: ptr char; start, stop: int): int</a></li>
           </ul></dd>
+<dt><a name="scanTextRun" href="#scanTextRun"><span>scanTextRun:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml_simd: proc scanTextRun(p: ptr char; start, stop: int): int" href="openparser/private/xml_simd.html#scanTextRun%2Cptr.char%2Cint%2Cint">xml_simd: proc scanTextRun(p: ptr char; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanTextRunScalar" href="#scanTextRunScalar"><span>scanTextRunScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml_simd: proc scanTextRunScalar(p: ptr char; start, stop: int): int" href="openparser/private/xml_simd.html#scanTextRunScalar%2Cptr.char%2Cint%2Cint">xml_simd: proc scanTextRunScalar(p: ptr char; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanTextRunSse2" href="#scanTextRunSse2"><span>scanTextRunSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml_simd: proc scanTextRunSse2(p: ptr char; start, stop: int): int" href="openparser/private/xml_simd.html#scanTextRunSse2%2Cptr.char%2Cint%2Cint">xml_simd: proc scanTextRunSse2(p: ptr char; start, stop: int): int</a></li>
+          </ul></dd>
 <dt><a name="scanUpperDigitUnder" href="#scanUpperDigitUnder"><span>scanUpperDigitUnder:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="simd: proc scanUpperDigitUnder(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanUpperDigitUnder%2Cstring%2Cint%2Cint">simd: proc scanUpperDigitUnder(s: string; start, stop: int): int</a></li>
@@ -1786,10 +1990,14 @@
 <dt><a name="skippable" href="#skippable"><span>skippable:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: template skippable()" href="openparser/json.html#skippable.t">json: template skippable()</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: template skippable()" href="openparser/xml.html#skippable.t">xml: template skippable()</a></li>
           </ul></dd>
 <dt><a name="skipValue" href="#skipValue"><span>skipValue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc skipValue(parser: var JsonParser)" href="openparser/json.html#skipValue%2CJsonParser">json: proc skipValue(parser: var JsonParser)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc skipValue(p: var XmlParser)" href="openparser/xml.html#skipValue%2CXmlParser">xml: proc skipValue(p: var XmlParser)</a></li>
           </ul></dd>
 <dt><a name="skipWhitespace" href="#skipWhitespace"><span>skipWhitespace:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1957,6 +2165,16 @@
           <li><a class="reference external"
           data-doc-search-tag="po: proc toString(cat: PoCatalog; s: Span): string" href="openparser/gettext/po.html#toString%2CPoCatalog%2CSpan">po: proc toString(cat: PoCatalog; s: Span): string</a></li>
           </ul></dd>
+<dt><a name="toXml" href="#toXml"><span>toXml:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc toXml[T](v: T; opts: XmlOptions = nil): string" href="openparser/xml.html#toXml%2CT%2CXmlOptions">xml: proc toXml[T](v: T; opts: XmlOptions = nil): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc toXml(v: XmlNode; opts: XmlOptions = nil): string" href="openparser/xml.html#toXml%2CXmlNode%2CXmlOptions">xml: proc toXml(v: XmlNode; opts: XmlOptions = nil): string</a></li>
+          </ul></dd>
+<dt><a name="toXmlNode" href="#toXmlNode"><span>toXmlNode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc toXmlNode[T](v: T): XmlNode" href="openparser/xml.html#toXmlNode%2CT">xml: proc toXmlNode[T](v: T): XmlNode</a></li>
+          </ul></dd>
 <dt><a name="translate" href="#translate"><span>translate:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="mo: proc translate(cat: MoCatalog; msgid: string; msgctxt = &quot;&quot;): string" href="openparser/gettext/mo.html#translate%2CMoCatalog%2Cstring%2Cstring">mo: proc translate(cat: MoCatalog; msgid: string; msgctxt = &quot;&quot;): string</a></li>
@@ -2060,14 +2278,20 @@
 <dt><a name="unexpectedChar" href="#unexpectedChar"><span>unexpectedChar:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: const unexpectedChar" href="openparser/json.html#unexpectedChar">json: const unexpectedChar</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: const unexpectedChar" href="openparser/xml.html#unexpectedChar">xml: const unexpectedChar</a></li>
           </ul></dd>
 <dt><a name="unexpectedToken" href="#unexpectedToken"><span>unexpectedToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: const unexpectedToken" href="openparser/json.html#unexpectedToken">json: const unexpectedToken</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: const unexpectedToken" href="openparser/xml.html#unexpectedToken">xml: const unexpectedToken</a></li>
           </ul></dd>
 <dt><a name="unexpectedTokenExpected" href="#unexpectedTokenExpected"><span>unexpectedTokenExpected:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: const unexpectedTokenExpected" href="openparser/json.html#unexpectedTokenExpected">json: const unexpectedTokenExpected</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: const unexpectedTokenExpected" href="openparser/xml.html#unexpectedTokenExpected">xml: const unexpectedTokenExpected</a></li>
           </ul></dd>
 <dt><a name="writeArrayFixed" href="#writeArrayFixed"><span>writeArrayFixed:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2243,6 +2467,118 @@
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc writeWith(b: var Buffer; writeFn: proc (b: var Buffer))" href="openparser/fbe.html#writeWith%2CBuffer%2Cproc%28Buffer%29">fbe: proc writeWith(b: var Buffer; writeFn: proc (b: var Buffer))</a></li>
           </ul></dd>
+<dt><a name="XML" href="#XML"><span>XML:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: type XML" href="openparser/xml.html#XML">xml: type XML</a></li>
+          </ul></dd>
+<dt><a name="xmlAttrEscape" href="#xmlAttrEscape"><span>xmlAttrEscape:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc xmlAttrEscape(s: string): string" href="openparser/xml.html#xmlAttrEscape%2Cstring">xml: proc xmlAttrEscape(s: string): string</a></li>
+          </ul></dd>
+<dt><a name="xmlEscape" href="#xmlEscape"><span>xmlEscape:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: proc xmlEscape(s: string): string" href="openparser/xml.html#xmlEscape%2Cstring">xml: proc xmlEscape(s: string): string</a></li>
+          </ul></dd>
+<dt><a name="XmlNode" href="#XmlNode"><span>XmlNode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: type XmlNode" href="openparser/xml.html#XmlNode">xml: type XmlNode</a></li>
+          </ul></dd>
+<dt><a name="XmlNodeKind" href="#XmlNodeKind"><span>XmlNodeKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: enum XmlNodeKind" href="openparser/xml.html#XmlNodeKind">xml: enum XmlNodeKind</a></li>
+          </ul></dd>
+<dt><a name="XmlOptions" href="#XmlOptions"><span>XmlOptions:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: type XmlOptions" href="openparser/xml.html#XmlOptions">xml: type XmlOptions</a></li>
+          </ul></dd>
+<dt><a name="XmlParser" href="#XmlParser"><span>XmlParser:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: object XmlParser" href="openparser/xml.html#XmlParser">xml: object XmlParser</a></li>
+          </ul></dd>
+<dt><a name="XmlToken" href="#XmlToken"><span>XmlToken:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: type XmlToken" href="openparser/xml.html#XmlToken">xml: type XmlToken</a></li>
+          </ul></dd>
+<dt><a name="XmlTokenKind" href="#XmlTokenKind"><span>XmlTokenKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: enum XmlTokenKind" href="openparser/xml.html#XmlTokenKind">xml: enum XmlTokenKind</a></li>
+          </ul></dd>
+<dt><a name="xnCdata" href="#xnCdata"><span>xnCdata:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlNodeKind.xnCdata" href="openparser/xml.html#xnCdata">xml: XmlNodeKind.xnCdata</a></li>
+          </ul></dd>
+<dt><a name="xnComment" href="#xnComment"><span>xnComment:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlNodeKind.xnComment" href="openparser/xml.html#xnComment">xml: XmlNodeKind.xnComment</a></li>
+          </ul></dd>
+<dt><a name="xnDoctype" href="#xnDoctype"><span>xnDoctype:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlNodeKind.xnDoctype" href="openparser/xml.html#xnDoctype">xml: XmlNodeKind.xnDoctype</a></li>
+          </ul></dd>
+<dt><a name="xnElement" href="#xnElement"><span>xnElement:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlNodeKind.xnElement" href="openparser/xml.html#xnElement">xml: XmlNodeKind.xnElement</a></li>
+          </ul></dd>
+<dt><a name="xnProlog" href="#xnProlog"><span>xnProlog:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlNodeKind.xnProlog" href="openparser/xml.html#xnProlog">xml: XmlNodeKind.xnProlog</a></li>
+          </ul></dd>
+<dt><a name="xnText" href="#xnText"><span>xnText:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlNodeKind.xnText" href="openparser/xml.html#xnText">xml: XmlNodeKind.xnText</a></li>
+          </ul></dd>
+<dt><a name="xtkAttributeName" href="#xtkAttributeName"><span>xtkAttributeName:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkAttributeName" href="openparser/xml.html#xtkAttributeName">xml: XmlTokenKind.xtkAttributeName</a></li>
+          </ul></dd>
+<dt><a name="xtkAttributeValue" href="#xtkAttributeValue"><span>xtkAttributeValue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkAttributeValue" href="openparser/xml.html#xtkAttributeValue">xml: XmlTokenKind.xtkAttributeValue</a></li>
+          </ul></dd>
+<dt><a name="xtkCdata" href="#xtkCdata"><span>xtkCdata:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkCdata" href="openparser/xml.html#xtkCdata">xml: XmlTokenKind.xtkCdata</a></li>
+          </ul></dd>
+<dt><a name="xtkComment" href="#xtkComment"><span>xtkComment:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkComment" href="openparser/xml.html#xtkComment">xml: XmlTokenKind.xtkComment</a></li>
+          </ul></dd>
+<dt><a name="xtkDoctype" href="#xtkDoctype"><span>xtkDoctype:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkDoctype" href="openparser/xml.html#xtkDoctype">xml: XmlTokenKind.xtkDoctype</a></li>
+          </ul></dd>
+<dt><a name="xtkEndTagClose" href="#xtkEndTagClose"><span>xtkEndTagClose:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkEndTagClose" href="openparser/xml.html#xtkEndTagClose">xml: XmlTokenKind.xtkEndTagClose</a></li>
+          </ul></dd>
+<dt><a name="xtkEof" href="#xtkEof"><span>xtkEof:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkEof" href="openparser/xml.html#xtkEof">xml: XmlTokenKind.xtkEof</a></li>
+          </ul></dd>
+<dt><a name="xtkEquals" href="#xtkEquals"><span>xtkEquals:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkEquals" href="openparser/xml.html#xtkEquals">xml: XmlTokenKind.xtkEquals</a></li>
+          </ul></dd>
+<dt><a name="xtkProlog" href="#xtkProlog"><span>xtkProlog:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkProlog" href="openparser/xml.html#xtkProlog">xml: XmlTokenKind.xtkProlog</a></li>
+          </ul></dd>
+<dt><a name="xtkSelfClosing" href="#xtkSelfClosing"><span>xtkSelfClosing:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkSelfClosing" href="openparser/xml.html#xtkSelfClosing">xml: XmlTokenKind.xtkSelfClosing</a></li>
+          </ul></dd>
+<dt><a name="xtkTagClose" href="#xtkTagClose"><span>xtkTagClose:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkTagClose" href="openparser/xml.html#xtkTagClose">xml: XmlTokenKind.xtkTagClose</a></li>
+          </ul></dd>
+<dt><a name="xtkTagOpen" href="#xtkTagOpen"><span>xtkTagOpen:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkTagOpen" href="openparser/xml.html#xtkTagOpen">xml: XmlTokenKind.xtkTagOpen</a></li>
+          </ul></dd>
+<dt><a name="xtkText" href="#xtkText"><span>xtkText:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlTokenKind.xtkText" href="openparser/xml.html#xtkText">xml: XmlTokenKind.xtkText</a></li>
+          </ul></dd>
 <dt><a name="YAML" href="#YAML"><span>YAML:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="yaml: type YAML" href="openparser/yaml.html#YAML">yaml: type YAML</a></li>
@@ -2383,7 +2719,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-15 12:40:17 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-17 06:56:38 UTC</small>
       </div>
     </div>
   </div>

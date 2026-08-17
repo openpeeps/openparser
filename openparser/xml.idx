@@ -1,0 +1,113 @@
+nimTitle	xml	openparser/xml.html	module openparser/xml		0
+nim	XmlOptions	openparser/xml.html#XmlOptions	type XmlOptions		24
+nim	xtkEof	openparser/xml.html#xtkEof	XmlTokenKind.xtkEof		52
+nim	xtkTagOpen	openparser/xml.html#xtkTagOpen	XmlTokenKind.xtkTagOpen		52
+nim	xtkTagClose	openparser/xml.html#xtkTagClose	XmlTokenKind.xtkTagClose		52
+nim	xtkSelfClosing	openparser/xml.html#xtkSelfClosing	XmlTokenKind.xtkSelfClosing		52
+nim	xtkEndTagClose	openparser/xml.html#xtkEndTagClose	XmlTokenKind.xtkEndTagClose		52
+nim	xtkAttributeName	openparser/xml.html#xtkAttributeName	XmlTokenKind.xtkAttributeName		52
+nim	xtkEquals	openparser/xml.html#xtkEquals	XmlTokenKind.xtkEquals		52
+nim	xtkAttributeValue	openparser/xml.html#xtkAttributeValue	XmlTokenKind.xtkAttributeValue		52
+nim	xtkText	openparser/xml.html#xtkText	XmlTokenKind.xtkText		52
+nim	xtkComment	openparser/xml.html#xtkComment	XmlTokenKind.xtkComment		52
+nim	xtkCdata	openparser/xml.html#xtkCdata	XmlTokenKind.xtkCdata		52
+nim	xtkProlog	openparser/xml.html#xtkProlog	XmlTokenKind.xtkProlog		52
+nim	xtkDoctype	openparser/xml.html#xtkDoctype	XmlTokenKind.xtkDoctype		52
+nim	XmlTokenKind	openparser/xml.html#XmlTokenKind	enum XmlTokenKind		52
+nim	XmlToken	openparser/xml.html#XmlToken	type XmlToken		75
+nim	XmlParser	openparser/xml.html#XmlParser	object XmlParser		83
+nim	OpenParserXmlError	openparser/xml.html#OpenParserXmlError	object OpenParserXmlError		91
+nim	xnElement	openparser/xml.html#xnElement	XmlNodeKind.xnElement		93
+nim	xnText	openparser/xml.html#xnText	XmlNodeKind.xnText		93
+nim	xnComment	openparser/xml.html#xnComment	XmlNodeKind.xnComment		93
+nim	xnCdata	openparser/xml.html#xnCdata	XmlNodeKind.xnCdata		93
+nim	xnProlog	openparser/xml.html#xnProlog	XmlNodeKind.xnProlog		93
+nim	xnDoctype	openparser/xml.html#xnDoctype	XmlNodeKind.xnDoctype		93
+nim	XmlNodeKind	openparser/xml.html#XmlNodeKind	enum XmlNodeKind		93
+nim	XmlNode	openparser/xml.html#XmlNode	type XmlNode		102
+nim	XML	openparser/xml.html#XML	type XML		120
+nim	skippable	openparser/xml.html#skippable.t	template skippable()		123
+nim	invalidToken	openparser/xml.html#invalidToken	const invalidToken		126
+nim	errorEndOfFile	openparser/xml.html#errorEndOfFile	const errorEndOfFile		127
+nim	unexpectedToken	openparser/xml.html#unexpectedToken	const unexpectedToken		128
+nim	unexpectedTokenExpected	openparser/xml.html#unexpectedTokenExpected	const unexpectedTokenExpected		129
+nim	unexpectedChar	openparser/xml.html#unexpectedChar	const unexpectedChar		130
+nim	error	openparser/xml.html#error,XmlLexer,string	proc error(l: var XmlLexer; msg: string)		132
+nim	error	openparser/xml.html#error,XmlParser,string	proc error(p: var XmlParser; msg: string)		136
+nim	openReadOnly	openparser/xml.html#openReadOnly,string	proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile		152
+nim	isMapped	openparser/xml.html#isMapped,MemFile	proc isMapped(m: MemFile): bool		157
+nim	newXmlLexer	openparser/xml.html#newXmlLexer,string	proc newXmlLexer(input: string): XmlLexer		161
+nim	newXmlLexer	openparser/xml.html#newXmlLexer,pointer,int	proc newXmlLexer(mem: pointer; size: int): XmlLexer		165
+nim	dumpHook	openparser/xml.html#dumpHook,string,string	proc dumpHook(s: var string; val: string)		170
+nim	dumpHook	openparser/xml.html#dumpHook,string,Integers	proc dumpHook(s: var string; val: Integers)		171
+nim	dumpHook	openparser/xml.html#dumpHook,string,	proc dumpHook(s: var string; val: float32 | float64)		172
+nim	dumpHook	openparser/xml.html#dumpHook,string,bool	proc dumpHook(s: var string; val: bool)		173
+nim	dumpHook	openparser/xml.html#dumpHook,string,_2	proc dumpHook(s: var string; val: tuple)		174
+nim	dumpHook	openparser/xml.html#dumpHook,string,_3	proc dumpHook(s: var string; val: object)		175
+nim	dumpHook	openparser/xml.html#dumpHook,string,ref.T	proc dumpHook[T](s: var string; val: ref T)		176
+nim	dumpHook	openparser/xml.html#dumpHook,string,pointer	proc dumpHook(s: var string; val: pointer)		177
+nim	dumpHook	openparser/xml.html#dumpHook,string,_4	proc dumpHook(s: var string; v: enum)		178
+nim	dumpHook	openparser/xml.html#dumpHook,string,AnyTable[K: string,V]	proc dumpHook[K: string; V](s: var string; val: AnyTable[K, V])		179
+nim	dumpHook	openparser/xml.html#dumpHook,string,set[T]	proc dumpHook[T](s: var string; val: set[T])		180
+nim	dumpHook	openparser/xml.html#dumpHook,string,T	proc dumpHook[T: distinct](s: var string; v: T)		181
+nim	dumpHook	openparser/xml.html#dumpHook,string,XmlNode	proc dumpHook(s: var string; v: XmlNode)		182
+nim	dumpHook	openparser/xml.html#dumpHook,string,char	proc dumpHook(s: var string; v: char)		183
+nim	dumpHook	openparser/xml.html#dumpHook,string,seq[T]	proc dumpHook[T](s: var string; v: seq[T])		184
+nim	dumpHook	openparser/xml.html#dumpHook,string,array[N,T]	proc dumpHook[N, T](s: var string; v: array[N, T])		185
+nim	dumpHook	openparser/xml.html#dumpHook,string,Option[T]	proc dumpHook[T](s: var string; v: Option[T])		186
+nim	dumpHook	openparser/xml.html#dumpHook,string,CritBitTree[T]	proc dumpHook[T](s: var string; v: CritBitTree[T])		187
+nim	advance	openparser/xml.html#advance,XmlParser	proc advance(p: var XmlParser): XmlToken		493
+nim	expectSkip	openparser/xml.html#expectSkip,XmlParser,XmlTokenKind	proc expectSkip(p: var XmlParser; tkind: XmlTokenKind)		499
+nim	ensureComma	openparser/xml.html#ensureComma.t	template ensureComma()		508
+nim	skipValue	openparser/xml.html#skipValue,XmlParser	proc skipValue(p: var XmlParser)		521
+nim	xmlEscape	openparser/xml.html#xmlEscape,string	proc xmlEscape(s: string): string		553
+nim	xmlAttrEscape	openparser/xml.html#xmlAttrEscape,string	proc xmlAttrEscape(s: string): string		563
+nim	dumpHook	openparser/xml.html#dumpHook,string,T,R,string	proc dumpHook[T, R](s: var string; val: T; renameVal: R; tag: string)		612
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,string	proc parseHook(p: var XmlParser; v: var string)		733
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,T	proc parseHook[T: float | float32 | float64](p: var XmlParser; v: var T)		734
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,bool	proc parseHook(p: var XmlParser; v: var bool)		735
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,seq[T]	proc parseHook[T](p: var XmlParser; v: var seq[T])		736
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,T_2	proc parseHook[T: object](p: var XmlParser; v: var T)		737
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,T_3	proc parseHook[T: ref object](p: var XmlParser; v: var T)		738
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,T_4	proc parseHook[T: enum](p: var XmlParser; v: var T)		739
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,AnyTable[K: string,V]	proc parseHook[K: string; V](p: var XmlParser; v: var AnyTable[K, V])		740
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,set[T]	proc parseHook[T](p: var XmlParser; v: var set[T])		741
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,T_5	proc parseHook[T: Integers](p: var XmlParser; v: var T)		742
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,T_6	proc parseHook[T: tuple](p: var XmlParser; v: var T)		743
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,T_7	proc parseHook[T: distinct](p: var XmlParser; v: var T)		867
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,Option[T]	proc parseHook[T](p: var XmlParser; v: var Option[T])		872
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,array[N,T]	proc parseHook[N: static[int]; T](p: var XmlParser; v: var array[N, T])		974
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,CritBitTree[T]	proc parseHook[T](p: var XmlParser; v: var CritBitTree[T])		1085
+nim	parseHook	openparser/xml.html#parseHook,XmlParser,XmlNode	proc parseHook(p: var XmlParser; v: var XmlNode)		1276
+nim	newXmlElement	openparser/xml.html#newXmlElement,string	proc newXmlElement(tag: string): XmlNode		1366
+nim	newXmlText	openparser/xml.html#newXmlText,string	proc newXmlText(text: string): XmlNode		1369
+nim	newXmlComment	openparser/xml.html#newXmlComment,string	proc newXmlComment(comment: string): XmlNode		1372
+nim	newXmlCdata	openparser/xml.html#newXmlCdata,string	proc newXmlCdata(cdata: string): XmlNode		1375
+nim	newXmlProlog	openparser/xml.html#newXmlProlog,string	proc newXmlProlog(prolog: string): XmlNode		1378
+nim	newXmlDoctype	openparser/xml.html#newXmlDoctype,string	proc newXmlDoctype(doctype: string): XmlNode		1381
+nim	addAttr	openparser/xml.html#addAttr,XmlNode,string,string	proc addAttr(elem: XmlNode; key, value: string)		1384
+nim	addChild	openparser/xml.html#addChild,XmlNode,XmlNode	proc addChild(elem: XmlNode; child: XmlNode)		1388
+nim	`[]`	openparser/xml.html#[],XmlNode,string	proc `[]`(elem: XmlNode; tag: string): XmlNode		1392
+nim	`[]`	openparser/xml.html#[],XmlNode,int	proc `[]`(elem: XmlNode; index: int): XmlNode		1399
+nim	len	openparser/xml.html#len,XmlNode	proc len(elem: XmlNode): int		1403
+nim	items	openparser/xml.html#items,XmlNode	proc items(elem: XmlNode): seq[XmlNode]		1407
+nim	getStr	openparser/xml.html#getStr,XmlNode	proc getStr(node: XmlNode): string		1411
+nim	getAttr	openparser/xml.html#getAttr,XmlNode,string	proc getAttr(elem: XmlNode; key: string): string		1416
+nim	`$`	openparser/xml.html#$,XmlNode	proc `$`(node: XmlNode): string		1420
+nim	fromXml	openparser/xml.html#fromXml,string,typedesc[T]	proc fromXml[T](s: string; t: typedesc[T]): T		1495
+nim	fromXml	openparser/xml.html#fromXml,string	proc fromXml(s: string): XmlNode		1509
+nim	fromXml	openparser/xml.html#fromXml,MemFile	proc fromXml(mapped: MemFile): XmlNode		1520
+nim	fromXml	openparser/xml.html#fromXml,MemFile,typedesc[T]	proc fromXml[T](mapped: MemFile; t: typedesc[T]): T		1531
+nim	fromXmlFile	openparser/xml.html#fromXmlFile,string	proc fromXmlFile(filename: string): XmlNode		1547
+nim	fromXmlFile	openparser/xml.html#fromXmlFile,string,typedesc[T]	proc fromXmlFile[T](filename: string; t: typedesc[T]): T		1553
+nim	toXml	openparser/xml.html#toXml,T,XmlOptions	proc toXml[T](v: T; opts: XmlOptions = nil): string		1559
+nim	toXml	openparser/xml.html#toXml,XmlNode,XmlOptions	proc toXml(v: XmlNode; opts: XmlOptions = nil): string		1566
+nim	toXmlNode	openparser/xml.html#toXmlNode,T	proc toXmlNode[T](v: T): XmlNode		1570
+nimgrp	dumphook	openparser/xml.html#dumpHook-procs-all	proc		170
+nimgrp	toxml	openparser/xml.html#toXml-procs-all	proc		1559
+nimgrp	fromxml	openparser/xml.html#fromXml-procs-all	proc		1495
+nimgrp	newxmllexer	openparser/xml.html#newXmlLexer-procs-all	proc		161
+nimgrp	parsehook	openparser/xml.html#parseHook-procs-all	proc		733
+nimgrp	[]	openparser/xml.html#[]-procs-all	proc		1392
+nimgrp	fromxmlfile	openparser/xml.html#fromXmlFile-procs-all	proc		1547
+nimgrp	error	openparser/xml.html#error-procs-all	proc		132

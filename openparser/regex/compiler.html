@@ -73,7 +73,7 @@
   opChar,                   ## match exact character
   opAnyChar,                ## match any character (.)
   opCharClass,              ## match character class [abc] [^a-z]
-  opEscapeClass,            ## match \d \w \s \D \W \S \b \B
+  opEscapeClass,            ## match \d \w \s \D \W \S
   opAnchorStart,            ## assert position ^ 
   opAnchorEnd,              ## assert position $
   opMatch,                  ## successful match
@@ -82,8 +82,7 @@
   opSplitLazy,              ## fork execution (lazy:   try t2 first, then t1)
   opSave,                   ## save current position into capture slot
   opProgress,               ## guard against zero-width infinite loops
-  opSkipTo                   ## SIMD scan forward to first occurrence of arg1 char
-                             ## Emitted for [^X]* and [^X]+ where X is a single literal char">OpCode</a></li>
+  opWordBoundary             ## assert word boundary: \b (neg=false) or \B (neg=true)">OpCode</a></li>
 <li><a class="reference" href="#PatternShape" title="PatternShape = enum
   psNone, psAlphaWordStar,  ## [a-zA-Z_]\w*
   psWordCharPlus,           ## \w+
@@ -171,7 +170,7 @@
   <span class="Identifier">opChar</span><span class="Other">,</span>                   <span class="Comment">## match exact character</span>
   <span class="Identifier">opAnyChar</span><span class="Other">,</span>                <span class="Comment">## match any character (.)</span>
   <span class="Identifier">opCharClass</span><span class="Other">,</span>              <span class="Comment">## match character class [abc] [^a-z]</span>
-  <span class="Identifier">opEscapeClass</span><span class="Other">,</span>            <span class="Comment">## match \d \w \s \D \W \S \b \B</span>
+  <span class="Identifier">opEscapeClass</span><span class="Other">,</span>            <span class="Comment">## match \d \w \s \D \W \S</span>
   <span class="Identifier">opAnchorStart</span><span class="Other">,</span>            <span class="Comment">## assert position ^ </span>
   <span class="Identifier">opAnchorEnd</span><span class="Other">,</span>              <span class="Comment">## assert position $</span>
   <span class="Identifier">opMatch</span><span class="Other">,</span>                  <span class="Comment">## successful match</span>
@@ -180,8 +179,7 @@
   <span class="Identifier">opSplitLazy</span><span class="Other">,</span>              <span class="Comment">## fork execution (lazy:   try t2 first, then t1)</span>
   <span class="Identifier">opSave</span><span class="Other">,</span>                   <span class="Comment">## save current position into capture slot</span>
   <span class="Identifier">opProgress</span><span class="Other">,</span>               <span class="Comment">## guard against zero-width infinite loops</span>
-  <span class="Identifier">opSkipTo</span>                   <span class="Comment">## SIMD scan forward to first occurrence of arg1 char</span>
-                             <span class="Comment">## Emitted for [^X]* and [^X]+ where X is a single literal char</span></pre></dt>
+  <span class="Identifier">opWordBoundary</span>             <span class="Comment">## assert word boundary: \b (neg=false) or \B (neg=true)</span></pre></dt>
   <dd>
     
     
@@ -293,7 +291,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-15 12:40:17 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-17 06:56:38 UTC</small>
       </div>
     </div>
   </div>

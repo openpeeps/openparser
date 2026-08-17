@@ -1,0 +1,12 @@
+nimTitle	xml_simd	openparser/private/xml_simd.html	module openparser/private/xml_simd		0
+nim	hasAvx2	openparser/private/xml_simd.html#hasAvx2	const hasAvx2		9
+nim	hasSse2	openparser/private/xml_simd.html#hasSse2	const hasSse2		10
+nim	scanTextRunScalar	openparser/private/xml_simd.html#scanTextRunScalar,ptr.char,int,int	proc scanTextRunScalar(p: ptr char; start, stop: int): int		19
+nim	scanAttrValueEndScalar	openparser/private/xml_simd.html#scanAttrValueEndScalar,ptr.char,int,int,char	proc scanAttrValueEndScalar(p: ptr char; start, stop: int; quote: char): int		27
+nim	scanNameEndScalar	openparser/private/xml_simd.html#scanNameEndScalar,ptr.char,int,int	proc scanNameEndScalar(p: ptr char; start, stop: int): int		35
+nim	scanTextRunSse2	openparser/private/xml_simd.html#scanTextRunSse2,ptr.char,int,int	proc scanTextRunSse2(p: ptr char; start, stop: int): int		48
+nim	scanAttrValueEndSse2	openparser/private/xml_simd.html#scanAttrValueEndSse2,ptr.char,int,int,char	proc scanAttrValueEndSse2(p: ptr char; start, stop: int; quote: char): int		66
+nim	scanNameEndSse2	openparser/private/xml_simd.html#scanNameEndSse2,ptr.char,int,int	proc scanNameEndSse2(p: ptr char; start, stop: int): int		84
+nim	scanTextRun	openparser/private/xml_simd.html#scanTextRun,ptr.char,int,int	proc scanTextRun(p: ptr char; start, stop: int): int		252
+nim	scanAttrValueEnd	openparser/private/xml_simd.html#scanAttrValueEnd,ptr.char,int,int,char	proc scanAttrValueEnd(p: ptr char; start, stop: int; quote: char): int		257
+nim	scanNameEnd	openparser/private/xml_simd.html#scanNameEnd,ptr.char,int,int	proc scanNameEnd(p: ptr char; start, stop: int): int		262
