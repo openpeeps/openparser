@@ -36,6 +36,7 @@ type
     ## Stored separately; instructions reference by index
     negated*: bool
     items*:   seq[CharClassItem]
+    bitmap*:  array[32, uint8]  ## 256-bit lookup: bitmap[byte shr 3] and (1u8 shl (byte and 7))
 
   PatternShape* = enum
     psNone
@@ -47,6 +48,13 @@ type
     psUpperDigitUnder2Plus  ## [A-Z_][A-Z0-9_]{2,} (min total = 3)
     psDigitPlus             ## \d+
     psDigitStar             ## \d*
+    psEndAnchorByte         ## X\s*$  (single byte + optional whitespace + anchor end)
+    psWordSpaceStarWord     ## \w+\s*\*+\s*\w+
+    psLitSpaceWordPlus      ## <literal>\s+\w+
+    psHexPrefixHexPlus      ## 0[xX][0-9a-fA-F]+
+    psLitWordSpaceWord      ## <literal>\s+[a-zA-Z_]\w*
+    psDigitPlusULSuffix     ## \d+[uUlL]*
+    psLitWordSpaceWordPlus  ## <literal>\w+\s+\w+
 
   Program* = object
     instrs*:  seq[Instr]
@@ -79,9 +87,41 @@ proc patch(c: var RegexCompiler, idx: int, target: int) {.inline.} =
 proc patch2(c: var RegexCompiler, idx: int, target: int) {.inline.} =
   c.prog.instrs[idx].arg2 = target
 
+proc setBitmapBit(bitmap: var array[32, uint8], b: byte) {.inline.} =
+  bitmap[b shr 3] = bitmap[b shr 3] or (1u8 shl (b and 7))
+
+proc buildClassBitmap*(cls: var CompiledClass) {.inline.} =
+  ## Populate cls.bitmap from cls.items. Called once at compile time.
+  for item in cls.items:
+    if item.isEscape:
+      case item.escapeChar
+      of 'd':
+        for c in '0'..'9': setBitmapBit(cls.bitmap, c.byte)
+      of 'D':
+        for c in char(0)..char(255):
+          if c notin {'0'..'9'}: setBitmapBit(cls.bitmap, c.byte)
+      of 'w':
+        for c in {'a'..'z','A'..'Z','0'..'9','_'}: setBitmapBit(cls.bitmap, c.byte)
+      of 'W':
+        for c in char(0)..char(255):
+          if c notin {'a'..'z','A'..'Z','0'..'9','_'}: setBitmapBit(cls.bitmap, c.byte)
+      of 's':
+        for c in {' ','\t','\n','\r','\f','\v'}: setBitmapBit(cls.bitmap, c.byte)
+      of 'S':
+        for c in char(0)..char(255):
+          if c notin {' ','\t','\n','\r','\f','\v'}: setBitmapBit(cls.bitmap, c.byte)
+      else: discard
+    elif item.isRange:
+      for ci in ord(item.lo)..ord(item.hi):
+        setBitmapBit(cls.bitmap, byte(ci))
+    else:
+      setBitmapBit(cls.bitmap, item.ch.byte)
+
 proc addClass(c: var RegexCompiler, cls: CompiledClass): int {.inline.} =
   result = c.prog.classes.len
-  c.prog.classes.add(cls)
+  var built = cls
+  buildClassBitmap(built)
+  c.prog.classes.add(built)
 
 proc hasLazyNode(n: RegexNode): bool =
   case n.kind
@@ -250,6 +290,13 @@ proc detectProgramShape(ast: RegexNode): PatternShape =
       if gotSingles[i] != singles[i]: return false
     true
 
+  proc isQuantifier(n: RegexNode, minReq: int, escapeChar: char): bool =
+    n.kind == rnQuantifier and n.max == -1 and not n.lazy and
+    n.min >= minReq and isEscape(n.operand, escapeChar)
+
+  proc isLiteral(n: RegexNode, ch: char): bool =
+    n.kind == rnChar and n.ch == ch
+
   ## \w+ / \w*  — single escape quantified
   if root.kind == rnQuantifier and root.max == -1 and not root.lazy:
     let body = root.operand
@@ -258,27 +305,125 @@ proc detectProgramShape(ast: RegexNode): PatternShape =
     if isEscape(body, 'd'):
       return if root.min >= 1: psDigitPlus else: psDigitStar
 
-  ## concat of exactly 2: head + quantified tail
-  if root.kind != rnConcat or root.children.len != 2: return psNone
-  let head = root.children[0]
-  let tail = root.children[1]
-  if tail.kind != rnQuantifier or tail.max != -1 or tail.lazy: return psNone
+  if root.kind != rnConcat: return psNone
+  let kids = root.children
+  let nkids = kids.len
 
-  let body = tail.operand
-  let minRep = tail.min
+  ## X\s*$ — single byte + optional \s + anchor end (3 children)
+  if nkids == 3:
+    if kids[0].kind == rnChar and
+       kids[1].kind == rnQuantifier and kids[1].max == -1 and not kids[1].lazy and
+       kids[1].min == 0 and isEscape(kids[1].operand, 's') and
+       kids[2].kind == rnAnchorEnd:
+      return psEndAnchorByte
 
-  ## [a-zA-Z_]\w*
-  if isCharClassOf(head, @[('a','z'),('A','Z')], @['_']) and
-     isEscape(body, 'w') and minRep == 0:
-    return psAlphaWordStar
+  ## --- 2-child concat patterns ---
+  if nkids == 2:
+    let head = kids[0]
+    let tail = kids[1]
+    if tail.kind == rnQuantifier and tail.max == -1 and not tail.lazy:
+      let body = tail.operand
+      let minRep = tail.min
 
-  ## [A-Z_][A-Z0-9_]{n,}
-  if isCharClassOf(head, @[('A','Z')], @['_']) and
-     isCharClassOf(body, @[('A','Z'),('0','9')], @['_']):
-    case minRep
-    of 0: return psUpperDigitUnderStar
-    of 1: return psUpperDigitUnderPlus
-    else: return psUpperDigitUnder2Plus   ## {2,} {3,} etc — min total = 1+minRep
+      ## [a-zA-Z_]\w*
+      if isCharClassOf(head, @[('a','z'),('A','Z')], @['_']) and
+         isEscape(body, 'w') and minRep == 0:
+        return psAlphaWordStar
+
+      ## [A-Z_][A-Z0-9_]{n,}
+      if isCharClassOf(head, @[('A','Z')], @['_']) and
+         isCharClassOf(body, @[('A','Z'),('0','9')], @['_']):
+        case minRep
+        of 0: return psUpperDigitUnderStar
+        of 1: return psUpperDigitUnderPlus
+        else: return psUpperDigitUnder2Plus
+
+      ## \d+[uUlL]*
+      if isEscape(head, 'd') and minRep >= 1:
+        if body.kind == rnCharClass and not body.negated:
+          var ulOk = true
+          for it in body.items:
+            if it.isRange: ulOk = false; break
+            elif it.ch notin {'u','U','l','L'}: ulOk = false; break
+          if ulOk: return psDigitPlusULSuffix
+
+    ## \d+[uUlL]*  — head is \d+, tail is [uUlL]*
+    if head.kind == rnQuantifier and head.max == -1 and not head.lazy and
+       head.min >= 1 and isEscape(head.operand, 'd'):
+      if tail.kind == rnQuantifier and tail.max == -1 and not tail.lazy and tail.min == 0:
+        let clsBody = tail.operand
+        if clsBody.kind == rnCharClass and not clsBody.negated:
+          var ulOk = true
+          for it in clsBody.items:
+            if it.isRange: ulOk = false; break
+            elif it.ch notin {'u','U','l','L'}: ulOk = false; break
+          if ulOk: return psDigitPlusULSuffix
+
+  ## --- Multi-segment patterns (3+ children) ---
+
+  ## \w+\s*\*+\s*\w+  — 5 children
+  if nkids == 5:
+    if kids[0].isQuantifier(1, 'w') and
+       kids[1].isQuantifier(0, 's') and
+       kids[2].kind == rnQuantifier and kids[2].max == -1 and not kids[2].lazy and
+       kids[2].min >= 1 and kids[2].operand.kind == rnEscaped and
+       kids[2].operand.escape == '*' and
+       kids[3].isQuantifier(0, 's') and
+       kids[4].isQuantifier(1, 'w'):
+      return psWordSpaceStarWord
+
+  ## 0[xX][0-9a-fA-F]+  — 3 children: '0', [xX], [hex]+
+  if nkids == 3:
+    if kids[0].isLiteral('0') and
+       kids[1].kind == rnCharClass and not kids[1].negated:
+      var hasX = false
+      for it in kids[1].items:
+        if it.isRange and it.lo == 'x' and it.hi == 'X': hasX = true
+        elif not it.isRange and (it.ch == 'x' or it.ch == 'X'): hasX = true
+      if hasX and
+         kids[2].kind == rnQuantifier and kids[2].max == -1 and not kids[2].lazy and
+         kids[2].min >= 1:
+        let body = kids[2].operand
+        if body.kind == rnCharClass and not body.negated:
+          var hexOk = true
+          for it in body.items:
+            if it.isRange:
+              if not ((it.lo >= '0' and it.hi <= '9') or
+                      (it.lo >= 'a' and it.hi <= 'f') or
+                      (it.lo >= 'A' and it.hi <= 'F')):
+                hexOk = false; break
+            elif it.ch notin {'0'..'9','a'..'f','A'..'F'}:
+              hexOk = false; break
+          if hexOk: return psHexPrefixHexPlus
+
+  ## Find literal prefix length (consecutive rnChar children at start)
+  var litEnd = 0
+  while litEnd < nkids and kids[litEnd].kind == rnChar: inc litEnd
+
+  ## <literal>\s+\w+  (e.g. #define\s+\w+)
+  if litEnd >= 1 and litEnd + 2 == nkids:
+    if kids[litEnd].isQuantifier(1, 's') and
+       kids[litEnd + 1].isQuantifier(1, 'w'):
+      return psLitSpaceWordPlus
+
+  ## <literal>\w+\s+\w+  (e.g. typedef\s+\w+\s+\w+)
+  if litEnd >= 1 and litEnd + 4 == nkids:
+    if kids[litEnd].isQuantifier(1, 's') and
+       kids[litEnd + 1].isQuantifier(1, 'w') and
+       kids[litEnd + 2].isQuantifier(1, 's') and
+       kids[litEnd + 3].isQuantifier(1, 'w'):
+      return psLitWordSpaceWordPlus
+
+  ## <literal>\s+[a-zA-Z_]\w*  (e.g. struct\s+[a-zA-Z_]\w*)
+  ## Parser flattens [a-zA-Z_]\w* into 3 separate children: \s+, [a-zA-Z_], \w*
+  if litEnd >= 1 and litEnd + 3 == nkids:
+    if kids[litEnd].isQuantifier(1, 's') and
+       kids[litEnd + 1].kind == rnCharClass and not kids[litEnd + 1].negated and
+       isCharClassOf(kids[litEnd + 1], @[('a','z'),('A','Z')], @['_']) and
+       kids[litEnd + 2].kind == rnQuantifier and kids[litEnd + 2].max == -1 and
+       not kids[litEnd + 2].lazy and kids[litEnd + 2].min == 0 and
+       isEscape(kids[litEnd + 2].operand, 'w'):
+      return psLitWordSpaceWord
 
   psNone
 

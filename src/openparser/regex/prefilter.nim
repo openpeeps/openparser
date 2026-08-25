@@ -44,12 +44,13 @@ type
       alt1*, alt2*: char
     of pfAnchorStart, pfNone, pfAlpha, pfWordChar, pfUpperAlpha: discard
     shape*: PatternShape
+    literalEndPc*: int  ## PC after literal prefix (for pfLiteral advance optimization)
 
 proc findInnerLiteral(prog: Program): tuple[ch: char, maxLookback: int, bs: BackscanKind] =
   # Walk instruction stream past variable-width prefix looking for a selective
   # mandatory literal (e.g. '(' in `\w*\s*\([^)]*\)`).
   # Returns '\0' if not found or if the lookback would be unbounded.
-  const SELECTIVE = {'(', ')', ';', ':', '#', '"', '<', '>', '[', ']', '{', '}', '!', '=', '/'}
+  const SELECTIVE = {'(', ')', ';', ':', '#', '"', '<', '>', '[', ']', '{', '}', '!', '=', '/', '*'}
   const MAX = 1024
   var pc = 0
   var maxLookback = 0
@@ -81,8 +82,29 @@ proc findInnerLiteral(prog: Program): tuple[ch: char, maxLookback: int, bs: Back
       maxLookback = min(maxLookback + 8, MAX)
       inc pc
     of opSplit, opSplitLazy:
-      # Quantifier loop: follow the EXIT branch (arg2 for greedy, arg1 for lazy)
-      # to skip past the loop body without inflating maxLookback too much.
+      # Peek at loop body for literals inside quantifier loops.
+      # A quantifier loop has a JMP back-edge to the SPLIT itself.
+      # For + quantifier: SPLIT(body, exit); PROGRESS; <body>; JMP(split)
+      # For * quantifier: SPLIT(body, exit); <body>; JMP(split)
+      let bodyPc = ins.arg1
+      let exitPc = ins.arg2
+      # Check if this is a quantifier loop (exit has JMP back to this split)
+      let isLoop = exitPc >= 0 and exitPc < prog.instrs.len and
+                   prog.instrs[exitPc].op == opJmp and
+                   prog.instrs[exitPc].arg1 == pc
+      if isLoop and bodyPc < prog.instrs.len:
+        let bodyIns = prog.instrs[bodyPc]
+        var litPc = bodyPc
+        if bodyIns.op == opProgress and bodyPc + 1 < prog.instrs.len:
+          litPc = bodyPc + 1  # skip PROGRESS to get to actual body
+        if litPc < prog.instrs.len and prog.instrs[litPc].op == opChar:
+          let ch = char(prog.instrs[litPc].arg1)
+          if ch in SELECTIVE:
+            let bs = if seenAlphaClass: bsAlphaWord
+                     elif seenWordClass: bsWordChar
+                     else: bsNone
+            return (ch, maxLookback + 1, bs)
+      # Continue with exit branch as before
       maxLookback = min(maxLookback + 32, MAX)
       pc = if ins.op == opSplit: ins.arg2 else: ins.arg1  # exit branch
       # no inc pc — pc is already set to exit
@@ -196,7 +218,15 @@ proc extractPrefilter*(prog: Program): Prefilter =
   # 1. Multi-byte literal prefix — most selective
   let lit = extractLiteralPrefix(prog)
   if lit.len >= 2:
-    return Prefilter(kind: pfLiteral, prefix: lit, offset: 0, shape: shape)
+    # Calculate literalEndPc: the PC after the last literal char
+    var lpc = 0
+    while lpc < prog.instrs.len:
+      let ins = prog.instrs[lpc]
+      case ins.op
+      of opChar: inc lpc
+      of opJmp, opSave, opProgress: inc lpc
+      else: break
+    return Prefilter(kind: pfLiteral, prefix: lit, offset: 0, shape: shape, literalEndPc: lpc)
 
   # 2. Alternation with shared/anchored literal
   let branches = branchLiterals(prog)
@@ -206,10 +236,14 @@ proc extractPrefilter*(prog: Program): Prefilter =
 
   # 3. Inner mandatory literal — check BEFORE falling back to class prefilters.
   #    A selective char like '(' is far cheaper than pfAlpha/pfWordChar.
-  let (innerCh, maxLb, bs) = findInnerLiteral(prog)
-  if innerCh != '\0' and maxLb > 0:
-    return Prefilter(kind: pfInnerLiteral, anchor: innerCh,
-                     maxLookback: maxLb, backscan: bs, shape: shape)
+  #    Skip for shapes that have their own SIMD fast-path.
+  if shape notin {psWordSpaceStarWord, psLitSpaceWordPlus, psLitWordSpaceWord,
+                   psLitWordSpaceWordPlus, psHexPrefixHexPlus, psDigitPlusULSuffix,
+                   psEndAnchorByte}:
+    let (innerCh, maxLb, bs) = findInnerLiteral(prog)
+    if innerCh != '\0' and maxLb > 0:
+      return Prefilter(kind: pfInnerLiteral, anchor: innerCh,
+                       maxLookback: maxLb, backscan: bs, shape: shape)
 
   # 4. Shape fast-path (pure SIMD, no NFA)
   if shape != psNone:
@@ -220,6 +254,34 @@ proc extractPrefilter*(prog: Program): Prefilter =
       return Prefilter(kind: pfAlpha, shape: shape)
     of psWordCharPlus, psWordCharStar:
       return Prefilter(kind: pfWordChar, shape: shape)
+    of psEndAnchorByte:
+      # X\s*$ — use pfByte to scan for the byte, shape fast-path handles the rest
+      if prog.instrs.len > 0 and prog.instrs[0].op == opChar:
+        return Prefilter(kind: pfByte, byte1: char(prog.instrs[0].arg1), shape: shape)
+      return Prefilter(kind: pfNone, shape: shape)
+    of psWordSpaceStarWord:
+      # \w+\s*\*+\s*\w+ — scan for first word char
+      return Prefilter(kind: pfWordChar, shape: shape)
+    of psLitSpaceWordPlus, psLitWordSpaceWord, psLitWordSpaceWordPlus:
+      # <literal>... — use pfLiteral to scan for literal prefix, shape fast-path handles rest
+      let lit = extractLiteralPrefix(prog)
+      if lit.len >= 2:
+        var lpc = 0
+        while lpc < prog.instrs.len:
+          let ins = prog.instrs[lpc]
+          case ins.op
+          of opChar: inc lpc
+          of opJmp, opSave, opProgress: inc lpc
+          else: break
+        return Prefilter(kind: pfLiteral, prefix: lit, offset: 0,
+                         shape: shape, literalEndPc: lpc)
+      return Prefilter(kind: pfNone, shape: shape)
+    of psHexPrefixHexPlus:
+      # 0[xX][0-9a-fA-F]+ — scan for '0'
+      return Prefilter(kind: pfByte, byte1: '0', shape: shape)
+    of psDigitPlusULSuffix:
+      # \d+[uUlL]* — scan for digit
+      return Prefilter(kind: pfByteRange, lo: '0', hi: '9', shape: shape)
     else: discard
 
   proc firstConsuming(prog: Program, pc: int,

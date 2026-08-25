@@ -1,0 +1,291 @@
+|.arch x64
+|.section code
+
+|.actionlist regex_actions
+
+// ---------------------------------------------------------------
+// Regex JIT — native backtracking engine.
+//
+// Generated-code register contract:
+//   rbx = input base pointer        (callee-saved)
+//   rsi = input length
+//   r13 = current position          (callee-saved)
+//   r12 = backtrack stack top       (callee-saved, grows upward)
+//   r15 = backtrack stack limit     (callee-saved)
+//   rax, rcx, rdx, r8-r11, r14 = scratch
+//
+// Entry ABI: fn(rdi=input, rsi=len, rdx=startPos, rcx=ctx)
+//   [rcx]     = backtrack stack base
+//   [rcx + 8] = backtrack stack limit
+// Returns: match end position (>= 0) or -1 on no match.
+//
+// Backtrack entry: 16 bytes { int64 pos; int32 resumeId; int32 pad }
+// Every consuming/anchor failure jumps to the single fail-entry
+// label which unwinds the backtrack stack. Splits push an entry
+// and jump to their preferred branch.
+//
+// All cross-function labels are dynamic PC labels (dasm_growpc);
+// they are global to the dasm_State, so emit functions may freely
+// reference labels allocated by the Nim-side compiler or by other
+// emit functions via =>label. Reserved PC label ids (fixed):
+//   0 = match exit   1 = fail entry   2 = no-match
+// ---------------------------------------------------------------
+
+void regex_prologue(dasm_State** Dst) {
+  | push rbp
+  | mov rbp, rsp
+  | push rbx
+  | push r12
+  | push r13
+  | push r14
+  | push r15
+  | mov rbx, rdi            // input ptr
+  | mov r13, rdx            // pos = startPos
+  | mov r12, [rcx]          // backtrack top = base (empty)
+  | mov r15, [rcx + 8]      // backtrack limit
+}
+
+void regex_epilogue(dasm_State** Dst) {
+  | pop r15
+  | pop r14
+  | pop r13
+  | pop r12
+  | pop rbx
+  | pop rbp
+  | ret
+}
+
+// Consume one literal character.
+void regex_emit_char(dasm_State** Dst, int lit, int failLabel) {
+  | cmp r13, rsi
+  | jge =>failLabel
+  | movzx eax, byte [rbx + r13]
+  | cmp eax, lit&255
+  | jne =>failLabel
+  | inc r13
+}
+
+// Consume any character except '\n'.
+void regex_emit_any_char(dasm_State** Dst, int failLabel) {
+  | cmp r13, rsi
+  | jge =>failLabel
+  | movzx eax, byte [rbx + r13]
+  | cmp eax, 10
+  | je =>failLabel
+  | inc r13
+}
+
+// Consume one char via 256-bit class bitmap (pointer embedded).
+void regex_emit_char_class(dasm_State** Dst, uintptr_t bitmapPtr, int negated, int failLabel) {
+  | cmp r13, rsi
+  | jge =>failLabel
+  | movzx ecx, byte [rbx + r13]      // c
+  | mov eax, ecx
+  | shr eax, 3
+  | mov64 r10, bitmapPtr
+  | movzx edx, byte [r10 + rax]      // bitmap[c >> 3]
+  | and ecx, 7
+  | bt edx, ecx                      // bit (c & 7)
+  if (negated) {
+    | jc =>failLabel
+  } else {
+    | jnc =>failLabel
+  }
+  | inc r13
+}
+
+// Consume one char via escape class (\d \D \w \W \s \S).
+// `cls` is the escape letter itself ('d','D','w','W','s','S').
+// Success falls through past the last emitted check.
+void regex_emit_escape_class(dasm_State** Dst, int cls, int failLabel) {
+  | cmp r13, rsi
+  | jge =>failLabel
+  | movzx eax, byte [rbx + r13]
+  switch (cls) {
+    case 'd':
+      | sub eax, '0'
+      | cmp eax, 9
+      | ja =>failLabel
+      break;
+    case 'D':
+      | sub eax, '0'
+      | cmp eax, 9
+      | jbe =>failLabel
+      break;
+    case 'w':
+      | mov ecx, eax
+      | or ecx, 0x20
+      | sub ecx, 'a'
+      | cmp ecx, 25
+      | jbe >1
+      | mov ecx, eax
+      | sub ecx, '0'
+      | cmp ecx, 9
+      | jbe >1
+      | cmp eax, '_'
+      | je >1
+      | jmp =>failLabel
+      |1:
+      break;
+    case 'W':
+      | mov ecx, eax
+      | or ecx, 0x20
+      | sub ecx, 'a'
+      | cmp ecx, 25
+      | jbe =>failLabel
+      | mov ecx, eax
+      | sub ecx, '0'
+      | cmp ecx, 9
+      | jbe =>failLabel
+      | cmp eax, '_'
+      | je =>failLabel
+      break;
+    case 's':
+      // \t(9) \n(10) \v(11) \f(12) \r(13) are contiguous
+      | sub eax, 9
+      | cmp eax, 4
+      | jbe >1
+      | cmp byte [rbx + r13], ' '
+      | je >1
+      | jmp =>failLabel
+      |1:
+      break;
+    case 'S':
+      | sub eax, 9
+      | cmp eax, 4
+      | jbe =>failLabel
+      | cmp byte [rbx + r13], ' '
+      | je =>failLabel
+      break;
+    default:
+      | jmp =>failLabel
+      break;
+  }
+  | inc r13                  // success: consume the char
+}
+
+// Assert ^: absolute start of input.
+void regex_emit_anchor_start(dasm_State** Dst, int failLabel) {
+  | test r13, r13
+  | jnz =>failLabel
+}
+
+// Assert $: absolute end of input.
+void regex_emit_anchor_end(dasm_State** Dst, int failLabel) {
+  | cmp r13, rsi
+  | jne =>failLabel
+}
+
+// Assert \b / \B. lblPrevLoaded/lblCurLoaded are caller-allocated
+// dynamic PC labels used as join points for the guarded loads.
+void regex_emit_word_boundary(dasm_State** Dst, int negated, int failLabel, int lblPrevLoaded, int lblCurLoaded) {
+  // isWord(prev char), 0 when pos == 0
+  | xor ecx, ecx
+  | test r13, r13
+  | jz =>lblPrevLoaded
+  | movzx ecx, byte [rbx + r13 - 1]
+  |=>lblPrevLoaded:
+  | mov r8d, ecx
+  | or r8d, 0x20
+  | sub r8d, 'a'
+  | cmp r8d, 25
+  | setbe r8b
+  | movzx r8d, r8b
+  | mov r9d, ecx
+  | sub r9d, '0'
+  | cmp r9d, 9
+  | setbe r9b
+  | movzx r9d, r9b
+  | xor edx, edx
+  | cmp ecx, '_'
+  | sete dl
+  | or edx, r8d
+  | or edx, r9d              // edx = isWord(prev)
+  // isWord(current char), 0 when pos == len
+  | xor ecx, ecx
+  | cmp r13, rsi
+  | jae =>lblCurLoaded
+  | movzx ecx, byte [rbx + r13]
+  |=>lblCurLoaded:
+  | mov r8d, ecx
+  | or r8d, 0x20
+  | sub r8d, 'a'
+  | cmp r8d, 25
+  | setbe r8b
+  | movzx r8d, r8b
+  | mov r9d, ecx
+  | sub r9d, '0'
+  | cmp r9d, 9
+  | setbe r9b
+  | movzx r9d, r9b
+  | xor r14d, r14d
+  | cmp ecx, '_'
+  | sete r14b
+  | movzx r14d, r14b
+  | or r14d, r8d
+  | or r14d, r9d             // r14d = isWord(cur)
+  | xor edx, r14d            // edx = 1 iff boundary
+  if (!negated) {
+    | jz =>failLabel         // \b wants a boundary
+  } else {
+    | jnz =>failLabel        // \B wants none
+  }
+}
+
+// Unconditional jump.
+void regex_jmp(dasm_State** Dst, int targetLabel) {
+  | jmp =>targetLabel
+}
+
+// Define a dynamic PC label at the current position.
+void regex_define_label(dasm_State** Dst, int label) {
+  |=>label:
+}
+
+// Fork execution: push {pos, resumeId} and try preferred branch.
+// Greedy split passes arg1's label; lazy split passes arg2's label
+// as tryFirstLabel (resumeTargetLabel is the deferred branch).
+void regex_split(dasm_State** Dst, int tryFirstLabel, int resumeId, int resumeTargetLabel, int failLabel) {
+  | cmp r12, r15
+  | jae =>failLabel          // stack full -> treat path as failed
+  | mov [r12], r13
+  | mov dword [r12 + 8], resumeId+0
+  | add r12, 16
+  | jmp =>tryFirstLabel
+}
+
+// Success: return current position. In full-match mode the match only
+// counts when it reached end of input; otherwise backtrack so that
+// another alternation/quantifier path can try to consume the rest.
+void regex_emit_match(dasm_State** Dst, int exitLabel, int failLabel, int wantFull) {
+  if (wantFull) {
+    | cmp r13, rsi
+    | jne =>failLabel
+  }
+  | mov rax, r13
+  | jmp =>exitLabel
+}
+
+// Fail-entry head: unwind one backtrack entry into r13/rax,
+// or jump to noMatchLabel when the stack is empty. stackBytes is
+// the total capacity of the backtrack region in bytes; the base is
+// recomputed from the limit since no register is reserved for it.
+void regex_emit_fail_entry_head(dasm_State** Dst, int noMatchLabel, int stackBytes) {
+  | lea rax, [r15 - stackBytes+0]   // rax = stack base
+  | cmp r12, rax
+  | jbe =>noMatchLabel              // empty
+  | sub r12, 16
+  | mov r13, [r12]
+  | mov eax, [r12 + 8]
+}
+
+// One dispatch case for the unwound resume id (eax).
+void regex_emit_dispatch_case(dasm_State** Dst, int id, int targetLabel) {
+  | cmp eax, id+0
+  | je =>targetLabel
+}
+
+// No match: return -1.
+void regex_emit_no_match(dasm_State** Dst) {
+  | or rax, -1
+}

@@ -55,7 +55,19 @@ proc scanNonWordCharScalar*(s: string, start, stop: int): int {.inline.} =
   ## Find first byte that is NOT \w — marks end of an identifier run.
   for i in start ..< stop:
     let c = s[i]
-    if c notin {'a'..'z', 'A'..'Z', '0'..'9', '_'}: return i
+    if c notin {'a'..'z','A'..'Z','0'..'9','_'}: return i
+  -1
+
+proc scanNonDigitScalar*(s: string, start, stop: int): int {.inline.} =
+  ## Find first byte that is NOT \d — marks end of a digit run.
+  for i in start ..< stop:
+    if s[i] notin {'0'..'9'}: return i
+  -1
+
+proc scanNonSpaceScalar*(s: string, start, stop: int): int {.inline.} =
+  ## Find first byte that is NOT \s — marks end of a whitespace run.
+  for i in start ..< stop:
+    if s[i] notin {' ','\t','\n','\r','\f','\v'}: return i
   -1
 
 proc scanNonAlphaUnderScalar*(s: string, start, stop: int): int {.inline.} =
@@ -188,6 +200,44 @@ when hasSse2:
       i += 16
     while i < stop:
       if s[i] notin {'a'..'z','A'..'Z','0'..'9','_'}: return i
+      inc i
+    -1
+
+  proc scanNonDigitSse2*(s: string, start, stop: int): int =
+    ## Find first byte NOT in \d — end-of-digit-run scan.
+    var i = start
+    while i + 16 <= stop:
+      let chunk = mm_loadu_si128(cast[ptr M128i](unsafeAddr s[i]))
+      let mDi = rangeMask16(chunk, '0', 9)
+      let inv = mm_andnot_si128(mDi, mm_set1_epi8(cast[int8](-1)))
+      let mask = mm_movemask_epi8(inv)
+      if mask != 0: return i + countTrailingZeroBits(cast[uint32](mask))
+      i += 16
+    while i < stop:
+      if s[i] notin {'0'..'9'}: return i
+      inc i
+    -1
+
+  proc scanNonSpaceSse2*(s: string, start, stop: int): int =
+    ## Find first byte NOT in \s — end-of-whitespace run scan.
+    var i = start
+    while i + 16 <= stop:
+      let chunk = mm_loadu_si128(cast[ptr M128i](unsafeAddr s[i]))
+      # Match space, tab, newline, carriage return, form feed, vertical tab
+      let mSp = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8](' ')))
+      let mTb = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8]('\t')))
+      let mNl = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8]('\n')))
+      let mCr = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8]('\r')))
+      let mFf = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8]('\f')))
+      let mVt = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8]('\v')))
+      let wsMask = mm_or_si128(mm_or_si128(mSp, mTb), mm_or_si128(mNl, mCr))
+      let wsAll  = mm_or_si128(wsMask, mm_or_si128(mFf, mVt))
+      let inv = mm_andnot_si128(wsAll, mm_set1_epi8(cast[int8](-1)))
+      let mask = mm_movemask_epi8(inv)
+      if mask != 0: return i + countTrailingZeroBits(cast[uint32](mask))
+      i += 16
+    while i < stop:
+      if s[i] notin {' ','\t','\n','\r','\f','\v'}: return i
       inc i
     -1
 
@@ -376,6 +426,64 @@ when hasAvx2:
       inc i
     -1
 
+  proc scanNonDigitAvx2*(s: string, start, stop: int): int =
+    ## Find first byte NOT in \d — end-of-digit-run scan.
+    var i = start
+    while i + 32 <= stop:
+      let chunk = mm256_loadu_si256(cast[ptr M256i](unsafeAddr s[i]))
+      let mDi = rangeMask32(chunk, '0', 9)
+      let inv = mm256_andnot_si256(mDi, mm256_set1_epi8(cast[int8](-1)))
+      let mask = cast[uint32](mm256_movemask_epi8(inv))
+      if mask != 0: return i + countTrailingZeroBits(mask)
+      i += 32
+    while i + 16 <= stop:
+      let chunk = mm_loadu_si128(cast[ptr M128i](unsafeAddr s[i]))
+      let mDi = rangeMask16(chunk, '0', 9)
+      let inv = mm_andnot_si128(mDi, mm_set1_epi8(cast[int8](-1)))
+      let mask = cast[uint32](mm_movemask_epi8(inv))
+      if mask != 0: return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] notin {'0'..'9'}: return i
+      inc i
+    -1
+
+  proc scanNonSpaceAvx2*(s: string, start, stop: int): int =
+    ## Find first byte NOT in \s — end-of-whitespace run scan.
+    var i = start
+    while i + 32 <= stop:
+      let chunk = mm256_loadu_si256(cast[ptr M256i](unsafeAddr s[i]))
+      let mSp = mm256_cmpeq_epi8(chunk, mm256_set1_epi8(cast[int8](' ')))
+      let mTb = mm256_cmpeq_epi8(chunk, mm256_set1_epi8(cast[int8]('\t')))
+      let mNl = mm256_cmpeq_epi8(chunk, mm256_set1_epi8(cast[int8]('\n')))
+      let mCr = mm256_cmpeq_epi8(chunk, mm256_set1_epi8(cast[int8]('\r')))
+      let mFf = mm256_cmpeq_epi8(chunk, mm256_set1_epi8(cast[int8]('\f')))
+      let mVt = mm256_cmpeq_epi8(chunk, mm256_set1_epi8(cast[int8]('\v')))
+      let wsMask = mm256_or_si256(mm256_or_si256(mSp, mTb), mm256_or_si256(mNl, mCr))
+      let wsAll  = mm256_or_si256(wsMask, mm256_or_si256(mFf, mVt))
+      let inv = mm256_andnot_si256(wsAll, mm256_set1_epi8(cast[int8](-1)))
+      let mask = cast[uint32](mm256_movemask_epi8(inv))
+      if mask != 0: return i + countTrailingZeroBits(mask)
+      i += 32
+    while i + 16 <= stop:
+      let chunk = mm_loadu_si128(cast[ptr M128i](unsafeAddr s[i]))
+      let mSp = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8](' ')))
+      let mTb = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8]('\t')))
+      let mNl = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8]('\n')))
+      let mCr = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8]('\r')))
+      let mFf = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8]('\f')))
+      let mVt = mm_cmpeq_epi8(chunk, mm_set1_epi8(cast[int8]('\v')))
+      let wsMask = mm_or_si128(mm_or_si128(mSp, mTb), mm_or_si128(mNl, mCr))
+      let wsAll  = mm_or_si128(wsMask, mm_or_si128(mFf, mVt))
+      let inv = mm_andnot_si128(wsAll, mm_set1_epi8(cast[int8](-1)))
+      let mask = cast[uint32](mm_movemask_epi8(inv))
+      if mask != 0: return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] notin {' ','\t','\n','\r','\f','\v'}: return i
+      inc i
+    -1
+
 # ---------------------------------------------------------------------------
 # Unified dispatch
 # ---------------------------------------------------------------------------
@@ -421,3 +529,13 @@ proc scanNonUpperDigitUnder*(s: string, start, stop: int): int {.inline.} =
   when hasAvx2: scanNonUpperDigitUnderAvx2(s, start, stop)
   elif hasSse2: scanNonUpperDigitUnderSse2(s, start, stop)
   else:         scanNonUpperDigitUnderScalar(s, start, stop)
+
+proc scanNonDigit*(s: string, start, stop: int): int {.inline.} =
+  when hasAvx2: scanNonDigitAvx2(s, start, stop)
+  elif hasSse2: scanNonDigitSse2(s, start, stop)
+  else:         scanNonDigitScalar(s, start, stop)
+
+proc scanNonSpace*(s: string, start, stop: int): int {.inline.} =
+  when hasAvx2: scanNonSpaceAvx2(s, start, stop)
+  elif hasSse2: scanNonSpaceSse2(s, start, stop)
+  else:         scanNonSpaceScalar(s, start, stop)
