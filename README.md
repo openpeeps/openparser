@@ -489,6 +489,60 @@ Error (1:26) Unexpected EOF while parsing `element`
 Error (1:33) Unexpected token `:`
 ```
 
+## QR Codes
+
+Full QR symbology family: generators and readers for Model 2, Micro QR, rMQR and legacy Model 1, plus SQRC-style encrypted payloads, payload builders and an SVG renderer.
+
+```nim
+import openparser/qr
+
+# Model 2 (versions 1-40, L/M/Q/H, auto segmentation)
+let qr = encodeQr("https://openparser.dev")
+echo decodeQrMatrix(qr).text  # https://openparser.dev
+
+# Micro QR (M1-M4)
+let micro = encodeMicro("HELLO MICRO")
+
+# rMQR (ISO/IEC 23941), all 32 sizes at levels M/H
+let rmqr = encodeRmqr("rectangular micro qr", ecMedium, "R11x139")
+echo decodeRmqrMatrix(rmqr).text
+
+# SQRC-style public/private payload (AES via nimcypher)
+var key: array[16, uint8]
+for i in 0 ..< 16: key[i] = uint8(i * 17 + 3)
+let sqrc = encodeSqrc(publicData = "serial 4711",
+                      privateData = "warranty code 99-FOO",
+                      key)
+let opened = decodeSqrcMatrix(sqrc, key)
+echo opened.publicText, " / ", opened.privateText
+```
+
+**Payload builders** feed straight into any encoder:
+
+```nim
+import openparser/qr
+
+encodeQr(makeVCard(VCard(fullName: "Ada Lovelace",
+                         org: "OpenPeeps", email: "ada@example.org")))
+encodeQr(makeWifi("home-net", "secret123"))
+encodeQr(makeUrl("openparser.dev"))
+```
+
+**Rendering** produces a compact standalone SVG (one merged path):
+
+```nim
+writeFile("qr.svg", encodeQr("hi").toSvg(scale = 8, border = 4))
+```
+
+**Decoding from images:** pass an 8-bit grayscale `GrayImage` to `decodeQrImage`; the reader binarizes (hybrid Otsu/adaptive), locates finder patterns, fits an affine grid and Reed-Solomon-corrects what it finds. Handles rotation up to about 30 degrees and moderate noise.
+
+Notes:
+- Encoder output is byte-compatible with segno/zxing for Model 2 and byte-identical for Micro QR and rMQR.
+- Model 1 is a legacy closed-system format; versions 1-12 are supported.
+- The SQRC profile and AQR ring format are documented openparser profiles inspired by DENSO WAVE's proprietary formats.
+
+---
+
 ## Roadmap
 
 - [x] JSON depth/size limit to prevent DoS attacks
