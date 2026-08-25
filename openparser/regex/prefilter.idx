@@ -16,5 +16,5 @@ nim	pfLiteralAnchored	openparser/regex/prefilter.html#pfLiteralAnchored	Prefilte
 nim	pfInnerLiteral	openparser/regex/prefilter.html#pfInnerLiteral	PrefilterKind.pfInnerLiteral		16
 nim	PrefilterKind	openparser/regex/prefilter.html#PrefilterKind	enum PrefilterKind		16
 nim	Prefilter	openparser/regex/prefilter.html#Prefilter	type Prefilter		29
-nim	extractPrefilter	openparser/regex/prefilter.html#extractPrefilter,Program	proc extractPrefilter(prog: Program): Prefilter		152
-nim	nextCandidate	openparser/regex/prefilter.html#nextCandidate,Prefilter,string,int,int	proc nextCandidate(pf: Prefilter; input: string; pos, inputLen: int): int		284
+nim	extractPrefilter	openparser/regex/prefilter.html#extractPrefilter,Program	proc extractPrefilter(prog: Program): Prefilter		174
+nim	nextCandidate	openparser/regex/prefilter.html#nextCandidate,Prefilter,string,int,int	proc nextCandidate(pf: Prefilter; input: string; pos, inputLen: int): int		346

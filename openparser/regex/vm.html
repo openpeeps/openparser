@@ -85,6 +85,10 @@
   <li><a class="reference" href="#allGroups%2CMatchResult%2Cstring" title="allGroups(m: MatchResult; input: string): seq[CaptureGroup]">allGroups(m: MatchResult; input: string): seq[CaptureGroup]</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">closeRegexVM
+  <li><a class="reference" href="#closeRegexVM%2CRegexVM" title="closeRegexVM(vm: var RegexVM)">closeRegexVM(vm: var RegexVM)</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">find
   <li><a class="reference" href="#find%2Cstring%2Cstring" title="find(pattern, input: string): MatchResult">find(pattern, input: string): MatchResult</a></li>
 <li><a class="reference" href="#find%2CRegexVM%2Cstring" title="find(vm: var RegexVM; input: string): MatchResult">find(vm: var RegexVM; input: string): MatchResult</a></li>
@@ -159,7 +163,7 @@
     <div class="section" id="6">
   <h1><a class="toc-backref" href="#6">Imports</a></h1>
   <dl class="item">
-    <a class="reference external" href="compiler.html">compiler</a>, <a class="reference external" href="prefilter.html">prefilter</a>, <a class="reference external" href="simd.html">simd</a>
+    <a class="reference external" href="compiler.html">compiler</a>, <a class="reference external" href="prefilter.html">prefilter</a>, <a class="reference external" href="simd.html">simd</a>, <a class="reference external" href="jit/compiler.html">jit/compiler</a>
   </dl>
 </div>
 <div class="section" id="7">
@@ -223,11 +227,22 @@
 </div>
 
 </div>
+<div id="closeRegexVM-procs-all">
+  <div id="closeRegexVM,RegexVM">
+  <dt><pre><span class="Keyword">proc</span> <a href="#closeRegexVM%2CRegexVM"><span class="Identifier">closeRegexVM</span></a><span class="Other">(</span><span class="Identifier">vm</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#RegexVM"><span class="Identifier">RegexVM</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Release JIT resources held by the VM. Safe to call multiple times.
+    
+  </dd>
+</div>
+
+</div>
 <div id="find-procs-all">
   <div id="find,string,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#find%2Cstring%2Cstring"><span class="Identifier">find</span></a><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">,</span> <span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#MatchResult"><span class="Identifier">MatchResult</span></a> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserRegexError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">OpenParserRegexError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -235,8 +250,8 @@
   </dd>
 </div>
 <div id="find,RegexVM,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#find%2CRegexVM%2Cstring"><span class="Identifier">find</span></a><span class="Other">(</span><span class="Identifier">vm</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#RegexVM"><span class="Identifier">RegexVM</span></a><span class="Other">;</span> <span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#MatchResult"><span class="Identifier">MatchResult</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#find%2CRegexVM%2Cstring"><span class="Identifier">find</span></a><span class="Other">(</span><span class="Identifier">vm</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#RegexVM"><span class="Identifier">RegexVM</span></a><span class="Other">;</span> <span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#MatchResult"><span class="Identifier">MatchResult</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Leftmost match anywhere in input, using SIMD prefilter to skip positions.
@@ -248,8 +263,8 @@
 <div id="findAll-procs-all">
   <div id="findAll,string,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#findAll%2Cstring%2Cstring"><span class="Identifier">findAll</span></a><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">,</span> <span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#MatchResult"><span class="Identifier">MatchResult</span></a><span class="Other">]</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserRegexError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">OpenParserRegexError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -257,8 +272,8 @@
   </dd>
 </div>
 <div id="findAll,RegexVM,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#findAll%2CRegexVM%2Cstring"><span class="Identifier">findAll</span></a><span class="Other">(</span><span class="Identifier">vm</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#RegexVM"><span class="Identifier">RegexVM</span></a><span class="Other">;</span> <span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#MatchResult"><span class="Identifier">MatchResult</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#findAll%2CRegexVM%2Cstring"><span class="Identifier">findAll</span></a><span class="Other">(</span><span class="Identifier">vm</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#RegexVM"><span class="Identifier">RegexVM</span></a><span class="Other">;</span> <span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#MatchResult"><span class="Identifier">MatchResult</span></a><span class="Other">]</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Find all non-overlapping matches in input, using SIMD prefilter to skip positions.
@@ -316,7 +331,8 @@
 </div>
 <div id="initRegexVM-procs-all">
   <div id="initRegexVM,Program">
-  <dt><pre><span class="Keyword">proc</span> <a href="#initRegexVM%2CProgram"><span class="Identifier">initRegexVM</span></a><span class="Other">(</span><span class="Identifier">prog</span><span class="Other">:</span> <a href="compiler.html#Program"><span class="Identifier">Program</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#RegexVM"><span class="Identifier">RegexVM</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#initRegexVM%2CProgram"><span class="Identifier">initRegexVM</span></a><span class="Other">(</span><span class="Identifier">prog</span><span class="Other">:</span> <a href="compiler.html#Program"><span class="Identifier">Program</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#RegexVM"><span class="Identifier">RegexVM</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -328,8 +344,8 @@
 <div id="match-procs-all">
   <div id="match,string,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#match%2Cstring%2Cstring"><span class="Identifier">match</span></a><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">,</span> <span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#MatchResult"><span class="Identifier">MatchResult</span></a> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserRegexError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">OpenParserRegexError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -337,8 +353,8 @@
   </dd>
 </div>
 <div id="match,RegexVM,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#match%2CRegexVM%2Cstring"><span class="Identifier">match</span></a><span class="Other">(</span><span class="Identifier">vm</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#RegexVM"><span class="Identifier">RegexVM</span></a><span class="Other">;</span> <span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#MatchResult"><span class="Identifier">MatchResult</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#match%2CRegexVM%2Cstring"><span class="Identifier">match</span></a><span class="Other">(</span><span class="Identifier">vm</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#RegexVM"><span class="Identifier">RegexVM</span></a><span class="Other">;</span> <span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#MatchResult"><span class="Identifier">MatchResult</span></a> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Anchored full match: must start at 0 AND consume the whole string.
@@ -394,7 +410,7 @@
 <div class="section" id="19">
   <h1><a class="toc-backref" href="#19">Exports</a></h1>
   <dl class="item">
-    <a href="compiler.html#disassemble,Program"><span class="Identifier">disassemble</span></a>, <a href="compiler.html#Program"><span class="Identifier">Program</span></a>, <a href="compiler.html#compile,RegexNode,int"><span class="Identifier">compile</span></a>, <a href="compiler.html#Instr"><span class="Identifier">Instr</span></a>, <a href="compiler.html#CompiledClass"><span class="Identifier">CompiledClass</span></a>, <a href="compiler.html#PatternShape"><span class="Identifier">PatternShape</span></a>, <a href="compiler.html#compile,string"><span class="Identifier">compile</span></a>, <a href="compiler.html#re,string"><span class="Identifier">re</span></a>, <a href="compiler.html#Regex"><span class="Identifier">Regex</span></a>, <a href="compiler.html#RegexCompiler"><span class="Identifier">RegexCompiler</span></a>, <a href="compiler.html#OpCode"><span class="Identifier">OpCode</span></a>
+    <a href="compiler.html#re,string"><span class="Identifier">re</span></a>, <a href="compiler.html#disassemble,Program"><span class="Identifier">disassemble</span></a>, <a href="compiler.html#Program"><span class="Identifier">Program</span></a>, <a href="compiler.html#compile,RegexNode,int"><span class="Identifier">compile</span></a>, <a href="compiler.html#Instr"><span class="Identifier">Instr</span></a>, <a href="compiler.html#CompiledClass"><span class="Identifier">CompiledClass</span></a>, <a href="compiler.html#PatternShape"><span class="Identifier">PatternShape</span></a>, <a href="compiler.html#buildClassBitmap,CompiledClass"><span class="Identifier">buildClassBitmap</span></a>, <a href="compiler.html#compile,string"><span class="Identifier">compile</span></a>, <a href="compiler.html#Regex"><span class="Identifier">Regex</span></a>, <a href="compiler.html#RegexCompiler"><span class="Identifier">RegexCompiler</span></a>, <a href="compiler.html#OpCode"><span class="Identifier">OpCode</span></a>
   </dl>
 </div>
 
@@ -404,7 +420,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-19 11:03:22 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-25 17:04:28 UTC</small>
       </div>
     </div>
   </div>

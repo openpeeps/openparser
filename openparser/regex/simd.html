@@ -128,6 +128,30 @@
   <li><a class="reference" href="#scanNonAlphaUnderSse2%2Cstring%2Cint%2Cint" title="scanNonAlphaUnderSse2(s: string; start, stop: int): int">scanNonAlphaUnderSse2(s: string; start, stop: int): int</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">scanNonDigit
+  <li><a class="reference" href="#scanNonDigit%2Cstring%2Cint%2Cint" title="scanNonDigit(s: string; start, stop: int): int">scanNonDigit(s: string; start, stop: int): int</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">scanNonDigitScalar
+  <li><a class="reference" href="#scanNonDigitScalar%2Cstring%2Cint%2Cint" title="scanNonDigitScalar(s: string; start, stop: int): int">scanNonDigitScalar(s: string; start, stop: int): int</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">scanNonDigitSse2
+  <li><a class="reference" href="#scanNonDigitSse2%2Cstring%2Cint%2Cint" title="scanNonDigitSse2(s: string; start, stop: int): int">scanNonDigitSse2(s: string; start, stop: int): int</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">scanNonSpace
+  <li><a class="reference" href="#scanNonSpace%2Cstring%2Cint%2Cint" title="scanNonSpace(s: string; start, stop: int): int">scanNonSpace(s: string; start, stop: int): int</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">scanNonSpaceScalar
+  <li><a class="reference" href="#scanNonSpaceScalar%2Cstring%2Cint%2Cint" title="scanNonSpaceScalar(s: string; start, stop: int): int">scanNonSpaceScalar(s: string; start, stop: int): int</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">scanNonSpaceSse2
+  <li><a class="reference" href="#scanNonSpaceSse2%2Cstring%2Cint%2Cint" title="scanNonSpaceSse2(s: string; start, stop: int): int">scanNonSpaceSse2(s: string; start, stop: int): int</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">scanNonUpperDigitUnder
   <li><a class="reference" href="#scanNonUpperDigitUnder%2Cstring%2Cint%2Cint" title="scanNonUpperDigitUnder(s: string; start, stop: int): int">scanNonUpperDigitUnder(s: string; start, stop: int): int</a></li>
 
@@ -394,6 +418,78 @@
 </div>
 
 </div>
+<div id="scanNonDigit-procs-all">
+  <div id="scanNonDigit,string,int,int">
+  <dt><pre><span class="Keyword">proc</span> <a href="#scanNonDigit%2Cstring%2Cint%2Cint"><span class="Identifier">scanNonDigit</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">start</span><span class="Other">,</span> <span class="Identifier">stop</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span class="Identifier">inline</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+
+</div>
+<div id="scanNonDigitScalar-procs-all">
+  <div id="scanNonDigitScalar,string,int,int">
+  <dt><pre><span class="Keyword">proc</span> <a href="#scanNonDigitScalar%2Cstring%2Cint%2Cint"><span class="Identifier">scanNonDigitScalar</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">start</span><span class="Other">,</span> <span class="Identifier">stop</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span class="Identifier">inline</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Find first byte that is NOT d — marks end of a digit run.
+    
+  </dd>
+</div>
+
+</div>
+<div id="scanNonDigitSse2-procs-all">
+  <div id="scanNonDigitSse2,string,int,int">
+  <dt><pre><span class="Keyword">proc</span> <a href="#scanNonDigitSse2%2Cstring%2Cint%2Cint"><span class="Identifier">scanNonDigitSse2</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">start</span><span class="Other">,</span> <span class="Identifier">stop</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Find first byte NOT in d — end-of-digit-run scan.
+    
+  </dd>
+</div>
+
+</div>
+<div id="scanNonSpace-procs-all">
+  <div id="scanNonSpace,string,int,int">
+  <dt><pre><span class="Keyword">proc</span> <a href="#scanNonSpace%2Cstring%2Cint%2Cint"><span class="Identifier">scanNonSpace</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">start</span><span class="Other">,</span> <span class="Identifier">stop</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span class="Identifier">inline</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+
+</div>
+<div id="scanNonSpaceScalar-procs-all">
+  <div id="scanNonSpaceScalar,string,int,int">
+  <dt><pre><span class="Keyword">proc</span> <a href="#scanNonSpaceScalar%2Cstring%2Cint%2Cint"><span class="Identifier">scanNonSpaceScalar</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">start</span><span class="Other">,</span> <span class="Identifier">stop</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span class="Identifier">inline</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Find first byte that is NOT s — marks end of a whitespace run.
+    
+  </dd>
+</div>
+
+</div>
+<div id="scanNonSpaceSse2-procs-all">
+  <div id="scanNonSpaceSse2,string,int,int">
+  <dt><pre><span class="Keyword">proc</span> <a href="#scanNonSpaceSse2%2Cstring%2Cint%2Cint"><span class="Identifier">scanNonSpaceSse2</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">start</span><span class="Other">,</span> <span class="Identifier">stop</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Find first byte NOT in s — end-of-whitespace run scan.
+    
+  </dd>
+</div>
+
+</div>
 <div id="scanNonUpperDigitUnder-procs-all">
   <div id="scanNonUpperDigitUnder,string,int,int">
   <dt><pre><span class="Keyword">proc</span> <a href="#scanNonUpperDigitUnder%2Cstring%2Cint%2Cint"><span class="Identifier">scanNonUpperDigitUnder</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">start</span><span class="Other">,</span> <span class="Identifier">stop</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span class="Identifier">inline</span><span class="Other">,</span>
@@ -548,7 +644,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-19 11:03:22 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-25 17:04:28 UTC</small>
       </div>
     </div>
   </div>

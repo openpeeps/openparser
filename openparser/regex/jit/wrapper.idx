@@ -1,0 +1,26 @@
+nimTitle	wrapper	openparser/regex/jit/wrapper.html	module openparser/regex/jit/wrapper		0
+nim	dasm_State	openparser/regex/jit/wrapper.html#dasm_State	object dasm_State		10
+nim	dasm_init	openparser/regex/jit/wrapper.html#dasm_init,ptr.ptr.dasm_State,cint	proc dasm_init(Dst: ptr ptr dasm_State; maxsection: cint)		13
+nim	dasm_free	openparser/regex/jit/wrapper.html#dasm_free,ptr.ptr.dasm_State	proc dasm_free(Dst: ptr ptr dasm_State)		14
+nim	dasm_setupglobal	openparser/regex/jit/wrapper.html#dasm_setupglobal,ptr.ptr.dasm_State,ptr.pointer,cuint	proc dasm_setupglobal(Dst: ptr ptr dasm_State; gl: ptr pointer; maxgl: cuint)		15
+nim	dasm_setup	openparser/regex/jit/wrapper.html#dasm_setup,ptr.ptr.dasm_State,pointer	proc dasm_setup(Dst: ptr ptr dasm_State; actionlist: pointer)		16
+nim	dasm_growpc	openparser/regex/jit/wrapper.html#dasm_growpc,ptr.ptr.dasm_State,cuint	proc dasm_growpc(Dst: ptr ptr dasm_State; maxpc: cuint)		17
+nim	dasm_link	openparser/regex/jit/wrapper.html#dasm_link,ptr.ptr.dasm_State,ptr.csize_t	proc dasm_link(Dst: ptr ptr dasm_State; szp: ptr csize_t): cint		18
+nim	dasm_encode	openparser/regex/jit/wrapper.html#dasm_encode,ptr.ptr.dasm_State,pointer	proc dasm_encode(Dst: ptr ptr dasm_State; buf: pointer): cint		19
+nim	regex_prologue	openparser/regex/jit/wrapper.html#regex_prologue,ptr.ptr.dasm_State	proc regex_prologue(Dst: ptr ptr dasm_State)		22
+nim	regex_epilogue	openparser/regex/jit/wrapper.html#regex_epilogue,ptr.ptr.dasm_State	proc regex_epilogue(Dst: ptr ptr dasm_State)		23
+nim	regex_emit_char	openparser/regex/jit/wrapper.html#regex_emit_char,ptr.ptr.dasm_State,cint,cint	proc regex_emit_char(Dst: ptr ptr dasm_State; lit: cint; failLabel: cint)		24
+nim	regex_emit_any_char	openparser/regex/jit/wrapper.html#regex_emit_any_char,ptr.ptr.dasm_State,cint	proc regex_emit_any_char(Dst: ptr ptr dasm_State; failLabel: cint)		25
+nim	regex_emit_char_class	openparser/regex/jit/wrapper.html#regex_emit_char_class,ptr.ptr.dasm_State,uint,cint,cint	proc regex_emit_char_class(Dst: ptr ptr dasm_State; bitmapPtr: uint; negated: cint;\n                      failLabel: cint)		26
+nim	regex_emit_escape_class	openparser/regex/jit/wrapper.html#regex_emit_escape_class,ptr.ptr.dasm_State,cint,cint	proc regex_emit_escape_class(Dst: ptr ptr dasm_State; cls: cint; failLabel: cint)		27
+nim	regex_emit_anchor_start	openparser/regex/jit/wrapper.html#regex_emit_anchor_start,ptr.ptr.dasm_State,cint	proc regex_emit_anchor_start(Dst: ptr ptr dasm_State; failLabel: cint)		28
+nim	regex_emit_anchor_end	openparser/regex/jit/wrapper.html#regex_emit_anchor_end,ptr.ptr.dasm_State,cint	proc regex_emit_anchor_end(Dst: ptr ptr dasm_State; failLabel: cint)		29
+nim	regex_emit_word_boundary	openparser/regex/jit/wrapper.html#regex_emit_word_boundary,ptr.ptr.dasm_State,cint,cint,cint,cint	proc regex_emit_word_boundary(Dst: ptr ptr dasm_State; negated: cint;\n                         failLabel: cint; lblPrevLoaded: cint;\n                         lblCurLoaded: cint)		30
+nim	regex_emit_jmp	openparser/regex/jit/wrapper.html#regex_emit_jmp,ptr.ptr.dasm_State,cint	proc regex_emit_jmp(Dst: ptr ptr dasm_State; targetLabel: cint)		31
+nim	regex_split	openparser/regex/jit/wrapper.html#regex_split,ptr.ptr.dasm_State,cint,cint,cint,cint	proc regex_split(Dst: ptr ptr dasm_State; tryFirstLabel: cint; resumeId: cint;\n            resumeTargetLabel: cint; failLabel: cint)		32
+nim	regex_emit_match	openparser/regex/jit/wrapper.html#regex_emit_match,ptr.ptr.dasm_State,cint,cint,cint	proc regex_emit_match(Dst: ptr ptr dasm_State; exitLabel: cint; failLabel: cint;\n                 wantFull: cint)		33
+nim	regex_emit_fail_entry_head	openparser/regex/jit/wrapper.html#regex_emit_fail_entry_head,ptr.ptr.dasm_State,cint,cint	proc regex_emit_fail_entry_head(Dst: ptr ptr dasm_State; noMatchLabel: cint;\n                           stackBytes: cint)		34
+nim	regex_emit_dispatch_case	openparser/regex/jit/wrapper.html#regex_emit_dispatch_case,ptr.ptr.dasm_State,cint,cint	proc regex_emit_dispatch_case(Dst: ptr ptr dasm_State; id: cint; targetLabel: cint)		35
+nim	regex_emit_no_match	openparser/regex/jit/wrapper.html#regex_emit_no_match,ptr.ptr.dasm_State	proc regex_emit_no_match(Dst: ptr ptr dasm_State)		36
+nim	regex_define_label	openparser/regex/jit/wrapper.html#regex_define_label,ptr.ptr.dasm_State,cint	proc regex_define_label(Dst: ptr ptr dasm_State; label: cint)		37
+nim	get_regex_actions	openparser/regex/jit/wrapper.html#get_regex_actions	proc get_regex_actions(): pointer		38

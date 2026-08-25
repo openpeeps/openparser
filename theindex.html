@@ -28,7 +28,7 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/json_simd.html">openparser/private/json_simd</a>, <a href="openparser/private/lexutils.html">openparser/private/lexutils</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/private/xml_simd.html">openparser/private/xml_simd</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/xml.html">openparser/xml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/json_simd.html">openparser/private/json_simd</a>, <a href="openparser/private/lexutils.html">openparser/private/lexutils</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/private/xml_simd.html">openparser/private/xml_simd</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/jit/compiler.html">openparser/regex/jit/compiler</a>, <a href="openparser/regex/jit/jit_mem.html">openparser/regex/jit/jit_mem</a>, <a href="openparser/regex/jit/wrapper.html">openparser/regex/jit/wrapper</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/xml.html">openparser/xml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc `$`(f: CsvFieldSlice): string" href="openparser/csv.html#%24%2CCsvFieldSlice">csv: proc `$`(f: CsvFieldSlice): string</a></li>
@@ -68,6 +68,10 @@
 <dt><a name="allGroups" href="#allGroups"><span>allGroups:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="vm: proc allGroups(m: MatchResult; input: string): seq[CaptureGroup]" href="openparser/regex/vm.html#allGroups%2CMatchResult%2Cstring">vm: proc allGroups(m: MatchResult; input: string): seq[CaptureGroup]</a></li>
+          </ul></dd>
+<dt><a name="allocJitCode" href="#allocJitCode"><span>allocJitCode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="jit_mem: proc allocJitCode(size: int): pointer" href="openparser/regex/jit/jit_mem.html#allocJitCode%2Cint">jit_mem: proc allocJitCode(size: int): pointer</a></li>
           </ul></dd>
 <dt><a name="AnyTable" href="#AnyTable"><span>AnyTable:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -189,6 +193,10 @@
 <li><a class="reference external"
           data-doc-search-tag="fbe: object Buffer" href="openparser/fbe.html#Buffer">fbe: object Buffer</a></li>
           </ul></dd>
+<dt><a name="buildClassBitmap" href="#buildClassBitmap"><span>buildClassBitmap:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc buildClassBitmap(cls: var CompiledClass)" href="openparser/regex/compiler.html#buildClassBitmap%2CCompiledClass">compiler: proc buildClassBitmap(cls: var CompiledClass)</a></li>
+          </ul></dd>
 <dt><a name="captureCount" href="#captureCount"><span>captureCount:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="parser: proc captureCount(p: RegexParser): lent int" href="openparser/regex/parser.html#captureCount%2CRegexParser">parser: proc captureCount(p: RegexParser): lent int</a></li>
@@ -219,6 +227,10 @@
           <li><a class="reference external"
           data-doc-search-tag="parser: proc close(p: var RegexParser)" href="openparser/regex/parser.html#close%2CRegexParser">parser: proc close(p: var RegexParser)</a></li>
           </ul></dd>
+<dt><a name="closeRegexVM" href="#closeRegexVM"><span>closeRegexVM:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="vm: proc closeRegexVM(vm: var RegexVM)" href="openparser/regex/vm.html#closeRegexVM%2CRegexVM">vm: proc closeRegexVM(vm: var RegexVM)</a></li>
+          </ul></dd>
 <dt><a name="compile" href="#compile"><span>compile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="compiler: proc compile(ast: RegexNode; numCaptures: int): Program" href="openparser/regex/compiler.html#compile%2CRegexNode%2Cint">compiler: proc compile(ast: RegexNode; numCaptures: int): Program</a></li>
@@ -229,6 +241,10 @@
 <li><a class="reference external"
           data-doc-search-tag="compiler: object CompiledClass" href="openparser/regex/compiler.html#CompiledClass">compiler: object CompiledClass</a></li>
           </ul></dd>
+<dt><a name="CompiledJit" href="#CompiledJit"><span>CompiledJit:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: object CompiledJit" href="openparser/regex/jit/compiler.html#CompiledJit">compiler: object CompiledJit</a></li>
+          </ul></dd>
 <dt><a name="compileMo" href="#compileMo"><span>compileMo:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="mo: proc compileMo(cat: MoCatalog): MoCompiledCatalog" href="openparser/gettext/mo.html#compileMo%2CMoCatalog">mo: proc compileMo(cat: MoCatalog): MoCompiledCatalog</a></li>
@@ -236,6 +252,10 @@
 <dt><a name="compilePo" href="#compilePo"><span>compilePo:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="po: proc compilePo(cat: PoCatalog; skipFuzzy = true): PoCompiledCatalog" href="openparser/gettext/po.html#compilePo%2CPoCatalog">po: proc compilePo(cat: PoCatalog; skipFuzzy = true): PoCompiledCatalog</a></li>
+          </ul></dd>
+<dt><a name="compileRegex" href="#compileRegex"><span>compileRegex:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc compileRegex(prog: Program; fullMatch = false): CompiledJit" href="openparser/regex/jit/compiler.html#compileRegex%2CProgram">compiler: proc compileRegex(prog: Program; fullMatch = false): CompiledJit</a></li>
           </ul></dd>
 <dt><a name="copyFieldsBeforeRecCase" href="#copyFieldsBeforeRecCase"><span>copyFieldsBeforeRecCase:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -256,6 +276,38 @@
 <dt><a name="CsvRowCallback" href="#CsvRowCallback"><span>CsvRowCallback:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: type CsvRowCallback" href="openparser/csv.html#CsvRowCallback">csv: type CsvRowCallback</a></li>
+          </ul></dd>
+<dt><a name="dasm_encode" href="#dasm_encode"><span>dasm_encode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc dasm_encode(Dst: ptr ptr dasm_State; buf: pointer): cint" href="openparser/regex/jit/wrapper.html#dasm_encode%2Cptr.ptr.dasm_State%2Cpointer">wrapper: proc dasm_encode(Dst: ptr ptr dasm_State; buf: pointer): cint</a></li>
+          </ul></dd>
+<dt><a name="dasm_free" href="#dasm_free"><span>dasm_free:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc dasm_free(Dst: ptr ptr dasm_State)" href="openparser/regex/jit/wrapper.html#dasm_free%2Cptr.ptr.dasm_State">wrapper: proc dasm_free(Dst: ptr ptr dasm_State)</a></li>
+          </ul></dd>
+<dt><a name="dasm_growpc" href="#dasm_growpc"><span>dasm_growpc:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc dasm_growpc(Dst: ptr ptr dasm_State; maxpc: cuint)" href="openparser/regex/jit/wrapper.html#dasm_growpc%2Cptr.ptr.dasm_State%2Ccuint">wrapper: proc dasm_growpc(Dst: ptr ptr dasm_State; maxpc: cuint)</a></li>
+          </ul></dd>
+<dt><a name="dasm_init" href="#dasm_init"><span>dasm_init:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc dasm_init(Dst: ptr ptr dasm_State; maxsection: cint)" href="openparser/regex/jit/wrapper.html#dasm_init%2Cptr.ptr.dasm_State%2Ccint">wrapper: proc dasm_init(Dst: ptr ptr dasm_State; maxsection: cint)</a></li>
+          </ul></dd>
+<dt><a name="dasm_link" href="#dasm_link"><span>dasm_link:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc dasm_link(Dst: ptr ptr dasm_State; szp: ptr csize_t): cint" href="openparser/regex/jit/wrapper.html#dasm_link%2Cptr.ptr.dasm_State%2Cptr.csize_t">wrapper: proc dasm_link(Dst: ptr ptr dasm_State; szp: ptr csize_t): cint</a></li>
+          </ul></dd>
+<dt><a name="dasm_setup" href="#dasm_setup"><span>dasm_setup:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc dasm_setup(Dst: ptr ptr dasm_State; actionlist: pointer)" href="openparser/regex/jit/wrapper.html#dasm_setup%2Cptr.ptr.dasm_State%2Cpointer">wrapper: proc dasm_setup(Dst: ptr ptr dasm_State; actionlist: pointer)</a></li>
+          </ul></dd>
+<dt><a name="dasm_setupglobal" href="#dasm_setupglobal"><span>dasm_setupglobal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc dasm_setupglobal(Dst: ptr ptr dasm_State; gl: ptr pointer; maxgl: cuint)" href="openparser/regex/jit/wrapper.html#dasm_setupglobal%2Cptr.ptr.dasm_State%2Cptr.pointer%2Ccuint">wrapper: proc dasm_setupglobal(Dst: ptr ptr dasm_State; gl: ptr pointer; maxgl: cuint)</a></li>
+          </ul></dd>
+<dt><a name="dasm_State" href="#dasm_State"><span>dasm_State:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: object dasm_State" href="openparser/regex/jit/wrapper.html#dasm_State">wrapper: object dasm_State</a></li>
           </ul></dd>
 <dt><a name="decode" href="#decode"><span>decode:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -615,9 +667,21 @@
           <li><a class="reference external"
           data-doc-search-tag="vm: proc findAll(pattern, input: string): seq[MatchResult]" href="openparser/regex/vm.html#findAll%2Cstring%2Cstring">vm: proc findAll(pattern, input: string): seq[MatchResult]</a></li>
           </ul></dd>
+<dt><a name="fnv1a" href="#fnv1a"><span>fnv1a:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="json: proc fnv1a(s: string): uint32" href="openparser/json.html#fnv1a%2Cstring">json: proc fnv1a(s: string): uint32</a></li>
+          </ul></dd>
 <dt><a name="form" href="#form"><span>form:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="mo: proc form(cat: MoCatalog; msgid: string; formIdx: int; msgctxt = &quot;&quot;): string" href="openparser/gettext/mo.html#form%2CMoCatalog%2Cstring%2Cint%2Cstring">mo: proc form(cat: MoCatalog; msgid: string; formIdx: int; msgctxt = &quot;&quot;): string</a></li>
+          </ul></dd>
+<dt><a name="freeJit" href="#freeJit"><span>freeJit:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc freeJit(cj: var CompiledJit)" href="openparser/regex/jit/compiler.html#freeJit%2CCompiledJit">compiler: proc freeJit(cj: var CompiledJit)</a></li>
+          </ul></dd>
+<dt><a name="freeJitCode" href="#freeJitCode"><span>freeJitCode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="jit_mem: proc freeJitCode(p: pointer; size: int)" href="openparser/regex/jit/jit_mem.html#freeJitCode%2Cpointer%2Cint">jit_mem: proc freeJitCode(p: pointer; size: int)</a></li>
           </ul></dd>
 <dt><a name="fromBson" href="#fromBson"><span>fromBson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -728,6 +792,10 @@
           data-doc-search-tag="toml: proc getObject(n: TomlNode): OrderedTableRef[string, TomlNode]" href="openparser/toml.html#getObject%2CTomlNode">toml: proc getObject(n: TomlNode): OrderedTableRef[string, TomlNode]</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc getObject(n: YamlNode): OrderedTableRef[string, YamlNode]" href="openparser/yaml.html#getObject%2CYamlNode">yaml: proc getObject(n: YamlNode): OrderedTableRef[string, YamlNode]</a></li>
+          </ul></dd>
+<dt><a name="get_regex_actions" href="#get_regex_actions"><span>get_regex_actions:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc get_regex_actions(): pointer" href="openparser/regex/jit/wrapper.html#get_regex_actions">wrapper: proc get_regex_actions(): pointer</a></li>
           </ul></dd>
 <dt><a name="getStr" href="#getStr"><span>getStr:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -843,6 +911,18 @@
 <li><a class="reference external"
           data-doc-search-tag="xml: proc items(elem: XmlNode): seq[XmlNode]" href="openparser/xml.html#items%2CXmlNode">xml: proc items(elem: XmlNode): seq[XmlNode]</a></li>
           </ul></dd>
+<dt><a name="JitCtx" href="#JitCtx"><span>JitCtx:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: object JitCtx" href="openparser/regex/jit/compiler.html#JitCtx">compiler: object JitCtx</a></li>
+          </ul></dd>
+<dt><a name="jitExec" href="#jitExec"><span>jitExec:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc jitExec(cj: CompiledJit; input: string; startPos = 0): int" href="openparser/regex/jit/compiler.html#jitExec%2CCompiledJit%2Cstring%2Cint">compiler: proc jitExec(cj: CompiledJit; input: string; startPos = 0): int</a></li>
+          </ul></dd>
+<dt><a name="jitScan" href="#jitScan"><span>jitScan:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc jitScan(cj: CompiledJit; input: string; fromPos = 0): tuple[start, stop: int]" href="openparser/regex/jit/compiler.html#jitScan%2CCompiledJit%2Cstring%2Cint">compiler: proc jitScan(cj: CompiledJit; input: string; fromPos = 0): tuple[start, stop: int]</a></li>
+          </ul></dd>
 <dt><a name="json" href="#json"><span>json:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: template json(name: static[string])" href="openparser/json.html#json.t%2Cstatic%5Bstring%5D">json: template json(name: static[string])</a></li>
@@ -910,6 +990,18 @@
 <dt><a name="jtkTrue" href="#jtkTrue"><span>jtkTrue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: JsonTokenKind.jtkTrue" href="openparser/json.html#jtkTrue">json: JsonTokenKind.jtkTrue</a></li>
+          </ul></dd>
+<dt><a name="lblFailEntry" href="#lblFailEntry"><span>lblFailEntry:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: const lblFailEntry" href="openparser/regex/jit/compiler.html#lblFailEntry">compiler: const lblFailEntry</a></li>
+          </ul></dd>
+<dt><a name="lblMatchExit" href="#lblMatchExit"><span>lblMatchExit:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: const lblMatchExit" href="openparser/regex/jit/compiler.html#lblMatchExit">compiler: const lblMatchExit</a></li>
+          </ul></dd>
+<dt><a name="lblNoMatch" href="#lblNoMatch"><span>lblNoMatch:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: const lblNoMatch" href="openparser/regex/jit/compiler.html#lblNoMatch">compiler: const lblNoMatch</a></li>
           </ul></dd>
 <dt><a name="len" href="#len"><span>len:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1489,9 +1581,33 @@
 <li><a class="reference external"
           data-doc-search-tag="compiler: PatternShape.psDigitPlus" href="openparser/regex/compiler.html#psDigitPlus">compiler: PatternShape.psDigitPlus</a></li>
           </ul></dd>
+<dt><a name="psDigitPlusULSuffix" href="#psDigitPlusULSuffix"><span>psDigitPlusULSuffix:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psDigitPlusULSuffix" href="openparser/regex/compiler.html#psDigitPlusULSuffix">compiler: PatternShape.psDigitPlusULSuffix</a></li>
+          </ul></dd>
 <dt><a name="psDigitStar" href="#psDigitStar"><span>psDigitStar:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="compiler: PatternShape.psDigitStar" href="openparser/regex/compiler.html#psDigitStar">compiler: PatternShape.psDigitStar</a></li>
+          </ul></dd>
+<dt><a name="psEndAnchorByte" href="#psEndAnchorByte"><span>psEndAnchorByte:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psEndAnchorByte" href="openparser/regex/compiler.html#psEndAnchorByte">compiler: PatternShape.psEndAnchorByte</a></li>
+          </ul></dd>
+<dt><a name="psHexPrefixHexPlus" href="#psHexPrefixHexPlus"><span>psHexPrefixHexPlus:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psHexPrefixHexPlus" href="openparser/regex/compiler.html#psHexPrefixHexPlus">compiler: PatternShape.psHexPrefixHexPlus</a></li>
+          </ul></dd>
+<dt><a name="psLitSpaceWordPlus" href="#psLitSpaceWordPlus"><span>psLitSpaceWordPlus:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psLitSpaceWordPlus" href="openparser/regex/compiler.html#psLitSpaceWordPlus">compiler: PatternShape.psLitSpaceWordPlus</a></li>
+          </ul></dd>
+<dt><a name="psLitWordSpaceWord" href="#psLitWordSpaceWord"><span>psLitWordSpaceWord:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psLitWordSpaceWord" href="openparser/regex/compiler.html#psLitWordSpaceWord">compiler: PatternShape.psLitWordSpaceWord</a></li>
+          </ul></dd>
+<dt><a name="psLitWordSpaceWordPlus" href="#psLitWordSpaceWordPlus"><span>psLitWordSpaceWordPlus:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psLitWordSpaceWordPlus" href="openparser/regex/compiler.html#psLitWordSpaceWordPlus">compiler: PatternShape.psLitWordSpaceWordPlus</a></li>
           </ul></dd>
 <dt><a name="psNone" href="#psNone"><span>psNone:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1516,6 +1632,10 @@
 <dt><a name="psWordCharStar" href="#psWordCharStar"><span>psWordCharStar:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="compiler: PatternShape.psWordCharStar" href="openparser/regex/compiler.html#psWordCharStar">compiler: PatternShape.psWordCharStar</a></li>
+          </ul></dd>
+<dt><a name="psWordSpaceStarWord" href="#psWordSpaceStarWord"><span>psWordSpaceStarWord:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: PatternShape.psWordSpaceStarWord" href="openparser/regex/compiler.html#psWordSpaceStarWord">compiler: PatternShape.psWordSpaceStarWord</a></li>
           </ul></dd>
 <dt><a name="put" href="#put"><span>put:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1707,6 +1827,76 @@
 <li><a class="reference external"
           data-doc-search-tag="compiler: object RegexCompiler" href="openparser/regex/compiler.html#RegexCompiler">compiler: object RegexCompiler</a></li>
           </ul></dd>
+<dt><a name="regex_define_label" href="#regex_define_label"><span>regex_define_label:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_define_label(Dst: ptr ptr dasm_State; label: cint)" href="openparser/regex/jit/wrapper.html#regex_define_label%2Cptr.ptr.dasm_State%2Ccint">wrapper: proc regex_define_label(Dst: ptr ptr dasm_State; label: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_anchor_end" href="#regex_emit_anchor_end"><span>regex_emit_anchor_end:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_anchor_end(Dst: ptr ptr dasm_State; failLabel: cint)" href="openparser/regex/jit/wrapper.html#regex_emit_anchor_end%2Cptr.ptr.dasm_State%2Ccint">wrapper: proc regex_emit_anchor_end(Dst: ptr ptr dasm_State; failLabel: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_anchor_start" href="#regex_emit_anchor_start"><span>regex_emit_anchor_start:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_anchor_start(Dst: ptr ptr dasm_State; failLabel: cint)" href="openparser/regex/jit/wrapper.html#regex_emit_anchor_start%2Cptr.ptr.dasm_State%2Ccint">wrapper: proc regex_emit_anchor_start(Dst: ptr ptr dasm_State; failLabel: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_any_char" href="#regex_emit_any_char"><span>regex_emit_any_char:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_any_char(Dst: ptr ptr dasm_State; failLabel: cint)" href="openparser/regex/jit/wrapper.html#regex_emit_any_char%2Cptr.ptr.dasm_State%2Ccint">wrapper: proc regex_emit_any_char(Dst: ptr ptr dasm_State; failLabel: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_char" href="#regex_emit_char"><span>regex_emit_char:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_char(Dst: ptr ptr dasm_State; lit: cint; failLabel: cint)" href="openparser/regex/jit/wrapper.html#regex_emit_char%2Cptr.ptr.dasm_State%2Ccint%2Ccint">wrapper: proc regex_emit_char(Dst: ptr ptr dasm_State; lit: cint; failLabel: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_char_class" href="#regex_emit_char_class"><span>regex_emit_char_class:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_char_class(Dst: ptr ptr dasm_State; bitmapPtr: uint; negated: cint;
+                      failLabel: cint)" href="openparser/regex/jit/wrapper.html#regex_emit_char_class%2Cptr.ptr.dasm_State%2Cuint%2Ccint%2Ccint">wrapper: proc regex_emit_char_class(Dst: ptr ptr dasm_State; bitmapPtr: uint; negated: cint;
+                      failLabel: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_dispatch_case" href="#regex_emit_dispatch_case"><span>regex_emit_dispatch_case:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_dispatch_case(Dst: ptr ptr dasm_State; id: cint; targetLabel: cint)" href="openparser/regex/jit/wrapper.html#regex_emit_dispatch_case%2Cptr.ptr.dasm_State%2Ccint%2Ccint">wrapper: proc regex_emit_dispatch_case(Dst: ptr ptr dasm_State; id: cint; targetLabel: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_escape_class" href="#regex_emit_escape_class"><span>regex_emit_escape_class:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_escape_class(Dst: ptr ptr dasm_State; cls: cint; failLabel: cint)" href="openparser/regex/jit/wrapper.html#regex_emit_escape_class%2Cptr.ptr.dasm_State%2Ccint%2Ccint">wrapper: proc regex_emit_escape_class(Dst: ptr ptr dasm_State; cls: cint; failLabel: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_fail_entry_head" href="#regex_emit_fail_entry_head"><span>regex_emit_fail_entry_head:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_fail_entry_head(Dst: ptr ptr dasm_State; noMatchLabel: cint;
+                           stackBytes: cint)" href="openparser/regex/jit/wrapper.html#regex_emit_fail_entry_head%2Cptr.ptr.dasm_State%2Ccint%2Ccint">wrapper: proc regex_emit_fail_entry_head(Dst: ptr ptr dasm_State; noMatchLabel: cint;
+                           stackBytes: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_jmp" href="#regex_emit_jmp"><span>regex_emit_jmp:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_jmp(Dst: ptr ptr dasm_State; targetLabel: cint)" href="openparser/regex/jit/wrapper.html#regex_emit_jmp%2Cptr.ptr.dasm_State%2Ccint">wrapper: proc regex_emit_jmp(Dst: ptr ptr dasm_State; targetLabel: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_match" href="#regex_emit_match"><span>regex_emit_match:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_match(Dst: ptr ptr dasm_State; exitLabel: cint; failLabel: cint;
+                 wantFull: cint)" href="openparser/regex/jit/wrapper.html#regex_emit_match%2Cptr.ptr.dasm_State%2Ccint%2Ccint%2Ccint">wrapper: proc regex_emit_match(Dst: ptr ptr dasm_State; exitLabel: cint; failLabel: cint;
+                 wantFull: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_no_match" href="#regex_emit_no_match"><span>regex_emit_no_match:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_no_match(Dst: ptr ptr dasm_State)" href="openparser/regex/jit/wrapper.html#regex_emit_no_match%2Cptr.ptr.dasm_State">wrapper: proc regex_emit_no_match(Dst: ptr ptr dasm_State)</a></li>
+          </ul></dd>
+<dt><a name="regex_emit_word_boundary" href="#regex_emit_word_boundary"><span>regex_emit_word_boundary:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_emit_word_boundary(Dst: ptr ptr dasm_State; negated: cint;
+                         failLabel: cint; lblPrevLoaded: cint;
+                         lblCurLoaded: cint)" href="openparser/regex/jit/wrapper.html#regex_emit_word_boundary%2Cptr.ptr.dasm_State%2Ccint%2Ccint%2Ccint%2Ccint">wrapper: proc regex_emit_word_boundary(Dst: ptr ptr dasm_State; negated: cint;
+                         failLabel: cint; lblPrevLoaded: cint;
+                         lblCurLoaded: cint)</a></li>
+          </ul></dd>
+<dt><a name="regex_epilogue" href="#regex_epilogue"><span>regex_epilogue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_epilogue(Dst: ptr ptr dasm_State)" href="openparser/regex/jit/wrapper.html#regex_epilogue%2Cptr.ptr.dasm_State">wrapper: proc regex_epilogue(Dst: ptr ptr dasm_State)</a></li>
+          </ul></dd>
+<dt><a name="RegexJitFn" href="#RegexJitFn"><span>RegexJitFn:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: type RegexJitFn" href="openparser/regex/jit/compiler.html#RegexJitFn">compiler: type RegexJitFn</a></li>
+          </ul></dd>
 <dt><a name="RegexLexer" href="#RegexLexer"><span>RegexLexer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="lexer: object RegexLexer" href="openparser/regex/lexer.html#RegexLexer">lexer: object RegexLexer</a></li>
@@ -1723,9 +1913,19 @@
 <li><a class="reference external"
           data-doc-search-tag="parser: object RegexParser" href="openparser/regex/parser.html#RegexParser">parser: object RegexParser</a></li>
           </ul></dd>
+<dt><a name="regex_prologue" href="#regex_prologue"><span>regex_prologue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_prologue(Dst: ptr ptr dasm_State)" href="openparser/regex/jit/wrapper.html#regex_prologue%2Cptr.ptr.dasm_State">wrapper: proc regex_prologue(Dst: ptr ptr dasm_State)</a></li>
+          </ul></dd>
 <dt><a name="RegexQuantifierKind" href="#RegexQuantifierKind"><span>RegexQuantifierKind:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="parser: enum RegexQuantifierKind" href="openparser/regex/parser.html#RegexQuantifierKind">parser: enum RegexQuantifierKind</a></li>
+          </ul></dd>
+<dt><a name="regex_split" href="#regex_split"><span>regex_split:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="wrapper: proc regex_split(Dst: ptr ptr dasm_State; tryFirstLabel: cint; resumeId: cint;
+            resumeTargetLabel: cint; failLabel: cint)" href="openparser/regex/jit/wrapper.html#regex_split%2Cptr.ptr.dasm_State%2Ccint%2Ccint%2Ccint%2Ccint">wrapper: proc regex_split(Dst: ptr ptr dasm_State; tryFirstLabel: cint; resumeId: cint;
+            resumeTargetLabel: cint; failLabel: cint)</a></li>
           </ul></dd>
 <dt><a name="RegexToken" href="#RegexToken"><span>RegexToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1910,6 +2110,30 @@
 <dt><a name="scanNonAlphaUnderSse2" href="#scanNonAlphaUnderSse2"><span>scanNonAlphaUnderSse2:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="simd: proc scanNonAlphaUnderSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonAlphaUnderSse2%2Cstring%2Cint%2Cint">simd: proc scanNonAlphaUnderSse2(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonDigit" href="#scanNonDigit"><span>scanNonDigit:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonDigit(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonDigit%2Cstring%2Cint%2Cint">simd: proc scanNonDigit(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonDigitScalar" href="#scanNonDigitScalar"><span>scanNonDigitScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonDigitScalar(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonDigitScalar%2Cstring%2Cint%2Cint">simd: proc scanNonDigitScalar(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonDigitSse2" href="#scanNonDigitSse2"><span>scanNonDigitSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonDigitSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonDigitSse2%2Cstring%2Cint%2Cint">simd: proc scanNonDigitSse2(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonSpace" href="#scanNonSpace"><span>scanNonSpace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonSpace(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonSpace%2Cstring%2Cint%2Cint">simd: proc scanNonSpace(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonSpaceScalar" href="#scanNonSpaceScalar"><span>scanNonSpaceScalar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonSpaceScalar(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonSpaceScalar%2Cstring%2Cint%2Cint">simd: proc scanNonSpaceScalar(s: string; start, stop: int): int</a></li>
+          </ul></dd>
+<dt><a name="scanNonSpaceSse2" href="#scanNonSpaceSse2"><span>scanNonSpaceSse2:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="simd: proc scanNonSpaceSse2(s: string; start, stop: int): int" href="openparser/regex/simd.html#scanNonSpaceSse2%2Cstring%2Cint%2Cint">simd: proc scanNonSpaceSse2(s: string; start, stop: int): int</a></li>
           </ul></dd>
 <dt><a name="scanNonUpperDigitUnder" href="#scanNonUpperDigitUnder"><span>scanNonUpperDigitUnder:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2735,7 +2959,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-19 11:03:22 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-25 17:04:28 UTC</small>
       </div>
     </div>
   </div>

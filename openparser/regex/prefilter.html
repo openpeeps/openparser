@@ -81,7 +81,8 @@
     alt1*, alt2*: char
   of pfAnchorStart, pfNone, pfAlpha, pfWordChar, pfUpperAlpha:
     nil
-  shape*: PatternShape">Prefilter</a></li>
+  shape*: PatternShape
+  literalEndPc*: int         ## PC after literal prefix (for pfLiteral advance optimization)">Prefilter</a></li>
 <li><a class="reference" href="#PrefilterKind" title="PrefilterKind = enum
   pfNone, pfByte, pfLiteral, pfByteRange, pfAnyOf2, pfAnchorStart, pfAlpha, ## [a-zA-Z_]
   pfWordChar,               ## [a-zA-Z0-9_]
@@ -153,7 +154,8 @@
     <span class="Identifier">alt1</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">alt2</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">char</span>
   <span class="Keyword">of</span> <span class="Identifier">pfAnchorStart</span><span class="Other">,</span> <span class="Identifier">pfNone</span><span class="Other">,</span> <span class="Identifier">pfAlpha</span><span class="Other">,</span> <span class="Identifier">pfWordChar</span><span class="Other">,</span> <span class="Identifier">pfUpperAlpha</span><span class="Other">:</span>
     <span class="Keyword">nil</span>
-  <span class="Identifier">shape</span><span class="Operator">*</span><span class="Other">:</span> <a href="compiler.html#PatternShape"><span class="Identifier">PatternShape</span></a></pre></dt>
+  <span class="Identifier">shape</span><span class="Operator">*</span><span class="Other">:</span> <a href="compiler.html#PatternShape"><span class="Identifier">PatternShape</span></a>
+  <span class="Identifier">literalEndPc</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>         <span class="Comment">## PC after literal prefix (for pfLiteral advance optimization)</span></pre></dt>
   <dd>
     
     
@@ -212,7 +214,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-19 11:03:22 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-25 17:04:28 UTC</small>
       </div>
     </div>
   </div>
