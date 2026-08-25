@@ -115,6 +115,13 @@ proc checkMaxDepth(p: var JsonParser) =
     if p.depth > p.options.maxDepth:
       raise newException(OpenParserJsonError, errorMaxDepth)
 
+proc fnv1a*(s: string): uint32 {.inline.} =
+  ## FNV-1a hash for compile-time field dispatch.
+  result = 2166136261u32
+  for c in s:
+    result = result xor uint32(c)
+    result = result * 16777619u32
+
 proc error*(l: var JsonLexer, msg: string) =
   # Raise a lexer error
   let context = getContext(l)
@@ -1417,38 +1424,432 @@ proc parseJson(parser: var JsonParser, v: var JsonNode) =
     parser.error(unexpectedToken % [$parser.curr.kind])
 
 macro fromJsonMacro(x: typed, str: typed): untyped =
-  # macro to parse JSON string `str` into object of type `x`
-  var t = x.getTypeInst()[1]
-  var
-    blockStmtList = newStmtList()
-    blockStmtId = genSym(nskLabel, "voodoo")
-  add blockStmtList, quote do:
-    var
-      tmp: `t`
-      parser = JsonParser(lexer: newJsonLexer(`str`))
-    parser.curr = parser.nextToken()
-    parser.next = parser.nextToken()
-    parser.parseJson(tmp)
-    ensureMove(tmp) # return the parsed object
-  var blockStmt = newBlockStmt(blockStmtId, blockStmtList)
-  result = newStmtList().add(blockStmt)
+  ## Compile-time optimized JSON parsing. Generates hash-based field dispatch
+  ## instead of linear fieldPairs scan, giving O(1) field lookup.
+  let tInst = x.getTypeInst()
+  let t = (if tInst.kind == nnkBracketExpr: tInst[1] else: tInst)
+  if t.kind != nnkSym:
+    var blockStmtList = newStmtList()
+    blockStmtList.add quote do:
+      var tmp: `t`
+      var parser = JsonParser(lexer: newJsonLexer(`str`))
+      parser.curr = parser.nextToken()
+      parser.next = parser.nextToken()
+      parser.parseJson(tmp)
+      ensureMove(tmp)
+    return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockStmtList))
+  let typeSym = t
+  var valImpl = typeSym.getImpl()
+  if valImpl.kind != nnkTypeDef:
+    var blockStmtList = newStmtList()
+    blockStmtList.add quote do:
+      var tmp: `t`
+      var parser = JsonParser(lexer: newJsonLexer(`str`))
+      parser.curr = parser.nextToken()
+      parser.next = parser.nextToken()
+      parser.parseJson(tmp)
+      ensureMove(tmp)
+    return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockStmtList))
+
+  # Unwrap type definition
+  var isRef = false
+  var tObj: NimNode
+  case valImpl.kind
+  of nnkTypeDef:
+    let objBody = valImpl[2]
+    if objBody.kind == nnkRefTy:
+      isRef = true
+      tObj = objBody[0]
+      if tObj.kind == nnkSym:
+        tObj = tObj.getTypeImpl()
+    elif objBody.kind == nnkObjectTy:
+      tObj = objBody
+    else:
+      tObj = nil
+  of nnkObjectTy:
+    tObj = valImpl
+  else:
+    tObj = nil
+
+  # Fall back to generic parseJson for non-object types
+  if tObj == nil or tObj.kind != nnkObjectTy:
+    var blockStmtList = newStmtList()
+    blockStmtList.add quote do:
+      var tmp: `t`
+      var parser = JsonParser(lexer: newJsonLexer(`str`))
+      parser.curr = parser.nextToken()
+      parser.next = parser.nextToken()
+      parser.parseJson(tmp)
+      ensureMove(tmp)
+    return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockStmtList))
+
+  # Extract fields from the object type
+  let recList = tObj[2]
+  var fields: seq[(string, string, int)] # (fieldName, wireName, hash)
+  var hasRecCase = false
+
+  for field in recList:
+    if field.kind == nnkRecCase:
+      hasRecCase = true
+      break
+
+  # Variant objects need special handling - fall back to generic parseObjectHook
+  if hasRecCase:
+    var blockStmtList = newStmtList()
+    blockStmtList.add quote do:
+      var tmp: `t`
+      var parser = JsonParser(lexer: newJsonLexer(`str`))
+      parser.curr = parser.nextToken()
+      parser.next = parser.nextToken()
+      parser.parseJson(tmp)
+      ensureMove(tmp)
+    return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockStmtList))
+
+  for field in recList:
+    case field.kind
+    of nnkSym:
+      let fieldName = field.strVal
+      fields.add((fieldName, fieldName, int(fnv1a(fieldName))))
+    of nnkIdentDefs:
+      let fieldNode = field[0]
+      case fieldNode.kind
+      of nnkPragmaExpr:
+        let symNode = fieldNode[0]
+        let fieldName = if symNode.kind in {nnkSym, nnkIdent}: symNode.strVal else: ""
+        if fieldName.len == 0:
+          continue
+        var wireName = fieldName
+        let pragmaNode = fieldNode[1]
+        if pragmaNode.kind == nnkPragma:
+          for pragmaChild in pragmaNode:
+            if pragmaChild.kind == nnkCall:
+              let pragmaName = pragmaChild[0]
+              if pragmaName.kind == nnkSym and pragmaName.strVal == "json":
+                wireName = pragmaChild[1].strVal
+        fields.add((fieldName, wireName, int(fnv1a(wireName))))
+      of nnkIdent, nnkSym:
+        let fieldName = fieldNode.strVal
+        fields.add((fieldName, fieldName, int(fnv1a(fieldName))))
+      else:
+        discard
+    else:
+      discard
+
+  # Group fields by hash to handle collisions
+  var hashGroups: Table[int, seq[(string, string)]]
+  for (fieldName, wireName, hashVal) in fields:
+    if hashVal notin hashGroups:
+      hashGroups[hashVal] = @[]
+    hashGroups[hashVal].add((fieldName, wireName))
+
+  # Build identifiers for the generated code
+  let vIdent = ident("v")
+  let parserIdent = ident("parser")
+  let wireKeyIdent = ident("wireKey")
+  let wireKeyHashIdent = ident("wireKeyHash")
+
+  # Build the case statement for field dispatch
+  var caseStmt = nnkCaseStmt.newTree(wireKeyHashIdent)
+  for hashVal, group in hashGroups:
+    if group.len == 1:
+      let (fieldName, wireName) = group[0]
+      let fieldNameIdent = ident(fieldName)
+      let body = newStmtList(
+        quote do:
+          `parserIdent`.currentField = some(`wireName`)
+          `parserIdent`.parseHook(`vIdent`.`fieldNameIdent`)
+      )
+      caseStmt.add(nnkOfBranch.newTree(newIntLitNode(hashVal), body))
+    else:
+      var ifStmt = newNimNode(nnkIfStmt)
+      for i, (fieldName, wireName) in group:
+        let fieldNameIdent = ident(fieldName)
+        let cond = infix(wireKeyIdent, "==", newStrLitNode(wireName))
+        let body = quote do:
+          `parserIdent`.currentField = some(`wireName`)
+          `parserIdent`.parseHook(`vIdent`.`fieldNameIdent`)
+        ifStmt.add(nnkElifBranch.newTree(cond, body))
+      caseStmt.add(nnkOfBranch.newTree(newIntLitNode(hashVal), newStmtList(ifStmt)))
+  caseStmt.add(nnkElse.newTree(newStmtList(
+    newCall(newDotExpr(parserIdent, ident"skipValue"))
+  )))
+
+  # Build the while-loop body
+  var whileBody = newStmtList()
+  whileBody.add quote do:
+    if `parserIdent`.curr.kind != jtkString:
+      `parserIdent`.error(unexpectedTokenExpected % [$`parserIdent`.curr.kind, $jtkString])
+    let key = `parserIdent`.curr.value
+    var `wireKeyIdent` = key
+    when compiles(renameHook(`vIdent`, `wireKeyIdent`)):
+      renameHook(`vIdent`, `wireKeyIdent`)
+    when isObjectVariant(`vIdent`):
+      if `wireKeyIdent` == discriminatorFieldName(`vIdent`):
+        `parserIdent`.advance()
+        `parserIdent`.expectSkip(jtkColon)
+        var d: type(discriminatorField(`vIdent`))
+        `parserIdent`.currentField = some(key)
+        `parserIdent`.parseHook(d)
+        let prev = `vIdent`
+        new(`vIdent`, d)
+        copyFieldsBeforeRecCase(`vIdent`, prev)
+        if `parserIdent`.curr.kind == jtkComma:
+          `parserIdent`.advance()
+        continue
+    let `wireKeyHashIdent` = int(fnv1a(`wireKeyIdent`))
+    `parserIdent`.advance()
+    `parserIdent`.expectSkip(jtkColon)
+  whileBody.add(caseStmt)
+  whileBody.add quote do:
+    if `parserIdent`.curr.kind == jtkComma:
+      `parserIdent`.advance()
+
+  # Build the entire generated code as a single AST
+  var blockBody = newStmtList()
+  blockBody.add quote do:
+    var `vIdent`: `t`
+    var `parserIdent` = JsonParser(lexer: newJsonLexer(`str`))
+    `parserIdent`.curr = `parserIdent`.nextToken()
+    `parserIdent`.next = `parserIdent`.nextToken()
+
+  if isRef:
+    blockBody.add quote do:
+      if `parserIdent`.curr.kind == jtkNull:
+        `vIdent` = nil
+        `parserIdent`.advance()
+      else:
+        if `vIdent`.isNil:
+          new(`vIdent`)
+        inc `parserIdent`.depth
+        checkMaxDepth(`parserIdent`)
+        `parserIdent`.expectSkip(jtkLBrace)
+        while `parserIdent`.curr.kind notin {jtkRBrace, jtkEof}:
+          `whileBody`
+        `parserIdent`.expectSkip(jtkRBrace)
+        dec `parserIdent`.depth
+  else:
+    blockBody.add quote do:
+      inc `parserIdent`.depth
+      checkMaxDepth(`parserIdent`)
+      `parserIdent`.expectSkip(jtkLBrace)
+      while `parserIdent`.curr.kind notin {jtkRBrace, jtkEof}:
+        `whileBody`
+      `parserIdent`.expectSkip(jtkRBrace)
+      dec `parserIdent`.depth
+
+  blockBody.add quote do:
+    ensureMove(`vIdent`)
+  result = newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockBody))
 
 macro fromJsonMacroOpts(x: typed, str: typed, opts: JsonOptions): untyped =
-  # macro to parse JSON string `str` into object of type `x` with options
-  var t = x.getTypeInst()[1]
-  var
-    blockStmtList = newStmtList()
-    blockStmtId = genSym(nskLabel, "voodoo")
-  add blockStmtList, quote do:
-    var
-      tmp: `t`
-      parser = JsonParser(lexer: newJsonLexer(`str`), options: `opts`)
-    parser.curr = parser.nextToken()
-    parser.next = parser.nextToken()
-    parser.parseJson(tmp)
-    ensureMove(tmp)
-  var blockStmt = newBlockStmt(blockStmtId, blockStmtList)
-  result = newStmtList().add(blockStmt)
+  ## Same as fromJsonMacro but accepts JsonOptions (e.g. maxDepth).
+  let tInst = x.getTypeInst()
+  let t = (if tInst.kind == nnkBracketExpr: tInst[1] else: tInst)
+  if t.kind != nnkSym:
+    var blockStmtList = newStmtList()
+    blockStmtList.add quote do:
+      var tmp: `t`
+      var parser = JsonParser(lexer: newJsonLexer(`str`), options: `opts`)
+      parser.curr = parser.nextToken()
+      parser.next = parser.nextToken()
+      parser.parseJson(tmp)
+      ensureMove(tmp)
+    return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockStmtList))
+  let typeSym = t
+  var valImpl = typeSym.getImpl()
+  if valImpl.kind != nnkTypeDef:
+    var blockStmtList = newStmtList()
+    blockStmtList.add quote do:
+      var tmp: `t`
+      var parser = JsonParser(lexer: newJsonLexer(`str`), options: `opts`)
+      parser.curr = parser.nextToken()
+      parser.next = parser.nextToken()
+      parser.parseJson(tmp)
+      ensureMove(tmp)
+    return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockStmtList))
+
+  # Unwrap type definition
+  var isRef = false
+  var tObj: NimNode
+  case valImpl.kind
+  of nnkTypeDef:
+    let objBody = valImpl[2]
+    if objBody.kind == nnkRefTy:
+      isRef = true
+      tObj = objBody[0]
+      if tObj.kind == nnkSym:
+        tObj = tObj.getTypeImpl()
+    elif objBody.kind == nnkObjectTy:
+      tObj = objBody
+    else:
+      tObj = nil
+  of nnkObjectTy:
+    tObj = valImpl
+  else:
+    tObj = nil
+
+  if tObj == nil or tObj.kind != nnkObjectTy:
+    var blockStmtList = newStmtList()
+    blockStmtList.add quote do:
+      var tmp: `t`
+      var parser = JsonParser(lexer: newJsonLexer(`str`), options: `opts`)
+      parser.curr = parser.nextToken()
+      parser.next = parser.nextToken()
+      parser.parseJson(tmp)
+      ensureMove(tmp)
+    return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockStmtList))
+
+  let recList = tObj[2]
+  var fields: seq[(string, string, int)]
+  var hasRecCase = false
+
+  for field in recList:
+    if field.kind == nnkRecCase:
+      hasRecCase = true
+      break
+
+  # Variant objects need special handling - fall back to generic parseObjectHook
+  if hasRecCase:
+    var blockStmtList = newStmtList()
+    blockStmtList.add quote do:
+      var tmp: `t`
+      var parser = JsonParser(lexer: newJsonLexer(`str`), options: `opts`)
+      parser.curr = parser.nextToken()
+      parser.next = parser.nextToken()
+      parser.parseJson(tmp)
+      ensureMove(tmp)
+    return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockStmtList))
+
+  for field in recList:
+    case field.kind
+    of nnkSym:
+      let fieldName = field.strVal
+      fields.add((fieldName, fieldName, int(fnv1a(fieldName))))
+    of nnkIdentDefs:
+      let fieldNode = field[0]
+      case fieldNode.kind
+      of nnkPragmaExpr:
+        let symNode = fieldNode[0]
+        let fieldName = if symNode.kind in {nnkSym, nnkIdent}: symNode.strVal else: ""
+        if fieldName.len == 0:
+          continue
+        var wireName = fieldName
+        let pragmaNode = fieldNode[1]
+        if pragmaNode.kind == nnkPragma:
+          for pragmaChild in pragmaNode:
+            if pragmaChild.kind == nnkCall:
+              let pragmaName = pragmaChild[0]
+              if pragmaName.kind == nnkSym and pragmaName.strVal == "json":
+                wireName = pragmaChild[1].strVal
+        fields.add((fieldName, wireName, int(fnv1a(wireName))))
+      of nnkIdent, nnkSym:
+        let fieldName = fieldNode.strVal
+        fields.add((fieldName, fieldName, int(fnv1a(fieldName))))
+      else:
+        discard
+    else:
+      discard
+
+  var hashGroups: Table[int, seq[(string, string)]]
+  for (fieldName, wireName, hashVal) in fields:
+    if hashVal notin hashGroups:
+      hashGroups[hashVal] = @[]
+    hashGroups[hashVal].add((fieldName, wireName))
+
+  let vIdent = ident("v")
+  let parserIdent = ident("parser")
+  let wireKeyIdent = ident("wireKey")
+  let wireKeyHashIdent = ident("wireKeyHash")
+
+  var caseStmt = nnkCaseStmt.newTree(wireKeyHashIdent)
+  for hashVal, group in hashGroups:
+    if group.len == 1:
+      let (fieldName, wireName) = group[0]
+      let fieldNameIdent = ident(fieldName)
+      let body = newStmtList(
+        quote do:
+          `parserIdent`.currentField = some(`wireName`)
+          `parserIdent`.parseHook(`vIdent`.`fieldNameIdent`)
+      )
+      caseStmt.add(nnkOfBranch.newTree(newIntLitNode(hashVal), body))
+    else:
+      var ifStmt = newNimNode(nnkIfStmt)
+      for i, (fieldName, wireName) in group:
+        let fieldNameIdent = ident(fieldName)
+        let cond = infix(wireKeyIdent, "==", newStrLitNode(wireName))
+        let body = quote do:
+          `parserIdent`.currentField = some(`wireName`)
+          `parserIdent`.parseHook(`vIdent`.`fieldNameIdent`)
+        ifStmt.add(nnkElifBranch.newTree(cond, body))
+      caseStmt.add(nnkOfBranch.newTree(newIntLitNode(hashVal), newStmtList(ifStmt)))
+  caseStmt.add(nnkElse.newTree(newStmtList(
+    newCall(newDotExpr(parserIdent, ident"skipValue"))
+  )))
+
+  var whileBody = newStmtList()
+  whileBody.add quote do:
+    if `parserIdent`.curr.kind != jtkString:
+      `parserIdent`.error(unexpectedTokenExpected % [$`parserIdent`.curr.kind, $jtkString])
+    let key = `parserIdent`.curr.value
+    var `wireKeyIdent` = key
+    when compiles(renameHook(`vIdent`, `wireKeyIdent`)):
+      renameHook(`vIdent`, `wireKeyIdent`)
+    when isObjectVariant(`vIdent`):
+      if `wireKeyIdent` == discriminatorFieldName(`vIdent`):
+        `parserIdent`.advance()
+        `parserIdent`.expectSkip(jtkColon)
+        var d: type(discriminatorField(`vIdent`))
+        `parserIdent`.currentField = some(key)
+        `parserIdent`.parseHook(d)
+        let prev = `vIdent`
+        new(`vIdent`, d)
+        copyFieldsBeforeRecCase(`vIdent`, prev)
+        if `parserIdent`.curr.kind == jtkComma:
+          `parserIdent`.advance()
+        continue
+    let `wireKeyHashIdent` = int(fnv1a(`wireKeyIdent`))
+    `parserIdent`.advance()
+    `parserIdent`.expectSkip(jtkColon)
+  whileBody.add(caseStmt)
+  whileBody.add quote do:
+    if `parserIdent`.curr.kind == jtkComma:
+      `parserIdent`.advance()
+
+  var blockBody = newStmtList()
+  blockBody.add quote do:
+    var `vIdent`: `t`
+    var `parserIdent` = JsonParser(lexer: newJsonLexer(`str`), options: `opts`)
+    `parserIdent`.curr = `parserIdent`.nextToken()
+    `parserIdent`.next = `parserIdent`.nextToken()
+
+  if isRef:
+    blockBody.add quote do:
+      if `parserIdent`.curr.kind == jtkNull:
+        `vIdent` = nil
+        `parserIdent`.advance()
+      else:
+        if `vIdent`.isNil:
+          new(`vIdent`)
+        inc `parserIdent`.depth
+        checkMaxDepth(`parserIdent`)
+        `parserIdent`.expectSkip(jtkLBrace)
+        while `parserIdent`.curr.kind notin {jtkRBrace, jtkEof}:
+          `whileBody`
+        `parserIdent`.expectSkip(jtkRBrace)
+        dec `parserIdent`.depth
+  else:
+    blockBody.add quote do:
+      inc `parserIdent`.depth
+      checkMaxDepth(`parserIdent`)
+      `parserIdent`.expectSkip(jtkLBrace)
+      while `parserIdent`.curr.kind notin {jtkRBrace, jtkEof}:
+        `whileBody`
+      `parserIdent`.expectSkip(jtkRBrace)
+      dec `parserIdent`.depth
+
+  blockBody.add quote do:
+    ensureMove(`vIdent`)
+  result = newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockBody))
 
 proc fromJson*[T](s: string, x: typedesc[T]): T =
   ## Provide a direct to object conversion from JSON string to Nim objects
@@ -1465,9 +1866,116 @@ proc fromJson*[T](s: string, x: typedesc[T], opts: JsonOptions): T =
     return fromJsonMacroOpts(x, s, opts)
 
 # JsonNode to Nim Object conversion
-proc toJsonNode*[T](v: T): JsonNode =
-  ## Convert any Nim value (object, table, seq, etc.) to a `JsonNode`
-  ## by serializing to a JSON string and parsing it back
-  result = fromJson(toJson(v))
+macro toJsonNodeMacro(v: typed): JsonNode =
+  ## Compile-time optimized T -> JsonNode conversion. Generates direct
+  ## JObject/JArray construction instead of the toJson-then-fromJson round-trip.
+  let tInst = v.getTypeInst()
+  var typeSym: NimNode
+  case tInst.kind
+  of nnkSym:
+    typeSym = tInst
+  of nnkBracketExpr:
+    typeSym = tInst[1]
+  else:
+    typeSym = tInst
+  var valImpl = typeSym.getImpl()
 
-  
+  # Unwrap type definition to get object body
+  var tObj: NimNode
+  case valImpl.kind
+  of nnkTypeDef:
+    let objBody = valImpl[2]
+    if objBody.kind == nnkRefTy:
+      tObj = objBody[0]
+      if tObj.kind == nnkSym:
+        tObj = tObj.getTypeImpl()
+    elif objBody.kind == nnkObjectTy:
+      tObj = objBody
+    else:
+      tObj = nil
+  of nnkObjectTy:
+    tObj = valImpl
+  else:
+    tObj = nil
+
+  # Fall back for non-object types
+  if tObj == nil or tObj.kind != nnkObjectTy:
+    return quote do:
+      fromJson(toJson(`v`))
+
+  let recList = tObj[2]
+  # Check for variant objects - fall back for now
+  for field in recList:
+    if field.kind == nnkRecCase:
+      return quote do:
+        fromJson(toJson(`v`))
+
+  # Build JObject field assignments
+  var fieldAssignments = newStmtList()
+  let objSym = genSym(nskVar, "obj")
+  for field in recList:
+    case field.kind
+    of nnkSym:
+      let fieldName = field.strVal
+      let wireNameLit = newStrLitNode(fieldName)
+      let fieldDot = newDotExpr(v, ident(fieldName))
+      let parseCall = newCall(ident"toJsonNode", fieldDot)
+      let keyVal = newStrLitNode(fieldName)
+      let bracket = nnkBracketExpr.newTree(objSym, keyVal)
+      let assign = newAssignment(bracket, parseCall)
+      fieldAssignments.add assign
+    of nnkIdentDefs:
+      let fieldNode = field[0]
+      case fieldNode.kind
+      of nnkPragmaExpr:
+        let symNode = fieldNode[0]
+        let fieldName = if symNode.kind in {nnkSym, nnkIdent}: symNode.strVal else: ""
+        if fieldName.len == 0:
+          continue
+        var wireName = fieldName
+        let pragmaNode = fieldNode[1]
+        if pragmaNode.kind == nnkPragma:
+          for pragmaChild in pragmaNode:
+            if pragmaChild.kind == nnkCall:
+              let pragmaName = pragmaChild[0]
+              if pragmaName.kind == nnkSym and pragmaName.strVal == "json":
+                wireName = pragmaChild[1].strVal
+        let fieldDot = newDotExpr(v, ident(fieldName))
+        let parseCall = newCall(ident"toJsonNode", fieldDot)
+        let keyVal = newStrLitNode(wireName)
+        let bracket = nnkBracketExpr.newTree(objSym, keyVal)
+        let assign = newAssignment(bracket, parseCall)
+        fieldAssignments.add assign
+      of nnkIdent, nnkSym:
+        let fieldName = fieldNode.strVal
+        let fieldDot = newDotExpr(v, ident(fieldName))
+        let parseCall = newCall(ident"toJsonNode", fieldDot)
+        let keyVal = newStrLitNode(fieldName)
+        let bracket = nnkBracketExpr.newTree(objSym, keyVal)
+        let assign = newAssignment(bracket, parseCall)
+        fieldAssignments.add assign
+      else:
+        discard
+    else:
+      discard
+
+  result = quote do:
+    var `objSym` = newJObject()
+    `fieldAssignments`
+    `objSym`
+
+proc toJsonNode*[T](v: T): JsonNode =
+  ## Convert any Nim value to a JsonNode. For objects, this generates direct
+  ## JObject construction at compile time, avoiding the toJson-then-fromJson
+  ## string round-trip.
+  when T is JsonNode:
+    result = v
+  elif T is ref object:
+    if v.isNil:
+      result = newJNull()
+    else:
+      result = toJsonNodeMacro(v[])
+  elif T is object:
+    result = toJsonNodeMacro(v)
+  else:
+    result = fromJson(toJson(v))
