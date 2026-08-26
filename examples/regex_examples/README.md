@@ -18,8 +18,8 @@ The benchmark compares openparser against
 `re` module (PCRE). Input is `example.h`, a ~15 MB C header file.
 
 ```
-Pattern                                  openparser        nitely       stdlib(PCRE)
---------------------------------------------------------------------------------------
+Pattern                                  openparser                  nitely                 stdlib(PCRE)
+---------------------------------------------------------------------------------------------------------------------
 [a-zA-Z_]\w*                           80.5   ms 191.2  MB/s     1367.4 ms 11.3   MB/s    *54.7   ms 281.4  MB/s
 [A-Z_][A-Z0-9_]{2,}                    55.5   ms 277.3  MB/s     614.1  ms 25.1   MB/s    *24.8   ms 620.6  MB/s
 typedef\s+\w+\s+\w+                    7.6    ms 2016.4 MB/s     26.3   ms 585.9  MB/s    *5.8    ms 2633.2 MB/s
