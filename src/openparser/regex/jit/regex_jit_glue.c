@@ -2,6 +2,7 @@
    Compiled once by Nim's {.compile.} pragma. */
 #include "dasm_proto.h"
 #include "dasm_x86.h"
+#include <stdint.h>
 #include "regex_jit.c"
 
 /* Re-export the action list pointer */
