@@ -342,6 +342,12 @@ proc charAt(l: HtmlLexer, idx: int): char {.inline.} =
   if idx < 0 or idx >= l.len: return '\0'
   if l.data != nil: l.data[idx] else: l.input[idx]
 
+proc slice(l: HtmlLexer, start, `end`: int): string =
+  # Build a string from lexer positions, works for both string and memfile input.
+  result = newString(max(0, `end` - start))
+  for i in 0 ..< result.len:
+    result[i] = l.charAt(start + i)
+
 proc getContext(l: HtmlLexer, posOverride: int = -1): string =
   # Show the full current line and place caret at exact token position.
   let rawPos = if posOverride >= 0: posOverride else: l.pos
@@ -428,10 +434,13 @@ proc nextToken(l: var HtmlLexer): HtmlToken =
       var commentStart = l.pos
       while not (l.charAt(l.pos) == '-' and l.charAt(l.pos + 1) == '-' and l.charAt(l.pos + 2) == '>'):
         if l.current == '\0':
-          l.error("Unterminated comment")
+          # Unterminated comment – treat rest of input as comment body.
+          result.kind = tkComment
+          result.value = l.slice(commentStart, l.pos)
+          return result
         advance(l)
       result.kind = tkComment
-      result.value = l.input[commentStart ..< l.pos]
+      result.value = l.slice(commentStart, l.pos)
       advance(l); advance(l); advance(l)
     else:
       advance(l)
@@ -443,7 +452,7 @@ proc nextToken(l: var HtmlLexer): HtmlToken =
       while l.charAt(l.pos) notin {' ', '\t', '\n', '\r', '/', '>', '\0'}:
         advance(l)
       result.pos = start
-      result.value = l.input[start ..< l.pos]
+      result.value = l.slice(start, l.pos)
   of '>':
     result.kind = tkTagClose
     l.inTag = false   # leaving the tag
@@ -465,10 +474,15 @@ proc nextToken(l: var HtmlLexer): HtmlToken =
       var valueStart = l.pos + 1
       var valueEnd = valueStart
       while l.charAt(valueEnd) != quote:
-        if l.charAt(valueEnd) == '\0':
-          l.error("Unterminated attribute value")
+        if l.charAt(valueEnd) in {'\0', '<', '>'}:
+          # Unterminated attribute value – emit partial value and stop.
+          result.value = l.slice(valueStart, valueEnd)
+          l.pos = valueEnd
+          l.current = l.charAt(l.pos)
+          l.inTag = false
+          return result
         inc valueEnd
-      result.value = l.input[valueStart ..< valueEnd]
+      result.value = l.slice(valueStart, valueEnd)
       l.pos = valueEnd + 1
       l.col += (valueEnd - valueStart) + 2
       l.current = l.charAt(l.pos)
@@ -478,7 +492,7 @@ proc nextToken(l: var HtmlLexer): HtmlToken =
       while l.charAt(l.pos) notin {'<', '>', '\0'}:
         advance(l)
       result.kind = tkText
-      result.value = l.input[start ..< l.pos]
+      result.value = l.slice(start, l.pos)
   of '=':
     # Emit '=' as its own token so attribute names don't include the '=' char.
     result.kind = tkText
@@ -489,7 +503,7 @@ proc nextToken(l: var HtmlLexer): HtmlToken =
     var start = l.pos
     while l.charAt(l.pos) notin {'<', '>', '/', '"', '\'', '=', ' ', '\t', '\n', '\r'} and l.charAt(l.pos) != '\0':
       advance(l)
-    result.value = l.input[start ..< l.pos]
+    result.value = l.slice(start, l.pos)
     if result.kind == tkTagOpen and result.value.len > 0:
       # The first token after a tag open is the tag name
       result.kind = tkTagOpen
@@ -573,7 +587,7 @@ proc parseElement(p: var HtmlParser): HtmlNode =
   discard p.advance()               # move past the tag‑name token
 
   # Create the node for this element.
-  var node = HtmlNode(kind: htmlTag, tag: parseEnum[HtmlTag](tagName))
+  var node = HtmlNode(kind: htmlTag, tag: getHtmlTag(tagName))
 
   parseAttributes(p, node)
   if p.curr.kind == tkSelfClosingTag:
@@ -584,7 +598,10 @@ proc parseElement(p: var HtmlParser): HtmlNode =
     return node
 
   # Normal opening tag – consume the `>` that ends the start‑tag.
-  if p.curr.kind == tkTagClose and p.curr.value.len == 0:
+  if p.curr.kind == tkEOF:
+    # Unterminated tag at EOF – silently close.
+    discard
+  elif p.curr.kind == tkTagClose and p.curr.value.len == 0:
     discard p.advance()
   else:
     # Missing `>` – policy may allow it, otherwise raise.
@@ -593,6 +610,10 @@ proc parseElement(p: var HtmlParser): HtmlNode =
     # Attempt to continue anyway.
     discard p.advance()
 
+  # Void elements (br, hr, img, input, etc.) have no children or closing tag.
+  if node.isSelfClosing:
+    return node
+
   while p.curr.kind != tkEOF:
     # Closing tag for this element?
     if p.curr.kind == tkTagClose and p.curr.value == tagName:
@@ -600,6 +621,11 @@ proc parseElement(p: var HtmlParser): HtmlNode =
       if p.curr.kind == tkTagClose and p.curr.value.len == 0:
         discard p.advance()                   # consume the trailing `>`
       break
+
+    # Stray `>` that closes the opening tag (e.g. `<br>`).
+    if p.curr.kind == tkTagClose and p.curr.value.len == 0:
+      discard p.advance()
+      continue
 
     case p.curr.kind
     of tkText:
@@ -616,6 +642,10 @@ proc parseElement(p: var HtmlParser): HtmlNode =
     else:
       # Unexpected token – skip it (or raise based on policy).
       discard p.advance()
+
+  # Reached EOF without finding the matching closing tag.
+  if p.curr.kind == tkEOF and not p.policy.allowUnclosedTags:
+    p.error("Unclosed tag: <" & tagName & ">")
 
   result = node
 
@@ -634,14 +664,27 @@ proc parseNodes(p: var HtmlParser) =
         let node = HtmlNode(kind: htmlComment, comment: p.curr.value)
         p.document.nodes.add(node)
       discard p.advance()
-    else: discard
+    else:
+      # Stray token (e.g. bare `>`) – skip it.
+      discard p.advance()
 
-proc parseHtmlFile*(path: string, policy: HtmlParserPolicy): HtmlNode =
+proc defaulHtmlParsingPolicy*(): HtmlParserPolicy
+
+proc parseHtmlFile*(path: string, policy: HtmlParserPolicy = defaulHtmlParsingPolicy()): HtmlDocument =
   ## Parses the HTML content of the specified file according to the given policy
-  ## and returns the root node of the resulting parse tree.
+  ## and returns the resulting parse tree.
   var mf: MemFile = memfiles.open(path, fmRead)
   defer: mf.close()
-  var p = HtmlParser(lexer: HtmlLexer(data: cast[ptr UncheckedArray[char]](mf.mem), len: mf.size, line: 1, col: 1))
+  var p = HtmlParser(
+    lexer: HtmlLexer(data: cast[ptr UncheckedArray[char]](mf.mem), len: mf.size, line: 1, col: 1),
+    document: HtmlDocument(),
+    policy: policy,
+  )
+  p.lexer.current = p.lexer.charAt(p.lexer.pos)
+  p.curr = p.lexer.nextToken()
+  p.next = p.lexer.nextToken()
+  p.parseNodes()
+  result = p.document
 
 proc defaulHtmlParsingPolicy*: HtmlParserPolicy =
   ## Returns a default HTML parser policy with common settings for typical HTML parsing.
