@@ -1,11 +1,12 @@
 import ../../src/openparser/regex/[lexer, parser, compiler, prefilter, vm]
+import pkg/regex
 
 import std/[times, strutils, strformat, os, memfiles, monotimes, re]
 
 
 type
   EngineKind = enum
-    openregex, stdlib
+    openparser, stdlib, nitely
 
   BenchResult = object
     engine:    EngineKind
@@ -13,10 +14,12 @@ type
     inputDesc: string
     matches:   int
     cpuMs, wallMs, mbPerSec: float
-    shapeName: string    ## for openregex; "n/a" for stdlib
-    pfKindName: string   ## for openregex; "n/a" for stdlib
+    shapeName: string    ## for openparser; "n/a" for stdlib
+    pfKindName: string   ## for openparser; "n/a" for stdlib
 
-proc bench(pattern, inputDesc, input: string; engine = EngineKind.openregex; runs = 1): BenchResult =
+var allResults: seq[BenchResult]
+
+proc bench(pattern, inputDesc, input: string; engine = EngineKind.openparser; runs = 1): BenchResult =
   result.pattern   = pattern
   result.inputDesc = inputDesc
   result.engine    = engine
@@ -25,7 +28,8 @@ proc bench(pattern, inputDesc, input: string; engine = EngineKind.openregex; run
   var bestCpu  = high(float)
   var bestWall = initDuration(seconds = int.high)
 
-  if engine == openregex:
+  case engine
+  of openparser:
     let prog = compile(pattern)
     result.shapeName  = $prog.shape
     result.pfKindName = $extractPrefilter(prog).kind
@@ -51,7 +55,7 @@ proc bench(pattern, inputDesc, input: string; engine = EngineKind.openregex; run
       if wall < bestWall:
         bestWall = wall
 
-  else: # stdlib
+  of stdlib:
     result.shapeName  = "n/a"
     result.pfKindName = "n/a"
 
@@ -74,6 +78,34 @@ proc bench(pattern, inputDesc, input: string; engine = EngineKind.openregex; run
       if wall < bestWall:
         bestWall = wall
 
+  of nitely:
+    result.shapeName  = "n/a"
+    result.pfKindName = "n/a"
+
+    let nre = re2(pattern)
+    let ms0 = findAll(input, nre)
+    discard ms0
+
+    for _ in 0 ..< runs:
+      let wallT0 = getMonoTime()
+      let cpuT0  = cpuTime()
+      let ms     = findAll(input, nre)
+      let cpuT1  = cpuTime()
+      let wallT1 = getMonoTime()
+
+      let cpu  = (cpuT1 - cpuT0) * 1000.0
+      let wall = wallT1 - wallT0
+
+      if cpu < bestCpu:
+        bestCpu      = cpu
+        result.matches = ms.len
+      if wall < bestWall:
+        bestWall = wall
+
+  result.cpuMs    = bestCpu
+  result.wallMs   = bestWall.inMicroseconds.float / 1000.0
+  result.mbPerSec = inputMb / (bestCpu / 1000.0)
+
   result.cpuMs    = bestCpu
   result.wallMs   = bestWall.inMicroseconds.float / 1000.0
   result.mbPerSec = inputMb / (bestCpu / 1000.0)
@@ -87,6 +119,50 @@ proc printResult(r: BenchResult) =
   echo &"  matches  : {r.matches}"
   echo &"  cpu best : {r.cpuMs:.3f} ms  ({r.mbPerSec:.1f} MB/s)"
   echo &"  wall best: {r.wallMs:.3f} ms"
+  echo ""
+  allResults.add(r)
+
+proc printSummary() =
+  echo "\n" & "=".repeat(90)
+  echo "  SUMMARY"
+  echo "=".repeat(90)
+  echo ""
+  echo "  Pattern" & " ".repeat(34) & "openparser        nitely       stdlib(PCRE)"
+  echo "  " & "-".repeat(86)
+
+  # Group results by pattern (3 results per pattern: openparser, nitely, stdlib)
+  var i = 0
+  while i < allResults.len:
+    let pat = allResults[i].pattern
+    var opMs, nlMs, stMs: float
+    var opMbs, nlMbs, stMbs: float
+
+    for j in i ..< min(i + 3, allResults.len):
+      if allResults[j].pattern == pat:
+        case allResults[j].engine
+        of openparser:
+          opMs = allResults[j].cpuMs
+          opMbs = allResults[j].mbPerSec
+        of nitely:
+          nlMs = allResults[j].cpuMs
+          nlMbs = allResults[j].mbPerSec
+        of stdlib:
+          stMs = allResults[j].cpuMs
+          stMbs = allResults[j].mbPerSec
+
+    let winnerMs = min(opMs, min(nlMs, stMs))
+    let patShort = if pat.len > 36: pat[0 ..< 33] & "..." else: pat
+
+    proc fmtCol(ms, mbs, winnerMs: float): string =
+      let tag = if ms == winnerMs: "*" else: " "
+      tag & $ms.formatFloat(ffDecimal, 1).alignLeft(7) & "ms " & $mbs.formatFloat(ffDecimal, 1).alignLeft(7) & "MB/s"
+
+    echo "  " & patShort.alignLeft(38) & fmtCol(opMs, opMbs, winnerMs).alignLeft(26) &
+         fmtCol(nlMs, nlMbs, winnerMs).alignLeft(26) & fmtCol(stMs, stMbs, winnerMs)
+    i += 3
+
+  echo ""
+  echo "  * = fastest engine for this pattern"
   echo ""
 
 proc section(title: string) =
@@ -123,57 +199,79 @@ echo &"Size   : {inputLen} bytes  ({inputLen.float/1_000_000:.2f} MB)  {lineCoun
 # ---------------------------------------------------------------------------
 
 section("Identifier patterns")
-printResult bench(r"[a-zA-Z_]\w*",           path, input, openregex)
+printResult bench(r"[a-zA-Z_]\w*",           path, input, openparser)
+printResult bench(r"[a-zA-Z_]\w*",           path, input, nitely)
 printResult bench(r"[a-zA-Z_]\w*",           path, input, stdlib)
-printResult bench(r"[A-Z_][A-Z0-9_]{2,}",    path, input, openregex)  # macros / constants
+printResult bench(r"[A-Z_][A-Z0-9_]{2,}",    path, input, openparser)  # macros / constants
+printResult bench(r"[A-Z_][A-Z0-9_]{2,}",    path, input, nitely)
 printResult bench(r"[A-Z_][A-Z0-9_]{2,}",    path, input, stdlib)
 
 section("Type & declaration patterns")
-printResult bench(r"typedef\s+\w+\s+\w+",    path, input, openregex)
+printResult bench(r"typedef\s+\w+\s+\w+",    path, input, openparser)
+printResult bench(r"typedef\s+\w+\s+\w+",    path, input, nitely)
 printResult bench(r"typedef\s+\w+\s+\w+",    path, input, stdlib)
-printResult bench(r"struct\s+[a-zA-Z_]\w*",  path, input, openregex)
+printResult bench(r"struct\s+[a-zA-Z_]\w*",  path, input, openparser)
+printResult bench(r"struct\s+[a-zA-Z_]\w*",  path, input, nitely)
 printResult bench(r"struct\s+[a-zA-Z_]\w*",  path, input, stdlib)
-printResult bench(r"enum\s+[a-zA-Z_]\w*",    path, input, openregex)
+printResult bench(r"enum\s+[a-zA-Z_]\w*",    path, input, openparser)
+printResult bench(r"enum\s+[a-zA-Z_]\w*",    path, input, nitely)
 printResult bench(r"enum\s+[a-zA-Z_]\w*",    path, input, stdlib)
-printResult bench(r"(unsigned|signed)\s+\w+", path, input, openregex)
+printResult bench(r"(unsigned|signed)\s+\w+", path, input, openparser)
+printResult bench(r"(unsigned|signed)\s+\w+", path, input, nitely)
 printResult bench(r"(unsigned|signed)\s+\w+", path, input, stdlib)
 
 section("Function signatures")
-printResult bench(r"[a-zA-Z_]\w*\s*\([^)]*\)", path, input, openregex)  # any call/decl
+printResult bench(r"[a-zA-Z_]\w*\s*\([^)]*\)", path, input, openparser)  # any call/decl
+printResult bench(r"[a-zA-Z_]\w*\s*\([^)]*\)", path, input, nitely)
 printResult bench(r"[a-zA-Z_]\w*\s*\([^)]*\)", path, input, stdlib)
-printResult bench(r"\w+\s+\w+\s*\([^)]*\);",   path, input, openregex)  # forward decl
+printResult bench(r"\w+\s+\w+\s*\([^)]*\);",   path, input, openparser)  # forward decl
+printResult bench(r"\w+\s+\w+\s*\([^)]*\);",   path, input, nitely)
 printResult bench(r"\w+\s+\w+\s*\([^)]*\);",   path, input, stdlib)
 
 section("Preprocessor directives")
-printResult bench(r"#define\s+\w+",                    path, input, openregex)
+printResult bench(r"#define\s+\w+",                    path, input, openparser)
+printResult bench(r"#define\s+\w+",                    path, input, nitely)
 printResult bench(r"#define\s+\w+",                    path, input, stdlib)
-printResult bench("\"#include\\s*[<\\\"][^>\\\"]+[>\\\"]\"", path, input, openregex)
+printResult bench("\"#include\\s*[<\\\"][^>\\\"]+[>\\\"]\"", path, input, openparser)
+printResult bench("\"#include\\s*[<\\\"][^>\\\"]+[>\\\"]\"", path, input, nitely)
 printResult bench("\"#include\\s*[<\\\"][^>\\\"]+[>\\\"]\"", path, input, stdlib)
-printResult bench(r"#ifdef\s+\w+|#ifndef\s+\w+",       path, input, openregex)
+printResult bench(r"#ifdef\s+\w+|#ifndef\s+\w+",       path, input, openparser)
+printResult bench(r"#ifdef\s+\w+|#ifndef\s+\w+",       path, input, nitely)
 printResult bench(r"#ifdef\s+\w+|#ifndef\s+\w+",       path, input, stdlib)
 
 section("Literals & constants")
-printResult bench(r"0[xX][0-9a-fA-F]+",   path, input, openregex)  # hex literals
+printResult bench(r"0[xX][0-9a-fA-F]+",   path, input, openparser)  # hex literals
+printResult bench(r"0[xX][0-9a-fA-F]+",   path, input, nitely)
 printResult bench(r"0[xX][0-9a-fA-F]+",   path, input, stdlib)
-printResult bench(r"\d+[uUlL]*",          path, input, openregex)  # int literals
+printResult bench(r"\d+[uUlL]*",          path, input, openparser)  # int literals
+printResult bench(r"\d+[uUlL]*",          path, input, nitely)
 printResult bench(r"\d+[uUlL]*",          path, input, stdlib)
-printResult bench("\"[^\"]*\"",           path, input, openregex)  # string literals  ← regular string
+printResult bench("\"[^\"]*\"",           path, input, openparser)  # string literals  ← regular string
+printResult bench("\"[^\"]*\"",           path, input, nitely)
 printResult bench("\"[^\"]*\"",           path, input, stdlib)
 
 section("Comments")
-printResult bench(r"//[^\n]*",               path, input, openregex)  # line comments
+printResult bench(r"//[^\n]*",               path, input, openparser)  # line comments
+printResult bench(r"//[^\n]*",               path, input, nitely)
 printResult bench(r"//[^\n]*",               path, input, stdlib)
-printResult bench(r"/\*[^*]*\*+([^/*][^*]*\*+)*/", path, input, openregex)  # block comments
+printResult bench(r"/\*[^*]*\*+([^/*][^*]*\*+)*/", path, input, openparser)  # block comments
+printResult bench(r"/\*[^*]*\*+([^/*][^*]*\*+)*/", path, input, nitely)
 printResult bench(r"/\*[^*]*\*+([^/*][^*]*\*+)*/", path, input, stdlib)
 
 section("Pointer & reference patterns")
-printResult bench(r"\w+\s*\*+\s*\w+",        path, input, openregex)
+printResult bench(r"\w+\s*\*+\s*\w+",        path, input, openparser)
+printResult bench(r"\w+\s*\*+\s*\w+",        path, input, nitely)
 printResult bench(r"\w+\s*\*+\s*\w+",        path, input, stdlib)
-printResult bench(r"const\s+\w+\s*\*",       path, input, openregex)
+printResult bench(r"const\s+\w+\s*\*",       path, input, openparser)
+printResult bench(r"const\s+\w+\s*\*",       path, input, nitely)
 printResult bench(r"const\s+\w+\s*\*",       path, input, stdlib)
 
 section("Anchored / worst-case patterns")
-printResult bench(r"^#",                     path, input, openregex)  # lines starting with #
+printResult bench(r"^#",                     path, input, openparser)  # lines starting with #
+printResult bench(r"^#",                     path, input, nitely)
 printResult bench(r"^#",                     path, input, stdlib)
-printResult bench(r";\s*$",                  path, input, openregex)  # lines ending with ;
+printResult bench(r";\s*$",                  path, input, openparser)  # lines ending with ;
+printResult bench(r";\s*$",                  path, input, nitely)
 printResult bench(r";\s*$",                  path, input, stdlib)
+
+printSummary()
