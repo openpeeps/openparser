@@ -21,6 +21,29 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 
 ---
 
+## Key features
+
+- JSON parser with SIMD-accelerated tokenization and direct-to-object parsing
+- YAML 1.2 parser with block and inline syntax, comments, and block scalars
+- Full-featured XML parser with element/attribute mapping and memfile support
+- TOML config parser with datetime support and inline tables
+- Zero-copy CSV parser using memory-mapped files for large file streaming
+- BSON binary encoding/decoding following the BSON 1.1 spec
+- HTML5 parser with configurable parsing policies and DOM tree output
+- RSS & Atom feed parsing, fetching, and serialization
+- DotEnv parser with variable expansion and command substitution
+- SQL parser supporting PostgreSQL, MySQL, and SQLite dialects
+- SIMD-accelerated regex engine with capture groups and quantifiers
+- GNU Gettext PO/MO translation file parsing and compilation
+- Fast Binary Encoding (FBE) with zero-copy buffer-based encoding
+- QR code generation and decoding for Model 2, Micro QR, rMQR, and SQRC
+- Context-aware error reporting with input snippets across all parsers
+- Zero-copy parsing via memory-mapped files for performance-critical workloads
+- Custom type extensibility through `parseHook`/`dumpHook` hooks
+- Field renaming and context-aware parsing with `renameHook` and `currentField`
+
+---
+
 ## JSON
 
 Zero-copy JSON parser with SIMD-accelerated tokenization, direct-to-object parsing, and full hook support. Exports `std/json` for `JsonNode` compatibility.
