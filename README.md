@@ -520,8 +520,8 @@ Full QR symbology family: generators and readers for Model 2, Micro QR, rMQR and
 import openparser/qr
 
 # Model 2 (versions 1-40, L/M/Q/H, auto segmentation)
-let qr = encodeQr("https://openparser.dev")
-echo decodeQrMatrix(qr).text  # https://openparser.dev
+let qr = encodeQr("https://openpeeps.dev")
+echo decodeQrMatrix(qr).text  # https://openpeeps.dev
 
 # Micro QR (M1-M4)
 let micro = encodeMicro("HELLO MICRO")
@@ -548,7 +548,7 @@ import openparser/qr
 encodeQr(makeVCard(VCard(fullName: "Ada Lovelace",
                          org: "OpenPeeps", email: "ada@example.org")))
 encodeQr(makeWifi("home-net", "secret123"))
-encodeQr(makeUrl("openparser.dev"))
+encodeQr(makeUrl("openpeeps.dev"))
 ```
 
 **Rendering** produces a compact standalone SVG (one merged path):
