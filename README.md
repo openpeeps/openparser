@@ -1,5 +1,8 @@
 <p align="center">
   A tiny collection of high-performance parsers and dumpers<br>
+  JSON &bullet; YAML &bullet; XML &bullet; TOML &bullet; CSV <br>
+  BSON &bullet; Plist &bullet; HTML &bullet; CSS &bullet; RSS &bullet; Atom<br>
+  DotEnv &bullet; iCal &bullet; NIF &bullet; SQL &bullet; Regex &bullet; Gettext &bullet; FBE &bullet; QR<br>
   Written in Nim language
 </p>
 
@@ -29,9 +32,12 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 - TOML config parser with datetime support and inline tables
 - Zero-copy CSV parser using memory-mapped files for large file streaming
 - BSON binary encoding/decoding following the BSON 1.1 spec
+- Plist XML and binary `bplist00` codec with autodetect and NSKeyedArchiver unarchiving
 - HTML5 parser with configurable parsing policies and DOM tree output
 - RSS & Atom feed parsing, fetching, and serialization
 - DotEnv parser with variable expansion and command substitution
+- iCalendar (RFC 5545) parser and serializer with line unfolding, TEXT codecs and typed components
+- NIF (2027 Nim Intermediate Format) parser with MemFile support, Base62 LineInfo and lazy symbol expansion
 - SQL parser supporting PostgreSQL, MySQL, and SQLite dialects
 - SIMD-accelerated regex engine with capture groups and quantifiers
 - GNU Gettext PO/MO translation file parsing and compilation
@@ -269,6 +275,51 @@ echo decoded["name"].getStr  # Alice
 
 ---
 
+## Plist
+
+Apple Property List codec covering XML (`<plist version="1.0">`) and binary `bplist00` interchangeably. Same two-decoder API as JSON/YAML: `JsonNode` tree or direct-to-object via `{.plist.}` pragma / `parseHook`.
+
+```nim
+import openparser/plist
+import std/times
+
+type Person = object
+  name {.plist: "Name".}: string
+  age {.plist: "Age".}: int
+  payload: seq[byte]   # <data> Base64
+  created: DateTime    # <date> ISO8601 UTC
+
+# Autodetect (XML or binary) -> JsonNode
+let node = parsePlist(readFile("Info.plist"))
+echo node["Name"].getStr
+
+# Autodetect -> typed object (works for XML and bplist00)
+let p = parsePlist(readFile("Info.plist"), Person)
+echo p.payload.len
+
+# Explicit XML / binary
+let xmlNode = parseXmlPlist(xmlString)
+let bNode = parseBPlist(bplistBytes)
+let xmlOut = toXmlPlist(node)      # -> string with prolog+DTD
+let bOut = toBPlist(p)             # -> seq[byte] bplist00
+
+# File helpers (autodetect)
+let fromFile = parsePlistFile("Info.plist")
+let xmlOnly = parseXmlPlistFile("Info.plist")
+let binOnly = parseBPlistFile("Info.bplist")
+
+# NSKeyedArchiver graphs are unarchived automatically (opt-out via PlistOptions)
+var opts = defaultPlistOptions()
+opts.unarchive = false
+let archived = parsePlist(archiverPlist, opts) # retains $archiver/$objects/$top
+```
+
+**Features:** XML entity decoding, comments, `<data>` Base64 ws-tolerance, `<date>` UTC, `integer` hex/decimal, `real` inf/nan, `true/false/array/dict/string`; binary `bplist00` header/trailer/offset table validation, marker `0x00/08/09/0F/1n/2n/33/4n/5n/6n/8n/An/Cn/Dn` + extended `0xF` counts, `UID` (`PlistUID distinct int` ↔ `{"CF$UID": int}`), `seq[byte]`/`DateTime`/`PlistUID`/`Option[T]` typed hooks, `{.plist.}` with `{.json.}` fallback, `PlistOptions` (`maxDepth`, `allowDuplicateKeys`, `strictDTD`, `xmlSortKeys`/`binarySortKeys`, `unarchive`), `detectPlistFormat`, double-unarchive-safe autodetect, file helpers for all three formats, cross-validated against `python plistlib` fixtures.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_plist.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/plist.html)
+
+---
+
 ## HTML
 
 HTML5 parser with configurable parsing policies, memfile support, and a DOM tree output. Handles real-world HTML gracefully.
@@ -344,6 +395,43 @@ loadDotenvForEnv("production")
 **Features:** Variable expansion (`${VAR}`), command substitution (`${CMD:default}`), override control, `get`/`set`/`del`/`has` API.
 
 - [API Reference](https://openpeeps.github.io/openparser/openparser/dotenv.html)
+
+---
+
+## iCal
+
+RFC 5545 iCalendar parser and serializer. Parse from string or file, work with typed Nim objects, and serialize back with correct folding and escaping.
+
+```nim
+import openparser/ical
+
+# Parse
+let cal = parseIcal(readFile("meet.ics"))
+echo cal.prodId           # PRODID
+for c in cal.components:
+  if c.kind == cckEvent:
+    echo c.event.summary  # unescaped TEXT
+    echo c.event.dtStart  # IcalDt with TZID
+
+# Build from objects
+var cal2 = IcalCalendar(prodId: some("-//MyApp//EN"), version: some("2.0"))
+var ev = IcalEvent(uid: "evt1@example.com")
+ev.dtstamp = some(IcalDt(dt: parseIcalDateTime("20240115T120000Z")))
+ev.dtStart = some(IcalDt(dt: parseIcalDateTime("20240115T130000Z")))
+ev.summary = some("Hello, world; with escapes\nnewline")
+ev.attendees.add(IcalPerson(uri: "mailto:alice@example.com", cn: some("Alice")))
+cal2.components.add(IcalComponent(kind: cckEvent, event: ev))
+
+# Serialize (CRLF + 75-octet folding, TEXT escaping)
+writeFile("out.ics", toIcal(cal2))
+
+# File convenience
+let fromFile = parseIcalFile("out.ics")
+```
+
+**Features:** Line unfolding/folding at 75 octets (UTF-8 safe), TEXT `\, \; \\ \n` codecs, DATE / DATE-TIME (`Z` UTC) / DURATION (`-P1W`, `PT15M`), parameters with quoted values (`CN="Doe, Jane"`), `VTIMEZONE` `STANDARD`/`DAYLIGHT`, nested `VALARM`, `VEVENT`/`VTODO`/`VJOURNAL` typed objects with `extraProps` fallback for `X-` and future components, `RRULE`/`EXDATE`/`CATEGORIES` handling, `OpenParserIcalError` with line context.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_ical.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/ical.html)
 
 ---
 
@@ -482,19 +570,55 @@ let buf2 = encode(alice, 7'u32, proc (fieldName: string): uint16 =
 
 ---
 
+## NIF
+
+NIF parser for the 2027 Nim Intermediate Format. Re-exports `nif/ast`, `nif/lexer`, `nif/parser` and provides `fromNif`, `fromNifFile`, `tokenizeNif` with MemFile support, lazy global-symbol expansion, depth limiting and context-aware errors via `OpenParserNifError`.
+
+```nim
+import openparser/nif
+
+# Parse from string (spec example)
+let src = """
+(.nif27)
+(stmts
+  (imp@2,5,sysio.nim (type :File (object . .)))
+  (call write.1.sys "Hello World!\0A"))
+"""
+let mods = fromNif(src)
+echo mods[1].tag              # stmts
+echo mods[1].children[0].tag  # imp with lineInfo
+
+# Parse from file with MemFile and module suffix expansion
+let mods2 = fromNifFile("module.nif")
+let nodes = fromNif("(stmts foo.0. bar.0.)",
+  NifOptions(moduleSuffix: "mymod", expandGlobalSymbols: true))
+echo nodes[0].children[0].symbol  # foo.0.mymod
+
+# Tokenize without parsing
+let toks = tokenizeNif("(stmts 123 \"hi\" :sym)")
+echo toks[2].kind  # ntkInt
+```
+
+**Features:** Full nifspec 2027 token set (`() [] {} .` atoms, `nkIdent/Symbol/SymbolDef/Int/UInt/Float/CharLit/StrLit/Compound/Directive`), escapes `\n \t \r \| \^ \xx`, Base62 `LineInfo @col[,line[,file]]` and `~` shorthand, `#comment#` suffixes, hyphenated identifiers, trailing-dot global symbols `foo.0.` with lazy `moduleSuffix` expansion, `.nif27` directive at byte 0, `.index/.indexat` support, `maxDepth` and `preserveComments` options, MemFile zero-copy `tokenizeNif`/`fromNif`, round-trip `dumpNif`.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_nif.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/nif.html)
+
+---
+
 ## Cross-cutting Features
 
-| Feature | JSON | YAML | XML | TOML | CSV |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Zero-copy / Memfiles | x | | x | | x |
-| Direct-to-object | x | x | x | x | |
-| `parseHook` / `dumpHook` | x | x | x | x | |
-| `renameHook` | x | x | x | x | |
-| `currentField` context | x | x | x | x | |
-| `skipValue` | x | x | x | x | |
-| `XmlNode` / `JsonNode` tree | x | x | x | x | |
-| SIMD acceleration | x | | x | | |
-| Context-aware errors | x | x | x | x | x |
+| Feature | JSON | YAML | XML | TOML | CSV | Plist |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| Zero-copy / Memfiles | x | | x | | x |  |
+| Direct-to-object | x | x | x | x | | x |
+| `parseHook` / `dumpHook` | x | x | x | x | | x |
+| `renameHook` | x | x | x | x | | x |
+| `currentField` context | x | x | x | x | | x |
+| `skipValue` | x | x | x | x | |  |
+| `XmlNode` / `JsonNode` tree | x | x | x | x | | x |
+| SIMD acceleration | x | | x | | |  |
+| Context-aware errors | x | x | x | x | x | x |
+| Binary format |  |  |  |  |  | x |
 
 ## Error Reporting
 
