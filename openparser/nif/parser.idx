@@ -1,0 +1,15 @@
+nimTitle	parser	openparser/nif/parser.html	module openparser/nif/parser		0
+nim	NifParser	openparser/nif/parser.html#NifParser	object NifParser		15
+nim	error	openparser/nif/parser.html#error,NifParser,string	proc error(p: var NifParser; msg: string)		22
+nim	advance	openparser/nif/parser.html#advance,NifParser	proc advance(p: var NifParser): NifToken		41
+nim	expectSkip	openparser/nif/parser.html#expectSkip,NifParser,NifTokenKind	proc expectSkip(p: var NifParser; kind: NifTokenKind)		47
+nim	initParser	openparser/nif/parser.html#initParser,NifLexer,NifOptions	proc initParser(lex: NifLexer; opts: NifOptions = nil): NifParser		56
+nim	parseModule	openparser/nif/parser.html#parseModule,NifParser	proc parseModule(p: var NifParser): NifModule		218
+nim	fromNif	openparser/nif/parser.html#fromNif,string,NifOptions	proc fromNif(input: string; opts: NifOptions = nil): NifModule		235
+nim	fromNif	openparser/nif/parser.html#fromNif,MemFile,NifOptions	proc fromNif(mf: MemFile; opts: NifOptions = nil): NifModule		241
+nim	fromNifFile	openparser/nif/parser.html#fromNifFile,string,NifOptions	proc fromNifFile(path: string; opts: NifOptions = nil): NifModule		247
+nim	dumpNif	openparser/nif/parser.html#dumpNif,NifModule	proc dumpNif(nodes: NifModule): string		265
+nim	tokenizeNif	openparser/nif/parser.html#tokenizeNif,string	proc tokenizeNif(input: string): seq[NifToken]		272
+nim	tokenizeNif	openparser/nif/parser.html#tokenizeNif,MemFile	proc tokenizeNif(mf: MemFile): seq[NifToken]		275
+nimgrp	tokenizenif	openparser/nif/parser.html#tokenizeNif-procs-all	proc		272
+nimgrp	fromnif	openparser/nif/parser.html#fromNif-procs-all	proc		235

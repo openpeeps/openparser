@@ -1,0 +1,34 @@
+nimTitle	lexer	openparser/nif/lexer.html	module openparser/nif/lexer		0
+nim	ntkEof	openparser/nif/lexer.html#ntkEof	NifTokenKind.ntkEof		14
+nim	ntkLParen	openparser/nif/lexer.html#ntkLParen	NifTokenKind.ntkLParen		14
+nim	ntkRParen	openparser/nif/lexer.html#ntkRParen	NifTokenKind.ntkRParen		14
+nim	ntkLBracket	openparser/nif/lexer.html#ntkLBracket	NifTokenKind.ntkLBracket		14
+nim	ntkRBracket	openparser/nif/lexer.html#ntkRBracket	NifTokenKind.ntkRBracket		14
+nim	ntkLBrace	openparser/nif/lexer.html#ntkLBrace	NifTokenKind.ntkLBrace		14
+nim	ntkRBrace	openparser/nif/lexer.html#ntkRBrace	NifTokenKind.ntkRBrace		14
+nim	ntkDot	openparser/nif/lexer.html#ntkDot	NifTokenKind.ntkDot		14
+nim	ntkIdent	openparser/nif/lexer.html#ntkIdent	NifTokenKind.ntkIdent		14
+nim	ntkSymbol	openparser/nif/lexer.html#ntkSymbol	NifTokenKind.ntkSymbol		14
+nim	ntkSymbolDef	openparser/nif/lexer.html#ntkSymbolDef	NifTokenKind.ntkSymbolDef		14
+nim	ntkInt	openparser/nif/lexer.html#ntkInt	NifTokenKind.ntkInt		14
+nim	ntkUInt	openparser/nif/lexer.html#ntkUInt	NifTokenKind.ntkUInt		14
+nim	ntkFloat	openparser/nif/lexer.html#ntkFloat	NifTokenKind.ntkFloat		14
+nim	ntkCharLit	openparser/nif/lexer.html#ntkCharLit	NifTokenKind.ntkCharLit		14
+nim	ntkStrLit	openparser/nif/lexer.html#ntkStrLit	NifTokenKind.ntkStrLit		14
+nim	ntkUnknown	openparser/nif/lexer.html#ntkUnknown	NifTokenKind.ntkUnknown		14
+nim	NifTokenKind	openparser/nif/lexer.html#NifTokenKind	enum NifTokenKind		14
+nim	NifToken	openparser/nif/lexer.html#NifToken	type NifToken		33
+nim	NifLexer	openparser/nif/lexer.html#NifLexer	type NifLexer		41
+nim	invalidToken	openparser/nif/lexer.html#invalidToken	const invalidToken		51
+nim	errorEndOfFile	openparser/nif/lexer.html#errorEndOfFile	const errorEndOfFile		52
+nim	unexpectedToken	openparser/nif/lexer.html#unexpectedToken	const unexpectedToken		53
+nim	unexpectedChar	openparser/nif/lexer.html#unexpectedChar	const unexpectedChar		54
+nim	newNifLexer	openparser/nif/lexer.html#newNifLexer,string	proc newNifLexer(input: string): NifLexer		56
+nim	newNifLexer	openparser/nif/lexer.html#newNifLexer,pointer,int	proc newNifLexer(mem: pointer; size: int): NifLexer		60
+nim	error	openparser/nif/lexer.html#error,NifLexer,string	proc error(l: var NifLexer; msg: string)		86
+nim	nextNifToken	openparser/nif/lexer.html#nextNifToken,NifLexer	proc nextNifToken(l: var NifLexer): NifToken		314
+nim	tokenize	openparser/nif/lexer.html#tokenize,string	proc tokenize(input: string): seq[NifToken]		581
+nim	tokenize	openparser/nif/lexer.html#tokenize,MemFile	proc tokenize(mf: MemFile): seq[NifToken]		589
+nim	tokens	openparser/nif/lexer.html#tokens.i,NifLexer	iterator tokens(l: var NifLexer): NifToken		597
+nimgrp	newniflexer	openparser/nif/lexer.html#newNifLexer-procs-all	proc		56
+nimgrp	tokenize	openparser/nif/lexer.html#tokenize-procs-all	proc		581

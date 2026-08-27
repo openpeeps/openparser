@@ -1,0 +1,3 @@
+nimTitle	nif	openparser/nif.html	module openparser/nif		0
+nim	openReadOnly	openparser/nif.html#openReadOnly,string	proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile		22
+nim	isMapped	openparser/nif.html#isMapped,MemFile	proc isMapped(m: MemFile): bool		27

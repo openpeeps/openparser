@@ -1,0 +1,32 @@
+nimTitle	ast	openparser/nif/ast.html	module openparser/nif/ast		0
+nim	OpenParserNifError	openparser/nif/ast.html#OpenParserNifError	object OpenParserNifError		13
+nim	NifOptions	openparser/nif/ast.html#NifOptions	type NifOptions		15
+nim	NifLineInfo	openparser/nif/ast.html#NifLineInfo	object NifLineInfo		26
+nim	NifSuffix	openparser/nif/ast.html#NifSuffix	object NifSuffix		40
+nim	nkEmpty	openparser/nif/ast.html#nkEmpty	NifNodeKind.nkEmpty		47
+nim	nkIdent	openparser/nif/ast.html#nkIdent	NifNodeKind.nkIdent		47
+nim	nkSymbol	openparser/nif/ast.html#nkSymbol	NifNodeKind.nkSymbol		47
+nim	nkSymbolDef	openparser/nif/ast.html#nkSymbolDef	NifNodeKind.nkSymbolDef		47
+nim	nkInt	openparser/nif/ast.html#nkInt	NifNodeKind.nkInt		47
+nim	nkUInt	openparser/nif/ast.html#nkUInt	NifNodeKind.nkUInt		47
+nim	nkFloat	openparser/nif/ast.html#nkFloat	NifNodeKind.nkFloat		47
+nim	nkCharLit	openparser/nif/ast.html#nkCharLit	NifNodeKind.nkCharLit		47
+nim	nkStrLit	openparser/nif/ast.html#nkStrLit	NifNodeKind.nkStrLit		47
+nim	nkCompound	openparser/nif/ast.html#nkCompound	NifNodeKind.nkCompound		47
+nim	nkDirective	openparser/nif/ast.html#nkDirective	NifNodeKind.nkDirective		47
+nim	NifNodeKind	openparser/nif/ast.html#NifNodeKind	enum NifNodeKind		47
+nim	NifNode	openparser/nif/ast.html#NifNode	type NifNode		60
+nim	NifModule	openparser/nif/ast.html#NifModule	type NifModule		102
+nim	NifIndexEntry	openparser/nif/ast.html#NifIndexEntry	object NifIndexEntry		105
+nim	defaultNifOptions	openparser/nif/ast.html#defaultNifOptions	proc defaultNifOptions(): NifOptions		111
+nim	isDirectiveTag	openparser/nif/ast.html#isDirectiveTag,string	proc isDirectiveTag(tag: string): bool		119
+nim	newNifEmpty	openparser/nif/ast.html#newNifEmpty	proc newNifEmpty(suffix = NifSuffix()): NifNode		122
+nim	newNifIdent	openparser/nif/ast.html#newNifIdent,string,string	proc newNifIdent(ident, raw: string; suffix = NifSuffix()): NifNode		128
+nim	newNifSymbol	openparser/nif/ast.html#newNifSymbol,string,string	proc newNifSymbol(sym, raw: string; suffix = NifSuffix()): NifNode		133
+nim	newNifSymbolDef	openparser/nif/ast.html#newNifSymbolDef,string,string	proc newNifSymbolDef(sym, raw: string; suffix = NifSuffix()): NifNode		138
+nim	newNifCompound	openparser/nif/ast.html#newNifCompound,string,string,seq[NifNode],Option[NifLineInfo],Option[string]	proc newNifCompound(tag, rawTag: string; children: seq[NifNode] = @[];\n               tagLI: Option[NifLineInfo] = none(NifLineInfo);\n               tagCmt: Option[string] = none(string)): NifNode		143
+nim	`$`	openparser/nif/ast.html#$,NifNode	proc `$`(n: NifNode): string		153
+nim	isNifDirective	openparser/nif/ast.html#isNifDirective,NifNode	proc isNifDirective(n: NifNode): bool		199
+nim	directiveName	openparser/nif/ast.html#directiveName,NifNode	proc directiveName(n: NifNode): string		202
+nim	getStrVal	openparser/nif/ast.html#getStrVal,NifNode	proc getStrVal(n: NifNode): string		205
+nim	getIdentVal	openparser/nif/ast.html#getIdentVal,NifNode	proc getIdentVal(n: NifNode): string		208

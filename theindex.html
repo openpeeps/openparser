@@ -28,10 +28,12 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/private/json_simd.html">openparser/private/json_simd</a>, <a href="openparser/private/lexutils.html">openparser/private/lexutils</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/private/xml_simd.html">openparser/private/xml_simd</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/jit/compiler.html">openparser/regex/jit/compiler</a>, <a href="openparser/regex/jit/jit_mem.html">openparser/regex/jit/jit_mem</a>, <a href="openparser/regex/jit/wrapper.html">openparser/regex/jit/wrapper</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/xml.html">openparser/xml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/nif.html">openparser/nif</a>, <a href="openparser/nif/ast.html">openparser/nif/ast</a>, <a href="openparser/nif/lexer.html">openparser/nif/lexer</a>, <a href="openparser/nif/parser.html">openparser/nif/parser</a>, <a href="openparser/private/json_simd.html">openparser/private/json_simd</a>, <a href="openparser/private/lexutils.html">openparser/private/lexutils</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/private/xml_simd.html">openparser/private/xml_simd</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/jit/compiler.html">openparser/regex/jit/compiler</a>, <a href="openparser/regex/jit/jit_mem.html">openparser/regex/jit/jit_mem</a>, <a href="openparser/regex/jit/wrapper.html">openparser/regex/jit/wrapper</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/xml.html">openparser/xml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc `$`(f: CsvFieldSlice): string" href="openparser/csv.html#%24%2CCsvFieldSlice">csv: proc `$`(f: CsvFieldSlice): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="ast: proc `$`(n: NifNode): string" href="openparser/nif/ast.html#%24%2CNifNode">ast: proc `$`(n: NifNode): string</a></li>
           <li><a class="reference external"
           data-doc-search-tag="parser: proc `$`(n: RegexNode; indent = 0): string" href="openparser/regex/parser.html#%24%2CRegexNode%2Cint">parser: proc `$`(n: RegexNode; indent = 0): string</a></li>
           <li><a class="reference external"
@@ -58,6 +60,8 @@
 <dt><a name="advance" href="#advance"><span>advance:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc advance(parser: var JsonParser): JsonToken" href="openparser/json.html#advance%2CJsonParser">json: proc advance(parser: var JsonParser): JsonToken</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="parser: proc advance(p: var NifParser): NifToken" href="openparser/nif/parser.html#advance%2CNifParser">parser: proc advance(p: var NifParser): NifToken</a></li>
           <li><a class="reference external"
           data-doc-search-tag="lexutils: proc advance[T](l: var T)" href="openparser/private/lexutils.html#advance%2CT">lexutils: proc advance[T](l: var T)</a></li>
           <li><a class="reference external"
@@ -355,9 +359,17 @@
 <li><a class="reference external"
           data-doc-search-tag="csv: proc defaultCsvOptions(): CsvOptions" href="openparser/csv.html#defaultCsvOptions">csv: proc defaultCsvOptions(): CsvOptions</a></li>
           </ul></dd>
+<dt><a name="defaultNifOptions" href="#defaultNifOptions"><span>defaultNifOptions:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: proc defaultNifOptions(): NifOptions" href="openparser/nif/ast.html#defaultNifOptions">ast: proc defaultNifOptions(): NifOptions</a></li>
+          </ul></dd>
 <dt><a name="del" href="#del"><span>del:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="dotenv: proc del(key: string)" href="openparser/dotenv.html#del%2Cstring">dotenv: proc del(key: string)</a></li>
+          </ul></dd>
+<dt><a name="directiveName" href="#directiveName"><span>directiveName:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: proc directiveName(n: NifNode): string" href="openparser/nif/ast.html#directiveName%2CNifNode">ast: proc directiveName(n: NifNode): string</a></li>
           </ul></dd>
 <dt><a name="disassemble" href="#disassemble"><span>disassemble:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -464,6 +476,10 @@
           data-doc-search-tag="xml: proc dumpHook(s: var string; v: XmlNode)" href="openparser/xml.html#dumpHook%2Cstring%2CXmlNode">xml: proc dumpHook(s: var string; v: XmlNode)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc dumpHook(s: var string; v: YamlNode)" href="openparser/yaml.html#dumpHook%2Cstring%2CYamlNode">yaml: proc dumpHook(s: var string; v: YamlNode)</a></li>
+          </ul></dd>
+<dt><a name="dumpNif" href="#dumpNif"><span>dumpNif:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: proc dumpNif(nodes: NifModule): string" href="openparser/nif/parser.html#dumpNif%2CNifModule">parser: proc dumpNif(nodes: NifModule): string</a></li>
           </ul></dd>
 <dt><a name="dumpTOML" href="#dumpTOML"><span>dumpTOML:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -597,6 +613,10 @@
           <li><a class="reference external"
           data-doc-search-tag="json: proc error(p: var JsonParser; msg: string)" href="openparser/json.html#error%2CJsonParser%2Cstring">json: proc error(p: var JsonParser; msg: string)</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="lexer: proc error(l: var NifLexer; msg: string)" href="openparser/nif/lexer.html#error%2CNifLexer%2Cstring">lexer: proc error(l: var NifLexer; msg: string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="parser: proc error(p: var NifParser; msg: string)" href="openparser/nif/parser.html#error%2CNifParser%2Cstring">parser: proc error(p: var NifParser; msg: string)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="lexer: proc error(l: var RegexLexer; msg: string)" href="openparser/regex/lexer.html#error%2CRegexLexer%2Cstring">lexer: proc error(l: var RegexLexer; msg: string)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xml: proc error(l: var XmlLexer; msg: string)" href="openparser/xml.html#error%2CXmlLexer%2Cstring">xml: proc error(l: var XmlLexer; msg: string)</a></li>
@@ -610,6 +630,8 @@
 <dt><a name="errorEndOfFile" href="#errorEndOfFile"><span>errorEndOfFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: const errorEndOfFile" href="openparser/json.html#errorEndOfFile">json: const errorEndOfFile</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="lexer: const errorEndOfFile" href="openparser/nif/lexer.html#errorEndOfFile">lexer: const errorEndOfFile</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xml: const errorEndOfFile" href="openparser/xml.html#errorEndOfFile">xml: const errorEndOfFile</a></li>
           </ul></dd>
@@ -626,6 +648,8 @@
 <dt><a name="expectSkip" href="#expectSkip"><span>expectSkip:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc expectSkip(parser: var JsonParser; tkind: JsonTokenKind)" href="openparser/json.html#expectSkip%2CJsonParser%2CJsonTokenKind">json: proc expectSkip(parser: var JsonParser; tkind: JsonTokenKind)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="parser: proc expectSkip(p: var NifParser; kind: NifTokenKind)" href="openparser/nif/parser.html#expectSkip%2CNifParser%2CNifTokenKind">parser: proc expectSkip(p: var NifParser; kind: NifTokenKind)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xml: proc expectSkip(p: var XmlParser; tkind: XmlTokenKind)" href="openparser/xml.html#expectSkip%2CXmlParser%2CXmlTokenKind">xml: proc expectSkip(p: var XmlParser; tkind: XmlTokenKind)</a></li>
           <li><a class="reference external"
@@ -723,6 +747,16 @@
 <li><a class="reference external"
           data-doc-search-tag="json: proc fromJsonLFile(filename: string): JsonNode" href="openparser/json.html#fromJsonLFile%2Cstring">json: proc fromJsonLFile(filename: string): JsonNode</a></li>
           </ul></dd>
+<dt><a name="fromNif" href="#fromNif"><span>fromNif:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: proc fromNif(mf: MemFile; opts: NifOptions = nil): NifModule" href="openparser/nif/parser.html#fromNif%2CMemFile%2CNifOptions">parser: proc fromNif(mf: MemFile; opts: NifOptions = nil): NifModule</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="parser: proc fromNif(input: string; opts: NifOptions = nil): NifModule" href="openparser/nif/parser.html#fromNif%2Cstring%2CNifOptions">parser: proc fromNif(input: string; opts: NifOptions = nil): NifModule</a></li>
+          </ul></dd>
+<dt><a name="fromNifFile" href="#fromNifFile"><span>fromNifFile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: proc fromNifFile(path: string; opts: NifOptions = nil): NifModule" href="openparser/nif/parser.html#fromNifFile%2Cstring%2CNifOptions">parser: proc fromNifFile(path: string; opts: NifOptions = nil): NifModule</a></li>
+          </ul></dd>
 <dt><a name="fromXml" href="#fromXml"><span>fromXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xml: proc fromXml(mapped: MemFile): XmlNode" href="openparser/xml.html#fromXml%2CMemFile">xml: proc fromXml(mapped: MemFile): XmlNode</a></li>
@@ -777,6 +811,10 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc getFloat(n: YamlNode): float64" href="openparser/yaml.html#getFloat%2CYamlNode">yaml: proc getFloat(n: YamlNode): float64</a></li>
           </ul></dd>
+<dt><a name="getIdentVal" href="#getIdentVal"><span>getIdentVal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: proc getIdentVal(n: NifNode): string" href="openparser/nif/ast.html#getIdentVal%2CNifNode">ast: proc getIdentVal(n: NifNode): string</a></li>
+          </ul></dd>
 <dt><a name="getInt" href="#getInt"><span>getInt:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc getInt(n: TomlNode): int64" href="openparser/toml.html#getInt%2CTomlNode">toml: proc getInt(n: TomlNode): int64</a></li>
@@ -804,6 +842,10 @@
           data-doc-search-tag="xml: proc getStr(node: XmlNode): string" href="openparser/xml.html#getStr%2CXmlNode">xml: proc getStr(node: XmlNode): string</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc getStr(n: YamlNode): string" href="openparser/yaml.html#getStr%2CYamlNode">yaml: proc getStr(n: YamlNode): string</a></li>
+          </ul></dd>
+<dt><a name="getStrVal" href="#getStrVal"><span>getStrVal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: proc getStrVal(n: NifNode): string" href="openparser/nif/ast.html#getStrVal%2CNifNode">ast: proc getStrVal(n: NifNode): string</a></li>
           </ul></dd>
 <dt><a name="getToken" href="#getToken"><span>getToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -863,6 +905,10 @@
 <li><a class="reference external"
           data-doc-search-tag="fbe: proc initBuffer(capacity = 256): Buffer" href="openparser/fbe.html#initBuffer%2Cint">fbe: proc initBuffer(capacity = 256): Buffer</a></li>
           </ul></dd>
+<dt><a name="initParser" href="#initParser"><span>initParser:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: proc initParser(lex: NifLexer; opts: NifOptions = nil): NifParser" href="openparser/nif/parser.html#initParser%2CNifLexer%2CNifOptions">parser: proc initParser(lex: NifLexer; opts: NifOptions = nil): NifParser</a></li>
+          </ul></dd>
 <dt><a name="initRegexLexer" href="#initRegexLexer"><span>initRegexLexer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="lexer: proc initRegexLexer(mf: MemFile): RegexLexer" href="openparser/regex/lexer.html#initRegexLexer%2CMemFile">lexer: proc initRegexLexer(mf: MemFile): RegexLexer</a></li>
@@ -895,13 +941,25 @@
 <li><a class="reference external"
           data-doc-search-tag="json: const invalidToken" href="openparser/json.html#invalidToken">json: const invalidToken</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="lexer: const invalidToken" href="openparser/nif/lexer.html#invalidToken">lexer: const invalidToken</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="xml: const invalidToken" href="openparser/xml.html#invalidToken">xml: const invalidToken</a></li>
+          </ul></dd>
+<dt><a name="isDirectiveTag" href="#isDirectiveTag"><span>isDirectiveTag:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: proc isDirectiveTag(tag: string): bool" href="openparser/nif/ast.html#isDirectiveTag%2Cstring">ast: proc isDirectiveTag(tag: string): bool</a></li>
           </ul></dd>
 <dt><a name="isMapped" href="#isMapped"><span>isMapped:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc isMapped(m: MemFile): bool" href="openparser/json.html#isMapped%2CMemFile">json: proc isMapped(m: MemFile): bool</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="nif: proc isMapped(m: MemFile): bool" href="openparser/nif.html#isMapped%2CMemFile">nif: proc isMapped(m: MemFile): bool</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="xml: proc isMapped(m: MemFile): bool" href="openparser/xml.html#isMapped%2CMemFile">xml: proc isMapped(m: MemFile): bool</a></li>
+          </ul></dd>
+<dt><a name="isNifDirective" href="#isNifDirective"><span>isNifDirective:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: proc isNifDirective(n: NifNode): bool" href="openparser/nif/ast.html#isNifDirective%2CNifNode">ast: proc isNifDirective(n: NifNode): bool</a></li>
           </ul></dd>
 <dt><a name="isObjectVariant" href="#isObjectVariant"><span>isObjectVariant:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1059,6 +1117,36 @@
 <li><a class="reference external"
           data-doc-search-tag="bson: proc newBSONDocument(node: JsonNode; version: int32 = 1'i32): BSONDocument" href="openparser/bson.html#newBSONDocument%2CJsonNode%2Cint32">bson: proc newBSONDocument(node: JsonNode; version: int32 = 1'i32): BSONDocument</a></li>
           </ul></dd>
+<dt><a name="newNifCompound" href="#newNifCompound"><span>newNifCompound:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: proc newNifCompound(tag, rawTag: string; children: seq[NifNode] = @[];
+               tagLI: Option[NifLineInfo] = none(NifLineInfo);
+               tagCmt: Option[string] = none(string)): NifNode" href="openparser/nif/ast.html#newNifCompound%2Cstring%2Cstring%2Cseq%5BNifNode%5D%2COption%5BNifLineInfo%5D%2COption%5Bstring%5D">ast: proc newNifCompound(tag, rawTag: string; children: seq[NifNode] = @[];
+               tagLI: Option[NifLineInfo] = none(NifLineInfo);
+               tagCmt: Option[string] = none(string)): NifNode</a></li>
+          </ul></dd>
+<dt><a name="newNifEmpty" href="#newNifEmpty"><span>newNifEmpty:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: proc newNifEmpty(suffix = NifSuffix()): NifNode" href="openparser/nif/ast.html#newNifEmpty">ast: proc newNifEmpty(suffix = NifSuffix()): NifNode</a></li>
+          </ul></dd>
+<dt><a name="newNifIdent" href="#newNifIdent"><span>newNifIdent:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: proc newNifIdent(ident, raw: string; suffix = NifSuffix()): NifNode" href="openparser/nif/ast.html#newNifIdent%2Cstring%2Cstring">ast: proc newNifIdent(ident, raw: string; suffix = NifSuffix()): NifNode</a></li>
+          </ul></dd>
+<dt><a name="newNifLexer" href="#newNifLexer"><span>newNifLexer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: proc newNifLexer(mem: pointer; size: int): NifLexer" href="openparser/nif/lexer.html#newNifLexer%2Cpointer%2Cint">lexer: proc newNifLexer(mem: pointer; size: int): NifLexer</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="lexer: proc newNifLexer(input: string): NifLexer" href="openparser/nif/lexer.html#newNifLexer%2Cstring">lexer: proc newNifLexer(input: string): NifLexer</a></li>
+          </ul></dd>
+<dt><a name="newNifSymbol" href="#newNifSymbol"><span>newNifSymbol:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: proc newNifSymbol(sym, raw: string; suffix = NifSuffix()): NifNode" href="openparser/nif/ast.html#newNifSymbol%2Cstring%2Cstring">ast: proc newNifSymbol(sym, raw: string; suffix = NifSuffix()): NifNode</a></li>
+          </ul></dd>
+<dt><a name="newNifSymbolDef" href="#newNifSymbolDef"><span>newNifSymbolDef:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: proc newNifSymbolDef(sym, raw: string; suffix = NifSuffix()): NifNode" href="openparser/nif/ast.html#newNifSymbolDef%2Cstring%2Cstring">ast: proc newNifSymbolDef(sym, raw: string; suffix = NifSuffix()): NifNode</a></li>
+          </ul></dd>
 <dt><a name="newTomlArray" href="#newTomlArray"><span>newTomlArray:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc newTomlArray(): TomlNode" href="openparser/toml.html#newTomlArray">toml: proc newTomlArray(): TomlNode</a></li>
@@ -1157,15 +1245,175 @@
 <li><a class="reference external"
           data-doc-search-tag="prefilter: proc nextCandidate(pf: Prefilter; input: string; pos, inputLen: int): int" href="openparser/regex/prefilter.html#nextCandidate%2CPrefilter%2Cstring%2Cint%2Cint">prefilter: proc nextCandidate(pf: Prefilter; input: string; pos, inputLen: int): int</a></li>
           </ul></dd>
+<dt><a name="nextNifToken" href="#nextNifToken"><span>nextNifToken:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: proc nextNifToken(l: var NifLexer): NifToken" href="openparser/nif/lexer.html#nextNifToken%2CNifLexer">lexer: proc nextNifToken(l: var NifLexer): NifToken</a></li>
+          </ul></dd>
 <dt><a name="nextToken" href="#nextToken"><span>nextToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc nextToken(p: var TomlParser): TomlToken" href="openparser/toml.html#nextToken%2CTomlParser">toml: proc nextToken(p: var TomlParser): TomlToken</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc nextToken(p: var YamlParser): YamlToken" href="openparser/yaml.html#nextToken%2CYamlParser">yaml: proc nextToken(p: var YamlParser): YamlToken</a></li>
           </ul></dd>
+<dt><a name="NifIndexEntry" href="#NifIndexEntry"><span>NifIndexEntry:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: object NifIndexEntry" href="openparser/nif/ast.html#NifIndexEntry">ast: object NifIndexEntry</a></li>
+          </ul></dd>
+<dt><a name="NifLexer" href="#NifLexer"><span>NifLexer:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: type NifLexer" href="openparser/nif/lexer.html#NifLexer">lexer: type NifLexer</a></li>
+          </ul></dd>
+<dt><a name="NifLineInfo" href="#NifLineInfo"><span>NifLineInfo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: object NifLineInfo" href="openparser/nif/ast.html#NifLineInfo">ast: object NifLineInfo</a></li>
+          </ul></dd>
+<dt><a name="NifModule" href="#NifModule"><span>NifModule:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: type NifModule" href="openparser/nif/ast.html#NifModule">ast: type NifModule</a></li>
+          </ul></dd>
+<dt><a name="NifNode" href="#NifNode"><span>NifNode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: type NifNode" href="openparser/nif/ast.html#NifNode">ast: type NifNode</a></li>
+          </ul></dd>
+<dt><a name="NifNodeKind" href="#NifNodeKind"><span>NifNodeKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: enum NifNodeKind" href="openparser/nif/ast.html#NifNodeKind">ast: enum NifNodeKind</a></li>
+          </ul></dd>
+<dt><a name="NifOptions" href="#NifOptions"><span>NifOptions:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: type NifOptions" href="openparser/nif/ast.html#NifOptions">ast: type NifOptions</a></li>
+          </ul></dd>
+<dt><a name="NifParser" href="#NifParser"><span>NifParser:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: object NifParser" href="openparser/nif/parser.html#NifParser">parser: object NifParser</a></li>
+          </ul></dd>
+<dt><a name="NifSuffix" href="#NifSuffix"><span>NifSuffix:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: object NifSuffix" href="openparser/nif/ast.html#NifSuffix">ast: object NifSuffix</a></li>
+          </ul></dd>
+<dt><a name="NifToken" href="#NifToken"><span>NifToken:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: type NifToken" href="openparser/nif/lexer.html#NifToken">lexer: type NifToken</a></li>
+          </ul></dd>
+<dt><a name="NifTokenKind" href="#NifTokenKind"><span>NifTokenKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: enum NifTokenKind" href="openparser/nif/lexer.html#NifTokenKind">lexer: enum NifTokenKind</a></li>
+          </ul></dd>
+<dt><a name="nkCharLit" href="#nkCharLit"><span>nkCharLit:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: NifNodeKind.nkCharLit" href="openparser/nif/ast.html#nkCharLit">ast: NifNodeKind.nkCharLit</a></li>
+          </ul></dd>
+<dt><a name="nkCompound" href="#nkCompound"><span>nkCompound:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: NifNodeKind.nkCompound" href="openparser/nif/ast.html#nkCompound">ast: NifNodeKind.nkCompound</a></li>
+          </ul></dd>
+<dt><a name="nkDirective" href="#nkDirective"><span>nkDirective:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: NifNodeKind.nkDirective" href="openparser/nif/ast.html#nkDirective">ast: NifNodeKind.nkDirective</a></li>
+          </ul></dd>
+<dt><a name="nkEmpty" href="#nkEmpty"><span>nkEmpty:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: NifNodeKind.nkEmpty" href="openparser/nif/ast.html#nkEmpty">ast: NifNodeKind.nkEmpty</a></li>
+          </ul></dd>
+<dt><a name="nkFloat" href="#nkFloat"><span>nkFloat:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: NifNodeKind.nkFloat" href="openparser/nif/ast.html#nkFloat">ast: NifNodeKind.nkFloat</a></li>
+          </ul></dd>
+<dt><a name="nkIdent" href="#nkIdent"><span>nkIdent:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: NifNodeKind.nkIdent" href="openparser/nif/ast.html#nkIdent">ast: NifNodeKind.nkIdent</a></li>
+          </ul></dd>
+<dt><a name="nkInt" href="#nkInt"><span>nkInt:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: NifNodeKind.nkInt" href="openparser/nif/ast.html#nkInt">ast: NifNodeKind.nkInt</a></li>
+          </ul></dd>
+<dt><a name="nkStrLit" href="#nkStrLit"><span>nkStrLit:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: NifNodeKind.nkStrLit" href="openparser/nif/ast.html#nkStrLit">ast: NifNodeKind.nkStrLit</a></li>
+          </ul></dd>
+<dt><a name="nkSymbol" href="#nkSymbol"><span>nkSymbol:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: NifNodeKind.nkSymbol" href="openparser/nif/ast.html#nkSymbol">ast: NifNodeKind.nkSymbol</a></li>
+          </ul></dd>
+<dt><a name="nkSymbolDef" href="#nkSymbolDef"><span>nkSymbolDef:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: NifNodeKind.nkSymbolDef" href="openparser/nif/ast.html#nkSymbolDef">ast: NifNodeKind.nkSymbolDef</a></li>
+          </ul></dd>
+<dt><a name="nkUInt" href="#nkUInt"><span>nkUInt:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: NifNodeKind.nkUInt" href="openparser/nif/ast.html#nkUInt">ast: NifNodeKind.nkUInt</a></li>
+          </ul></dd>
 <dt><a name="noMatch" href="#noMatch"><span>noMatch:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="vm: proc noMatch(): MatchResult" href="openparser/regex/vm.html#noMatch">vm: proc noMatch(): MatchResult</a></li>
+          </ul></dd>
+<dt><a name="ntkCharLit" href="#ntkCharLit"><span>ntkCharLit:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkCharLit" href="openparser/nif/lexer.html#ntkCharLit">lexer: NifTokenKind.ntkCharLit</a></li>
+          </ul></dd>
+<dt><a name="ntkDot" href="#ntkDot"><span>ntkDot:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkDot" href="openparser/nif/lexer.html#ntkDot">lexer: NifTokenKind.ntkDot</a></li>
+          </ul></dd>
+<dt><a name="ntkEof" href="#ntkEof"><span>ntkEof:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkEof" href="openparser/nif/lexer.html#ntkEof">lexer: NifTokenKind.ntkEof</a></li>
+          </ul></dd>
+<dt><a name="ntkFloat" href="#ntkFloat"><span>ntkFloat:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkFloat" href="openparser/nif/lexer.html#ntkFloat">lexer: NifTokenKind.ntkFloat</a></li>
+          </ul></dd>
+<dt><a name="ntkIdent" href="#ntkIdent"><span>ntkIdent:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkIdent" href="openparser/nif/lexer.html#ntkIdent">lexer: NifTokenKind.ntkIdent</a></li>
+          </ul></dd>
+<dt><a name="ntkInt" href="#ntkInt"><span>ntkInt:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkInt" href="openparser/nif/lexer.html#ntkInt">lexer: NifTokenKind.ntkInt</a></li>
+          </ul></dd>
+<dt><a name="ntkLBrace" href="#ntkLBrace"><span>ntkLBrace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkLBrace" href="openparser/nif/lexer.html#ntkLBrace">lexer: NifTokenKind.ntkLBrace</a></li>
+          </ul></dd>
+<dt><a name="ntkLBracket" href="#ntkLBracket"><span>ntkLBracket:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkLBracket" href="openparser/nif/lexer.html#ntkLBracket">lexer: NifTokenKind.ntkLBracket</a></li>
+          </ul></dd>
+<dt><a name="ntkLParen" href="#ntkLParen"><span>ntkLParen:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkLParen" href="openparser/nif/lexer.html#ntkLParen">lexer: NifTokenKind.ntkLParen</a></li>
+          </ul></dd>
+<dt><a name="ntkRBrace" href="#ntkRBrace"><span>ntkRBrace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkRBrace" href="openparser/nif/lexer.html#ntkRBrace">lexer: NifTokenKind.ntkRBrace</a></li>
+          </ul></dd>
+<dt><a name="ntkRBracket" href="#ntkRBracket"><span>ntkRBracket:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkRBracket" href="openparser/nif/lexer.html#ntkRBracket">lexer: NifTokenKind.ntkRBracket</a></li>
+          </ul></dd>
+<dt><a name="ntkRParen" href="#ntkRParen"><span>ntkRParen:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkRParen" href="openparser/nif/lexer.html#ntkRParen">lexer: NifTokenKind.ntkRParen</a></li>
+          </ul></dd>
+<dt><a name="ntkStrLit" href="#ntkStrLit"><span>ntkStrLit:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkStrLit" href="openparser/nif/lexer.html#ntkStrLit">lexer: NifTokenKind.ntkStrLit</a></li>
+          </ul></dd>
+<dt><a name="ntkSymbol" href="#ntkSymbol"><span>ntkSymbol:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkSymbol" href="openparser/nif/lexer.html#ntkSymbol">lexer: NifTokenKind.ntkSymbol</a></li>
+          </ul></dd>
+<dt><a name="ntkSymbolDef" href="#ntkSymbolDef"><span>ntkSymbolDef:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkSymbolDef" href="openparser/nif/lexer.html#ntkSymbolDef">lexer: NifTokenKind.ntkSymbolDef</a></li>
+          </ul></dd>
+<dt><a name="ntkUInt" href="#ntkUInt"><span>ntkUInt:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkUInt" href="openparser/nif/lexer.html#ntkUInt">lexer: NifTokenKind.ntkUInt</a></li>
+          </ul></dd>
+<dt><a name="ntkUnknown" href="#ntkUnknown"><span>ntkUnknown:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: NifTokenKind.ntkUnknown" href="openparser/nif/lexer.html#ntkUnknown">lexer: NifTokenKind.ntkUnknown</a></li>
           </ul></dd>
 <dt><a name="ntranslate" href="#ntranslate"><span>ntranslate:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1217,6 +1465,10 @@
 <li><a class="reference external"
           data-doc-search-tag="json: object OpenParserJsonError" href="openparser/json.html#OpenParserJsonError">json: object OpenParserJsonError</a></li>
           </ul></dd>
+<dt><a name="OpenParserNifError" href="#OpenParserNifError"><span>OpenParserNifError:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ast: object OpenParserNifError" href="openparser/nif/ast.html#OpenParserNifError">ast: object OpenParserNifError</a></li>
+          </ul></dd>
 <dt><a name="OpenParserRegexError" href="#OpenParserRegexError"><span>OpenParserRegexError:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="lexer: object OpenParserRegexError" href="openparser/regex/lexer.html#OpenParserRegexError">lexer: object OpenParserRegexError</a></li>
@@ -1240,6 +1492,8 @@
 <dt><a name="openReadOnly" href="#openReadOnly"><span>openReadOnly:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile" href="openparser/json.html#openReadOnly%2Cstring">json: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="nif: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile" href="openparser/nif.html#openReadOnly%2Cstring">nif: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xml: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile" href="openparser/xml.html#openReadOnly%2Cstring">xml: proc openReadOnly(filename: string; allowRemap = false; mapFlags = cint(-1)): MemFile</a></li>
           </ul></dd>
@@ -1398,6 +1652,10 @@
           data-doc-search-tag="yaml: proc parseHook[T: Integers](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_6">yaml: proc parseHook[T: Integers](p: var YamlParser; v: var T)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseHook[T: object](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_7">yaml: proc parseHook[T: object](p: var YamlParser; v: var T)</a></li>
+          </ul></dd>
+<dt><a name="parseModule" href="#parseModule"><span>parseModule:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: proc parseModule(p: var NifParser): NifModule" href="openparser/nif/parser.html#parseModule%2CNifParser">parser: proc parseModule(p: var NifParser): NifModule</a></li>
           </ul></dd>
 <dt><a name="parseObject" href="#parseObject"><span>parseObject:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2357,6 +2615,22 @@
           <li><a class="reference external"
           data-doc-search-tag="json: proc toJsonNode[T](v: T): JsonNode" href="openparser/json.html#toJsonNode%2CT">json: proc toJsonNode[T](v: T): JsonNode</a></li>
           </ul></dd>
+<dt><a name="tokenize" href="#tokenize"><span>tokenize:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: proc tokenize(mf: MemFile): seq[NifToken]" href="openparser/nif/lexer.html#tokenize%2CMemFile">lexer: proc tokenize(mf: MemFile): seq[NifToken]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="lexer: proc tokenize(input: string): seq[NifToken]" href="openparser/nif/lexer.html#tokenize%2Cstring">lexer: proc tokenize(input: string): seq[NifToken]</a></li>
+          </ul></dd>
+<dt><a name="tokenizeNif" href="#tokenizeNif"><span>tokenizeNif:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="parser: proc tokenizeNif(mf: MemFile): seq[NifToken]" href="openparser/nif/parser.html#tokenizeNif%2CMemFile">parser: proc tokenizeNif(mf: MemFile): seq[NifToken]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="parser: proc tokenizeNif(input: string): seq[NifToken]" href="openparser/nif/parser.html#tokenizeNif%2Cstring">parser: proc tokenizeNif(input: string): seq[NifToken]</a></li>
+          </ul></dd>
+<dt><a name="tokens" href="#tokens"><span>tokens:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="lexer: iterator tokens(l: var NifLexer): NifToken" href="openparser/nif/lexer.html#tokens.i%2CNifLexer">lexer: iterator tokens(l: var NifLexer): NifToken</a></li>
+          </ul></dd>
 <dt><a name="TOML" href="#TOML"><span>TOML:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: type TOML" href="openparser/toml.html#TOML">toml: type TOML</a></li>
@@ -2519,11 +2793,15 @@
 <li><a class="reference external"
           data-doc-search-tag="json: const unexpectedChar" href="openparser/json.html#unexpectedChar">json: const unexpectedChar</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="lexer: const unexpectedChar" href="openparser/nif/lexer.html#unexpectedChar">lexer: const unexpectedChar</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="xml: const unexpectedChar" href="openparser/xml.html#unexpectedChar">xml: const unexpectedChar</a></li>
           </ul></dd>
 <dt><a name="unexpectedToken" href="#unexpectedToken"><span>unexpectedToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: const unexpectedToken" href="openparser/json.html#unexpectedToken">json: const unexpectedToken</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="lexer: const unexpectedToken" href="openparser/nif/lexer.html#unexpectedToken">lexer: const unexpectedToken</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xml: const unexpectedToken" href="openparser/xml.html#unexpectedToken">xml: const unexpectedToken</a></li>
           </ul></dd>
@@ -2959,7 +3237,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-26 21:20:44 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-27 00:53:27 UTC</small>
       </div>
     </div>
   </div>
