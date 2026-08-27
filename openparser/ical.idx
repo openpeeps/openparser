@@ -1,0 +1,59 @@
+nimTitle	ical	openparser/ical.html	module openparser/ical		0
+nim	OpenParserIcalError	openparser/ical.html#OpenParserIcalError	object OpenParserIcalError		27
+nim	IcalDateTime	openparser/ical.html#IcalDateTime	object IcalDateTime		29
+nim	IcalDuration	openparser/ical.html#IcalDuration	object IcalDuration		35
+nim	IcalDt	openparser/ical.html#IcalDt	object IcalDt		39
+nim	IcalParam	openparser/ical.html#IcalParam	object IcalParam		43
+nim	IcalProp	openparser/ical.html#IcalProp	object IcalProp		47
+nim	IcalPerson	openparser/ical.html#IcalPerson	object IcalPerson		52
+nim	trkRelative	openparser/ical.html#trkRelative	IcalTriggerKind.trkRelative		57
+nim	trkAbsolute	openparser/ical.html#trkAbsolute	IcalTriggerKind.trkAbsolute		57
+nim	IcalTriggerKind	openparser/ical.html#IcalTriggerKind	enum IcalTriggerKind		57
+nim	IcalTrigger	openparser/ical.html#IcalTrigger	object IcalTrigger		58
+nim	IcalAlarm	openparser/ical.html#IcalAlarm	type IcalAlarm		63
+nim	IcalTzObservance	openparser/ical.html#IcalTzObservance	type IcalTzObservance		73
+nim	IcalTimezone	openparser/ical.html#IcalTimezone	type IcalTimezone		81
+nim	IcalEvent	openparser/ical.html#IcalEvent	type IcalEvent		87
+nim	IcalTodo	openparser/ical.html#IcalTodo	type IcalTodo		114
+nim	IcalJournal	openparser/ical.html#IcalJournal	type IcalJournal		138
+nim	IcalGenericSub	openparser/ical.html#IcalGenericSub	object IcalGenericSub		150
+nim	IcalOther	openparser/ical.html#IcalOther	type IcalOther		155
+nim	cckEvent	openparser/ical.html#cckEvent	IcalComponentKind.cckEvent		160
+nim	cckTodo	openparser/ical.html#cckTodo	IcalComponentKind.cckTodo		160
+nim	cckJournal	openparser/ical.html#cckJournal	IcalComponentKind.cckJournal		160
+nim	cckTimezone	openparser/ical.html#cckTimezone	IcalComponentKind.cckTimezone		160
+nim	cckOther	openparser/ical.html#cckOther	IcalComponentKind.cckOther		160
+nim	IcalComponentKind	openparser/ical.html#IcalComponentKind	enum IcalComponentKind		160
+nim	IcalComponent	openparser/ical.html#IcalComponent	type IcalComponent		163
+nim	IcalCalendar	openparser/ical.html#IcalCalendar	type IcalCalendar		171
+nim	IcalCrlf	openparser/ical.html#IcalCrlf	const IcalCrlf		179
+nim	norm	openparser/ical.html#norm,string	proc norm(s: string): string		184
+nim	failIcal	openparser/ical.html#failIcal,int,string,string	proc failIcal(lineNo: int; lineText, msg: string)		186
+nim	icalError	openparser/ical.html#icalError,string	proc icalError(msg: string)		190
+nim	getParam	openparser/ical.html#getParam,IcalProp,string	proc getParam(prop: IcalProp; name: string): Option[IcalParam]		193
+nim	hasParam	openparser/ical.html#hasParam,IcalProp,string	proc hasParam(prop: IcalProp; name: string): bool		199
+nim	paramFirst	openparser/ical.html#paramFirst,IcalProp,string	proc paramFirst(prop: IcalProp; name: string): Option[string]		201
+nim	unescapeIcalText	openparser/ical.html#unescapeIcalText,string	proc unescapeIcalText(s: string): string		208
+nim	escapeIcalText	openparser/ical.html#escapeIcalText,string	proc escapeIcalText(s: string): string		222
+nim	splitEscapedComma	openparser/ical.html#splitEscapedComma,string	proc splitEscapedComma(s: string): seq[string]		233
+nim	joinEscapedComma	openparser/ical.html#joinEscapedComma,seq[string]	proc joinEscapedComma(items: seq[string]): string		250
+nim	parseIcalDateTime	openparser/ical.html#parseIcalDateTime,string	proc parseIcalDateTime(s: string): IcalDateTime		258
+nim	formatIcalDateTime	openparser/ical.html#formatIcalDateTime,IcalDateTime	proc formatIcalDateTime(dt: IcalDateTime): string		295
+nim	parseIcalDt	openparser/ical.html#parseIcalDt,IcalProp	proc parseIcalDt(prop: IcalProp): IcalDt		307
+nim	parseIcalDuration	openparser/ical.html#parseIcalDuration,string	proc parseIcalDuration(s: string): IcalDuration		314
+nim	formatIcalDuration	openparser/ical.html#formatIcalDuration,IcalDuration	proc formatIcalDuration(d: IcalDuration): string		357
+nim	totalSeconds	openparser/ical.html#totalSeconds,IcalDuration	proc totalSeconds(d: IcalDuration): int64		369
+nim	parseIcalTrigger	openparser/ical.html#parseIcalTrigger,string	proc parseIcalTrigger(s: string): IcalTrigger		380
+nim	formatIcalTrigger	openparser/ical.html#formatIcalTrigger,IcalTrigger	proc formatIcalTrigger(t: IcalTrigger): string		389
+nim	parseIcalPerson	openparser/ical.html#parseIcalPerson,IcalProp	proc parseIcalPerson(prop: IcalProp): IcalPerson		396
+nim	formatPersonProp	openparser/ical.html#formatPersonProp,string,IcalPerson	proc formatPersonProp(name: string; p: IcalPerson): IcalProp		401
+nim	parseContentLine	openparser/ical.html#parseContentLine,int,string	proc parseContentLine(lineNo: int; text: string): IcalProp		419
+nim	propLine	openparser/ical.html#propLine,IcalProp	proc propLine(prop: IcalProp): string		514
+nim	unfoldLines	openparser/ical.html#unfoldLines,string	proc unfoldLines(input: string): seq[LLine]		534
+nim	findProp	openparser/ical.html#findProp,seq[IcalProp],string	proc findProp(props: seq[IcalProp]; name: string): Option[IcalProp]		655
+nim	buildCalendar	openparser/ical.html#buildCalendar,CompTree	proc buildCalendar(tree: CompTree): IcalCalendar		861
+nim	parseIcal	openparser/ical.html#parseIcal,string	proc parseIcal(input: string): IcalCalendar		879
+nim	parseIcalFile	openparser/ical.html#parseIcalFile,string	proc parseIcalFile(path: string): IcalCalendar		901
+nim	writeIcalDt	openparser/ical.html#writeIcalDt,IcalDt	proc writeIcalDt(d: IcalDt): string		907
+nim	toIcal	openparser/ical.html#toIcal,IcalCalendar	proc toIcal(cal: IcalCalendar): string		1090
+nim	`$`	openparser/ical.html#$,IcalCalendar	proc `$`(cal: IcalCalendar): string		1113

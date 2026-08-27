@@ -28,10 +28,12 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/nif.html">openparser/nif</a>, <a href="openparser/nif/ast.html">openparser/nif/ast</a>, <a href="openparser/nif/lexer.html">openparser/nif/lexer</a>, <a href="openparser/nif/parser.html">openparser/nif/parser</a>, <a href="openparser/private/json_simd.html">openparser/private/json_simd</a>, <a href="openparser/private/lexutils.html">openparser/private/lexutils</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/private/xml_simd.html">openparser/private/xml_simd</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/jit/compiler.html">openparser/regex/jit/compiler</a>, <a href="openparser/regex/jit/jit_mem.html">openparser/regex/jit/jit_mem</a>, <a href="openparser/regex/jit/wrapper.html">openparser/regex/jit/wrapper</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/xml.html">openparser/xml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="index.html">openparser</a>, <a href="openparser/bson.html">openparser/bson</a>, <a href="openparser/csv.html">openparser/csv</a>, <a href="openparser/dotenv.html">openparser/dotenv</a>, <a href="openparser/fbe.html">openparser/fbe</a>, <a href="openparser/feed.html">openparser/feed</a>, <a href="openparser/gettext/mo.html">openparser/gettext/mo</a>, <a href="openparser/gettext/po.html">openparser/gettext/po</a>, <a href="openparser/ical.html">openparser/ical</a>, <a href="openparser/json.html">openparser/json</a>, <a href="openparser/nif.html">openparser/nif</a>, <a href="openparser/nif/ast.html">openparser/nif/ast</a>, <a href="openparser/nif/lexer.html">openparser/nif/lexer</a>, <a href="openparser/nif/parser.html">openparser/nif/parser</a>, <a href="openparser/private/json_simd.html">openparser/private/json_simd</a>, <a href="openparser/private/lexutils.html">openparser/private/lexutils</a>, <a href="openparser/private/types.html">openparser/private/types</a>, <a href="openparser/private/xml_simd.html">openparser/private/xml_simd</a>, <a href="openparser/regex/compiler.html">openparser/regex/compiler</a>, <a href="openparser/regex/jit/compiler.html">openparser/regex/jit/compiler</a>, <a href="openparser/regex/jit/jit_mem.html">openparser/regex/jit/jit_mem</a>, <a href="openparser/regex/jit/wrapper.html">openparser/regex/jit/wrapper</a>, <a href="openparser/regex/lexer.html">openparser/regex/lexer</a>, <a href="openparser/regex/parser.html">openparser/regex/parser</a>, <a href="openparser/regex/prefilter.html">openparser/regex/prefilter</a>, <a href="openparser/regex/simd.html">openparser/regex/simd</a>, <a href="openparser/regex/vm.html">openparser/regex/vm</a>, <a href="openparser/rss.html">openparser/rss</a>, <a href="openparser/toml.html">openparser/toml</a>, <a href="openparser/xml.html">openparser/xml</a>, <a href="openparser/yaml.html">openparser/yaml</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="csv: proc `$`(f: CsvFieldSlice): string" href="openparser/csv.html#%24%2CCsvFieldSlice">csv: proc `$`(f: CsvFieldSlice): string</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="ical: proc `$`(cal: IcalCalendar): string" href="openparser/ical.html#%24%2CIcalCalendar">ical: proc `$`(cal: IcalCalendar): string</a></li>
           <li><a class="reference external"
           data-doc-search-tag="ast: proc `$`(n: NifNode): string" href="openparser/nif/ast.html#%24%2CNifNode">ast: proc `$`(n: NifNode): string</a></li>
           <li><a class="reference external"
@@ -197,6 +199,10 @@
 <li><a class="reference external"
           data-doc-search-tag="fbe: object Buffer" href="openparser/fbe.html#Buffer">fbe: object Buffer</a></li>
           </ul></dd>
+<dt><a name="buildCalendar" href="#buildCalendar"><span>buildCalendar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc buildCalendar(tree: CompTree): IcalCalendar" href="openparser/ical.html#buildCalendar%2CCompTree">ical: proc buildCalendar(tree: CompTree): IcalCalendar</a></li>
+          </ul></dd>
 <dt><a name="buildClassBitmap" href="#buildClassBitmap"><span>buildClassBitmap:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="compiler: proc buildClassBitmap(cls: var CompiledClass)" href="openparser/regex/compiler.html#buildClassBitmap%2CCompiledClass">compiler: proc buildClassBitmap(cls: var CompiledClass)</a></li>
@@ -212,6 +218,26 @@
 <dt><a name="Captures" href="#Captures"><span>Captures:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="vm: type Captures" href="openparser/regex/vm.html#Captures">vm: type Captures</a></li>
+          </ul></dd>
+<dt><a name="cckEvent" href="#cckEvent"><span>cckEvent:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: IcalComponentKind.cckEvent" href="openparser/ical.html#cckEvent">ical: IcalComponentKind.cckEvent</a></li>
+          </ul></dd>
+<dt><a name="cckJournal" href="#cckJournal"><span>cckJournal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: IcalComponentKind.cckJournal" href="openparser/ical.html#cckJournal">ical: IcalComponentKind.cckJournal</a></li>
+          </ul></dd>
+<dt><a name="cckOther" href="#cckOther"><span>cckOther:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: IcalComponentKind.cckOther" href="openparser/ical.html#cckOther">ical: IcalComponentKind.cckOther</a></li>
+          </ul></dd>
+<dt><a name="cckTimezone" href="#cckTimezone"><span>cckTimezone:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: IcalComponentKind.cckTimezone" href="openparser/ical.html#cckTimezone">ical: IcalComponentKind.cckTimezone</a></li>
+          </ul></dd>
+<dt><a name="cckTodo" href="#cckTodo"><span>cckTodo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: IcalComponentKind.cckTodo" href="openparser/ical.html#cckTodo">ical: IcalComponentKind.cckTodo</a></li>
           </ul></dd>
 <dt><a name="charAt" href="#charAt"><span>charAt:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -639,6 +665,10 @@
 <li><a class="reference external"
           data-doc-search-tag="json: const errorMaxDepth" href="openparser/json.html#errorMaxDepth">json: const errorMaxDepth</a></li>
           </ul></dd>
+<dt><a name="escapeIcalText" href="#escapeIcalText"><span>escapeIcalText:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc escapeIcalText(s: string): string" href="openparser/ical.html#escapeIcalText%2Cstring">ical: proc escapeIcalText(s: string): string</a></li>
+          </ul></dd>
 <dt><a name="expandValue" href="#expandValue"><span>expandValue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="dotenv: proc expandValue(value: string; local: var Table[string, string];
@@ -658,6 +688,10 @@
 <dt><a name="extractPrefilter" href="#extractPrefilter"><span>extractPrefilter:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="prefilter: proc extractPrefilter(prog: Program): Prefilter" href="openparser/regex/prefilter.html#extractPrefilter%2CProgram">prefilter: proc extractPrefilter(prog: Program): Prefilter</a></li>
+          </ul></dd>
+<dt><a name="failIcal" href="#failIcal"><span>failIcal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc failIcal(lineNo: int; lineText, msg: string)" href="openparser/ical.html#failIcal%2Cint%2Cstring%2Cstring">ical: proc failIcal(lineNo: int; lineText, msg: string)</a></li>
           </ul></dd>
 <dt><a name="fetchAtom" href="#fetchAtom"><span>fetchAtom:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -691,6 +725,10 @@
           <li><a class="reference external"
           data-doc-search-tag="vm: proc findAll(pattern, input: string): seq[MatchResult]" href="openparser/regex/vm.html#findAll%2Cstring%2Cstring">vm: proc findAll(pattern, input: string): seq[MatchResult]</a></li>
           </ul></dd>
+<dt><a name="findProp" href="#findProp"><span>findProp:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc findProp(props: seq[IcalProp]; name: string): Option[IcalProp]" href="openparser/ical.html#findProp%2Cseq%5BIcalProp%5D%2Cstring">ical: proc findProp(props: seq[IcalProp]; name: string): Option[IcalProp]</a></li>
+          </ul></dd>
 <dt><a name="fnv1a" href="#fnv1a"><span>fnv1a:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc fnv1a(s: string): uint32" href="openparser/json.html#fnv1a%2Cstring">json: proc fnv1a(s: string): uint32</a></li>
@@ -698,6 +736,22 @@
 <dt><a name="form" href="#form"><span>form:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="mo: proc form(cat: MoCatalog; msgid: string; formIdx: int; msgctxt = &quot;&quot;): string" href="openparser/gettext/mo.html#form%2CMoCatalog%2Cstring%2Cint%2Cstring">mo: proc form(cat: MoCatalog; msgid: string; formIdx: int; msgctxt = &quot;&quot;): string</a></li>
+          </ul></dd>
+<dt><a name="formatIcalDateTime" href="#formatIcalDateTime"><span>formatIcalDateTime:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc formatIcalDateTime(dt: IcalDateTime): string" href="openparser/ical.html#formatIcalDateTime%2CIcalDateTime">ical: proc formatIcalDateTime(dt: IcalDateTime): string</a></li>
+          </ul></dd>
+<dt><a name="formatIcalDuration" href="#formatIcalDuration"><span>formatIcalDuration:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc formatIcalDuration(d: IcalDuration): string" href="openparser/ical.html#formatIcalDuration%2CIcalDuration">ical: proc formatIcalDuration(d: IcalDuration): string</a></li>
+          </ul></dd>
+<dt><a name="formatIcalTrigger" href="#formatIcalTrigger"><span>formatIcalTrigger:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc formatIcalTrigger(t: IcalTrigger): string" href="openparser/ical.html#formatIcalTrigger%2CIcalTrigger">ical: proc formatIcalTrigger(t: IcalTrigger): string</a></li>
+          </ul></dd>
+<dt><a name="formatPersonProp" href="#formatPersonProp"><span>formatPersonProp:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc formatPersonProp(name: string; p: IcalPerson): IcalProp" href="openparser/ical.html#formatPersonProp%2Cstring%2CIcalPerson">ical: proc formatPersonProp(name: string; p: IcalPerson): IcalProp</a></li>
           </ul></dd>
 <dt><a name="freeJit" href="#freeJit"><span>freeJit:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -831,6 +885,10 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc getObject(n: YamlNode): OrderedTableRef[string, YamlNode]" href="openparser/yaml.html#getObject%2CYamlNode">yaml: proc getObject(n: YamlNode): OrderedTableRef[string, YamlNode]</a></li>
           </ul></dd>
+<dt><a name="getParam" href="#getParam"><span>getParam:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc getParam(prop: IcalProp; name: string): Option[IcalParam]" href="openparser/ical.html#getParam%2CIcalProp%2Cstring">ical: proc getParam(prop: IcalProp; name: string): Option[IcalParam]</a></li>
+          </ul></dd>
 <dt><a name="get_regex_actions" href="#get_regex_actions"><span>get_regex_actions:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="wrapper: proc get_regex_actions(): pointer" href="openparser/regex/jit/wrapper.html#get_regex_actions">wrapper: proc get_regex_actions(): pointer</a></li>
@@ -889,6 +947,10 @@
 <li><a class="reference external"
           data-doc-search-tag="types: proc hasKind(node: NimNode; kind: NimNodeKind): bool" href="openparser/private/types.html#hasKind%2CNimNode%2CNimNodeKind">types: proc hasKind(node: NimNode; kind: NimNodeKind): bool</a></li>
           </ul></dd>
+<dt><a name="hasParam" href="#hasParam"><span>hasParam:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc hasParam(prop: IcalProp; name: string): bool" href="openparser/ical.html#hasParam%2CIcalProp%2Cstring">ical: proc hasParam(prop: IcalProp; name: string): bool</a></li>
+          </ul></dd>
 <dt><a name="hasSse2" href="#hasSse2"><span>hasSse2:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json_simd: const hasSse2" href="openparser/private/json_simd.html#hasSse2">json_simd: const hasSse2</a></li>
@@ -900,6 +962,90 @@
 <dt><a name="headerEntryIndex" href="#headerEntryIndex"><span>headerEntryIndex:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="po: proc headerEntryIndex(cat: PoCatalog): int" href="openparser/gettext/po.html#headerEntryIndex%2CPoCatalog">po: proc headerEntryIndex(cat: PoCatalog): int</a></li>
+          </ul></dd>
+<dt><a name="IcalAlarm" href="#IcalAlarm"><span>IcalAlarm:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: type IcalAlarm" href="openparser/ical.html#IcalAlarm">ical: type IcalAlarm</a></li>
+          </ul></dd>
+<dt><a name="IcalCalendar" href="#IcalCalendar"><span>IcalCalendar:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: type IcalCalendar" href="openparser/ical.html#IcalCalendar">ical: type IcalCalendar</a></li>
+          </ul></dd>
+<dt><a name="IcalComponent" href="#IcalComponent"><span>IcalComponent:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: type IcalComponent" href="openparser/ical.html#IcalComponent">ical: type IcalComponent</a></li>
+          </ul></dd>
+<dt><a name="IcalComponentKind" href="#IcalComponentKind"><span>IcalComponentKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: enum IcalComponentKind" href="openparser/ical.html#IcalComponentKind">ical: enum IcalComponentKind</a></li>
+          </ul></dd>
+<dt><a name="IcalCrlf" href="#IcalCrlf"><span>IcalCrlf:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: const IcalCrlf" href="openparser/ical.html#IcalCrlf">ical: const IcalCrlf</a></li>
+          </ul></dd>
+<dt><a name="IcalDateTime" href="#IcalDateTime"><span>IcalDateTime:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: object IcalDateTime" href="openparser/ical.html#IcalDateTime">ical: object IcalDateTime</a></li>
+          </ul></dd>
+<dt><a name="IcalDt" href="#IcalDt"><span>IcalDt:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: object IcalDt" href="openparser/ical.html#IcalDt">ical: object IcalDt</a></li>
+          </ul></dd>
+<dt><a name="IcalDuration" href="#IcalDuration"><span>IcalDuration:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: object IcalDuration" href="openparser/ical.html#IcalDuration">ical: object IcalDuration</a></li>
+          </ul></dd>
+<dt><a name="icalError" href="#icalError"><span>icalError:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc icalError(msg: string)" href="openparser/ical.html#icalError%2Cstring">ical: proc icalError(msg: string)</a></li>
+          </ul></dd>
+<dt><a name="IcalEvent" href="#IcalEvent"><span>IcalEvent:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: type IcalEvent" href="openparser/ical.html#IcalEvent">ical: type IcalEvent</a></li>
+          </ul></dd>
+<dt><a name="IcalGenericSub" href="#IcalGenericSub"><span>IcalGenericSub:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: object IcalGenericSub" href="openparser/ical.html#IcalGenericSub">ical: object IcalGenericSub</a></li>
+          </ul></dd>
+<dt><a name="IcalJournal" href="#IcalJournal"><span>IcalJournal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: type IcalJournal" href="openparser/ical.html#IcalJournal">ical: type IcalJournal</a></li>
+          </ul></dd>
+<dt><a name="IcalOther" href="#IcalOther"><span>IcalOther:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: type IcalOther" href="openparser/ical.html#IcalOther">ical: type IcalOther</a></li>
+          </ul></dd>
+<dt><a name="IcalParam" href="#IcalParam"><span>IcalParam:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: object IcalParam" href="openparser/ical.html#IcalParam">ical: object IcalParam</a></li>
+          </ul></dd>
+<dt><a name="IcalPerson" href="#IcalPerson"><span>IcalPerson:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: object IcalPerson" href="openparser/ical.html#IcalPerson">ical: object IcalPerson</a></li>
+          </ul></dd>
+<dt><a name="IcalProp" href="#IcalProp"><span>IcalProp:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: object IcalProp" href="openparser/ical.html#IcalProp">ical: object IcalProp</a></li>
+          </ul></dd>
+<dt><a name="IcalTimezone" href="#IcalTimezone"><span>IcalTimezone:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: type IcalTimezone" href="openparser/ical.html#IcalTimezone">ical: type IcalTimezone</a></li>
+          </ul></dd>
+<dt><a name="IcalTodo" href="#IcalTodo"><span>IcalTodo:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: type IcalTodo" href="openparser/ical.html#IcalTodo">ical: type IcalTodo</a></li>
+          </ul></dd>
+<dt><a name="IcalTrigger" href="#IcalTrigger"><span>IcalTrigger:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: object IcalTrigger" href="openparser/ical.html#IcalTrigger">ical: object IcalTrigger</a></li>
+          </ul></dd>
+<dt><a name="IcalTriggerKind" href="#IcalTriggerKind"><span>IcalTriggerKind:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: enum IcalTriggerKind" href="openparser/ical.html#IcalTriggerKind">ical: enum IcalTriggerKind</a></li>
+          </ul></dd>
+<dt><a name="IcalTzObservance" href="#IcalTzObservance"><span>IcalTzObservance:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: type IcalTzObservance" href="openparser/ical.html#IcalTzObservance">ical: type IcalTzObservance</a></li>
           </ul></dd>
 <dt><a name="initBuffer" href="#initBuffer"><span>initBuffer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -980,6 +1126,10 @@
 <dt><a name="jitScan" href="#jitScan"><span>jitScan:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="compiler: proc jitScan(cj: CompiledJit; input: string; fromPos = 0): tuple[start, stop: int]" href="openparser/regex/jit/compiler.html#jitScan%2CCompiledJit%2Cstring%2Cint">compiler: proc jitScan(cj: CompiledJit; input: string; fromPos = 0): tuple[start, stop: int]</a></li>
+          </ul></dd>
+<dt><a name="joinEscapedComma" href="#joinEscapedComma"><span>joinEscapedComma:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc joinEscapedComma(items: seq[string]): string" href="openparser/ical.html#joinEscapedComma%2Cseq%5Bstring%5D">ical: proc joinEscapedComma(items: seq[string]): string</a></li>
           </ul></dd>
 <dt><a name="json" href="#json"><span>json:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1347,6 +1497,10 @@
 <li><a class="reference external"
           data-doc-search-tag="vm: proc noMatch(): MatchResult" href="openparser/regex/vm.html#noMatch">vm: proc noMatch(): MatchResult</a></li>
           </ul></dd>
+<dt><a name="norm" href="#norm"><span>norm:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc norm(s: string): string" href="openparser/ical.html#norm%2Cstring">ical: proc norm(s: string): string</a></li>
+          </ul></dd>
 <dt><a name="ntkCharLit" href="#ntkCharLit"><span>ntkCharLit:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="lexer: NifTokenKind.ntkCharLit" href="openparser/nif/lexer.html#ntkCharLit">lexer: NifTokenKind.ntkCharLit</a></li>
@@ -1461,6 +1615,10 @@
 <li><a class="reference external"
           data-doc-search-tag="mo: proc openMoCatalog(path: string): MoCatalog" href="openparser/gettext/mo.html#openMoCatalog%2Cstring">mo: proc openMoCatalog(path: string): MoCatalog</a></li>
           </ul></dd>
+<dt><a name="OpenParserIcalError" href="#OpenParserIcalError"><span>OpenParserIcalError:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: object OpenParserIcalError" href="openparser/ical.html#OpenParserIcalError">ical: object OpenParserIcalError</a></li>
+          </ul></dd>
 <dt><a name="OpenParserJsonError" href="#OpenParserJsonError"><span>OpenParserJsonError:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: object OpenParserJsonError" href="openparser/json.html#OpenParserJsonError">json: object OpenParserJsonError</a></li>
@@ -1533,6 +1691,10 @@
 <li><a class="reference external"
           data-doc-search-tag="compiler: OpCode.opWordBoundary" href="openparser/regex/compiler.html#opWordBoundary">compiler: OpCode.opWordBoundary</a></li>
           </ul></dd>
+<dt><a name="paramFirst" href="#paramFirst"><span>paramFirst:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc paramFirst(prop: IcalProp; name: string): Option[string]" href="openparser/ical.html#paramFirst%2CIcalProp%2Cstring">ical: proc paramFirst(prop: IcalProp; name: string): Option[string]</a></li>
+          </ul></dd>
 <dt><a name="parse" href="#parse"><span>parse:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="parser: proc parse(p: var RegexParser): RegexNode" href="openparser/regex/parser.html#parse%2CRegexParser">parser: proc parse(p: var RegexParser): RegexNode</a></li>
@@ -1540,6 +1702,10 @@
 <dt><a name="parseAtom" href="#parseAtom"><span>parseAtom:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="feed: proc parseAtom(xml: string): AtomFeed" href="openparser/feed.html#parseAtom%2Cstring">feed: proc parseAtom(xml: string): AtomFeed</a></li>
+          </ul></dd>
+<dt><a name="parseContentLine" href="#parseContentLine"><span>parseContentLine:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc parseContentLine(lineNo: int; text: string): IcalProp" href="openparser/ical.html#parseContentLine%2Cint%2Cstring">ical: proc parseContentLine(lineNo: int; text: string): IcalProp</a></li>
           </ul></dd>
 <dt><a name="parseCsv" href="#parseCsv"><span>parseCsv:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1652,6 +1818,34 @@
           data-doc-search-tag="yaml: proc parseHook[T: Integers](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_6">yaml: proc parseHook[T: Integers](p: var YamlParser; v: var T)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseHook[T: object](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseHook%2CYamlParser%2CT_7">yaml: proc parseHook[T: object](p: var YamlParser; v: var T)</a></li>
+          </ul></dd>
+<dt><a name="parseIcal" href="#parseIcal"><span>parseIcal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc parseIcal(input: string): IcalCalendar" href="openparser/ical.html#parseIcal%2Cstring">ical: proc parseIcal(input: string): IcalCalendar</a></li>
+          </ul></dd>
+<dt><a name="parseIcalDateTime" href="#parseIcalDateTime"><span>parseIcalDateTime:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc parseIcalDateTime(s: string): IcalDateTime" href="openparser/ical.html#parseIcalDateTime%2Cstring">ical: proc parseIcalDateTime(s: string): IcalDateTime</a></li>
+          </ul></dd>
+<dt><a name="parseIcalDt" href="#parseIcalDt"><span>parseIcalDt:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc parseIcalDt(prop: IcalProp): IcalDt" href="openparser/ical.html#parseIcalDt%2CIcalProp">ical: proc parseIcalDt(prop: IcalProp): IcalDt</a></li>
+          </ul></dd>
+<dt><a name="parseIcalDuration" href="#parseIcalDuration"><span>parseIcalDuration:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc parseIcalDuration(s: string): IcalDuration" href="openparser/ical.html#parseIcalDuration%2Cstring">ical: proc parseIcalDuration(s: string): IcalDuration</a></li>
+          </ul></dd>
+<dt><a name="parseIcalFile" href="#parseIcalFile"><span>parseIcalFile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc parseIcalFile(path: string): IcalCalendar" href="openparser/ical.html#parseIcalFile%2Cstring">ical: proc parseIcalFile(path: string): IcalCalendar</a></li>
+          </ul></dd>
+<dt><a name="parseIcalPerson" href="#parseIcalPerson"><span>parseIcalPerson:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc parseIcalPerson(prop: IcalProp): IcalPerson" href="openparser/ical.html#parseIcalPerson%2CIcalProp">ical: proc parseIcalPerson(prop: IcalProp): IcalPerson</a></li>
+          </ul></dd>
+<dt><a name="parseIcalTrigger" href="#parseIcalTrigger"><span>parseIcalTrigger:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc parseIcalTrigger(s: string): IcalTrigger" href="openparser/ical.html#parseIcalTrigger%2Cstring">ical: proc parseIcalTrigger(s: string): IcalTrigger</a></li>
           </ul></dd>
 <dt><a name="parseModule" href="#parseModule"><span>parseModule:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1830,6 +2024,10 @@
 <dt><a name="Program" href="#Program"><span>Program:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="compiler: object Program" href="openparser/regex/compiler.html#Program">compiler: object Program</a></li>
+          </ul></dd>
+<dt><a name="propLine" href="#propLine"><span>propLine:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc propLine(prop: IcalProp): string" href="openparser/ical.html#propLine%2CIcalProp">ical: proc propLine(prop: IcalProp): string</a></li>
           </ul></dd>
 <dt><a name="psAlphaWordStar" href="#psAlphaWordStar"><span>psAlphaWordStar:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2505,6 +2703,10 @@
 <li><a class="reference external"
           data-doc-search-tag="po: object Span" href="openparser/gettext/po.html#Span">po: object Span</a></li>
           </ul></dd>
+<dt><a name="splitEscapedComma" href="#splitEscapedComma"><span>splitEscapedComma:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc splitEscapedComma(s: string): seq[string]" href="openparser/ical.html#splitEscapedComma%2Cstring">ical: proc splitEscapedComma(s: string): seq[string]</a></li>
+          </ul></dd>
 <dt><a name="str" href="#str"><span>str:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="vm: proc str(g: CaptureGroup; input: string): string" href="openparser/regex/vm.html#str%2CCaptureGroup%2Cstring">vm: proc str(g: CaptureGroup; input: string): string</a></li>
@@ -2605,6 +2807,10 @@
 <li><a class="reference external"
           data-doc-search-tag="bson: proc toBytes(doc: BSONDocument): seq[byte]" href="openparser/bson.html#toBytes%2CBSONDocument">bson: proc toBytes(doc: BSONDocument): seq[byte]</a></li>
           </ul></dd>
+<dt><a name="toIcal" href="#toIcal"><span>toIcal:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc toIcal(cal: IcalCalendar): string" href="openparser/ical.html#toIcal%2CIcalCalendar">ical: proc toIcal(cal: IcalCalendar): string</a></li>
+          </ul></dd>
 <dt><a name="toJson" href="#toJson"><span>toJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc toJson[T](v: T; opts: JsonOptions = nil): string" href="openparser/json.html#toJson%2CT%2CJsonOptions">json: proc toJson[T](v: T; opts: JsonOptions = nil): string</a></li>
@@ -2679,6 +2885,10 @@
           <li><a class="reference external"
           data-doc-search-tag="po: proc toString(cat: PoCatalog; s: Span): string" href="openparser/gettext/po.html#toString%2CPoCatalog%2CSpan">po: proc toString(cat: PoCatalog; s: Span): string</a></li>
           </ul></dd>
+<dt><a name="totalSeconds" href="#totalSeconds"><span>totalSeconds:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc totalSeconds(d: IcalDuration): int64" href="openparser/ical.html#totalSeconds%2CIcalDuration">ical: proc totalSeconds(d: IcalDuration): int64</a></li>
+          </ul></dd>
 <dt><a name="toXml" href="#toXml"><span>toXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xml: proc toXml[T](v: T; opts: XmlOptions = nil): string" href="openparser/xml.html#toXml%2CT%2CXmlOptions">xml: proc toXml[T](v: T; opts: XmlOptions = nil): string</a></li>
@@ -2696,6 +2906,14 @@
           data-doc-search-tag="mo: proc translate(cc: MoCompiledCatalog; msgid: string; msgctxt = &quot;&quot;): string" href="openparser/gettext/mo.html#translate%2CMoCompiledCatalog%2Cstring%2Cstring">mo: proc translate(cc: MoCompiledCatalog; msgid: string; msgctxt = &quot;&quot;): string</a></li>
           <li><a class="reference external"
           data-doc-search-tag="po: proc translate(cc: PoCompiledCatalog; msgid: string; msgctxt = &quot;&quot;): string" href="openparser/gettext/po.html#translate%2CPoCompiledCatalog%2Cstring%2Cstring">po: proc translate(cc: PoCompiledCatalog; msgid: string; msgctxt = &quot;&quot;): string</a></li>
+          </ul></dd>
+<dt><a name="trkAbsolute" href="#trkAbsolute"><span>trkAbsolute:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: IcalTriggerKind.trkAbsolute" href="openparser/ical.html#trkAbsolute">ical: IcalTriggerKind.trkAbsolute</a></li>
+          </ul></dd>
+<dt><a name="trkRelative" href="#trkRelative"><span>trkRelative:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: IcalTriggerKind.trkRelative" href="openparser/ical.html#trkRelative">ical: IcalTriggerKind.trkRelative</a></li>
           </ul></dd>
 <dt><a name="ttkBoolean" href="#ttkBoolean"><span>ttkBoolean:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2789,6 +3007,10 @@
 <li><a class="reference external"
           data-doc-search-tag="toml: TomlValueKind.tvkTable" href="openparser/toml.html#tvkTable">toml: TomlValueKind.tvkTable</a></li>
           </ul></dd>
+<dt><a name="unescapeIcalText" href="#unescapeIcalText"><span>unescapeIcalText:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc unescapeIcalText(s: string): string" href="openparser/ical.html#unescapeIcalText%2Cstring">ical: proc unescapeIcalText(s: string): string</a></li>
+          </ul></dd>
 <dt><a name="unexpectedChar" href="#unexpectedChar"><span>unexpectedChar:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: const unexpectedChar" href="openparser/json.html#unexpectedChar">json: const unexpectedChar</a></li>
@@ -2810,6 +3032,10 @@
           data-doc-search-tag="json: const unexpectedTokenExpected" href="openparser/json.html#unexpectedTokenExpected">json: const unexpectedTokenExpected</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xml: const unexpectedTokenExpected" href="openparser/xml.html#unexpectedTokenExpected">xml: const unexpectedTokenExpected</a></li>
+          </ul></dd>
+<dt><a name="unfoldLines" href="#unfoldLines"><span>unfoldLines:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc unfoldLines(input: string): seq[LLine]" href="openparser/ical.html#unfoldLines%2Cstring">ical: proc unfoldLines(input: string): seq[LLine]</a></li>
           </ul></dd>
 <dt><a name="writeArrayFixed" href="#writeArrayFixed"><span>writeArrayFixed:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2908,6 +3134,10 @@
                 writeVal: proc (b: var Buffer; v: V))" href="openparser/fbe.html#writeHash%2CBuffer%2Cseq%5Btuple%5BK%2CV%5D%5D%2Cproc%28Buffer%2CK%29%2Cproc%28Buffer%2CV%29">fbe: proc writeHash[K, V](b: var Buffer; items: seq[tuple[key: K, val: V]];
                 writeKey: proc (b: var Buffer; k: K);
                 writeVal: proc (b: var Buffer; v: V))</a></li>
+          </ul></dd>
+<dt><a name="writeIcalDt" href="#writeIcalDt"><span>writeIcalDt:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="ical: proc writeIcalDt(d: IcalDt): string" href="openparser/ical.html#writeIcalDt%2CIcalDt">ical: proc writeIcalDt(d: IcalDt): string</a></li>
           </ul></dd>
 <dt><a name="writeInt16LE" href="#writeInt16LE"><span>writeInt16LE:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3237,7 +3467,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-27 00:53:27 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-27 08:50:14 UTC</small>
       </div>
     </div>
   </div>
