@@ -81,8 +81,17 @@
   of yamlNull:
     nil">YamlNode</a></li>
 <li><a class="reference" href="#YAMLObject_2" title="YAMLObject = OrderedTableRef[string, YamlNode]">YAMLObject</a></li>
+<li><a class="reference" href="#YamlOptions" title="YamlOptions = ref object
+  maxDepth*: int             ## Maximum nesting depth for objects/arrays. 0 = no limit.
+  allowDuplicateKeys*: bool  ## When false (default), duplicate mapping keys raise. When true, last wins.
+  allowYaml11Booleans*: bool ## When true, accepts YAML 1.1 booleans (yes/no/on/off, case-insensitive).
+  strictTabs*: bool          ## When true, tabs used as indentation raise. Default true per §6.1.
+  allowTabsAsIndent*: bool   ## Deprecated alias for non-strict tabs. Prefer strictTabs.">YamlOptions</a></li>
 <li><a class="reference" href="#YamlParser" title="YamlParser = object
-  prev*, curr*, next*: YamlToken">YamlParser</a></li>
+  prev*, curr*, next*: YamlToken
+  options*: YamlOptions
+  depth*: int
+  anchors*: Table[string, YamlNode]">YamlParser</a></li>
 <li><a class="reference" href="#YamlToken" title="YamlToken = ref object
   kind*: YamlTokenKind
   value*: string
@@ -95,7 +104,9 @@
   ytkEOF = &quot;EOF&quot;, ytkIdentifier = &quot;Identifier&quot;, ytkColon = &quot;:&quot;, ytkComma = &quot;,&quot;,
   ytkDash = &quot;-&quot;, ytkLB = &quot;[&quot;, ytkRB = &quot;]&quot;, ytkLC = &quot;{&quot;, ytkRC = &quot;}&quot;,
   ytkPipe = &quot;|&quot;, ytkGT = &quot;&gt;&quot;, ytkQuote = &quot;\&quot;&quot;, ytkSingleQuote = &quot;\'&quot;, ytkString,
-  ytkFloat, ytkInteger, ytkBoolean, ytkComment, ytkUnknown">YamlTokenKind</a></li>
+  ytkFloat, ytkInteger, ytkBoolean, ytkComment, ytkAnchor = &quot;&amp;&quot;, ytkAlias = &quot;*&quot;,
+  ytkTag = &quot;!&quot;, ytkQuestion = &quot;?&quot;, ytkDocumentStart = &quot;---&quot;,
+  ytkDocumentEnd = &quot;...&quot;, ytkDirective = &quot;%&quot;, ytkUnknown">YamlTokenKind</a></li>
 <li><a class="reference" href="#YamlValueKind" title="YamlValueKind = enum
   yamlInteger, yamlFloat, yamlString, yamlBoolean, yamlObject, yamlArray,
   yamlNull">YamlValueKind</a></li>
@@ -113,6 +124,10 @@
 </ul>
 <ul class="simple nested-toc-section">advance
   <li><a class="reference" href="#advance%2CYamlParser" title="advance(p: var YamlParser)">advance(p: var YamlParser)</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">defaultYamlOptions
+  <li><a class="reference" href="#defaultYamlOptions" title="defaultYamlOptions(): YamlOptions">defaultYamlOptions(): YamlOptions</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">dump
@@ -163,6 +178,10 @@
 </ul>
 <ul class="simple nested-toc-section">getValue
   <li><a class="reference" href="#getValue%2CYamlNode" title="getValue(v: YamlNode): string">getValue(v: YamlNode): string</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">initYamlParser
+  <li><a class="reference" href="#initYamlParser%2CYAML%2CYamlOptions" title="initYamlParser(input: YAML; opts: YamlOptions = nil): YamlParser">initYamlParser(input: YAML; opts: YamlOptions = nil): YamlParser</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">newYamlArray
@@ -222,8 +241,13 @@
 </ul>
 <ul class="simple nested-toc-section">parseYAML
   <li><a class="reference" href="#parseYAML%2CYAML" title="parseYAML(input: YAML): YAMLObject">parseYAML(input: YAML): YAMLObject</a></li>
+<li><a class="reference" href="#parseYAML%2CYAML%2CYamlOptions" title="parseYAML(input: YAML; opts: YamlOptions): YAMLObject">parseYAML(input: YAML; opts: YamlOptions): YAMLObject</a></li>
 <li><a class="reference" href="#parseYAML%2CYamlParser%2CT" title="parseYAML[T: object | ref object](p: var YamlParser; v: var T)">parseYAML[T: object | ref object](p: var YamlParser; v: var T)</a></li>
 <li><a class="reference" href="#parseYAML%2CYAML%2Ctypedesc%5BT%5D" title="parseYAML[T](input: YAML; t: typedesc[T]): T">parseYAML[T](input: YAML; t: typedesc[T]): T</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">parseYAMLStream
+  <li><a class="reference" href="#parseYAMLStream%2CYAML%2CYamlOptions" title="parseYAMLStream(input: YAML; opts: YamlOptions = nil): seq[YAMLObject]">parseYAMLStream(input: YAML; opts: YamlOptions = nil): seq[YAMLObject]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">put
@@ -330,13 +354,29 @@
   <dt><pre><a href="#YAMLObject"><span class="Identifier">YAMLObject</span></a> <span class="Other">=</span> <span class="Identifier">OrderedTableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span></pre></dt>
   <dd>
     
-    Represents a simple 
+    Represents a simple mapping (root document)
+    
+  </dd>
+</div>
+<div id="YamlOptions">
+  <dt><pre><a href="#YamlOptions"><span class="Identifier">YamlOptions</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <span class="Identifier">maxDepth</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>             <span class="Comment">## Maximum nesting depth for objects/arrays. 0 = no limit.</span>
+  <span class="Identifier">allowDuplicateKeys</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>  <span class="Comment">## When false (default), duplicate mapping keys raise. When true, last wins.</span>
+  <span class="Identifier">allowYaml11Booleans</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Comment">## When true, accepts YAML 1.1 booleans (yes/no/on/off, case-insensitive).</span>
+  <span class="Identifier">strictTabs</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>          <span class="Comment">## When true, tabs used as indentation raise. Default true per §6.1.</span>
+  <span class="Identifier">allowTabsAsIndent</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>   <span class="Comment">## Deprecated alias for non-strict tabs. Prefer strictTabs.</span></pre></dt>
+  <dd>
+    
+    Options controlling YAML parsing strictness and extensions
     
   </dd>
 </div>
 <div id="YamlParser">
   <dt><pre><a href="#YamlParser"><span class="Identifier">YamlParser</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
-  <span class="Identifier">prev</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">curr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">next</span><span class="Operator">*</span><span class="Other">:</span> <a href="#YamlToken"><span class="Identifier">YamlToken</span></a></pre></dt>
+  <span class="Identifier">prev</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">curr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">next</span><span class="Operator">*</span><span class="Other">:</span> <a href="#YamlToken"><span class="Identifier">YamlToken</span></a>
+  <span class="Identifier">options</span><span class="Operator">*</span><span class="Other">:</span> <a href="#YamlOptions"><span class="Identifier">YamlOptions</span></a>
+  <span class="Identifier">depth</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
+  <span class="Identifier">anchors</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span></pre></dt>
   <dd>
     
     Parses a sequence of tokens from the YamlLexer to build a YAMLObject
@@ -363,7 +403,9 @@
   <span class="Identifier">ytkEOF</span> <span class="Other">=</span> <span class="StringLit">&quot;EOF&quot;</span><span class="Other">,</span> <span class="Identifier">ytkIdentifier</span> <span class="Other">=</span> <span class="StringLit">&quot;Identifier&quot;</span><span class="Other">,</span> <span class="Identifier">ytkColon</span> <span class="Other">=</span> <span class="StringLit">&quot;:&quot;</span><span class="Other">,</span> <span class="Identifier">ytkComma</span> <span class="Other">=</span> <span class="StringLit">&quot;,&quot;</span><span class="Other">,</span>
   <span class="Identifier">ytkDash</span> <span class="Other">=</span> <span class="StringLit">&quot;-&quot;</span><span class="Other">,</span> <span class="Identifier">ytkLB</span> <span class="Other">=</span> <span class="StringLit">&quot;[&quot;</span><span class="Other">,</span> <span class="Identifier">ytkRB</span> <span class="Other">=</span> <span class="StringLit">&quot;]&quot;</span><span class="Other">,</span> <span class="Identifier">ytkLC</span> <span class="Other">=</span> <span class="StringLit">&quot;{&quot;</span><span class="Other">,</span> <span class="Identifier">ytkRC</span> <span class="Other">=</span> <span class="StringLit">&quot;}&quot;</span><span class="Other">,</span>
   <span class="Identifier">ytkPipe</span> <span class="Other">=</span> <span class="StringLit">&quot;|&quot;</span><span class="Other">,</span> <span class="Identifier">ytkGT</span> <span class="Other">=</span> <span class="StringLit">&quot;&gt;&quot;</span><span class="Other">,</span> <span class="Identifier">ytkQuote</span> <span class="Other">=</span> <span class="StringLit">&quot;\&quot;&quot;</span><span class="Other">,</span> <span class="Identifier">ytkSingleQuote</span> <span class="Other">=</span> <span class="StringLit">&quot;\'&quot;</span><span class="Other">,</span> <span class="Identifier">ytkString</span><span class="Other">,</span>
-  <span class="Identifier">ytkFloat</span><span class="Other">,</span> <span class="Identifier">ytkInteger</span><span class="Other">,</span> <span class="Identifier">ytkBoolean</span><span class="Other">,</span> <span class="Identifier">ytkComment</span><span class="Other">,</span> <span class="Identifier">ytkUnknown</span></pre></dt>
+  <span class="Identifier">ytkFloat</span><span class="Other">,</span> <span class="Identifier">ytkInteger</span><span class="Other">,</span> <span class="Identifier">ytkBoolean</span><span class="Other">,</span> <span class="Identifier">ytkComment</span><span class="Other">,</span> <span class="Identifier">ytkAnchor</span> <span class="Other">=</span> <span class="StringLit">&quot;&amp;&quot;</span><span class="Other">,</span> <span class="Identifier">ytkAlias</span> <span class="Other">=</span> <span class="StringLit">&quot;*&quot;</span><span class="Other">,</span>
+  <span class="Identifier">ytkTag</span> <span class="Other">=</span> <span class="StringLit">&quot;!&quot;</span><span class="Other">,</span> <span class="Identifier">ytkQuestion</span> <span class="Other">=</span> <span class="StringLit">&quot;?&quot;</span><span class="Other">,</span> <span class="Identifier">ytkDocumentStart</span> <span class="Other">=</span> <span class="StringLit">&quot;---&quot;</span><span class="Other">,</span>
+  <span class="Identifier">ytkDocumentEnd</span> <span class="Other">=</span> <span class="StringLit">&quot;...&quot;</span><span class="Other">,</span> <span class="Identifier">ytkDirective</span> <span class="Other">=</span> <span class="StringLit">&quot;%&quot;</span><span class="Other">,</span> <span class="Identifier">ytkUnknown</span></pre></dt>
   <dd>
     
     
@@ -399,11 +441,22 @@
 </div>
 <div id="advance-procs-all">
   <div id="advance,YamlParser">
-  <dt><pre><span class="Keyword">proc</span> <a href="#advance%2CYamlParser"><span class="Identifier">advance</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
-                                  <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#advance%2CYamlParser"><span class="Identifier">advance</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span>
+    <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Move to the next token, skipping comments
+    
+  </dd>
+</div>
+
+</div>
+<div id="defaultYamlOptions-procs-all">
+  <div id="defaultYamlOptions">
+  <dt><pre><span class="Keyword">proc</span> <a href="#defaultYamlOptions"><span class="Identifier">defaultYamlOptions</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlOptions"><span class="Identifier">YamlOptions</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Default options: strict Core Schema, last-wins for duplicate keys disabled? Use true for compat
     
   </dd>
 </div>
@@ -563,6 +616,18 @@
 </div>
 
 </div>
+<div id="initYamlParser-procs-all">
+  <div id="initYamlParser,YAML,YamlOptions">
+  <dt><pre><span class="Keyword">proc</span> <a href="#initYamlParser%2CYAML%2CYamlOptions"><span class="Identifier">initYamlParser</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="#YAML"><span class="Identifier">YAML</span></a><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="#YamlOptions"><span class="Identifier">YamlOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+
+</div>
 <div id="newYamlArray-procs-all">
   <div id="newYamlArray">
   <dt><pre><span class="Keyword">proc</span> <a href="#newYamlArray"><span class="Identifier">newYamlArray</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
@@ -612,7 +677,7 @@
   <dt><pre><span class="Keyword">proc</span> <a href="#newYamlLexer%2Cstring"><span class="Identifier">newYamlLexer</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#YamlLexer"><span class="Identifier">YamlLexer</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Create a new YamlLexer for the given input string
+    Create a new YamlLexer for the given input string, stripping BOM per §5.2
     
   </dd>
 </div>
@@ -653,8 +718,8 @@
 </div>
 <div id="nextToken-procs-all">
   <div id="nextToken,YamlParser">
-  <dt><pre><span class="Keyword">proc</span> <a href="#nextToken%2CYamlParser"><span class="Identifier">nextToken</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#YamlToken"><span class="Identifier">YamlToken</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#nextToken%2CYamlParser"><span class="Identifier">nextToken</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#YamlToken"><span class="Identifier">YamlToken</span></a> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Lexical analysis to produce the next token from the input
@@ -665,8 +730,8 @@
 </div>
 <div id="parseHook-procs-all">
   <div id="parseHook,YamlParser,bool">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2Cbool"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2Cbool"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">bool</span><span class="Other">)</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -675,7 +740,8 @@
 </div>
 <div id="parseHook,YamlParser,JsonNode">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2CJsonNode"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">JsonNode</span><span class="Other">)</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Parse YAML value (scalar, array, or mapping) into a JsonNode
@@ -684,7 +750,7 @@
 </div>
 <div id="parseHook,YamlParser,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2Cstring"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">string</span><span class="Other">)</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -735,7 +801,7 @@
   <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CYamlParser%2CT_6"><span class="Identifier">parseHook</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <a href="private/types.html#Integers"><span class="Identifier">Integers</span></a><span class="Other">]</span><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
-    A hook to parse integer fields
+    A hook to parse integer fields (supports 0o/0x/_ , alias)
     
   </dd>
 </div>
@@ -800,7 +866,18 @@
 <div id="parseYAML-procs-all">
   <div id="parseYAML,YAML">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseYAML%2CYAML"><span class="Identifier">parseYAML</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="#YAML"><span class="Identifier">YAML</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#YAMLObject"><span class="Identifier">YAMLObject</span></a> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+<div id="parseYAML,YAML,YamlOptions">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAML%2CYAML%2CYamlOptions"><span class="Identifier">parseYAML</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="#YAML"><span class="Identifier">YAML</span></a><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="#YamlOptions"><span class="Identifier">YamlOptions</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#YAMLObject"><span class="Identifier">YAMLObject</span></a> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -820,6 +897,19 @@
   <dd>
     
     Parse YAML string into a Nim object or sequence of type <tt class="docutils literal"><span class="pre"><span class="Identifier">T</span></span></tt>
+    
+  </dd>
+</div>
+
+</div>
+<div id="parseYAMLStream-procs-all">
+  <div id="parseYAMLStream,YAML,YamlOptions">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAMLStream%2CYAML%2CYamlOptions"><span class="Identifier">parseYAMLStream</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="#YAML"><span class="Identifier">YAML</span></a><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="#YamlOptions"><span class="Identifier">YamlOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#YAMLObject"><span class="Identifier">YAMLObject</span></a><span class="Other">]</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Parse multi-document stream, returning each document as YAMLObject
     
   </dd>
 </div>
@@ -885,7 +975,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-27 08:50:13 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-27 18:35:29 UTC</small>
       </div>
     </div>
   </div>

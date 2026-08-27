@@ -389,6 +389,10 @@
 <li><a class="reference external"
           data-doc-search-tag="ast: proc defaultNifOptions(): NifOptions" href="openparser/nif/ast.html#defaultNifOptions">ast: proc defaultNifOptions(): NifOptions</a></li>
           </ul></dd>
+<dt><a name="defaultYamlOptions" href="#defaultYamlOptions"><span>defaultYamlOptions:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc defaultYamlOptions(): YamlOptions" href="openparser/yaml.html#defaultYamlOptions">yaml: proc defaultYamlOptions(): YamlOptions</a></li>
+          </ul></dd>
 <dt><a name="del" href="#del"><span>del:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="dotenv: proc del(key: string)" href="openparser/dotenv.html#del%2Cstring">dotenv: proc del(key: string)</a></li>
@@ -1070,6 +1074,10 @@
 <dt><a name="initRegexVM" href="#initRegexVM"><span>initRegexVM:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="vm: proc initRegexVM(prog: Program): RegexVM" href="openparser/regex/vm.html#initRegexVM%2CProgram">vm: proc initRegexVM(prog: Program): RegexVM</a></li>
+          </ul></dd>
+<dt><a name="initYamlParser" href="#initYamlParser"><span>initYamlParser:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc initYamlParser(input: YAML; opts: YamlOptions = nil): YamlParser" href="openparser/yaml.html#initYamlParser%2CYAML%2CYamlOptions">yaml: proc initYamlParser(input: YAML; opts: YamlOptions = nil): YamlParser</a></li>
           </ul></dd>
 <dt><a name="INNER_HEADER_SIZE" href="#INNER_HEADER_SIZE"><span>INNER_HEADER_SIZE:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1881,11 +1889,17 @@
           <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseYAML[T](input: YAML; t: typedesc[T]): T" href="openparser/yaml.html#parseYAML%2CYAML%2Ctypedesc%5BT%5D">yaml: proc parseYAML[T](input: YAML; t: typedesc[T]): T</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="yaml: proc parseYAML(input: YAML; opts: YamlOptions): YAMLObject" href="openparser/yaml.html#parseYAML%2CYAML%2CYamlOptions">yaml: proc parseYAML(input: YAML; opts: YamlOptions): YAMLObject</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="yaml: proc parseYAML[T: object | ref object](p: var YamlParser; v: var T)" href="openparser/yaml.html#parseYAML%2CYamlParser%2CT">yaml: proc parseYAML[T: object | ref object](p: var YamlParser; v: var T)</a></li>
           </ul></dd>
 <dt><a name="parseYamlMappingPairs" href="#parseYamlMappingPairs"><span>parseYamlMappingPairs:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="yaml: template parseYamlMappingPairs(body: untyped)" href="openparser/yaml.html#parseYamlMappingPairs.t%2Cuntyped">yaml: template parseYamlMappingPairs(body: untyped)</a></li>
+          </ul></dd>
+<dt><a name="parseYAMLStream" href="#parseYAMLStream"><span>parseYAMLStream:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: proc parseYAMLStream(input: YAML; opts: YamlOptions = nil): seq[YAMLObject]" href="openparser/yaml.html#parseYAMLStream%2CYAML%2CYamlOptions">yaml: proc parseYAMLStream(input: YAML; opts: YamlOptions = nil): seq[YAMLObject]</a></li>
           </ul></dd>
 <dt><a name="patchUint16At" href="#patchUint16At"><span>patchUint16At:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3367,6 +3381,10 @@
 <li><a class="reference external"
           data-doc-search-tag="yaml: type YAMLObject" href="openparser/yaml.html#YAMLObject_2">yaml: type YAMLObject</a></li>
           </ul></dd>
+<dt><a name="YamlOptions" href="#YamlOptions"><span>YamlOptions:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: type YamlOptions" href="openparser/yaml.html#YamlOptions">yaml: type YamlOptions</a></li>
+          </ul></dd>
 <dt><a name="YamlParser" href="#YamlParser"><span>YamlParser:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="yaml: object YamlParser" href="openparser/yaml.html#YamlParser">yaml: object YamlParser</a></li>
@@ -3387,6 +3405,14 @@
 <li><a class="reference external"
           data-doc-search-tag="yaml: enum YamlValueKind" href="openparser/yaml.html#YamlValueKind">yaml: enum YamlValueKind</a></li>
           </ul></dd>
+<dt><a name="ytkAlias" href="#ytkAlias"><span>ytkAlias:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: YamlTokenKind.ytkAlias" href="openparser/yaml.html#ytkAlias">yaml: YamlTokenKind.ytkAlias</a></li>
+          </ul></dd>
+<dt><a name="ytkAnchor" href="#ytkAnchor"><span>ytkAnchor:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: YamlTokenKind.ytkAnchor" href="openparser/yaml.html#ytkAnchor">yaml: YamlTokenKind.ytkAnchor</a></li>
+          </ul></dd>
 <dt><a name="ytkBoolean" href="#ytkBoolean"><span>ytkBoolean:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="yaml: YamlTokenKind.ytkBoolean" href="openparser/yaml.html#ytkBoolean">yaml: YamlTokenKind.ytkBoolean</a></li>
@@ -3406,6 +3432,18 @@
 <dt><a name="ytkDash" href="#ytkDash"><span>ytkDash:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="yaml: YamlTokenKind.ytkDash" href="openparser/yaml.html#ytkDash">yaml: YamlTokenKind.ytkDash</a></li>
+          </ul></dd>
+<dt><a name="ytkDirective" href="#ytkDirective"><span>ytkDirective:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: YamlTokenKind.ytkDirective" href="openparser/yaml.html#ytkDirective">yaml: YamlTokenKind.ytkDirective</a></li>
+          </ul></dd>
+<dt><a name="ytkDocumentEnd" href="#ytkDocumentEnd"><span>ytkDocumentEnd:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: YamlTokenKind.ytkDocumentEnd" href="openparser/yaml.html#ytkDocumentEnd">yaml: YamlTokenKind.ytkDocumentEnd</a></li>
+          </ul></dd>
+<dt><a name="ytkDocumentStart" href="#ytkDocumentStart"><span>ytkDocumentStart:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: YamlTokenKind.ytkDocumentStart" href="openparser/yaml.html#ytkDocumentStart">yaml: YamlTokenKind.ytkDocumentStart</a></li>
           </ul></dd>
 <dt><a name="ytkEOF" href="#ytkEOF"><span>ytkEOF:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3439,6 +3477,10 @@
 <li><a class="reference external"
           data-doc-search-tag="yaml: YamlTokenKind.ytkPipe" href="openparser/yaml.html#ytkPipe">yaml: YamlTokenKind.ytkPipe</a></li>
           </ul></dd>
+<dt><a name="ytkQuestion" href="#ytkQuestion"><span>ytkQuestion:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: YamlTokenKind.ytkQuestion" href="openparser/yaml.html#ytkQuestion">yaml: YamlTokenKind.ytkQuestion</a></li>
+          </ul></dd>
 <dt><a name="ytkQuote" href="#ytkQuote"><span>ytkQuote:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="yaml: YamlTokenKind.ytkQuote" href="openparser/yaml.html#ytkQuote">yaml: YamlTokenKind.ytkQuote</a></li>
@@ -3459,6 +3501,10 @@
 <li><a class="reference external"
           data-doc-search-tag="yaml: YamlTokenKind.ytkString" href="openparser/yaml.html#ytkString">yaml: YamlTokenKind.ytkString</a></li>
           </ul></dd>
+<dt><a name="ytkTag" href="#ytkTag"><span>ytkTag:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="yaml: YamlTokenKind.ytkTag" href="openparser/yaml.html#ytkTag">yaml: YamlTokenKind.ytkTag</a></li>
+          </ul></dd>
 <dt><a name="ytkUnknown" href="#ytkUnknown"><span>ytkUnknown:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="yaml: YamlTokenKind.ytkUnknown" href="openparser/yaml.html#ytkUnknown">yaml: YamlTokenKind.ytkUnknown</a></li>
@@ -3467,7 +3513,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-27 08:50:14 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-27 18:35:30 UTC</small>
       </div>
     </div>
   </div>
