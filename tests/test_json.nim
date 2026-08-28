@@ -15,12 +15,16 @@ type
   Person = ref object
     case `type`: MemberType
     of mtAdmin:
-      adminLevel: int
+      adminLevel*: int
     else: discard
     name: string
     age: int
     address: Address
     friends: seq[Person]
+
+  Params = object
+    path*: string
+    count*: int
 
 suite "Deserializers":
   test "Direct-to-Object Parsing":
@@ -53,6 +57,14 @@ suite "Deserializers":
     check data["friends"].kind == JArray
     check data["friends"][0].getStr == "Bob"
     check data["friends"][1].getStr == "Charlie"
+
+  test "Direct-to-Object parsing with public fields":
+    let args = %*{"path": "/tmp/test", "count": 5}
+    echo $args
+    let p = fromJson($args, Params)
+    echo toJson(p) # {"path":"","count":0}
+    check p.path == "/tmp/test"
+    check p.count == 5
 
   test "JSONL Parsing":
     let jsonLStr = """

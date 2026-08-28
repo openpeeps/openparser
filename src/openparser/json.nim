@@ -468,7 +468,6 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
   let strObj = newStmtList()
   var i = 0
   let res = genSym(nskVar, "res")
-  var len = valImpl[2].len
   for field in valImpl[2]:
     case field.kind
     of nnkSym:
@@ -477,11 +476,9 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
         if opts.skipFields.len > 0 and opts.skipFields.contains(fieldName):
           inc i
           continue
-      if i != 0 and i < len:
+      if i != 0:
         strObj.add(newCall(ident"add", res, newLit(",")))
-      let fieldLit = newLit(fieldName)
-      # Check for json pragma at compile time - supersedes field name
-      let wireNameLit = 
+      let wireNameLit =
         if field.hasCustomPragma(json):
           field.getCustomPragmaVal(json)
         else:
@@ -489,7 +486,6 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
       let wireName = genSym(nskVar, "wireName")
       strObj.add quote do:
         var `wireName` = `wireNameLit`
-        # renameHook supersedes pragma
         when compiles(renameHook(`v`, `wireName`)):
           renameHook(`v`, `wireName`)
         `res`.add("\"" & `wireName` & "\":")
@@ -506,63 +502,44 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
       )
       inc i
     of nnkIdentDefs:
-      # Field with pragma or type annotation
-      let fieldNode = field[0]  # First child is the field name (with pragma)
-      case fieldNode.kind
-      of nnkPragmaExpr:
-        # Field has a pragma - extract field name and check for json pragma
-        let symNode = fieldNode[0]  # The actual field name symbol
-        let fieldName = 
-          if symNode.kind == nnkSym: symNode.strVal
-          elif symNode.kind == nnkIdent: symNode.strVal
-          else: ""
+      # May contain multiple field names (e.g. a*, b: int) plus type and default val
+      for idx in 0 ..< field.len - 2:
+        let nameNode = field[idx]
+        var actualNameNode: NimNode
+        var pragmaNode: NimNode = nil
+        case nameNode.kind
+        of nnkPostfix:
+          actualNameNode = nameNode[1]
+        of nnkPragmaExpr:
+          let inner = nameNode[0]
+          case inner.kind
+          of nnkPostfix: actualNameNode = inner[1]
+          else: actualNameNode = inner
+          pragmaNode = nameNode[1]
+        of nnkIdent, nnkSym:
+          actualNameNode = nameNode
+        else:
+          continue
+        if actualNameNode.kind notin {nnkIdent, nnkSym}:
+          continue
+        let fieldName = actualNameNode.strVal
         if fieldName.len == 0:
-          inc i
           continue
         if opts != nil:
           if opts.skipFields.len > 0 and opts.skipFields.contains(fieldName):
             inc i
             continue
-        if i != 0 and i < len:
+        if i != 0:
           strObj.add(newCall(ident"add", res, newLit(",")))
-        # Check for json pragma manually
         var wireNameLit = newLit(fieldName)
-        let pragmaNode = fieldNode[1]  # nnkPragma
-        if pragmaNode.kind == nnkPragma:
+        if pragmaNode != nil and pragmaNode.kind == nnkPragma:
           for pragmaChild in pragmaNode:
-            if pragmaChild.kind == nnkCall:
+            if pragmaChild.kind in {nnkCall, nnkExprColonExpr}:
               let pragmaName = pragmaChild[0]
-              if pragmaName.kind == nnkSym and pragmaName.strVal == "json":
-                wireNameLit = pragmaChild[1]  # Return the pragma value
-        let wireName = genSym(nskVar, "wireName")
-        strObj.add quote do:
-          var `wireName` = `wireNameLit`
-          # renameHook supersedes pragma
-          when compiles(renameHook(`v`, `wireName`)):
-            renameHook(`v`, `wireName`)
-          `res`.add("\"" & `wireName` & "\":")
-        strObj.add(
-          nnkWhenStmt.newTree(
-            nnkElifBranch.newTree(
-              nnkCall.newTree(
-                ident("compiles"),
-                newCall(ident("dumpHook"), res, newDotExpr(v, ident(fieldName)))
-              ),
-              newCall(ident("dumpHook"), res, newDotExpr(v, ident(fieldName)))
-            )
-          )
-        )
-        inc i
-      of nnkIdent, nnkSym:
-        # Simple field without pragma
-        let fieldName = fieldNode.strVal
-        if opts != nil:
-          if opts.skipFields.len > 0 and opts.skipFields.contains(fieldName):
-            inc i
-            continue
-        if i != 0 and i < len:
-          strObj.add(newCall(ident"add", res, newLit(",")))
-        let wireNameLit = newLit(fieldName)
+              let pName = if pragmaName.kind == nnkSym: pragmaName.strVal else: $pragmaName
+              if pName == "json":
+                # pragma value may be StrLit
+                wireNameLit = pragmaChild[1]
         let wireName = genSym(nskVar, "wireName")
         strObj.add quote do:
           var `wireName` = `wireNameLit`
@@ -581,8 +558,6 @@ proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode =
           )
         )
         inc i
-      else:
-        discard
     of nnkRecCase:
       discard
     else:
@@ -1511,27 +1486,38 @@ macro fromJsonMacro(x: typed, str: typed): untyped =
       let fieldName = field.strVal
       fields.add((fieldName, fieldName, int(fnv1a(fieldName))))
     of nnkIdentDefs:
-      let fieldNode = field[0]
-      case fieldNode.kind
-      of nnkPragmaExpr:
-        let symNode = fieldNode[0]
-        let fieldName = if symNode.kind in {nnkSym, nnkIdent}: symNode.strVal else: ""
+      for idx in 0 ..< field.len - 2:
+        let nameNode = field[idx]
+        var actualNameNode: NimNode
+        var pragmaNode: NimNode = nil
+        case nameNode.kind
+        of nnkPostfix:
+          actualNameNode = nameNode[1]
+        of nnkPragmaExpr:
+          let inner = nameNode[0]
+          case inner.kind
+          of nnkPostfix: actualNameNode = inner[1]
+          else: actualNameNode = inner
+          pragmaNode = nameNode[1]
+        of nnkIdent, nnkSym:
+          actualNameNode = nameNode
+        else:
+          continue
+        if actualNameNode.kind notin {nnkIdent, nnkSym}:
+          continue
+        let fieldName = actualNameNode.strVal
         if fieldName.len == 0:
           continue
         var wireName = fieldName
-        let pragmaNode = fieldNode[1]
-        if pragmaNode.kind == nnkPragma:
+        if pragmaNode != nil and pragmaNode.kind == nnkPragma:
           for pragmaChild in pragmaNode:
-            if pragmaChild.kind == nnkCall:
+            if pragmaChild.kind in {nnkCall, nnkExprColonExpr}:
               let pragmaName = pragmaChild[0]
-              if pragmaName.kind == nnkSym and pragmaName.strVal == "json":
+              let pName = if pragmaName.kind == nnkSym: pragmaName.strVal else: $pragmaName
+              if pName == "json":
+                # pragma value may be StrLit
                 wireName = pragmaChild[1].strVal
         fields.add((fieldName, wireName, int(fnv1a(wireName))))
-      of nnkIdent, nnkSym:
-        let fieldName = fieldNode.strVal
-        fields.add((fieldName, fieldName, int(fnv1a(fieldName))))
-      else:
-        discard
     else:
       discard
 
@@ -1726,27 +1712,37 @@ macro fromJsonMacroOpts(x: typed, str: typed, opts: JsonOptions): untyped =
       let fieldName = field.strVal
       fields.add((fieldName, fieldName, int(fnv1a(fieldName))))
     of nnkIdentDefs:
-      let fieldNode = field[0]
-      case fieldNode.kind
-      of nnkPragmaExpr:
-        let symNode = fieldNode[0]
-        let fieldName = if symNode.kind in {nnkSym, nnkIdent}: symNode.strVal else: ""
+      for idx in 0 ..< field.len - 2:
+        let nameNode = field[idx]
+        var actualNameNode: NimNode
+        var pragmaNode: NimNode = nil
+        case nameNode.kind
+        of nnkPostfix:
+          actualNameNode = nameNode[1]
+        of nnkPragmaExpr:
+          let inner = nameNode[0]
+          case inner.kind
+          of nnkPostfix: actualNameNode = inner[1]
+          else: actualNameNode = inner
+          pragmaNode = nameNode[1]
+        of nnkIdent, nnkSym:
+          actualNameNode = nameNode
+        else:
+          continue
+        if actualNameNode.kind notin {nnkIdent, nnkSym}:
+          continue
+        let fieldName = actualNameNode.strVal
         if fieldName.len == 0:
           continue
         var wireName = fieldName
-        let pragmaNode = fieldNode[1]
-        if pragmaNode.kind == nnkPragma:
+        if pragmaNode != nil and pragmaNode.kind == nnkPragma:
           for pragmaChild in pragmaNode:
-            if pragmaChild.kind == nnkCall:
+            if pragmaChild.kind in {nnkCall, nnkExprColonExpr}:
               let pragmaName = pragmaChild[0]
-              if pragmaName.kind == nnkSym and pragmaName.strVal == "json":
+              let pName = if pragmaName.kind == nnkSym: pragmaName.strVal else: $pragmaName
+              if pName == "json":
                 wireName = pragmaChild[1].strVal
         fields.add((fieldName, wireName, int(fnv1a(wireName))))
-      of nnkIdent, nnkSym:
-        let fieldName = fieldNode.strVal
-        fields.add((fieldName, fieldName, int(fnv1a(fieldName))))
-      else:
-        discard
     else:
       discard
 
@@ -1875,10 +1871,25 @@ macro toJsonNodeMacro(v: typed): JsonNode =
   of nnkSym:
     typeSym = tInst
   of nnkBracketExpr:
-    typeSym = tInst[1]
+    # Generic instance like seq[Foo] or Option[Foo] – not a plain object
+    if tInst.len > 1 and tInst[1].kind == nnkSym:
+      typeSym = tInst[1]
+    else:
+      return quote do:
+        fromJson(toJson(`v`))
   else:
-    typeSym = tInst
-  var valImpl = typeSym.getImpl()
+    return quote do:
+      fromJson(toJson(`v`))
+  # typeSym must be a symbol to call getImpl
+  if typeSym.kind != nnkSym:
+    return quote do:
+      fromJson(toJson(`v`))
+  var valImpl: NimNode
+  try:
+    valImpl = typeSym.getImpl()
+  except:
+    return quote do:
+      fromJson(toJson(`v`))
 
   # Unwrap type definition to get object body
   var tObj: NimNode
@@ -1917,7 +1928,6 @@ macro toJsonNodeMacro(v: typed): JsonNode =
     case field.kind
     of nnkSym:
       let fieldName = field.strVal
-      let wireNameLit = newStrLitNode(fieldName)
       let fieldDot = newDotExpr(v, ident(fieldName))
       let parseCall = newCall(ident"toJsonNode", fieldDot)
       let keyVal = newStrLitNode(fieldName)
@@ -1925,20 +1935,35 @@ macro toJsonNodeMacro(v: typed): JsonNode =
       let assign = newAssignment(bracket, parseCall)
       fieldAssignments.add assign
     of nnkIdentDefs:
-      let fieldNode = field[0]
-      case fieldNode.kind
-      of nnkPragmaExpr:
-        let symNode = fieldNode[0]
-        let fieldName = if symNode.kind in {nnkSym, nnkIdent}: symNode.strVal else: ""
+      for idx in 0 ..< field.len - 2:
+        let nameNode = field[idx]
+        var actualNameNode: NimNode
+        var pragmaNode: NimNode = nil
+        case nameNode.kind
+        of nnkPostfix:
+          actualNameNode = nameNode[1]
+        of nnkPragmaExpr:
+          let inner = nameNode[0]
+          case inner.kind
+          of nnkPostfix: actualNameNode = inner[1]
+          else: actualNameNode = inner
+          pragmaNode = nameNode[1]
+        of nnkIdent, nnkSym:
+          actualNameNode = nameNode
+        else:
+          continue
+        if actualNameNode.kind notin {nnkIdent, nnkSym}:
+          continue
+        let fieldName = actualNameNode.strVal
         if fieldName.len == 0:
           continue
         var wireName = fieldName
-        let pragmaNode = fieldNode[1]
-        if pragmaNode.kind == nnkPragma:
+        if pragmaNode != nil and pragmaNode.kind == nnkPragma:
           for pragmaChild in pragmaNode:
-            if pragmaChild.kind == nnkCall:
+            if pragmaChild.kind in {nnkCall, nnkExprColonExpr}:
               let pragmaName = pragmaChild[0]
-              if pragmaName.kind == nnkSym and pragmaName.strVal == "json":
+              let pName = if pragmaName.kind == nnkSym: pragmaName.strVal else: $pragmaName
+              if pName == "json":
                 wireName = pragmaChild[1].strVal
         let fieldDot = newDotExpr(v, ident(fieldName))
         let parseCall = newCall(ident"toJsonNode", fieldDot)
@@ -1946,16 +1971,6 @@ macro toJsonNodeMacro(v: typed): JsonNode =
         let bracket = nnkBracketExpr.newTree(objSym, keyVal)
         let assign = newAssignment(bracket, parseCall)
         fieldAssignments.add assign
-      of nnkIdent, nnkSym:
-        let fieldName = fieldNode.strVal
-        let fieldDot = newDotExpr(v, ident(fieldName))
-        let parseCall = newCall(ident"toJsonNode", fieldDot)
-        let keyVal = newStrLitNode(fieldName)
-        let bracket = nnkBracketExpr.newTree(objSym, keyVal)
-        let assign = newAssignment(bracket, parseCall)
-        fieldAssignments.add assign
-      else:
-        discard
     else:
       discard
 
