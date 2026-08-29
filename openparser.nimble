@@ -2,7 +2,7 @@
 
 version       = "0.3.0"
 author        = "George Lemon"
-description   = "Tiny parsers and serializers for JSON, CSV, RSS, Atom feeds, QR codes and more"
+description   = "Tiny parsers and serializers for JSON, YAML, XML, TOML, CSV, BSON, Plist (XML+Binary), RSS, QR codes and more"
 license       = "MIT"
 srcDir        = "src"
 
