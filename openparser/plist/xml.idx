@@ -1,0 +1,5 @@
+nimTitle	xml	openparser/plist/xml.html	module openparser/plist/xml		0
+nim	parseXmlPlist	openparser/plist/xml.html#parseXmlPlist,string,PlistOptions	proc parseXmlPlist(s: string; opts: PlistOptions = nil): JsonNode		396
+nim	toXmlPlist	openparser/plist/xml.html#toXmlPlist,JsonNode,PlistOptions	proc toXmlPlist(node: JsonNode; opts: PlistOptions = nil): string		456
+nim	toXmlPlist	openparser/plist/xml.html#toXmlPlist,T,PlistOptions	proc toXmlPlist[T](v: T; opts: PlistOptions = nil): string		466
+nimgrp	toxmlplist	openparser/plist/xml.html#toXmlPlist-procs-all	proc		456

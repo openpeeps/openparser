@@ -1,0 +1,38 @@
+nimTitle	common	openparser/plist/common.html	module openparser/plist/common		0
+nim	pfXml	openparser/plist/common.html#pfXml	PlistFormat.pfXml		5
+nim	pfBinary	openparser/plist/common.html#pfBinary	PlistFormat.pfBinary		5
+nim	PlistFormat	openparser/plist/common.html#PlistFormat	enum PlistFormat		5
+nim	PlistError	openparser/plist/common.html#PlistError	object PlistError		8
+nim	PlistOptions	openparser/plist/common.html#PlistOptions	type PlistOptions		10
+nim	PlistUID	openparser/plist/common.html#PlistUID	type PlistUID		20
+nim	plist	openparser/plist/common.html#plist.t,static[string]	template plist(name: static[string])		22
+nim	json	openparser/plist/common.html#json.t,static[string]	template json(name: static[string])		25
+nim	defaultPlistOptions	openparser/plist/common.html#defaultPlistOptions	proc defaultPlistOptions(): PlistOptions		28
+nim	`==`	openparser/plist/common.html#==,PlistUID,PlistUID	proc `==`(a, b: PlistUID): bool		40
+nim	`$`	openparser/plist/common.html#$,PlistUID	proc `$`(u: PlistUID): string		41
+nim	plistCFUIDKey	openparser/plist/common.html#plistCFUIDKey	const plistCFUIDKey		44
+nim	plistDataMarker	openparser/plist/common.html#plistDataMarker	const plistDataMarker		45
+nim	isPlistData	openparser/plist/common.html#isPlistData,string	proc isPlistData(s: string): bool		46
+nim	extractPlistData	openparser/plist/common.html#extractPlistData,string	proc extractPlistData(s: string): string		47
+nim	makePlistDataNode	openparser/plist/common.html#makePlistDataNode,string	proc makePlistDataNode(b64: string): JsonNode		48
+nim	plistDateMarker	openparser/plist/common.html#plistDateMarker	const plistDateMarker		49
+nim	isPlistDate	openparser/plist/common.html#isPlistDate,string	proc isPlistDate(s: string): bool		50
+nim	extractPlistDate	openparser/plist/common.html#extractPlistDate,string	proc extractPlistDate(s: string): string		51
+nim	makePlistDateNode	openparser/plist/common.html#makePlistDateNode,string	proc makePlistDateNode(iso: string): JsonNode		52
+nim	isPlistUIDObject	openparser/plist/common.html#isPlistUIDObject,JsonNode	proc isPlistUIDObject(node: JsonNode): bool		54
+nim	toPlistUID	openparser/plist/common.html#toPlistUID,JsonNode	proc toPlistUID(node: JsonNode): PlistUID		57
+nim	fromPlistUID	openparser/plist/common.html#fromPlistUID,PlistUID	proc fromPlistUID(uid: PlistUID): JsonNode		62
+nim	detectPlistFormat	openparser/plist/common.html#detectPlistFormat,openArray[byte]	proc detectPlistFormat(data: openArray[byte]): PlistFormat		66
+nim	detectPlistFormat	openparser/plist/common.html#detectPlistFormat,string	proc detectPlistFormat(data: string): PlistFormat		73
+nim	readUInt16BE	openparser/plist/common.html#readUInt16BE,openArray[byte],int	proc readUInt16BE(data: openArray[byte]; pos: int): uint16		80
+nim	readUInt32BE	openparser/plist/common.html#readUInt32BE,openArray[byte],int	proc readUInt32BE(data: openArray[byte]; pos: int): uint32		83
+nim	readUInt64BE	openparser/plist/common.html#readUInt64BE,openArray[byte],int	proc readUInt64BE(data: openArray[byte]; pos: int): uint64		86
+nim	writeUInt16BE	openparser/plist/common.html#writeUInt16BE,seq[byte],uint16	proc writeUInt16BE(s: var seq[byte]; v: uint16)		91
+nim	writeUInt32BE	openparser/plist/common.html#writeUInt32BE,seq[byte],uint32	proc writeUInt32BE(s: var seq[byte]; v: uint32)		95
+nim	writeUInt64BE	openparser/plist/common.html#writeUInt64BE,seq[byte],uint64	proc writeUInt64BE(s: var seq[byte]; v: uint64)		98
+nim	byteCount	openparser/plist/common.html#byteCount,uint64	proc byteCount(v: uint64): int		102
+nim	ensure	openparser/plist/common.html#ensure,int,int,int	proc ensure(dataLen, pos, needed: int)		108
+nim	plistError	openparser/plist/common.html#plistError,string	proc plistError(msg: string)		112
+nim	toPlistNode	openparser/plist/common.html#toPlistNode,T	proc toPlistNode[T](v: T): JsonNode		294
+nim	jsonNodeTo	openparser/plist/common.html#jsonNodeTo,JsonNode,typedesc[T]	proc jsonNodeTo[T](node: JsonNode; _: typedesc[T]): T		334
+nimgrp	detectplistformat	openparser/plist/common.html#detectPlistFormat-procs-all	proc		66

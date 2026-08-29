@@ -1,0 +1,8 @@
+nimTitle	bplist	openparser/plist/bplist.html	module openparser/plist/bplist		0
+nim	parseBPlist	openparser/plist/bplist.html#parseBPlist,openArray[byte],PlistOptions	proc parseBPlist(data: openArray[byte]; opts: PlistOptions = nil): JsonNode		363
+nim	parseBPlist	openparser/plist/bplist.html#parseBPlist,seq[byte],PlistOptions	proc parseBPlist(data: seq[byte]; opts: PlistOptions = nil): JsonNode		369
+nim	parseBPlist	openparser/plist/bplist.html#parseBPlist,string,PlistOptions	proc parseBPlist(data: string; opts: PlistOptions = nil): JsonNode		373
+nim	toBPlist	openparser/plist/bplist.html#toBPlist,JsonNode,PlistOptions	proc toBPlist(node: JsonNode; opts: PlistOptions = nil): seq[byte]		530
+nim	toBPlist	openparser/plist/bplist.html#toBPlist,T,PlistOptions	proc toBPlist[T](v: T; opts: PlistOptions = nil): seq[byte]		685
+nimgrp	parsebplist	openparser/plist/bplist.html#parseBPlist-procs-all	proc		363
+nimgrp	tobplist	openparser/plist/bplist.html#toBPlist-procs-all	proc		530

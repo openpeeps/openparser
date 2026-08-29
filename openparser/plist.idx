@@ -1,0 +1,33 @@
+nimTitle	plist	openparser/plist.html	module openparser/plist		0
+nim	toXmlPlist	openparser/plist.html#toXmlPlist,T,PlistOptions	proc toXmlPlist[T: object](v: T; opts: PlistOptions = nil): string		10
+nim	toBPlist	openparser/plist.html#toBPlist,T,PlistOptions	proc toBPlist[T: object](v: T; opts: PlistOptions = nil): seq[byte]		13
+nim	toXmlPlist	openparser/plist.html#toXmlPlist,JsonNode,PlistOptions	proc toXmlPlist(node: JsonNode; opts: PlistOptions = nil): string		17
+nim	toBPlist	openparser/plist.html#toBPlist,JsonNode,PlistOptions	proc toBPlist(node: JsonNode; opts: PlistOptions = nil): seq[byte]		20
+nim	unarchiveIfNeeded	openparser/plist.html#unarchiveIfNeeded,JsonNode	proc unarchiveIfNeeded(node: JsonNode): JsonNode		65
+nim	parseXmlPlist	openparser/plist.html#parseXmlPlist,string,PlistOptions	proc parseXmlPlist(s: string; opts: PlistOptions = nil): JsonNode		96
+nim	parseBPlist	openparser/plist.html#parseBPlist,openArray[byte],PlistOptions	proc parseBPlist(data: openArray[byte]; opts: PlistOptions = nil): JsonNode		101
+nim	parseBPlist	openparser/plist.html#parseBPlist,seq[byte],PlistOptions	proc parseBPlist(data: seq[byte]; opts: PlistOptions = nil): JsonNode		106
+nim	parseBPlist	openparser/plist.html#parseBPlist,string,PlistOptions	proc parseBPlist(data: string; opts: PlistOptions = nil): JsonNode		111
+nim	parsePlist	openparser/plist.html#parsePlist,string,PlistOptions	proc parsePlist(s: string; opts: PlistOptions = nil): JsonNode		116
+nim	parsePlist	openparser/plist.html#parsePlist,seq[byte],PlistOptions	proc parsePlist(data: seq[byte]; opts: PlistOptions = nil): JsonNode		128
+nim	parsePlist	openparser/plist.html#parsePlist,openArray[byte],PlistOptions	proc parsePlist(data: openArray[byte]; opts: PlistOptions = nil): JsonNode		140
+nim	parseXmlPlistFile	openparser/plist.html#parseXmlPlistFile,string,PlistOptions	proc parseXmlPlistFile(path: string; opts: PlistOptions = nil): JsonNode		145
+nim	parseBPlistFile	openparser/plist.html#parseBPlistFile,string,PlistOptions	proc parseBPlistFile(path: string; opts: PlistOptions = nil): JsonNode		149
+nim	parsePlistFile	openparser/plist.html#parsePlistFile,string,PlistOptions	proc parsePlistFile(path: string; opts: PlistOptions = nil): JsonNode		155
+nim	parsePlist	openparser/plist.html#parsePlist,string,typedesc[T],PlistOptions	proc parsePlist[T](s: string; _: typedesc[T]; opts: PlistOptions = nil): T		163
+nim	parsePlist	openparser/plist.html#parsePlist,seq[byte],typedesc[T],PlistOptions	proc parsePlist[T](data: seq[byte]; _: typedesc[T]; opts: PlistOptions = nil): T		167
+nim	parsePlist	openparser/plist.html#parsePlist,openArray[byte],typedesc[T],PlistOptions	proc parsePlist[T](data: openArray[byte]; _: typedesc[T]; opts: PlistOptions = nil): T		171
+nim	parseXmlPlist	openparser/plist.html#parseXmlPlist,string,typedesc[T],PlistOptions	proc parseXmlPlist[T](s: string; _: typedesc[T]; opts: PlistOptions = nil): T		175
+nim	parseBPlist	openparser/plist.html#parseBPlist,openArray[byte],typedesc[T],PlistOptions	proc parseBPlist[T](data: openArray[byte]; _: typedesc[T]; opts: PlistOptions = nil): T		181
+nim	parseBPlist	openparser/plist.html#parseBPlist,seq[byte],typedesc[T],PlistOptions	proc parseBPlist[T](data: seq[byte]; _: typedesc[T]; opts: PlistOptions = nil): T		187
+nim	parsePlistFile	openparser/plist.html#parsePlistFile,string,typedesc[T],PlistOptions	proc parsePlistFile[T](path: string; _: typedesc[T]; opts: PlistOptions = nil): T		193
+nim	parseXmlPlistFile	openparser/plist.html#parseXmlPlistFile,string,typedesc[T],PlistOptions	proc parseXmlPlistFile[T](path: string; _: typedesc[T]; opts: PlistOptions = nil): T		197
+nim	parseBPlistFile	openparser/plist.html#parseBPlistFile,string,typedesc[T],PlistOptions	proc parseBPlistFile[T](path: string; _: typedesc[T]; opts: PlistOptions = nil): T		201
+nimgrp	toxmlplist	openparser/plist.html#toXmlPlist-procs-all	proc		10
+nimgrp	parseplist	openparser/plist.html#parsePlist-procs-all	proc		116
+nimgrp	parsebplistfile	openparser/plist.html#parseBPlistFile-procs-all	proc		149
+nimgrp	parsexmlplist	openparser/plist.html#parseXmlPlist-procs-all	proc		96
+nimgrp	parsebplist	openparser/plist.html#parseBPlist-procs-all	proc		101
+nimgrp	parsexmlplistfile	openparser/plist.html#parseXmlPlistFile-procs-all	proc		145
+nimgrp	tobplist	openparser/plist.html#toBPlist-procs-all	proc		13
+nimgrp	parseplistfile	openparser/plist.html#parsePlistFile-procs-all	proc		155

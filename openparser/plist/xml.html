@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>openparser/private/lexutils</title>
+<title>openparser/plist/xml</title>
 
 <!-- Google fonts -->
 <link href='https://fonts.googleapis.com/css?family=Lato:400,600,900' rel='stylesheet' type='text/css'/>
@@ -27,7 +27,7 @@
     <label for="nav-toggle" id="nav-burger">&#9776;</label>
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
-      <h1 class="title">openparser/private/lexutils</h1>
+      <h1 class="title">openparser/plist/xml</h1>
       <div class="row">
   <div class="three columns">
     <div class="theme-select-wrapper">
@@ -55,23 +55,19 @@
     </div>
     <ul class="simple simple-toc" id="toc-list">
   <li>
+  <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
+</li>
+<li>
   <details open>
     <summary><a class="reference reference-toplevel" href="#12" id="62">Procs</a></summary>
     <ul class="simple simple-toc-section">
-      <ul class="simple nested-toc-section">advance
-  <li><a class="reference" href="#advance%2CT" title="advance[T](l: var T)">advance[T](l: var T)</a></li>
+      <ul class="simple nested-toc-section">parseXmlPlist
+  <li><a class="reference" href="#parseXmlPlist%2Cstring%2CPlistOptions" title="parseXmlPlist(s: string; opts: PlistOptions = nil): JsonNode">parseXmlPlist(s: string; opts: PlistOptions = nil): JsonNode</a></li>
 
 </ul>
-<ul class="simple nested-toc-section">charAt
-  <li><a class="reference" href="#charAt%2CT%2Cint" title="charAt[T](l: T; idx: int): char">charAt[T](l: T; idx: int): char</a></li>
-
-</ul>
-<ul class="simple nested-toc-section">getContext
-  <li><a class="reference" href="#getContext%2CT%2Cint%2Cint" title="getContext[T](l: T; posOverride: int = -1; maxContext: int = 80): string">getContext[T](l: T; posOverride: int = -1; maxContext: int = 80): string</a></li>
-
-</ul>
-<ul class="simple nested-toc-section">skipWhitespace
-  <li><a class="reference" href="#skipWhitespace%2CT" title="skipWhitespace[T](l: var T)">skipWhitespace[T](l: var T)</a></li>
+<ul class="simple nested-toc-section">toXmlPlist
+  <li><a class="reference" href="#toXmlPlist%2CJsonNode%2CPlistOptions" title="toXmlPlist(node: JsonNode; opts: PlistOptions = nil): string">toXmlPlist(node: JsonNode; opts: PlistOptions = nil): string</a></li>
+<li><a class="reference" href="#toXmlPlist%2CT%2CPlistOptions" title="toXmlPlist[T](v: T; opts: PlistOptions = nil): string">toXmlPlist[T](v: T; opts: PlistOptions = nil): string</a></li>
 
 </ul>
 
@@ -87,23 +83,19 @@
     <div id="tocRoot"></div>
     
     <p class="module-desc"></p>
-    <div class="section" id="12">
+    <div class="section" id="6">
+  <h1><a class="toc-backref" href="#6">Imports</a></h1>
+  <dl class="item">
+    <a class="reference external" href="common.html">common</a>
+  </dl>
+</div>
+<div class="section" id="12">
   <h1><a class="toc-backref" href="#12">Procs</a></h1>
   <dl class="item">
-    <div id="advance-procs-all">
-  <div id="advance,T">
-  <dt><pre><span class="Keyword">proc</span> <a href="#advance%2CT"><span class="Identifier">advance</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">l</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
-  <dd>
-    
-    Advances the lexer's position by one character, updating the current character and column.
-    
-  </dd>
-</div>
-
-</div>
-<div id="charAt-procs-all">
-  <div id="charAt,T,int">
-  <dt><pre><span class="Keyword">proc</span> <a href="#charAt%2CT%2Cint"><span class="Identifier">charAt</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">l</span><span class="Other">:</span> <span class="Identifier">T</span><span class="Other">;</span> <span class="Identifier">idx</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">char</span> {.<span class="Identifier">inline</span>.}</pre></dt>
+    <div id="parseXmlPlist-procs-all">
+  <div id="parseXmlPlist,string,PlistOptions">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseXmlPlist%2Cstring%2CPlistOptions"><span class="Identifier">parseXmlPlist</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="common.html#PlistOptions"><span class="Identifier">PlistOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">JsonNode</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">PlistError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -112,25 +104,21 @@
 </div>
 
 </div>
-<div id="getContext-procs-all">
-  <div id="getContext,T,int,int">
-  <dt><pre><span class="Keyword">proc</span> <a href="#getContext%2CT%2Cint%2Cint"><span class="Identifier">getContext</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">l</span><span class="Other">:</span> <span class="Identifier">T</span><span class="Other">;</span> <span class="Identifier">posOverride</span><span class="Other">:</span> <span class="Identifier">int</span> <span class="Other">=</span> <span class="DecNumber">-1</span><span class="Other">;</span> <span class="Identifier">maxContext</span><span class="Other">:</span> <span class="Identifier">int</span> <span class="Other">=</span> <span class="DecNumber">80</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+<div id="toXmlPlist-procs-all">
+  <div id="toXmlPlist,JsonNode,PlistOptions">
+  <dt><pre><span class="Keyword">proc</span> <a href="#toXmlPlist%2CJsonNode%2CPlistOptions"><span class="Identifier">toXmlPlist</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <span class="Identifier">JsonNode</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="common.html#PlistOptions"><span class="Identifier">PlistOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Show a window around the error position, capped to <tt class="docutils literal"><span class="pre"><span class="Identifier">maxContext</span></span></tt> chars on each side. Prevents dumping entire minified files on error.
+    
     
   </dd>
 </div>
-
-</div>
-<div id="skipWhitespace-procs-all">
-  <div id="skipWhitespace,T">
-  <dt><pre><span class="Keyword">proc</span> <a href="#skipWhitespace%2CT"><span class="Identifier">skipWhitespace</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">l</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+<div id="toXmlPlist,T,PlistOptions">
+  <dt><pre><span class="Keyword">proc</span> <a href="#toXmlPlist%2CT%2CPlistOptions"><span class="Identifier">toXmlPlist</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">T</span><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="common.html#PlistOptions"><span class="Identifier">PlistOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
   <dd>
     
-    <p>A generic procedure to skip whitespace characters in a lexer.</p>
-<p>It advances the lexer's position until it encounters a non-whitespace character</p>
-
+    
     
   </dd>
 </div>
@@ -146,7 +134,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-29 13:00:50 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-29 13:00:51 UTC</small>
       </div>
     </div>
   </div>
