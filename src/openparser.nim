@@ -8,8 +8,10 @@ when defined(napibuild):
   discard
 elif defined(builddocs):
   # For documentation purposes, we re-export all parsers here
-  import ./openparser/[json, csv, rss, feed, yaml, dotenv, fbe, toml, bson, xml, nif, ical, plist]
-  export json, csv, rss, feed, yaml, dotenv, fbe, toml, bson, xml, nif, ical, plist
+  import ./openparser/[json, csv, rss, feed, yaml, dotenv,
+                    fbe, toml, bson, xml, nif, ical, plist, css, svg]
+  export json, csv, rss, feed, yaml, dotenv,
+      fbe, toml, bson, xml, nif, ical, plist, css, svg
 
   import ./openparser/gettext/[po, mo]
   export po, mo
