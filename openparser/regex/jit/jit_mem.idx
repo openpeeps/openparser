@@ -1,3 +1,3 @@
 nimTitle	jit_mem	openparser/regex/jit/jit_mem.html	module openparser/regex/jit/jit_mem		0
-nim	allocJitCode	openparser/regex/jit/jit_mem.html#allocJitCode,int	proc allocJitCode(size: int): pointer		16
-nim	freeJitCode	openparser/regex/jit/jit_mem.html#freeJitCode,pointer,int	proc freeJitCode(p: pointer; size: int)		17
+nim	allocJitCode	openparser/regex/jit/jit_mem.html#allocJitCode,int	proc allocJitCode(size: int): pointer		20
+nim	freeJitCode	openparser/regex/jit/jit_mem.html#freeJitCode,pointer,int	proc freeJitCode(p: pointer; size: int)		21

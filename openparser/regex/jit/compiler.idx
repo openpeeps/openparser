@@ -7,5 +7,5 @@ nim	JitCtx	openparser/regex/jit/compiler.html#JitCtx	object JitCtx		21
 nim	CompiledJit	openparser/regex/jit/compiler.html#CompiledJit	object CompiledJit		25
 nim	freeJit	openparser/regex/jit/compiler.html#freeJit,CompiledJit	proc freeJit(cj: var CompiledJit)		32
 nim	compileRegex	openparser/regex/jit/compiler.html#compileRegex,Program	proc compileRegex(prog: Program; fullMatch = false): CompiledJit		41
-nim	jitExec	openparser/regex/jit/compiler.html#jitExec,CompiledJit,string,int	proc jitExec(cj: CompiledJit; input: string; startPos = 0): int		227
-nim	jitScan	openparser/regex/jit/compiler.html#jitScan,CompiledJit,string,int	proc jitScan(cj: CompiledJit; input: string; fromPos = 0): tuple[start, stop: int]		234
+nim	jitExec	openparser/regex/jit/compiler.html#jitExec,CompiledJit,string,int	proc jitExec(cj: CompiledJit; input: string; startPos = 0): int		229
+nim	jitScan	openparser/regex/jit/compiler.html#jitScan,CompiledJit,string,int	proc jitScan(cj: CompiledJit; input: string; fromPos = 0): tuple[start, stop: int]		236
