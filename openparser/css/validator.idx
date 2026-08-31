@@ -1,0 +1,17 @@
+nimTitle	validator	openparser/css/validator.html	module openparser/css/validator		0
+nim	ValidationError	openparser/css/validator.html#ValidationError	object ValidationError		5
+nim	ValidationResult	openparser/css/validator.html#ValidationResult	object ValidationResult		10
+nim	CssWideKeywords	openparser/css/validator.html#CssWideKeywords	const CssWideKeywords		55
+nim	UniversalFunctions	openparser/css/validator.html#UniversalFunctions	const UniversalFunctions		56
+nim	MathFunctions	openparser/css/validator.html#MathFunctions	const MathFunctions		57
+nim	MaxRecursionDepth	openparser/css/validator.html#MaxRecursionDepth	const MaxRecursionDepth		60
+nim	matchValue	openparser/css/validator.html#matchValue,CssData,CssValue,SyntaxNode,int	proc matchValue(data: CssData; val: CssValue; syn: SyntaxNode; depth: int = 0): bool		93
+nim	matchSequence	openparser/css/validator.html#matchSequence,CssData,seq[CssValue],SyntaxNode,int	proc matchSequence(data: CssData; vals: seq[CssValue]; syn: SyntaxNode;\n              depth: int = 0): tuple[matched: bool, consumed: int]		94
+nim	matchType	openparser/css/validator.html#matchType,CssData,CssValue,string	proc matchType(data: CssData; val: CssValue; typeName: string): bool		96
+nim	validate	openparser/css/validator.html#validate,CssData,string,seq[CssValue]	proc validate(data: CssData; property: string; values: seq[CssValue]): ValidationResult		418
+nim	validate	openparser/css/validator.html#validate,CssData,string,string,seq[CssValue]	proc validate(data: CssData; property: string; rawValue: string;\n         components: seq[CssValue]): ValidationResult		437
+nim	validateDeclaration	openparser/css/validator.html#validateDeclaration,CssData,CssNode	proc validateDeclaration(data: CssData; node: CssNode): ValidationResult		441
+nim	validateRuleSet	openparser/css/validator.html#validateRuleSet,CssData,CssNode	proc validateRuleSet(data: CssData; node: CssNode): ValidationResult		446
+nim	validateAtRule	openparser/css/validator.html#validateAtRule,CssData,CssNode	proc validateAtRule(data: CssData; node: CssNode): ValidationResult		455
+nim	validateStyleSheet	openparser/css/validator.html#validateStyleSheet,CssData,CssStyleSheet	proc validateStyleSheet(data: CssData; style: CssStyleSheet): seq[ValidationResult]		468
+nimgrp	validate	openparser/css/validator.html#validate-procs-all	proc		418

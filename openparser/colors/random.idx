@@ -1,0 +1,9 @@
+nimTitle	random	openparser/colors/random.html	module openparser/colors/random		0
+nim	lmRandom	openparser/colors/random.html#lmRandom	Luminosity.lmRandom		12
+nim	lmBright	openparser/colors/random.html#lmBright	Luminosity.lmBright		12
+nim	lmLight	openparser/colors/random.html#lmLight	Luminosity.lmLight		12
+nim	lmDark	openparser/colors/random.html#lmDark	Luminosity.lmDark		12
+nim	Luminosity	openparser/colors/random.html#Luminosity	enum Luminosity		12
+nim	RandomColorOptions	openparser/colors/random.html#RandomColorOptions	object RandomColorOptions		18
+nim	randomColor	openparser/colors/random.html#randomColor	proc randomColor(opts = RandomColorOptions(alpha: -1.0)): Color		38
+nim	randomColors	openparser/colors/random.html#randomColors,int	proc randomColors(count: int; opts = RandomColorOptions(alpha: -1.0)): seq[Color]		87

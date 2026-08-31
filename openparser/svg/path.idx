@@ -1,0 +1,4 @@
+nimTitle	path	openparser/svg/path.html	module openparser/svg/path		0
+nim	parsePathData	openparser/svg/path.html#parsePathData,string	proc parsePathData(d: string): seq[SvgPathSeg]		20
+nim	pathSegToString	openparser/svg/path.html#pathSegToString,SvgPathSeg,bool	proc pathSegToString(seg: SvgPathSeg; minify: bool = false): string		93
+nim	pathDataToString	openparser/svg/path.html#pathDataToString,seq[SvgPathSeg],bool	proc pathDataToString(segs: seq[SvgPathSeg]; minify: bool = false): string		104

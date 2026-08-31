@@ -1,0 +1,21 @@
+nimTitle	convert	openparser/colors/convert.html	module openparser/colors/convert		0
+nim	toHsl	openparser/colors/convert.html#toHsl,Color	proc toHsl(c: Color): Hsl		21
+nim	fromHsl	openparser/colors/convert.html#fromHsl,Hsl	proc fromHsl(hsl: Hsl): Color		44
+nim	toHsv	openparser/colors/convert.html#toHsv,Color	proc toHsv(c: Color): Hsv		60
+nim	fromHsv	openparser/colors/convert.html#fromHsv,Hsv	proc fromHsv(hsv: Hsv): Color		80
+nim	toHsb	openparser/colors/convert.html#toHsb,Color	proc toHsb(c: Color): Hsb		99
+nim	fromHsb	openparser/colors/convert.html#fromHsb,Hsv	proc fromHsb(hsb: Hsb): Color		100
+nim	toHwb	openparser/colors/convert.html#toHwb,Color	proc toHwb(c: Color): Hwb		102
+nim	fromHwb	openparser/colors/convert.html#fromHwb,Hwb	proc fromHwb(hwb: Hwb): Color		108
+nim	toCmyk	openparser/colors/convert.html#toCmyk,Color	proc toCmyk(c: Color): Cmyk		121
+nim	fromCmyk	openparser/colors/convert.html#fromCmyk,Cmyk	proc fromCmyk(cmyk: Cmyk): Color		129
+nim	toLab	openparser/colors/convert.html#toLab,Color	proc toLab(c: Color): Lab		134
+nim	fromLab	openparser/colors/convert.html#fromLab,Lab	proc fromLab(lab: Lab): Color		149
+nim	toLch	openparser/colors/convert.html#toLch,Color	proc toLch(c: Color): Lch		170
+nim	fromLch	openparser/colors/convert.html#fromLch,Lch	proc fromLch(lch: Lch): Color		177
+nim	toOklab	openparser/colors/convert.html#toOklab,Color	proc toOklab(c: Color): Oklab		183
+nim	fromOklab	openparser/colors/convert.html#fromOklab,Oklab	proc fromOklab(ok: Oklab): Color		198
+nim	toOklch	openparser/colors/convert.html#toOklch,Color	proc toOklch(c: Color): Oklch		215
+nim	fromOklchToColor	openparser/colors/convert.html#fromOklchToColor,Oklch	proc fromOklchToColor(oklch: Oklch): Color		222
+nim	toRgb	openparser/colors/convert.html#toRgb,Color	proc toRgb(c: Color): Rgb		227
+nim	fromRgb	openparser/colors/convert.html#fromRgb,Rgb	proc fromRgb(rgb: Rgb): Color		229

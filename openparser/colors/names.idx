@@ -1,0 +1,7 @@
+nimTitle	names	openparser/colors/names.html	module openparser/colors/names		0
+nim	NamedEntry	openparser/colors/names.html#NamedEntry	tuple NamedEntry		10
+nim	NamedColors	openparser/colors/names.html#NamedColors	const NamedColors		12
+nim	namedTable	openparser/colors/names.html#namedTable	var namedTable		163
+nim	initNamedTable	openparser/colors/names.html#initNamedTable	proc initNamedTable()		165
+nim	colorToLab	openparser/colors/names.html#colorToLab,Color	proc colorToLab(c: Color): tuple[l, a, b: float]		192
+nim	toName	openparser/colors/names.html#toName,Color	proc toName(c: Color): string		196

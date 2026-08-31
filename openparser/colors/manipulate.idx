@@ -1,0 +1,15 @@
+nimTitle	manipulate	openparser/colors/manipulate.html	module openparser/colors/manipulate		0
+nim	lighten	openparser/colors/manipulate.html#lighten,Color,float	proc lighten(c: Color; amount: float = 10.0): Color		10
+nim	darken	openparser/colors/manipulate.html#darken,Color,float	proc darken(c: Color; amount: float = 10.0): Color		17
+nim	saturate	openparser/colors/manipulate.html#saturate,Color,float	proc saturate(c: Color; amount: float = 10.0): Color		24
+nim	desaturate	openparser/colors/manipulate.html#desaturate,Color,float	proc desaturate(c: Color; amount: float = 10.0): Color		31
+nim	greyscale	openparser/colors/manipulate.html#greyscale,Color	proc greyscale(c: Color): Color		38
+nim	spin	openparser/colors/manipulate.html#spin,Color,float	proc spin(c: Color; amount: float): Color		41
+nim	brighten	openparser/colors/manipulate.html#brighten,Color,float	proc brighten(c: Color; amount: float = 10.0): Color		48
+nim	mix	openparser/colors/manipulate.html#mix,Color,Color,float	proc mix(a, b: Color; weight: float = 50.0): Color		53
+nim	tint	openparser/colors/manipulate.html#tint,Color,float	proc tint(c: Color; amount: float = 10.0): Color		58
+nim	shade	openparser/colors/manipulate.html#shade,Color,float	proc shade(c: Color; amount: float = 10.0): Color		62
+nim	setAlpha	openparser/colors/manipulate.html#setAlpha,Color,float	proc setAlpha(c: Color; a: float): Color		66
+nim	fadeIn	openparser/colors/manipulate.html#fadeIn,Color,float	proc fadeIn(c: Color; amount: float = 10.0): Color		69
+nim	fadeOut	openparser/colors/manipulate.html#fadeOut,Color,float	proc fadeOut(c: Color; amount: float = 10.0): Color		72
+nim	complement	openparser/colors/manipulate.html#complement,Color	proc complement(c: Color): Color		75

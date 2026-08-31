@@ -1,0 +1,49 @@
+nimTitle	parser	openparser/css/parser.html	module openparser/css/parser		0
+nim	tkIdent	openparser/css/parser.html#tkIdent	CssTokenKind.tkIdent		23
+nim	tkAtKeyword	openparser/css/parser.html#tkAtKeyword	CssTokenKind.tkAtKeyword		23
+nim	tkHash	openparser/css/parser.html#tkHash	CssTokenKind.tkHash		23
+nim	tkClass	openparser/css/parser.html#tkClass	CssTokenKind.tkClass		23
+nim	tkString	openparser/css/parser.html#tkString	CssTokenKind.tkString		23
+nim	tkBadString	openparser/css/parser.html#tkBadString	CssTokenKind.tkBadString		23
+nim	tkUrl	openparser/css/parser.html#tkUrl	CssTokenKind.tkUrl		23
+nim	tkBadUrl	openparser/css/parser.html#tkBadUrl	CssTokenKind.tkBadUrl		23
+nim	tkNumber	openparser/css/parser.html#tkNumber	CssTokenKind.tkNumber		23
+nim	tkPercentage	openparser/css/parser.html#tkPercentage	CssTokenKind.tkPercentage		23
+nim	tkDimension	openparser/css/parser.html#tkDimension	CssTokenKind.tkDimension		23
+nim	tkFunction	openparser/css/parser.html#tkFunction	CssTokenKind.tkFunction		23
+nim	tkColon	openparser/css/parser.html#tkColon	CssTokenKind.tkColon		23
+nim	tkSemicolon	openparser/css/parser.html#tkSemicolon	CssTokenKind.tkSemicolon		23
+nim	tkBraceOpen	openparser/css/parser.html#tkBraceOpen	CssTokenKind.tkBraceOpen		23
+nim	tkBraceClose	openparser/css/parser.html#tkBraceClose	CssTokenKind.tkBraceClose		23
+nim	tkParenOpen	openparser/css/parser.html#tkParenOpen	CssTokenKind.tkParenOpen		23
+nim	tkParenClose	openparser/css/parser.html#tkParenClose	CssTokenKind.tkParenClose		23
+nim	tkBracketOpen	openparser/css/parser.html#tkBracketOpen	CssTokenKind.tkBracketOpen		23
+nim	tkBracketClose	openparser/css/parser.html#tkBracketClose	CssTokenKind.tkBracketClose		23
+nim	tkComma	openparser/css/parser.html#tkComma	CssTokenKind.tkComma		23
+nim	tkCDO	openparser/css/parser.html#tkCDO	CssTokenKind.tkCDO		23
+nim	tkCDC	openparser/css/parser.html#tkCDC	CssTokenKind.tkCDC		23
+nim	tkIncludeMatch	openparser/css/parser.html#tkIncludeMatch	CssTokenKind.tkIncludeMatch		23
+nim	tkDashMatch	openparser/css/parser.html#tkDashMatch	CssTokenKind.tkDashMatch		23
+nim	tkPrefixMatch	openparser/css/parser.html#tkPrefixMatch	CssTokenKind.tkPrefixMatch		23
+nim	tkSuffixMatch	openparser/css/parser.html#tkSuffixMatch	CssTokenKind.tkSuffixMatch		23
+nim	tkSubstringMatch	openparser/css/parser.html#tkSubstringMatch	CssTokenKind.tkSubstringMatch		23
+nim	tkColumn	openparser/css/parser.html#tkColumn	CssTokenKind.tkColumn		23
+nim	tkDelim	openparser/css/parser.html#tkDelim	CssTokenKind.tkDelim		23
+nim	tkComment	openparser/css/parser.html#tkComment	CssTokenKind.tkComment		23
+nim	tkWhitespace	openparser/css/parser.html#tkWhitespace	CssTokenKind.tkWhitespace		23
+nim	tkEOF	openparser/css/parser.html#tkEOF	CssTokenKind.tkEOF		23
+nim	CssTokenKind	openparser/css/parser.html#CssTokenKind	enum CssTokenKind		23
+nim	CssToken	openparser/css/parser.html#CssToken	object CssToken		58
+nim	CssLexer	openparser/css/parser.html#CssLexer	object CssLexer		63
+nim	CssPolicy	openparser/css/parser.html#CssPolicy	object CssPolicy		73
+nim	CssParser	openparser/css/parser.html#CssParser	object CssParser		90
+nim	CSSParseError	openparser/css/parser.html#CSSParseError	object CSSParseError		96
+nim	error	openparser/css/parser.html#error,CssParser,string,CssToken	proc error(p: var CssParser; msg: string; tok: CssToken = p.curr)		101
+nim	defaultPolicy	openparser/css/parser.html#defaultPolicy	proc defaultPolicy(): CssPolicy		111
+nim	isInList	openparser/css/parser.html#isInList,seq[string],string	proc isInList(list: seq[string]; name: string): bool		121
+nim	isPropertyAllowed	openparser/css/parser.html#isPropertyAllowed,CssPolicy,string	proc isPropertyAllowed(policy: CssPolicy; name: string): bool		128
+nim	isAtRuleAllowed	openparser/css/parser.html#isAtRuleAllowed,CssPolicy,string	proc isAtRuleAllowed(policy: CssPolicy; name: string): bool		135
+nim	isFunctionAllowed	openparser/css/parser.html#isFunctionAllowed,CssPolicy,string	proc isFunctionAllowed(policy: CssPolicy; name: string): bool		142
+nim	validateValue	openparser/css/parser.html#validateValue,CssValue,CssPolicy	proc validateValue(val: CssValue; policy: CssPolicy): bool		149
+nim	nextToken	openparser/css/parser.html#nextToken,CssLexer	proc nextToken(l: var CssLexer): CssToken		267
+nim	parseCss	openparser/css/parser.html#parseCss,string,CssPolicy	proc parseCss(input: string; policy: CssPolicy = defaultPolicy()): CssStyleSheet		936

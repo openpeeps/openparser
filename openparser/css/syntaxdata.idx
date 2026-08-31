@@ -1,0 +1,20 @@
+nimTitle	syntaxdata	openparser/css/syntaxdata.html	module openparser/css/syntaxdata		0
+nim	propertiesJson	openparser/css/syntaxdata.html#propertiesJson	const propertiesJson		6
+nim	syntaxesJson	openparser/css/syntaxdata.html#syntaxesJson	const syntaxesJson		7
+nim	typesJson	openparser/css/syntaxdata.html#typesJson	const typesJson		8
+nim	functionsJson	openparser/css/syntaxdata.html#functionsJson	const functionsJson		9
+nim	atRulesJson	openparser/css/syntaxdata.html#atRulesJson	const atRulesJson		10
+nim	selectorsJson	openparser/css/syntaxdata.html#selectorsJson	const selectorsJson		11
+nim	unitsJson	openparser/css/syntaxdata.html#unitsJson	const unitsJson		12
+nim	CssSyntaxEntry	openparser/css/syntaxdata.html#CssSyntaxEntry	object CssSyntaxEntry		15
+nim	CssPropertyDef	openparser/css/syntaxdata.html#CssPropertyDef	object CssPropertyDef		18
+nim	CssTypeEntry	openparser/css/syntaxdata.html#CssTypeEntry	object CssTypeEntry		27
+nim	CssFunctionEntry	openparser/css/syntaxdata.html#CssFunctionEntry	object CssFunctionEntry		32
+nim	CssAtRuleDef	openparser/css/syntaxdata.html#CssAtRuleDef	object CssAtRuleDef		38
+nim	CssSelectorEntry	openparser/css/syntaxdata.html#CssSelectorEntry	object CssSelectorEntry		41
+nim	CssUnitEntry	openparser/css/syntaxdata.html#CssUnitEntry	object CssUnitEntry		44
+nim	CssData	openparser/css/syntaxdata.html#CssData	object CssData		47
+nim	loadCssData	openparser/css/syntaxdata.html#loadCssData	proc loadCssData(): CssData		58
+nim	getSyntax	openparser/css/syntaxdata.html#getSyntax,CssData,string	proc getSyntax(data: CssData; name: string): SyntaxNode		73
+nim	resolveType	openparser/css/syntaxdata.html#resolveType,CssData,string	proc resolveType(data: CssData; name: string): SyntaxNode		82
+nim	getPropertySyntax	openparser/css/syntaxdata.html#getPropertySyntax,CssData,string	proc getPropertySyntax(data: CssData; property: string): SyntaxNode		93

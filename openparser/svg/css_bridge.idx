@@ -1,0 +1,3 @@
+nimTitle	css_bridge	openparser/svg/css_bridge.html	module openparser/svg/css_bridge		0
+nim	parseStyleAttribute	openparser/svg/css_bridge.html#parseStyleAttribute,string	proc parseStyleAttribute(style: string): seq[tuple[property, value: string]]		8
+nim	styleDeclsToString	openparser/svg/css_bridge.html#styleDeclsToString,seq[tuple[string,string]],bool	proc styleDeclsToString(decls: seq[tuple[property, value: string]];\n                   minify: bool = false): string		30

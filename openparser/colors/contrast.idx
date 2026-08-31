@@ -1,0 +1,8 @@
+nimTitle	contrast	openparser/colors/contrast.html	module openparser/colors/contrast		0
+nim	luminance	openparser/colors/contrast.html#luminance,Color	proc luminance(c: Color): float		10
+nim	contrastRatio	openparser/colors/contrast.html#contrastRatio,Color,Color	proc contrastRatio(a, b: Color): float		19
+nim	isReadable	openparser/colors/contrast.html#isReadable,Color,Color,string,string	proc isReadable(a, b: Color; level: string = "AA"; size: string = "small"): bool		26
+nim	readability	openparser/colors/contrast.html#readability,Color,Color	proc readability(a, b: Color): tuple[ratio: float, level: string]		37
+nim	isLight	openparser/colors/contrast.html#isLight,Color	proc isLight(c: Color): bool		45
+nim	isDark	openparser/colors/contrast.html#isDark,Color	proc isDark(c: Color): bool		48
+nim	mostReadable	openparser/colors/contrast.html#mostReadable,Color,seq[Color]	proc mostReadable(base: Color; candidates: seq[Color]): Color		51

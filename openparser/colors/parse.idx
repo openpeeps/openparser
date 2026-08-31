@@ -1,0 +1,4 @@
+nimTitle	parse	openparser/colors/parse.html	module openparser/colors/parse		0
+nim	parseHexColor	openparser/colors/parse.html#parseHexColor,string	proc parseHexColor(s: string): Color		25
+nim	parseColor	openparser/colors/parse.html#parseColor,string	proc parseColor(s: string): Color		261
+nim	isValidColor	openparser/colors/parse.html#isValidColor,string	proc isValidColor(s: string): bool		337

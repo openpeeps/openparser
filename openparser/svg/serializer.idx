@@ -1,0 +1,9 @@
+nimTitle	serializer	openparser/svg/serializer.html	module openparser/svg/serializer		0
+nim	SvgSerializeOptions	openparser/svg/serializer.html#SvgSerializeOptions	object SvgSerializeOptions		13
+nim	defaultSvgSerializeOptions	openparser/svg/serializer.html#defaultSvgSerializeOptions	proc defaultSvgSerializeOptions(): SvgSerializeOptions		22
+nim	toSvg	openparser/svg/serializer.html#toSvg,SvgDocument,SvgSerializeOptions	proc toSvg(doc: SvgDocument; opts: SvgSerializeOptions = defaultSvgSerializeOptions()): string		125
+nim	toSvg	openparser/svg/serializer.html#toSvg,SvgNode,SvgSerializeOptions	proc toSvg(node: SvgNode; opts: SvgSerializeOptions = defaultSvgSerializeOptions()): string		140
+nim	`$`	openparser/svg/serializer.html#$,SvgDocument	proc `$`(doc: SvgDocument): string		148
+nim	`$`	openparser/svg/serializer.html#$,SvgNode	proc `$`(node: SvgNode): string		151
+nimgrp	$	openparser/svg/serializer.html#$-procs-all	proc		148
+nimgrp	tosvg	openparser/svg/serializer.html#toSvg-procs-all	proc		125

@@ -1,0 +1,12 @@
+nimTitle	stringify	openparser/colors/stringify.html	module openparser/colors/stringify		0
+nim	toHex	openparser/colors/stringify.html#toHex,Color	proc toHex(c: Color; allow3Char = false): string		12
+nim	toHex8	openparser/colors/stringify.html#toHex8,Color	proc toHex8(c: Color; allow4Char = false): string		25
+nim	toRgbString	openparser/colors/stringify.html#toRgbString,Color	proc toRgbString(c: Color): string		49
+nim	toHslString	openparser/colors/stringify.html#toHslString,Color	proc toHslString(c: Color): string		56
+nim	toHsvString	openparser/colors/stringify.html#toHsvString,Color	proc toHsvString(c: Color): string		66
+nim	toCmykString	openparser/colors/stringify.html#toCmykString,Color	proc toCmykString(c: Color): string		76
+nim	toLabString	openparser/colors/stringify.html#toLabString,Color	proc toLabString(c: Color): string		80
+nim	toLchString	openparser/colors/stringify.html#toLchString,Color	proc toLchString(c: Color): string		84
+nim	toOklabString	openparser/colors/stringify.html#toOklabString,Color	proc toOklabString(c: Color): string		88
+nim	toOklchString	openparser/colors/stringify.html#toOklchString,Color	proc toOklchString(c: Color): string		92
+nim	toString	openparser/colors/stringify.html#toString,Color	proc toString(c: Color): string		96

@@ -1,0 +1,9 @@
+nimTitle	parser	openparser/svg/parser.html	module openparser/svg/parser		0
+nim	SVGParserPolicy	openparser/svg/parser.html#SVGParserPolicy	object SVGParserPolicy		14
+nim	SvgParseError	openparser/svg/parser.html#SvgParseError	object SvgParseError		23
+nim	defaultSVGParserPolicy	openparser/svg/parser.html#defaultSVGParserPolicy	proc defaultSVGParserPolicy(): SVGParserPolicy		25
+nim	parseSvg	openparser/svg/parser.html#parseSvg,string,SVGParserPolicy	proc parseSvg(input: string; policy: SVGParserPolicy = defaultSVGParserPolicy()): SvgDocument		91
+nim	parseSvg	openparser/svg/parser.html#parseSvg,MemFile,SVGParserPolicy	proc parseSvg(mf: MemFile; policy: SVGParserPolicy = defaultSVGParserPolicy()): SvgDocument		108
+nim	parseSvgFile	openparser/svg/parser.html#parseSvgFile,string,SVGParserPolicy	proc parseSvgFile(path: string; policy: SVGParserPolicy = defaultSVGParserPolicy()): SvgDocument		116
+nim	parseSvgElement	openparser/svg/parser.html#parseSvgElement,string,SVGParserPolicy	proc parseSvgElement(input: string;\n                policy: SVGParserPolicy = defaultSVGParserPolicy()): SvgNode		126
+nimgrp	parsesvg	openparser/svg/parser.html#parseSvg-procs-all	proc		91

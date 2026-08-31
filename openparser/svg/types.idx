@@ -1,0 +1,33 @@
+nimTitle	types	openparser/svg/types.html	module openparser/svg/types		0
+nim	luNumber	openparser/svg/types.html#luNumber	SvgLengthUnit.luNumber		8
+nim	luPx	openparser/svg/types.html#luPx	SvgLengthUnit.luPx		8
+nim	luPercent	openparser/svg/types.html#luPercent	SvgLengthUnit.luPercent		8
+nim	luEm	openparser/svg/types.html#luEm	SvgLengthUnit.luEm		8
+nim	luEx	openparser/svg/types.html#luEx	SvgLengthUnit.luEx		8
+nim	luPt	openparser/svg/types.html#luPt	SvgLengthUnit.luPt		8
+nim	luPc	openparser/svg/types.html#luPc	SvgLengthUnit.luPc		8
+nim	luCm	openparser/svg/types.html#luCm	SvgLengthUnit.luCm		8
+nim	luMm	openparser/svg/types.html#luMm	SvgLengthUnit.luMm		8
+nim	luIn	openparser/svg/types.html#luIn	SvgLengthUnit.luIn		8
+nim	SvgLengthUnit	openparser/svg/types.html#SvgLengthUnit	enum SvgLengthUnit		8
+nim	SvgLength	openparser/svg/types.html#SvgLength	object SvgLength		20
+nim	SvgViewBox	openparser/svg/types.html#SvgViewBox	object SvgViewBox		25
+nim	SvgPreserveAspect	openparser/svg/types.html#SvgPreserveAspect	object SvgPreserveAspect		28
+nim	trMatrix	openparser/svg/types.html#trMatrix	SvgTransformKind.trMatrix		32
+nim	trTranslate	openparser/svg/types.html#trTranslate	SvgTransformKind.trTranslate		32
+nim	trScale	openparser/svg/types.html#trScale	SvgTransformKind.trScale		32
+nim	trRotate	openparser/svg/types.html#trRotate	SvgTransformKind.trRotate		32
+nim	trSkewX	openparser/svg/types.html#trSkewX	SvgTransformKind.trSkewX		32
+nim	trSkewY	openparser/svg/types.html#trSkewY	SvgTransformKind.trSkewY		32
+nim	SvgTransformKind	openparser/svg/types.html#SvgTransformKind	enum SvgTransformKind		32
+nim	SvgTransform	openparser/svg/types.html#SvgTransform	object SvgTransform		40
+nim	defaultSvgLength	openparser/svg/types.html#defaultSvgLength,float	proc defaultSvgLength(v: float = 0.0): SvgLength		44
+nim	svgLengthToString	openparser/svg/types.html#svgLengthToString,SvgLength	proc svgLengthToString(l: SvgLength): string		47
+nim	parseSvgLength	openparser/svg/types.html#parseSvgLength,string	proc parseSvgLength(s: string): SvgLength		57
+nim	parseSvgViewBox	openparser/svg/types.html#parseSvgViewBox,string	proc parseSvgViewBox(s: string): SvgViewBox		101
+nim	viewBoxToString	openparser/svg/types.html#viewBoxToString,SvgViewBox	proc viewBoxToString(vb: SvgViewBox): string		118
+nim	parsePreserveAspectRatio	openparser/svg/types.html#parsePreserveAspectRatio,string	proc parsePreserveAspectRatio(s: string): SvgPreserveAspect		121
+nim	preserveAspectToString	openparser/svg/types.html#preserveAspectToString,SvgPreserveAspect	proc preserveAspectToString(p: SvgPreserveAspect): string		132
+nim	parseSvgTransform	openparser/svg/types.html#parseSvgTransform,string	proc parseSvgTransform(s: string): seq[SvgTransform]		137
+nim	transformToString	openparser/svg/types.html#transformToString,SvgTransform	proc transformToString(t: SvgTransform): string		188
+nim	transformsToString	openparser/svg/types.html#transformsToString,seq[SvgTransform]	proc transformsToString(ts: seq[SvgTransform]): string		202

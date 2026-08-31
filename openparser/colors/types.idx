@@ -1,0 +1,28 @@
+nimTitle	types	openparser/colors/types.html	module openparser/colors/types		0
+nim	ParserColorError	openparser/colors/types.html#ParserColorError	object ParserColorError		7
+nim	cfHex	openparser/colors/types.html#cfHex	ColorFormat.cfHex		9
+nim	cfRgb	openparser/colors/types.html#cfRgb	ColorFormat.cfRgb		9
+nim	cfHsl	openparser/colors/types.html#cfHsl	ColorFormat.cfHsl		9
+nim	cfHsv	openparser/colors/types.html#cfHsv	ColorFormat.cfHsv		9
+nim	cfHsb	openparser/colors/types.html#cfHsb	ColorFormat.cfHsb		9
+nim	cfCmyk	openparser/colors/types.html#cfCmyk	ColorFormat.cfCmyk		9
+nim	cfLab	openparser/colors/types.html#cfLab	ColorFormat.cfLab		9
+nim	cfLch	openparser/colors/types.html#cfLch	ColorFormat.cfLch		9
+nim	cfOklab	openparser/colors/types.html#cfOklab	ColorFormat.cfOklab		9
+nim	cfOklch	openparser/colors/types.html#cfOklch	ColorFormat.cfOklch		9
+nim	cfNamed	openparser/colors/types.html#cfNamed	ColorFormat.cfNamed		9
+nim	cfHwb	openparser/colors/types.html#cfHwb	ColorFormat.cfHwb		9
+nim	ColorFormat	openparser/colors/types.html#ColorFormat	enum ColorFormat		9
+nim	Color	openparser/colors/types.html#Color	object Color		23
+nim	Rgb	openparser/colors/types.html#Rgb	object Rgb		28
+nim	Hsl	openparser/colors/types.html#Hsl	object Hsl		32
+nim	Hsv	openparser/colors/types.html#Hsv	object Hsv		36
+nim	Hsb	openparser/colors/types.html#Hsb	type Hsb		40
+nim	Hwb	openparser/colors/types.html#Hwb	object Hwb		42
+nim	Cmyk	openparser/colors/types.html#Cmyk	object Cmyk		46
+nim	Lab	openparser/colors/types.html#Lab	object Lab		49
+nim	Lch	openparser/colors/types.html#Lch	object Lch		53
+nim	Oklab	openparser/colors/types.html#Oklab	object Oklab		56
+nim	Oklch	openparser/colors/types.html#Oklch	object Oklch		60
+nim	initColor	openparser/colors/types.html#initColor,float,float,float,float	proc initColor(r, g, b: float; a: float = 1.0; format = cfRgb): Color		63
+nim	isValid	openparser/colors/types.html#isValid,Color	proc isValid(c: Color): bool		66

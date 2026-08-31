@@ -1,0 +1,15 @@
+nimTitle	constants	openparser/colors/constants.html	module openparser/colors/constants		0
+nim	Xn	openparser/colors/constants.html#Xn	const Xn		10
+nim	Yn	openparser/colors/constants.html#Yn	const Yn		11
+nim	Zn	openparser/colors/constants.html#Zn	const Zn		12
+nim	SRgbToXyz	openparser/colors/constants.html#SRgbToXyz	const SRgbToXyz		15
+nim	XyzToSrgb	openparser/colors/constants.html#XyzToSrgb	const XyzToSrgb		20
+nim	OklabM1	openparser/colors/constants.html#OklabM1	const OklabM1		28
+nim	OklabM2	openparser/colors/constants.html#OklabM2	const OklabM2		34
+nim	OklabM2Inv	openparser/colors/constants.html#OklabM2Inv	const OklabM2Inv		39
+nim	OklabM1Inv	openparser/colors/constants.html#OklabM1Inv	const OklabM1Inv		44
+nim	clamp	openparser/colors/constants.html#clamp,float,float,float	proc clamp(v, lo, hi: float): float		50
+nim	clamp01	openparser/colors/constants.html#clamp01,float	proc clamp01(v: float): float		53
+nim	degToRad	openparser/colors/constants.html#degToRad,float	proc degToRad(d: float): float		55
+nim	radToDeg	openparser/colors/constants.html#radToDeg,float	proc radToDeg(r: float): float		56
+nim	hueMod	openparser/colors/constants.html#hueMod,float	proc hueMod(h: float): float		58

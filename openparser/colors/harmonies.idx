@@ -1,0 +1,7 @@
+nimTitle	harmonies	openparser/colors/harmonies.html	module openparser/colors/harmonies		0
+nim	triad	openparser/colors/harmonies.html#triad,Color	proc triad(c: Color): seq[Color]		11
+nim	tetrad	openparser/colors/harmonies.html#tetrad,Color	proc tetrad(c: Color): seq[Color]		14
+nim	splitComplement	openparser/colors/harmonies.html#splitComplement,Color	proc splitComplement(c: Color): seq[Color]		17
+nim	analogous	openparser/colors/harmonies.html#analogous,Color,int,int	proc analogous(c: Color; results: int = 6; slices: int = 30): seq[Color]		20
+nim	monochromatic	openparser/colors/harmonies.html#monochromatic,Color,int	proc monochromatic(c: Color; results: int = 6): seq[Color]		34
+nim	complementSeq	openparser/colors/harmonies.html#complementSeq,Color	proc complementSeq(c: Color): seq[Color]		53

@@ -1,0 +1,102 @@
+nimTitle	ast	openparser/svg/ast.html	module openparser/svg/ast		0
+nim	svgUnknown	openparser/svg/ast.html#svgUnknown	SvgTag.svgUnknown		10
+nim	svgSvg	openparser/svg/ast.html#svgSvg	SvgTag.svgSvg		10
+nim	svgG	openparser/svg/ast.html#svgG	SvgTag.svgG		10
+nim	svgDefs	openparser/svg/ast.html#svgDefs	SvgTag.svgDefs		10
+nim	svgSymbol	openparser/svg/ast.html#svgSymbol	SvgTag.svgSymbol		10
+nim	svgUse	openparser/svg/ast.html#svgUse	SvgTag.svgUse		10
+nim	svgSwitch	openparser/svg/ast.html#svgSwitch	SvgTag.svgSwitch		10
+nim	svgPath	openparser/svg/ast.html#svgPath	SvgTag.svgPath		10
+nim	svgRect	openparser/svg/ast.html#svgRect	SvgTag.svgRect		10
+nim	svgCircle	openparser/svg/ast.html#svgCircle	SvgTag.svgCircle		10
+nim	svgEllipse	openparser/svg/ast.html#svgEllipse	SvgTag.svgEllipse		10
+nim	svgLine	openparser/svg/ast.html#svgLine	SvgTag.svgLine		10
+nim	svgPolyline	openparser/svg/ast.html#svgPolyline	SvgTag.svgPolyline		10
+nim	svgPolygon	openparser/svg/ast.html#svgPolygon	SvgTag.svgPolygon		10
+nim	svgText	openparser/svg/ast.html#svgText	SvgTag.svgText		10
+nim	svgTspan	openparser/svg/ast.html#svgTspan	SvgTag.svgTspan		10
+nim	svgTref	openparser/svg/ast.html#svgTref	SvgTag.svgTref		10
+nim	svgTextPath	openparser/svg/ast.html#svgTextPath	SvgTag.svgTextPath		10
+nim	svgAltGlyph	openparser/svg/ast.html#svgAltGlyph	SvgTag.svgAltGlyph		10
+nim	svgAltGlyphDef	openparser/svg/ast.html#svgAltGlyphDef	SvgTag.svgAltGlyphDef		10
+nim	svgAltGlyphItem	openparser/svg/ast.html#svgAltGlyphItem	SvgTag.svgAltGlyphItem		10
+nim	svgGlyph	openparser/svg/ast.html#svgGlyph	SvgTag.svgGlyph		10
+nim	svgGlyphRef	openparser/svg/ast.html#svgGlyphRef	SvgTag.svgGlyphRef		10
+nim	svgMissingGlyph	openparser/svg/ast.html#svgMissingGlyph	SvgTag.svgMissingGlyph		10
+nim	svgFont	openparser/svg/ast.html#svgFont	SvgTag.svgFont		10
+nim	svgFontFace	openparser/svg/ast.html#svgFontFace	SvgTag.svgFontFace		10
+nim	svgFontFaceSrc	openparser/svg/ast.html#svgFontFaceSrc	SvgTag.svgFontFaceSrc		10
+nim	svgFontFaceUri	openparser/svg/ast.html#svgFontFaceUri	SvgTag.svgFontFaceUri		10
+nim	svgFontFaceFormat	openparser/svg/ast.html#svgFontFaceFormat	SvgTag.svgFontFaceFormat		10
+nim	svgFontFaceName	openparser/svg/ast.html#svgFontFaceName	SvgTag.svgFontFaceName		10
+nim	svgHkern	openparser/svg/ast.html#svgHkern	SvgTag.svgHkern		10
+nim	svgVkern	openparser/svg/ast.html#svgVkern	SvgTag.svgVkern		10
+nim	svgA	openparser/svg/ast.html#svgA	SvgTag.svgA		10
+nim	svgImage	openparser/svg/ast.html#svgImage	SvgTag.svgImage		10
+nim	svgLinearGradient	openparser/svg/ast.html#svgLinearGradient	SvgTag.svgLinearGradient		10
+nim	svgRadialGradient	openparser/svg/ast.html#svgRadialGradient	SvgTag.svgRadialGradient		10
+nim	svgStop	openparser/svg/ast.html#svgStop	SvgTag.svgStop		10
+nim	svgPattern	openparser/svg/ast.html#svgPattern	SvgTag.svgPattern		10
+nim	svgClipPath	openparser/svg/ast.html#svgClipPath	SvgTag.svgClipPath		10
+nim	svgMask	openparser/svg/ast.html#svgMask	SvgTag.svgMask		10
+nim	svgFilter	openparser/svg/ast.html#svgFilter	SvgTag.svgFilter		10
+nim	svgFeBlend	openparser/svg/ast.html#svgFeBlend	SvgTag.svgFeBlend		10
+nim	svgFeColorMatrix	openparser/svg/ast.html#svgFeColorMatrix	SvgTag.svgFeColorMatrix		10
+nim	svgFeComponentTransfer	openparser/svg/ast.html#svgFeComponentTransfer	SvgTag.svgFeComponentTransfer		10
+nim	svgFeComposite	openparser/svg/ast.html#svgFeComposite	SvgTag.svgFeComposite		10
+nim	svgFeConvolveMatrix	openparser/svg/ast.html#svgFeConvolveMatrix	SvgTag.svgFeConvolveMatrix		10
+nim	svgFeDiffuseLighting	openparser/svg/ast.html#svgFeDiffuseLighting	SvgTag.svgFeDiffuseLighting		10
+nim	svgFeDisplacementMap	openparser/svg/ast.html#svgFeDisplacementMap	SvgTag.svgFeDisplacementMap		10
+nim	svgFeDistantLight	openparser/svg/ast.html#svgFeDistantLight	SvgTag.svgFeDistantLight		10
+nim	svgFeDropShadow	openparser/svg/ast.html#svgFeDropShadow	SvgTag.svgFeDropShadow		10
+nim	svgFeFlood	openparser/svg/ast.html#svgFeFlood	SvgTag.svgFeFlood		10
+nim	svgFeFuncA	openparser/svg/ast.html#svgFeFuncA	SvgTag.svgFeFuncA		10
+nim	svgFeFuncB	openparser/svg/ast.html#svgFeFuncB	SvgTag.svgFeFuncB		10
+nim	svgFeFuncG	openparser/svg/ast.html#svgFeFuncG	SvgTag.svgFeFuncG		10
+nim	svgFeFuncR	openparser/svg/ast.html#svgFeFuncR	SvgTag.svgFeFuncR		10
+nim	svgFeGaussianBlur	openparser/svg/ast.html#svgFeGaussianBlur	SvgTag.svgFeGaussianBlur		10
+nim	svgFeImage	openparser/svg/ast.html#svgFeImage	SvgTag.svgFeImage		10
+nim	svgFeMerge	openparser/svg/ast.html#svgFeMerge	SvgTag.svgFeMerge		10
+nim	svgFeMergeNode	openparser/svg/ast.html#svgFeMergeNode	SvgTag.svgFeMergeNode		10
+nim	svgFeMorphology	openparser/svg/ast.html#svgFeMorphology	SvgTag.svgFeMorphology		10
+nim	svgFeOffset	openparser/svg/ast.html#svgFeOffset	SvgTag.svgFeOffset		10
+nim	svgFePointLight	openparser/svg/ast.html#svgFePointLight	SvgTag.svgFePointLight		10
+nim	svgFeSpecularLighting	openparser/svg/ast.html#svgFeSpecularLighting	SvgTag.svgFeSpecularLighting		10
+nim	svgFeSpotLight	openparser/svg/ast.html#svgFeSpotLight	SvgTag.svgFeSpotLight		10
+nim	svgFeTile	openparser/svg/ast.html#svgFeTile	SvgTag.svgFeTile		10
+nim	svgFeTurbulence	openparser/svg/ast.html#svgFeTurbulence	SvgTag.svgFeTurbulence		10
+nim	svgView	openparser/svg/ast.html#svgView	SvgTag.svgView		10
+nim	svgCursor	openparser/svg/ast.html#svgCursor	SvgTag.svgCursor		10
+nim	svgStyle	openparser/svg/ast.html#svgStyle	SvgTag.svgStyle		10
+nim	svgScript	openparser/svg/ast.html#svgScript	SvgTag.svgScript		10
+nim	svgTitle	openparser/svg/ast.html#svgTitle	SvgTag.svgTitle		10
+nim	svgDesc	openparser/svg/ast.html#svgDesc	SvgTag.svgDesc		10
+nim	svgMetadata	openparser/svg/ast.html#svgMetadata	SvgTag.svgMetadata		10
+nim	svgForeignObject	openparser/svg/ast.html#svgForeignObject	SvgTag.svgForeignObject		10
+nim	svgMarker	openparser/svg/ast.html#svgMarker	SvgTag.svgMarker		10
+nim	svgAnimate	openparser/svg/ast.html#svgAnimate	SvgTag.svgAnimate		10
+nim	svgAnimateMotion	openparser/svg/ast.html#svgAnimateMotion	SvgTag.svgAnimateMotion		10
+nim	svgAnimateTransform	openparser/svg/ast.html#svgAnimateTransform	SvgTag.svgAnimateTransform		10
+nim	svgSet	openparser/svg/ast.html#svgSet	SvgTag.svgSet		10
+nim	svgMpath	openparser/svg/ast.html#svgMpath	SvgTag.svgMpath		10
+nim	SvgTag	openparser/svg/ast.html#SvgTag	enum SvgTag		10
+nim	svgElement	openparser/svg/ast.html#svgElement	SvgNodeKind.svgElement		92
+nim	svgTextNode	openparser/svg/ast.html#svgTextNode	SvgNodeKind.svgTextNode		92
+nim	svgCommentNode	openparser/svg/ast.html#svgCommentNode	SvgNodeKind.svgCommentNode		92
+nim	svgCdataNode	openparser/svg/ast.html#svgCdataNode	SvgNodeKind.svgCdataNode		92
+nim	SvgNodeKind	openparser/svg/ast.html#SvgNodeKind	enum SvgNodeKind		92
+nim	SvgPathSeg	openparser/svg/ast.html#SvgPathSeg	object SvgPathSeg		98
+nim	SvgCommonAttrs	openparser/svg/ast.html#SvgCommonAttrs	object SvgCommonAttrs		102
+nim	SvgNode	openparser/svg/ast.html#SvgNode	type SvgNode		119
+nim	SvgDocument	openparser/svg/ast.html#SvgDocument	object SvgDocument		164
+nim	getSvgTag	openparser/svg/ast.html#getSvgTag,string	proc getSvgTag(name: string): SvgTag		169
+nim	newSvgElement	openparser/svg/ast.html#newSvgElement,SvgTag,string	proc newSvgElement(tag: SvgTag; rawTag: string = ""): SvgNode		176
+nim	newSvgText	openparser/svg/ast.html#newSvgText,string	proc newSvgText(t: string): SvgNode		179
+nim	newSvgComment	openparser/svg/ast.html#newSvgComment,string	proc newSvgComment(c: string): SvgNode		180
+nim	newSvgCdata	openparser/svg/ast.html#newSvgCdata,string	proc newSvgCdata(c: string): SvgNode		181
+nim	tagName	openparser/svg/ast.html#tagName,SvgNode	proc tagName(node: SvgNode): string		183
+nim	`[]`	openparser/svg/ast.html#[],SvgNode,int	proc `[]`(node: SvgNode; idx: int): SvgNode		187
+nim	len	openparser/svg/ast.html#len,SvgNode	proc len(node: SvgNode): int		189
+nim	addChild	openparser/svg/ast.html#addChild,SvgNode,SvgNode	proc addChild(parent, child: SvgNode)		191
+nim	findChild	openparser/svg/ast.html#findChild,SvgNode,SvgTag	proc findChild(parent: SvgNode; tag: SvgTag): SvgNode		195
+nim	findAll	openparser/svg/ast.html#findAll,SvgNode,SvgTag	proc findAll(parent: SvgNode; tag: SvgTag): seq[SvgNode]		201

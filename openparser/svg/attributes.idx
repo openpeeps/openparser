@@ -1,0 +1,5 @@
+nimTitle	attributes	openparser/svg/attributes.html	module openparser/svg/attributes		0
+nim	parsePoints	openparser/svg/attributes.html#parsePoints,string	proc parsePoints(s: string): seq[tuple[x, y: float]]		10
+nim	pointsToString	openparser/svg/attributes.html#pointsToString,seq[tuple[float,float]],bool	proc pointsToString(pts: seq[tuple[x, y: float]]; minify: bool = false): string		31
+nim	fillCommonAttrs	openparser/svg/attributes.html#fillCommonAttrs,SvgNode,bool	proc fillCommonAttrs(node: SvgNode; policyStrict: bool = false)		39
+nim	fillGeometryAttrs	openparser/svg/attributes.html#fillGeometryAttrs,SvgNode	proc fillGeometryAttrs(node: SvgNode)		84

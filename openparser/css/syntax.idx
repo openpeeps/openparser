@@ -1,0 +1,24 @@
+nimTitle	syntax	openparser/css/syntax.html	module openparser/css/syntax		0
+nim	skKeyword	openparser/css/syntax.html#skKeyword	SyntaxKind.skKeyword		4
+nim	skType	openparser/css/syntax.html#skType	SyntaxKind.skType		4
+nim	skFunction	openparser/css/syntax.html#skFunction	SyntaxKind.skFunction		4
+nim	skPropertyRef	openparser/css/syntax.html#skPropertyRef	SyntaxKind.skPropertyRef		4
+nim	skString	openparser/css/syntax.html#skString	SyntaxKind.skString		4
+nim	skNumeric	openparser/css/syntax.html#skNumeric	SyntaxKind.skNumeric		4
+nim	skTokenRef	openparser/css/syntax.html#skTokenRef	SyntaxKind.skTokenRef		4
+nim	skDelim	openparser/css/syntax.html#skDelim	SyntaxKind.skDelim		4
+nim	skGroup	openparser/css/syntax.html#skGroup	SyntaxKind.skGroup		4
+nim	skAlternatives	openparser/css/syntax.html#skAlternatives	SyntaxKind.skAlternatives		4
+nim	skAtLeastOne	openparser/css/syntax.html#skAtLeastOne	SyntaxKind.skAtLeastOne		4
+nim	skAll	openparser/css/syntax.html#skAll	SyntaxKind.skAll		4
+nim	skJuxtapose	openparser/css/syntax.html#skJuxtapose	SyntaxKind.skJuxtapose		4
+nim	skOptional	openparser/css/syntax.html#skOptional	SyntaxKind.skOptional		4
+nim	skZeroOrMore	openparser/css/syntax.html#skZeroOrMore	SyntaxKind.skZeroOrMore		4
+nim	skOneOrMore	openparser/css/syntax.html#skOneOrMore	SyntaxKind.skOneOrMore		4
+nim	skCommaSep	openparser/css/syntax.html#skCommaSep	SyntaxKind.skCommaSep		4
+nim	skRequired	openparser/css/syntax.html#skRequired	SyntaxKind.skRequired		4
+nim	skMulti	openparser/css/syntax.html#skMulti	SyntaxKind.skMulti		4
+nim	SyntaxKind	openparser/css/syntax.html#SyntaxKind	enum SyntaxKind		4
+nim	SyntaxNode	openparser/css/syntax.html#SyntaxNode	type SyntaxNode		25
+nim	parseSyntax	openparser/css/syntax.html#parseSyntax,string	proc parseSyntax(input: string): SyntaxNode		419
+nim	`$`	openparser/css/syntax.html#$,SyntaxNode	proc `$`(node: SyntaxNode): string		432
