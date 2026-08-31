@@ -44,6 +44,8 @@ proc compileRegex*(prog: Program, fullMatch = false): CompiledJit =
   ## checks backtrack into remaining alternatives). Returns a result
   ## with fn == nil when the program uses unsupported features
   ## (captures) or contains epsilon cycles.
+  when defined(windows) or defined(noRegexJit):
+    return
   let numInstrs = prog.instrs.len
   if prog.numCaptures > 0 or numInstrs == 0:
     return
@@ -235,9 +237,11 @@ proc jitScan*(cj: CompiledJit, input: string, fromPos = 0): tuple[start, stop: i
   ## Leftmost scan starting at `fromPos`: try every start offset until one
   ## matches. Returns (-1, -1) when nothing matches.
   result = (-1, -1)
+  if cj.fn == nil:
+    return
   if cj.anchored and fromPos > 0:
     return
-  when not defined(noRegexJit):
+  when not defined(noRegexJit) and not defined(windows):
     if cj.firstByte >= 0:
       # SIMD hop between candidate positions where the required first
       # byte occurs; full verification still runs in generated code.

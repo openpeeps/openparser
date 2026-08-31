@@ -10,8 +10,12 @@
 ## Low-level JIT code memory allocator. Provides `allocJitCode` and
 ## `freeJitCode` backed by platform-specific routines (e.g. mmap with
 ## PROT_EXEC) declared in `regex_jit_mem.h`.
-import std/os
-{.passC: "-I" & currentSourcePath().parentDir.}
+when defined(windows) or defined(noRegexJit):
+  proc allocJitCode*(size: int): pointer = nil
+  proc freeJitCode*(p: pointer, size: int) = discard
+else:
+  import std/os
+  {.passC: "-I" & currentSourcePath().parentDir.}
 
-proc allocJitCode*(size: int): pointer {.importc: "vc_alloc_jit_code", header: "regex_jit_mem.h".}
-proc freeJitCode*(p: pointer, size: int) {.importc: "vc_free_jit_code", header: "regex_jit_mem.h".}
+  proc allocJitCode*(size: int): pointer {.importc: "vc_alloc_jit_code", header: "regex_jit_mem.h".}
+  proc freeJitCode*(p: pointer, size: int) {.importc: "vc_free_jit_code", header: "regex_jit_mem.h".}

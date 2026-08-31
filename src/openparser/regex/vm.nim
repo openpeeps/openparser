@@ -207,9 +207,10 @@ proc initRegexVM*(prog: Program): RegexVM =
   result.prefilter = extractPrefilter(prog)
   result.pcCur     = initPcSet(n)
   result.pcNxt     = initPcSet(n)
-  when not defined(noRegexJit):
+  when not defined(noRegexJit) and not defined(windows):
     # Programs with captures or epsilon cycles get fn == nil here and
-    # keep using the interpreter below.
+    # keep using the interpreter below. JIT is disabled on Windows due to
+    # System-V vs Win64 calling convention mismatch and missing sys/mman.h.
     result.jit = jitcore.compileRegex(prog)
 
 proc closeRegexVM*(vm: var RegexVM) =
@@ -218,12 +219,12 @@ proc closeRegexVM*(vm: var RegexVM) =
   vm.jitFull.freeJit()
 
 proc hasJit(vm: RegexVM): bool {.inline.} =
-  when defined(noRegexJit): false else: vm.jit.fn != nil
+  when defined(noRegexJit) or defined(windows): false else: vm.jit.fn != nil
 
 proc ensureJitFull(vm: var RegexVM): bool =
   ## Lazily compile the full-match JIT variant (opMatch requires end of
   ## input and otherwise backtracks). Returns false when unavailable.
-  when defined(noRegexJit):
+  when defined(noRegexJit) or defined(windows):
     false
   else:
     if vm.jit.fn == nil:
@@ -705,7 +706,7 @@ proc execShape(pf: Prefilter, input: string,
 
 proc match*(vm: var RegexVM, input: string): MatchResult =
   ## Anchored full match: must start at 0 AND consume the whole string.
-  when not defined(noRegexJit):
+  when not defined(noRegexJit) and not defined(windows):
     if ensureJitFull(vm):
       let stopPos = jitcore.jitExec(vm.jitFull, input, 0)
       if stopPos >= 0 and stopPos == input.len:
@@ -743,7 +744,7 @@ proc backscanStart(input: string, anchorPos, minPos: int,
 
 proc find*(vm: var RegexVM, input: string): MatchResult =
   ## Leftmost match anywhere in input, using SIMD prefilter to skip positions.
-  when not defined(noRegexJit):
+  when not defined(noRegexJit) and not defined(windows):
     if vm.jit.fn != nil:
       # PCRE-style backtracking scan: leftmost start, first matching
       # alternative within that start. The JIT is faster than the
@@ -821,7 +822,7 @@ proc find*(vm: var RegexVM, input: string): MatchResult =
 
 proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
   ## Find all non-overlapping matches in input, using SIMD prefilter to skip positions.
-  when not defined(noRegexJit):
+  when not defined(noRegexJit) and not defined(windows):
     if vm.jit.fn != nil:
       var pos = 0
       while pos <= input.len:
