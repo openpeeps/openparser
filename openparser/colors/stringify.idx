@@ -10,3 +10,8 @@ nim	toLchString	openparser/colors/stringify.html#toLchString,Color	proc toLchStr
 nim	toOklabString	openparser/colors/stringify.html#toOklabString,Color	proc toOklabString(c: Color): string		88
 nim	toOklchString	openparser/colors/stringify.html#toOklchString,Color	proc toOklchString(c: Color): string		92
 nim	toString	openparser/colors/stringify.html#toString,Color	proc toString(c: Color): string		96
+nim	toHexAlpha	openparser/colors/stringify.html#toHexAlpha,Color	proc toHexAlpha(c: Color): string		110
+nim	toHtmlHex	openparser/colors/stringify.html#toHtmlHex,Color	proc toHtmlHex(c: Color): string		115
+nim	toHtmlHexTiny	openparser/colors/stringify.html#toHtmlHexTiny,Color	proc toHtmlHexTiny(c: Color): string		119
+nim	toHtmlRgb	openparser/colors/stringify.html#toHtmlRgb,Color	proc toHtmlRgb(c: Color): string		123
+nim	toHtmlRgba	openparser/colors/stringify.html#toHtmlRgba,Color	proc toHtmlRgba(c: Color): string		124

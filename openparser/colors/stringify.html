@@ -73,12 +73,32 @@
   <li><a class="reference" href="#toHex8%2CColor" title="toHex8(c: Color; allow4Char = false): string">toHex8(c: Color; allow4Char = false): string</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">toHexAlpha
+  <li><a class="reference" href="#toHexAlpha%2CColor" title="toHexAlpha(c: Color): string">toHexAlpha(c: Color): string</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">toHslString
   <li><a class="reference" href="#toHslString%2CColor" title="toHslString(c: Color): string">toHslString(c: Color): string</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">toHsvString
   <li><a class="reference" href="#toHsvString%2CColor" title="toHsvString(c: Color): string">toHsvString(c: Color): string</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">toHtmlHex
+  <li><a class="reference" href="#toHtmlHex%2CColor" title="toHtmlHex(c: Color): string">toHtmlHex(c: Color): string</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">toHtmlHexTiny
+  <li><a class="reference" href="#toHtmlHexTiny%2CColor" title="toHtmlHexTiny(c: Color): string">toHtmlHexTiny(c: Color): string</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">toHtmlRgb
+  <li><a class="reference" href="#toHtmlRgb%2CColor" title="toHtmlRgb(c: Color): string">toHtmlRgb(c: Color): string</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">toHtmlRgba
+  <li><a class="reference" href="#toHtmlRgba%2CColor" title="toHtmlRgba(c: Color): string">toHtmlRgba(c: Color): string</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">toLabString
@@ -162,6 +182,17 @@
 </div>
 
 </div>
+<div id="toHexAlpha-procs-all">
+  <div id="toHexAlpha,Color">
+  <dt><pre><span class="Keyword">proc</span> <a href="#toHexAlpha%2CColor"><span class="Identifier">toHexAlpha</span></a><span class="Other">(</span><span class="Identifier">c</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Alias for chroma <tt class="docutils literal"><span class="pre"><span class="Identifier">toHexAlpha</span></span></tt> (no '#', uppercase). Returns with '#' for openparser consistency via toHex8; exposed for drop-in compat.
+    
+  </dd>
+</div>
+
+</div>
 <div id="toHslString-procs-all">
   <div id="toHslString,Color">
   <dt><pre><span class="Keyword">proc</span> <a href="#toHslString%2CColor"><span class="Identifier">toHslString</span></a><span class="Other">(</span><span class="Identifier">c</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
@@ -176,6 +207,50 @@
 <div id="toHsvString-procs-all">
   <div id="toHsvString,Color">
   <dt><pre><span class="Keyword">proc</span> <a href="#toHsvString%2CColor"><span class="Identifier">toHsvString</span></a><span class="Other">(</span><span class="Identifier">c</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+
+</div>
+<div id="toHtmlHex-procs-all">
+  <div id="toHtmlHex,Color">
+  <dt><pre><span class="Keyword">proc</span> <a href="#toHtmlHex%2CColor"><span class="Identifier">toHtmlHex</span></a><span class="Other">(</span><span class="Identifier">c</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Alias for chroma <tt class="docutils literal"><span class="pre"><span class="Identifier">toHtmlHex</span></span></tt> (&quot;#RRGGBB&quot;).
+    
+  </dd>
+</div>
+
+</div>
+<div id="toHtmlHexTiny-procs-all">
+  <div id="toHtmlHexTiny,Color">
+  <dt><pre><span class="Keyword">proc</span> <a href="#toHtmlHexTiny%2CColor"><span class="Identifier">toHtmlHexTiny</span></a><span class="Other">(</span><span class="Identifier">c</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Alias for chroma <tt class="docutils literal"><span class="pre"><span class="Identifier">toHtmlHexTiny</span></span></tt> (&quot;#RGB&quot;).
+    
+  </dd>
+</div>
+
+</div>
+<div id="toHtmlRgb-procs-all">
+  <div id="toHtmlRgb,Color">
+  <dt><pre><span class="Keyword">proc</span> <a href="#toHtmlRgb%2CColor"><span class="Identifier">toHtmlRgb</span></a><span class="Other">(</span><span class="Identifier">c</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+
+</div>
+<div id="toHtmlRgba-procs-all">
+  <div id="toHtmlRgba,Color">
+  <dt><pre><span class="Keyword">proc</span> <a href="#toHtmlRgba%2CColor"><span class="Identifier">toHtmlRgba</span></a><span class="Other">(</span><span class="Identifier">c</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -260,7 +335,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-31 21:51:30 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-03 17:32:06 UTC</small>
       </div>
     </div>
   </div>

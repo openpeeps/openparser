@@ -13,3 +13,5 @@ nim	setAlpha	openparser/colors/manipulate.html#setAlpha,Color,float	proc setAlph
 nim	fadeIn	openparser/colors/manipulate.html#fadeIn,Color,float	proc fadeIn(c: Color; amount: float = 10.0): Color		69
 nim	fadeOut	openparser/colors/manipulate.html#fadeOut,Color,float	proc fadeOut(c: Color; amount: float = 10.0): Color		72
 nim	complement	openparser/colors/manipulate.html#complement,Color	proc complement(c: Color): Color		75
+nim	mixCMYK	openparser/colors/manipulate.html#mixCMYK,Color,Color,float	proc mixCMYK(a, b: Color; weight: float = 50.0): Color		78
+nim	almostEqual	openparser/colors/manipulate.html#almostEqual,Color,Color,float	proc almostEqual(a, b: Color; eps: float = 0.01): bool		93

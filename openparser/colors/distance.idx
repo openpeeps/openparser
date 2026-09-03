@@ -1,0 +1,3 @@
+nimTitle	distance	openparser/colors/distance.html	module openparser/colors/distance		0
+nim	deltaE00	openparser/colors/distance.html#deltaE00,Lab,Lab,float,float,float	proc deltaE00(c1, c2: Lab; kL, kC, kH: float = 1.0): float		21
+nim	distance	openparser/colors/distance.html#distance,Color,Color	proc distance(a, b: Color): float		67

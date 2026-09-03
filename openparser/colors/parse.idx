@@ -2,3 +2,11 @@ nimTitle	parse	openparser/colors/parse.html	module openparser/colors/parse		0
 nim	parseHexColor	openparser/colors/parse.html#parseHexColor,string	proc parseHexColor(s: string): Color		25
 nim	parseColor	openparser/colors/parse.html#parseColor,string	proc parseColor(s: string): Color		261
 nim	isValidColor	openparser/colors/parse.html#isValidColor,string	proc isValidColor(s: string): bool		337
+nim	parseHex	openparser/colors/parse.html#parseHex,string	proc parseHex(hex: string): Color		347
+nim	parseHexAlpha	openparser/colors/parse.html#parseHexAlpha,string	proc parseHexAlpha(hex: string): Color		357
+nim	parseHtmlHex	openparser/colors/parse.html#parseHtmlHex,string	proc parseHtmlHex(hex: string): Color		366
+nim	parseHtmlHexTiny	openparser/colors/parse.html#parseHtmlHexTiny,string	proc parseHtmlHexTiny(hex: string): Color		373
+nim	parseHtmlRgb	openparser/colors/parse.html#parseHtmlRgb,string	proc parseHtmlRgb(s: string): Color		382
+nim	parseHtmlRgba	openparser/colors/parse.html#parseHtmlRgba,string	proc parseHtmlRgba(s: string): Color		383
+nim	parseHtmlName	openparser/colors/parse.html#parseHtmlName,string	proc parseHtmlName(s: string): Color		384
+nim	parseHtmlColor	openparser/colors/parse.html#parseHtmlColor,string	proc parseHtmlColor(s: string): Color		385

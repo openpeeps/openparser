@@ -69,8 +69,40 @@
   <li><a class="reference" href="#parseColor%2Cstring" title="parseColor(s: string): Color">parseColor(s: string): Color</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">parseHex
+  <li><a class="reference" href="#parseHex%2Cstring" title="parseHex(hex: string): Color">parseHex(hex: string): Color</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">parseHexAlpha
+  <li><a class="reference" href="#parseHexAlpha%2Cstring" title="parseHexAlpha(hex: string): Color">parseHexAlpha(hex: string): Color</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">parseHexColor
   <li><a class="reference" href="#parseHexColor%2Cstring" title="parseHexColor(s: string): Color">parseHexColor(s: string): Color</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">parseHtmlColor
+  <li><a class="reference" href="#parseHtmlColor%2Cstring" title="parseHtmlColor(s: string): Color">parseHtmlColor(s: string): Color</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">parseHtmlHex
+  <li><a class="reference" href="#parseHtmlHex%2Cstring" title="parseHtmlHex(hex: string): Color">parseHtmlHex(hex: string): Color</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">parseHtmlHexTiny
+  <li><a class="reference" href="#parseHtmlHexTiny%2Cstring" title="parseHtmlHexTiny(hex: string): Color">parseHtmlHexTiny(hex: string): Color</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">parseHtmlName
+  <li><a class="reference" href="#parseHtmlName%2Cstring" title="parseHtmlName(s: string): Color">parseHtmlName(s: string): Color</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">parseHtmlRgb
+  <li><a class="reference" href="#parseHtmlRgb%2Cstring" title="parseHtmlRgb(s: string): Color">parseHtmlRgb(s: string): Color</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">parseHtmlRgba
+  <li><a class="reference" href="#parseHtmlRgba%2Cstring" title="parseHtmlRgba(s: string): Color">parseHtmlRgba(s: string): Color</a></li>
 
 </ul>
 
@@ -118,10 +150,106 @@
 </div>
 
 </div>
+<div id="parseHex-procs-all">
+  <div id="parseHex,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHex%2Cstring"><span class="Identifier">parseHex</span></a><span class="Other">(</span><span class="Identifier">hex</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ParserColorError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+                                    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Parses 6-digit hex without leading '#', e.g. &quot;FF0000&quot; -&gt; red. Mirrors chroma <tt class="docutils literal"><span class="pre"><span class="Identifier">parseHex</span></span></tt>: asserts hex.len == 6, no '#'.
+    
+  </dd>
+</div>
+
+</div>
+<div id="parseHexAlpha-procs-all">
+  <div id="parseHexAlpha,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHexAlpha%2Cstring"><span class="Identifier">parseHexAlpha</span></a><span class="Other">(</span><span class="Identifier">hex</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ParserColorError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Parses 8-digit hex without leading '#', e.g. &quot;FF0000FF&quot;.
+    
+  </dd>
+</div>
+
+</div>
 <div id="parseHexColor-procs-all">
   <div id="parseHexColor,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseHexColor%2Cstring"><span class="Identifier">parseHexColor</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ParserColorError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
                                        <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+
+</div>
+<div id="parseHtmlColor-procs-all">
+  <div id="parseHtmlColor,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHtmlColor%2Cstring"><span class="Identifier">parseHtmlColor</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ParserColorError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span>
+    <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+
+</div>
+<div id="parseHtmlHex-procs-all">
+  <div id="parseHtmlHex,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHtmlHex%2Cstring"><span class="Identifier">parseHtmlHex</span></a><span class="Other">(</span><span class="Identifier">hex</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ParserColorError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+                                        <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Parses HTML hex with leading '#', e.g. &quot;#FF0000&quot;.
+    
+  </dd>
+</div>
+
+</div>
+<div id="parseHtmlHexTiny-procs-all">
+  <div id="parseHtmlHexTiny,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHtmlHexTiny%2Cstring"><span class="Identifier">parseHtmlHexTiny</span></a><span class="Other">(</span><span class="Identifier">hex</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ParserColorError</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Parses 3-digit HTML hex like &quot;#F00&quot;.
+    
+  </dd>
+</div>
+
+</div>
+<div id="parseHtmlName-procs-all">
+  <div id="parseHtmlName,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHtmlName%2Cstring"><span class="Identifier">parseHtmlName</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ParserColorError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span>
+    <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+
+</div>
+<div id="parseHtmlRgb-procs-all">
+  <div id="parseHtmlRgb,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHtmlRgb%2Cstring"><span class="Identifier">parseHtmlRgb</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ParserColorError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span>
+    <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    
+  </dd>
+</div>
+
+</div>
+<div id="parseHtmlRgba-procs-all">
+  <div id="parseHtmlRgba,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseHtmlRgba%2Cstring"><span class="Identifier">parseHtmlRgba</span></a><span class="Other">(</span><span class="Identifier">s</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="types.html#Color"><span class="Identifier">Color</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ParserColorError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span>
+    <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -140,7 +268,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-31 21:51:30 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-03 17:32:06 UTC</small>
       </div>
     </div>
   </div>
