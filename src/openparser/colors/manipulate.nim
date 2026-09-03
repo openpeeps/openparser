@@ -74,3 +74,22 @@ proc fadeOut*(c: Color, amount: float = 10.0): Color {.discardable.} =
 
 proc complement*(c: Color): Color {.discardable.} =
   c.spin(180.0)
+
+proc mixCMYK*(a, b: Color, weight: float = 50.0): Color {.discardable.} =
+  ## Mix two colors via CMYK interpolation (chroma compat).
+  ## When weight == 50, simple average; otherwise lerp in CMYK space.
+  let w = clamp(weight/100.0, 0.0, 1.0)
+  let ca = a.toCmyk()
+  let cb = b.toCmyk()
+  var c: Cmyk
+  c.c = clamp01(ca.c*(1.0 - w) + cb.c*w)
+  c.m = clamp01(ca.m*(1.0 - w) + cb.m*w)
+  c.y = clamp01(ca.y*(1.0 - w) + cb.y*w)
+  c.k = clamp01(ca.k*(1.0 - w) + cb.k*w)
+  c.a = clamp01(a.a*(1.0 - w) + b.a*w)
+  result = fromCmyk(c)
+  result.format = a.format
+
+proc almostEqual*(a, b: Color, eps: float = 0.01): bool =
+  ## Chroma compat: true if r,g,b within eps (ignores alpha, like chroma).
+  abs(a.r - b.r) <= eps and abs(a.g - b.g) <= eps and abs(a.b - b.b) <= eps

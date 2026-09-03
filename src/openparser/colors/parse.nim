@@ -342,3 +342,44 @@ proc isValidColor*(s: string): bool =
     false
   except:
     false
+
+# --- chroma compatibility aliases ---
+proc parseHex*(hex: string): Color =
+  ## Parses 6-digit hex without leading '#', e.g. "FF0000" -> red.
+  ## Mirrors chroma `parseHex`: asserts hex.len == 6, no '#'.
+  var s = hex.strip()
+  if s.len > 0 and s[0] == '#':
+    s = s[1..^1]
+  if s.len != 6:
+    error("parseHex expects 6 hex digits: " & hex)
+  parseHexColor(s)
+
+proc parseHexAlpha*(hex: string): Color =
+  ## Parses 8-digit hex without leading '#', e.g. "FF0000FF".
+  var s = hex.strip()
+  if s.len > 0 and s[0] == '#':
+    s = s[1..^1]
+  if s.len != 8:
+    error("parseHexAlpha expects 8 hex digits: " & hex)
+  parseHexColor(s)
+
+proc parseHtmlHex*(hex: string): Color =
+  ## Parses HTML hex with leading '#', e.g. "#FF0000".
+  var s = hex.strip()
+  if s.len == 0 or s[0] != '#':
+    error("parseHtmlHex expects leading '#': " & hex)
+  parseHexColor(s)
+
+proc parseHtmlHexTiny*(hex: string): Color =
+  ## Parses 3-digit HTML hex like "#F00".
+  var s = hex.strip()
+  if s.len == 0 or s[0] != '#':
+    error("parseHtmlHexTiny expects leading '#': " & hex)
+  if s.len != 4:
+    error("parseHtmlHexTiny expects 4 chars like #F00: " & hex)
+  parseHexColor(s)
+
+proc parseHtmlRgb*(s: string): Color = parseColor(s)
+proc parseHtmlRgba*(s: string): Color = parseColor(s)
+proc parseHtmlName*(s: string): Color = parseColor(s)
+proc parseHtmlColor*(s: string): Color = parseColor(s)

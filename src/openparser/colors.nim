@@ -4,7 +4,7 @@
 #          Made by Humans from OpenPeeps
 #          https://github.com/openpeeps/openparser
 import ./colors/[types, constants, names, convert, parse,
-          stringify, manipulate, harmonies, contrast, random]
+          stringify, manipulate, harmonies, contrast, random, distance]
 
 export types, constants, names, convert, parse, stringify,
-          manipulate, harmonies, contrast, random
+          manipulate, harmonies, contrast, random, distance

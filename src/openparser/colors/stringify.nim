@@ -105,3 +105,20 @@ proc toString*(c: Color): string =
   of cfOklab: c.toOklabString()
   of cfOklch: c.toOklchString()
   else: c.toRgbString()
+
+# --- chroma compatibility aliases ---
+proc toHexAlpha*(c: Color): string =
+  ## Alias for chroma `toHexAlpha` (no '#', uppercase). Returns with '#'
+  ## for openparser consistency via toHex8; exposed for drop-in compat.
+  c.toHex8()
+
+proc toHtmlHex*(c: Color): string =
+  ## Alias for chroma `toHtmlHex` ("#RRGGBB").
+  c.toHex()
+
+proc toHtmlHexTiny*(c: Color): string =
+  ## Alias for chroma `toHtmlHexTiny` ("#RGB").
+  c.toHex(allow3Char = true)
+
+proc toHtmlRgb*(c: Color): string = c.toRgbString()
+proc toHtmlRgba*(c: Color): string = c.toRgbString()
