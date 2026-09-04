@@ -2,7 +2,7 @@
   A tiny collection of high-performance parsers and dumpers<br>
   JSON &bullet; YAML &bullet; XML &bullet; TOML &bullet; CSV <br>
   BSON &bullet; Plist &bullet; HTML &bullet; CSS &bullet; RSS &bullet; Atom<br>
-  DotEnv &bullet; iCal &bullet; NIF &bullet; SQL &bullet; Regex &bullet; Gettext &bullet; FBE &bullet; QR<br>
+  DotEnv &bullet; iCal &bullet; NIF &bullet; SQL &bullet; Regex &bullet; Gettext &bullet; FBE &bullet; QR &bullet; SVG &bullet; Colors<br>
   Written in Nim language
 </p>
 
@@ -43,6 +43,8 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 - GNU Gettext PO/MO translation file parsing and compilation
 - Fast Binary Encoding (FBE) with zero-copy buffer-based encoding
 - QR code generation and decoding for Model 2, Micro QR, rMQR, and SQRC
+- SVG parser with typed DOM, path data, transforms and serializer
+- Colors module with CSS Color 4, harmonies, contrast and manipulation
 - Context-aware error reporting with input snippets across all parsers
 - Zero-copy parsing via memory-mapped files for performance-critical workloads
 - Custom type extensibility through `parseHook`/`dumpHook` hooks
@@ -602,6 +604,123 @@ echo toks[2].kind  # ntkInt
 **Features:** Full nifspec 2027 token set (`() [] {} .` atoms, `nkIdent/Symbol/SymbolDef/Int/UInt/Float/CharLit/StrLit/Compound/Directive`), escapes `\n \t \r \| \^ \xx`, Base62 `LineInfo @col[,line[,file]]` and `~` shorthand, `#comment#` suffixes, hyphenated identifiers, trailing-dot global symbols `foo.0.` with lazy `moduleSuffix` expansion, `.nif27` directive at byte 0, `.index/.indexat` support, `maxDepth` and `preserveComments` options, MemFile zero-copy `tokenizeNif`/`fromNif`, round-trip `dumpNif`.
 
 - [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_nif.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/nif.html)
+
+---
+
+## Colors
+
+CSS Color Module Level 4 parser with conversions, manipulation, harmonies and WCAG contrast. Parses any CSS color string and converts between hex, rgb, hsl, hsv, hwb, cmyk, lab, lch, oklab, oklch.
+
+```nim
+import openparser/colors
+
+# Parse any CSS color
+let c = parseColor("oklch(0.7 0.15 180)")
+echo c.toHex()          # #00c0a0
+echo c.toRgbString()    # rgb(0, 192, 160)
+echo c.toHslString()    # hsl(172, 100%, 38%)
+
+# Hex, named, functions, transparent
+echo parseColor("#ff0000").toHex()        # #ff0000
+echo parseColor("rebeccapurple").toHex()  # #663399
+echo parseColor("rgb(255 0 0 / 0.5)").toHex8()  # #ff000080
+echo parseColor("hsl(0 100% 50%)").toHex()      # #ff0000
+echo parseColor("lab(53.2 80.1 67.2)").toHex()  # #ff0000
+
+# Conversions
+let hsl = c.toHsl()
+let lab = c.toLab()
+let oklch = c.toOklch()
+echo fromHsl(hsl).toHex()
+echo fromLab(lab).toHex()
+
+# Manipulation (chainable, immutable)
+let lighter = parseColor("red").lighten(20).saturate(10).spin(30)
+echo lighter.toHex()           # lighter rotated red
+echo parseColor("red").complement().toHex()  # #00ffff
+echo parseColor("red").mix(parseColor("blue"), 50).toHex()  # #800080
+echo parseColor("red").tint(20).toHex()      # pastel
+echo parseColor("red").shade(20).toHex()     # darker
+
+# Harmonies
+echo parseColor("red").triad()        # [red, lime, blue]
+echo parseColor("red").tetrad()       # 4 colors
+echo parseColor("red").analogous(5)   # 5 analogous colors
+
+# Contrast & readability (WCAG 2.1)
+echo luminance(parseColor("white"))   # 1.0
+echo contrastRatio(parseColor("white"), parseColor("black"))  # 21.0
+echo isReadable(parseColor("white"), parseColor("black"))     # true
+echo mostReadable(parseColor("black"), @[parseColor("white"), parseColor("red")]).toName()  # white
+
+# Validation
+echo isValidColor("notacolor")  # false
+echo parseColor("transparent").toHex8()  # #00000000
+```
+
+**Features:** Hex `#rgb #rgba #rrggbb #rrggbbaa` with/without `#`, 148 named colors, `rgb/rgba` with comma/space/slash syntax, `hsl/hsla`, `hsv/hsva/hsb`, `hwb`, `cmyk/device-cmyk`, `lab/lch/oklab/oklch`, `color(srgb ...)` and `transparent`, `isValidColor`, round-trip `toHex/toHex8/toRgb/toHsl/toHsv/toHwb/toCmyk/toLab/toLch/toOklab/toOklch` + `*String` helpers, manipulation `lighten/darken/saturate/desaturate/greyscale/spin/brighten/mix/tint/shade/setAlpha/fadeIn/fadeOut/complement`, harmonies `triad/tetrad/splitComplement/analogous/monochromatic`, WCAG `luminance/contrastRatio/isReadable/readability/mostReadable/isLight/isDark`, random `randomColor/randomColors`.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_colors.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/colors.html)
+
+---
+
+## SVG
+
+Full SVG 1.1 parser with typed DOM, path, lengths, transforms and CSS bridge. Built on top of the XML and Colors modules.
+
+```nim
+import openparser/svg
+
+# Parse from string or file (MemFile)
+let src = """
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <rect x="2" y="2" width="20" height="20" rx="4" fill="oklch(0.7 0.15 180)" />
+    <path d="M12 2 L22 22 L2 22 Z" fill="red" stroke="none"/>
+    <g transform="translate(10) rotate(45)">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor"/>
+    </g>
+  </svg>
+"""
+let doc = parseSvg(src)
+echo doc.root.tag              # svgSvg
+echo doc.root.width.get().value  # 24.0
+echo doc.root.viewBox.get().width  # 24.0
+
+# Typed access
+let rect = doc.root.children[0]
+echo rect.common.fill.get().toHex()       # #00c0a0 (oklch resolved via Colors)
+echo rect.width.get().value               # 20.0
+
+let path = doc.root.children[1]
+echo path.d.get()                         # M12 2 L22 22 L2 22 Z
+echo path.dSegs.len                       # 4 segments (M, L, L, Z)
+
+# Lengths, viewBox, transforms
+echo parseSvgLength("50%").unit           # luPercent
+echo parseSvgViewBox("0 0 100 100").width # 100.0
+echo parseSvgTransform("translate(10) rotate(45)").len  # 2
+
+# Modify DOM and serialize
+rect.common.fill = some(parseColor("rebeccapurple"))
+rect.attrsRaw["fill"] = "rebeccapurple"  # keep raw in sync for serializer
+let minified = doc.toSvg()  # compact: <svg ...><rect .../></svg>
+let pretty = doc.toSvg(SvgSerializeOptions(pretty: true, indentSize: 2, xmlDecl: true))
+echo pretty
+
+# File & error handling
+let doc2 = parseSvgFile("icon.svg")
+# strict mode via policy
+let policy = SVGParserPolicy(requireXmlns: true, allowUnknownTags: false)
+# parseSvg(src, policy) raises SvgParseError on unknown tags
+
+# CSS style attribute bridge
+let styled = parseSvg("""<svg><rect style="fill: hsl(0 100% 50%); stroke: blue; opacity: 0.5"/></svg>""")
+echo styled.root.children[0].common.styleDecls[0].property  # fill
+```
+
+**Features:** All SVG tags via `SvgTag` enum + `rawTag` fallback, typed `SvgLength` (`px % em ex pt pc cm mm in` + exponent handling), `SvgViewBox`, `SvgPreserveAspectRatio`, `SvgTransform` (`matrix/translate/scale/rotate/skewX/skewY`), full path `d` parser (`M L H V C S Q T A Z` with implicit lineto), points for `polygon/polyline`, `fill/stroke` resolved to `Color` (via `openparser/colors`) + `fillRaw/strokeRaw` for `none/currentColor`, `style` attribute parsed into `styleDecls` via CSS bridge, `x/y/rx/ry/cx/cy/r/x1/y1/x2/y2` lengths, `opacity/fillOpacity/strokeOpacity`, `href` (incl. `xlink:href`), `SVGParserPolicy` (`requireXmlns/allowUnknownTags/allowUnknownAttrs/preserveComments/strictColors/strictLengths/allowEntities`), `MemFile` `parseSvgFile`/`parseSvg(mf)`, serializer `toSvg` with `pretty/minify/xmlDecl/sortAttrs/preserveComments` and self-closing/escaping handling, round-trip preservation.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_svg.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/svg.html)
 
 ---
 
