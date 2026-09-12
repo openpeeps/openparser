@@ -164,7 +164,6 @@ Prebuilt binaries ship under `bin/<platform>-<arch>/openparser.node` and are sel
 |---|---|
 | darwin | arm64, x64 |
 | linux | arm64, x64 |
-| win32 | x64 |
 
 `binaryPath` and `nativePair` are exposed on the module so you can inspect which binary was loaded:
 

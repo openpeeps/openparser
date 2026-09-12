@@ -1,0 +1,91 @@
+name: release
+# Tag pushes (e.g. `0.3.2`) build the NAPI addons for macOS (arm64/x64) and
+# Linux (x64/arm64), attach them to the GitHub Release, and publish
+# `@openpeeps/openparser` to npm with all binaries included.
+#
+# NB: never compile `src/openparser.nim` directly (`nim c` / `nimble build`
+# hit the `{.error.}` guard). The build always goes through the custom denim
+# command below, which defines `-d:napibuild`.
+on:
+  push:
+    tags:
+      - '*.*.*'
+jobs:
+  napi:
+    name: napi addons
+    uses: nimbase/setup-nim-action/.github/workflows/release_clue.yml@v1
+    with:
+      app-name: openparser
+      nim-version: '2.2.x'
+      package-manager: nimble
+      test: true
+      test-flags: '-d:release'
+      node-version: '22'
+      pre-build-command: nimble install denim -y
+      build-command: denim build src/openparser.nim --cmake -y && node addons/openparser_napi/scripts/place-binary.js && npm test --prefix addons/openparser_napi
+      binary: bin/openparser.node
+      target-matrix: '[{"os":"macos-14","arch":"arm64"},{"os":"macos-15-intel","arch":"x86_64"},{"os":"ubuntu-24.04","arch":"x86_64"},{"os":"ubuntu-24.04-arm","arch":"arm64"}]'
+      create-release: true
+
+  npm-publish:
+    name: npm publish
+    runs-on: ubuntu-latest
+    needs: napi
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: artifact-*
+          path: dist
+          merge-multiple: true
+
+      - name: Assemble per-arch binaries
+        shell: bash
+        run: |
+          set -eu
+          pkg=addons/openparser_napi
+          # Map each release archive to its npm package slot.
+          # Archive names come from release_clue as <app>_<runner-os>-<arch>
+          # (lowercased), e.g. openparser_macos-arm64.tar.gz.
+          declare -A slots=(
+            [openparser_macos-arm64.tar.gz]=darwin-arm64
+            [openparser_macos-x86_64.tar.gz]=darwin-x64
+            [openparser_linux-x86_64.tar.gz]=linux-x64
+            [openparser_linux-arm64.tar.gz]=linux-arm64
+          )
+          for archive in "${!slots[@]}"; do
+            [[ -f "dist/${archive}" ]] || { echo "ERROR: missing ${archive}"; exit 1; }
+            work="$(mktemp -d)"
+            tar xzf "dist/${archive}" -C "${work}"
+            node_bin="$(find "${work}" -name 'openparser.node' | head -n 1)"
+            [[ -n "${node_bin}" ]] || { echo "ERROR: no openparser.node in ${archive}"; exit 1; }
+            dest="${pkg}/bin/${slots[${archive}]}"
+            mkdir -p "${dest}"
+            cp "${node_bin}" "${dest}/openparser.node"
+            rm -rf "${work}"
+          done
+          find "${pkg}/bin" -name '*.node' | sort
+
+      - name: Check tag matches package version
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          ver="$(node -p "require('./addons/openparser_napi/package.json').version")"
+          [[ "${tag}" == "${ver}" ]] || { echo "ERROR: tag ${tag} != package.json ${ver}"; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Smoke test assembled package
+        shell: bash
+        run: npm test --prefix addons/openparser_napi
+
+      - name: Publish to npm
+        working-directory: addons/openparser_napi
+        shell: bash
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

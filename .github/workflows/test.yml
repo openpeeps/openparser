@@ -13,17 +13,36 @@ on:
       - examples
       - .github/workflows
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  nim:
+    name: nim tests
+    uses: nimbase/setup-nim-action/.github/workflows/test_clue.yml@v1
+    with:
+      nim-version: '2.2.x'
+      os: '[{"os":"ubuntu-latest"},{"os":"macos-latest"}]'
+
+  napi:
+    name: napi addon (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        nim-version:
-          - 'stable'
+        os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v3
-      - uses: jiro4989/setup-nim-action@v1
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          nim-version: ${{ matrix.nim-version }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - run: nimble install -Y
-      - run: nimble test -d:release
+          node-version: '22'
+
+      - run: npm install -g cmake-js
+        # `denim build --cmake` shells out to `cmake-js compile`, so the
+        # cmake-js CLI must be on PATH before the build step below.
+
+      - uses: lukka/get-cmake@latest
+
+      - uses: nimbase/setup-nim-action@v1
+        with:
+          nim-version: '2.2.x'
+          command: nimble install -y && nimble install denim -y && denim build src/openparser.nim --cmake -y
+
+      - run: node addons/openparser_napi/scripts/place-binary.js && npm test --prefix addons/openparser_napi

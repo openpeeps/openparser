@@ -20,7 +20,6 @@ const path = require('path');
 const SUPPORTED = {
   darwin: ['arm64', 'x64'],
   linux: ['arm64', 'x64'],
-  win32: ['x64'],
 };
 
 function candidates() {
