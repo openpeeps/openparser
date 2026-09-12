@@ -41,6 +41,7 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 - NIF (2027 Nim Intermediate Format) parser with MemFile support, Base62 LineInfo and lazy symbol expansion
 - SQL parser supporting PostgreSQL, MySQL, and SQLite dialects
 - SIMD-accelerated regex engine with capture groups and quantifiers
+- SIMD-accelerated fuzzy search with fzf-style scoring and top-N ranking
 - GNU Gettext PO/MO translation file parsing and compilation
 - Fast Binary Encoding (FBE) with zero-copy buffer-based encoding
 - QR code generation and decoding for Model 2, Micro QR, rMQR, and SQRC
@@ -528,6 +529,41 @@ echo email.matched  # true
 ```
 
 **Features:** SSE2/AVX2 acceleration, character classes, quantifiers, alternation, capture groups, anchoring.
+
+---
+
+## Fuzzy Search
+
+SIMD-accelerated fuzzy (subsequence) search with fzf-style scoring: consecutive runs, word boundaries and camel humps rank higher, gaps and leading offsets are penalized. Zero per-candidate allocations, bounded top-N ranking, match positions for highlighting.
+
+```nim
+import openparser/fuzzy
+
+# Score one candidate: every query char must appear in order
+let r = fuzzyScore("abc", "abc")
+echo r.matched     # true
+echo r.score       # 27.333334
+echo r.positions   # @[0, 1, 2]
+
+# Gapped matches score lower but still hit
+echo fuzzyScore("abc", "axbyc").score  # 10.4
+
+# Case-insensitive by default, exact on demand
+echo fuzzyScore("ABC", "abc").matched  # true
+echo fuzzyScore("A", "a", FuzzyOptions(caseSensitive: true)).matched  # false
+
+# Rank candidates best-first, keep the top 2
+let words = @["application", "apple", "pineapple", "app"]
+for m in fuzzySearch("app", words, FuzzyOptions(limit: 2)):
+  echo m.text, " ", m.score  # app 27.333334, apple 16.4
+
+# Filter weak matches without a limit
+let strict = fuzzySearch("app", words, FuzzyOptions(minScore: 20.0))
+```
+
+**Features:** SSE2/AVX2/NEON lanes with scalar fallback and kernel parity tests, ASCII case folding without copying, word-start and camelCase bonuses, gap and leading penalties, length-normalized scores, top-N bounded heap ranking, `minScore` filtering, byte-offset match positions.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_fuzzy.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/fuzzy.html)
 
 ---
 
