@@ -36,6 +36,6 @@ jobs:
         echo "$HOME/.cmake-js/bin" >> "$GITHUB_PATH")
       pre-test-command: >-
         cd .. && nimble install denim &&
-        denim build openparser/src/openparser.nim --cmake -y &&
-        node openparser/addons/openparser_napi/scripts/place-binary.js &&
-        npm test --prefix openparser/addons/openparser_napi
+        cd openparser && denim build src/openparser.nim --cmake -y &&
+        node addons/openparser_napi/scripts/place-binary.js &&
+        npm test --prefix addons/openparser_napi
