@@ -1,5 +1,4 @@
-import std/[strutils]
-import openparser/css/[parser, ast, syntax, syntaxdata, validator]
+import openparser/css/[parser, ast, syntaxdata, validator]
 
 let data = loadCssData()
 

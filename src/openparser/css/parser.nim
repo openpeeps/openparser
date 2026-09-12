@@ -14,7 +14,7 @@
 ## It can be used as a standalone parser or as part of a larger CSS processing pipeline. The AST can
 ## be serialized back to CSS text, optionally minified.
 
-import std/[unicode, strutils, memfiles, math]
+import std/[unicode, strutils]
 
 import ./ast
 import ../private/lexutils
@@ -195,7 +195,6 @@ proc consumeEscape(l: var CssLexer): string =
     return ch
 
 proc consumeIdent(l: var CssLexer): string =
-  var result = ""
   if l.current == '-':
     result.add('-')
     l.advance()
@@ -210,10 +209,8 @@ proc consumeIdent(l: var CssLexer): string =
       result.add(l.consumeEscape())
     else:
       break
-  return result
 
 proc consumeNumber(l: var CssLexer): string =
-  var result = ""
   if l.current in {'+', '-'}:
     result.add(l.current)
     l.advance()
@@ -236,7 +233,6 @@ proc consumeNumber(l: var CssLexer): string =
     while l.current.isDigit():
       result.add(l.current)
       l.advance()
-  return result
 
 proc lexString(l: var CssLexer, quote: char): CssToken =
   let startLine = l.line

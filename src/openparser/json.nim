@@ -13,9 +13,8 @@
 ## but is designed to work with memory-mapped files and provide a more flexible and extensible
 ## serialization/deserialization mechanism.
 
-import std/[macros, macrocache, json, sequtils,
-        strutils, options, tables, enumutils, memfiles,
-        critbits, typetraits, strutils]
+import std/[macros, macrocache, json, strutils, options,
+        tables, memfiles, critbits, typetraits, strutils]
 
 import ./private/[types, lexutils]
 when not defined(openparserJsonNoSimd) and (defined(amd64) or defined(i386)):

@@ -8,8 +8,7 @@
 ## Thse AST is used to represent the structure of CSS code in a tree format, allowing for easy manipulation
 ## and serialization back to CSS text.
 
-import std/[tables, strutils]
-import ../json
+import std/strutils
 
 type
   CssNodeKind* = enum
