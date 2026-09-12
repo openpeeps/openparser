@@ -13,7 +13,7 @@ on:
 jobs:
   napi:
     name: napi addons
-    uses: nimbase/setup-nim-action/.github/workflows/release_clue.yml@v1
+    uses: nimbase/setup-nim-action/.github/workflows/release_clue.yml@main
     with:
       app-name: openparser
       nim-version: '2.2.x'
