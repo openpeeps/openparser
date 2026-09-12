@@ -15,14 +15,14 @@ on:
 jobs:
   nim:
     name: nim tests
-    uses: nimbase/setup-nim-action/.github/workflows/test_clue.yml@main
+    uses: nimbase/setup-nim-action/.github/workflows/test.yml@main
     with:
       nim-version: '2.2.x'
       os: '[{"os":"ubuntu-latest"},{"os":"macos-latest"}]'
 
   napi:
     name: napi addon
-    uses: nimbase/setup-nim-action/.github/workflows/test_clue.yml@main
+    uses: nimbase/setup-nim-action/.github/workflows/test.yml@main
     with:
       nim-version: '2.2.x'
       os: '[{"os":"ubuntu-latest"},{"os":"macos-latest"}]'
@@ -34,9 +34,6 @@ jobs:
         npm install -g cmake-js ||
         (npm install --prefix "$HOME/.cmake-js" cmake-js &&
         echo "$HOME/.cmake-js/bin" >> "$GITHUB_PATH")
-      # NB: never compile `src/openparser.nim` directly (`nim c` /
-      # `nimble build` hit the `{.error.}` guard). The build always goes
-      # through the custom denim command, which defines `-d:napibuild`.
       pre-test-command: >-
         nimble install denim -y &&
         denim build src/openparser.nim --cmake -y &&
