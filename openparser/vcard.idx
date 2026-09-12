@@ -1,0 +1,70 @@
+nimTitle	vcard	openparser/vcard.html	module openparser/vcard		0
+nim	OpenParserVCardError	openparser/vcard.html#OpenParserVCardError	object OpenParserVCardError		27
+nim	vv30	openparser/vcard.html#vv30	VCardVersion.vv30		29
+nim	vv40	openparser/vcard.html#vv40	VCardVersion.vv40		29
+nim	VCardVersion	openparser/vcard.html#VCardVersion	enum VCardVersion		29
+nim	VCardOptions	openparser/vcard.html#VCardOptions	object VCardOptions		33
+nim	VCardParam	openparser/vcard.html#VCardParam	object VCardParam		38
+nim	VCardProp	openparser/vcard.html#VCardProp	object VCardProp		42
+nim	VCardName	openparser/vcard.html#VCardName	object VCardName		48
+nim	VCardAdr	openparser/vcard.html#VCardAdr	object VCardAdr		51
+nim	VCardTel	openparser/vcard.html#VCardTel	object VCardTel		61
+nim	VCardEmail	openparser/vcard.html#VCardEmail	object VCardEmail		69
+nim	VCardImpp	openparser/vcard.html#VCardImpp	object VCardImpp		76
+nim	VCardLang	openparser/vcard.html#VCardLang	object VCardLang		83
+nim	VCardUrl	openparser/vcard.html#VCardUrl	object VCardUrl		90
+nim	VCardPhoto	openparser/vcard.html#VCardPhoto	object VCardPhoto		98
+nim	VCardOrg	openparser/vcard.html#VCardOrg	object VCardOrg		110
+nim	VCardRelated	openparser/vcard.html#VCardRelated	object VCardRelated		114
+nim	VCardMember	openparser/vcard.html#VCardMember	object VCardMember		122
+nim	VCardGender	openparser/vcard.html#VCardGender	object VCardGender		128
+nim	VCardDateProp	openparser/vcard.html#VCardDateProp	object VCardDateProp		132
+nim	VCardClientPid	openparser/vcard.html#VCardClientPid	object VCardClientPid		141
+nim	vkIndividual	openparser/vcard.html#vkIndividual	VCardKind.vkIndividual		145
+nim	vkGroup	openparser/vcard.html#vkGroup	VCardKind.vkGroup		145
+nim	vkOrg	openparser/vcard.html#vkOrg	VCardKind.vkOrg		145
+nim	vkLocation	openparser/vcard.html#vkLocation	VCardKind.vkLocation		145
+nim	vkApplication	openparser/vcard.html#vkApplication	VCardKind.vkApplication		145
+nim	vkCustom	openparser/vcard.html#vkCustom	VCardKind.vkCustom		145
+nim	VCardKind	openparser/vcard.html#VCardKind	enum VCardKind		145
+nim	VCardKindValue	openparser/vcard.html#VCardKindValue	object VCardKindValue		148
+nim	VCard	openparser/vcard.html#VCard	type VCard		156
+nim	VCardCrlf	openparser/vcard.html#VCardCrlf	const VCardCrlf		195
+nim	defaultVCardOptions	openparser/vcard.html#defaultVCardOptions	proc defaultVCardOptions(): VCardOptions		197
+nim	norm	openparser/vcard.html#norm,string	proc norm(s: string): string		202
+nim	failVCard	openparser/vcard.html#failVCard,int,string,string	proc failVCard(lineNo: int; lineText, msg: string)		204
+nim	vcardError	openparser/vcard.html#vcardError,string	proc vcardError(msg: string)		208
+nim	getParam	openparser/vcard.html#getParam,VCardProp,string	proc getParam(prop: VCardProp; name: string): Option[VCardParam]		211
+nim	hasParam	openparser/vcard.html#hasParam,VCardProp,string	proc hasParam(prop: VCardProp; name: string): bool		217
+nim	paramFirst	openparser/vcard.html#paramFirst,VCardProp,string	proc paramFirst(prop: VCardProp; name: string): Option[string]		220
+nim	paramAll	openparser/vcard.html#paramAll,VCardProp,string	proc paramAll(prop: VCardProp; name: string): seq[string]		225
+nim	unescapeVCardText	openparser/vcard.html#unescapeVCardText,string	proc unescapeVCardText(s: string): string		234
+nim	escapeVCardText	openparser/vcard.html#escapeVCardText,string	proc escapeVCardText(s: string): string		251
+nim	splitUnescaped	openparser/vcard.html#splitUnescaped,string,char	proc splitUnescaped(s: string; sep: char): seq[string]		262
+nim	splitEscapedComma	openparser/vcard.html#splitEscapedComma,string	proc splitEscapedComma(s: string): seq[string]		276
+nim	splitEscapedSemi	openparser/vcard.html#splitEscapedSemi,string	proc splitEscapedSemi(s: string): seq[string]		279
+nim	joinEscapedComma	openparser/vcard.html#joinEscapedComma,seq[string]	proc joinEscapedComma(items: seq[string]): string		282
+nim	joinEscapedSemi	openparser/vcard.html#joinEscapedSemi,seq[string]	proc joinEscapedSemi(items: seq[string]): string		288
+nim	unescapeParamValue	openparser/vcard.html#unescapeParamValue,string	proc unescapeParamValue(s: string): string		296
+nim	escapeParamValue	openparser/vcard.html#escapeParamValue,string	proc escapeParamValue(s: string): string		309
+nim	isVCardDate	openparser/vcard.html#isVCardDate,string	proc isVCardDate(s: string): bool		332
+nim	isVCardTime	openparser/vcard.html#isVCardTime,string	proc isVCardTime(s: string): bool		345
+nim	isVCardDateTime	openparser/vcard.html#isVCardDateTime,string	proc isVCardDateTime(s: string): bool		356
+nim	isVCardTimestamp	openparser/vcard.html#isVCardTimestamp,string	proc isVCardTimestamp(s: string): bool		371
+nim	isVCardUtcOffset	openparser/vcard.html#isVCardUtcOffset,string	proc isVCardUtcOffset(s: string): bool		376
+nim	validateVCardDateProp	openparser/vcard.html#validateVCardDateProp,VCardProp,string	proc validateVCardDateProp(prop: VCardProp; raw: string)		391
+nim	parseContentLine	openparser/vcard.html#parseContentLine,int,string	proc parseContentLine(lineNo: int; text: string): VCardProp		418
+nim	propLine	openparser/vcard.html#propLine,VCardProp	proc propLine(prop: VCardProp): string		507
+nim	unfoldLines	openparser/vcard.html#unfoldLines,string	proc unfoldLines(input: string): seq[LLine]		532
+nim	parseVCardKind	openparser/vcard.html#parseVCardKind,string	proc parseVCardKind(s: string): VCardKindValue		749
+nim	vcardKindStr	openparser/vcard.html#vcardKindStr,VCardKindValue	proc vcardKindStr(k: VCardKindValue): string		762
+nim	findProp	openparser/vcard.html#findProp,seq[VCardProp],string	proc findProp(props: seq[VCardProp]; name: string): Option[VCardProp]		772
+nim	buildVCard	openparser/vcard.html#buildVCard,seq[VCardProp]	proc buildVCard(props: seq[VCardProp]): VCard		780
+nim	parseVCards	openparser/vcard.html#parseVCards,string	proc parseVCards(input: string): seq[VCard]		913
+nim	parseVCard	openparser/vcard.html#parseVCard,string	proc parseVCard(input: string): VCard		952
+nim	parseVCardsFile	openparser/vcard.html#parseVCardsFile,string	proc parseVCardsFile(path: string): seq[VCard]		959
+nim	parseVCardFile	openparser/vcard.html#parseVCardFile,string	proc parseVCardFile(path: string): VCard		962
+nim	toVCards	openparser/vcard.html#toVCards,seq[VCard]	proc toVCards(cards: seq[VCard]; opts = defaultVCardOptions()): string		1162
+nim	toVCard	openparser/vcard.html#toVCard,VCard	proc toVCard(card: VCard; opts = defaultVCardOptions()): string		1169
+nim	`$`	openparser/vcard.html#$,VCard	proc `$`(card: VCard): string		1172
+nim	toQrPayload	openparser/vcard.html#toQrPayload,VCard	proc toQrPayload(c: VCard): string		1176
