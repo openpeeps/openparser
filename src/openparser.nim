@@ -9,8 +9,8 @@ when defined(napibuild):
   # `denim build src/openparser.nim --cmake -y` so the library itself
   # gains no denim dependency and zero overhead.
   import denim
-  include ./openparser/napi_convert
-  include ./openparser/napi_bridge
+  include ./openparser/private/napi_convert
+  include ./openparser/private/napi_bridge
 
 elif defined(builddocs):
   # For documentation purposes, we re-export all parsers here
