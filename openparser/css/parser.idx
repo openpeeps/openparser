@@ -45,5 +45,5 @@ nim	isPropertyAllowed	openparser/css/parser.html#isPropertyAllowed,CssPolicy,str
 nim	isAtRuleAllowed	openparser/css/parser.html#isAtRuleAllowed,CssPolicy,string	proc isAtRuleAllowed(policy: CssPolicy; name: string): bool		135
 nim	isFunctionAllowed	openparser/css/parser.html#isFunctionAllowed,CssPolicy,string	proc isFunctionAllowed(policy: CssPolicy; name: string): bool		142
 nim	validateValue	openparser/css/parser.html#validateValue,CssValue,CssPolicy	proc validateValue(val: CssValue; policy: CssPolicy): bool		149
-nim	nextToken	openparser/css/parser.html#nextToken,CssLexer	proc nextToken(l: var CssLexer): CssToken		267
-nim	parseCss	openparser/css/parser.html#parseCss,string,CssPolicy	proc parseCss(input: string; policy: CssPolicy = defaultPolicy()): CssStyleSheet		936
+nim	nextToken	openparser/css/parser.html#nextToken,CssLexer	proc nextToken(l: var CssLexer): CssToken		263
+nim	parseCss	openparser/css/parser.html#parseCss,string,CssPolicy	proc parseCss(input: string; policy: CssPolicy = defaultPolicy()): CssStyleSheet		932
