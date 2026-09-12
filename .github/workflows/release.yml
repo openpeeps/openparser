@@ -21,7 +21,7 @@ jobs:
       test: true
       test-flags: '-d:release'
       pre-build-command: >-
-        nimble install denim -y &&
+        cd .. && nimble install denim -y &&
         (npm install -g cmake-js ||
         (npm install --prefix "$HOME/.cmake-js" cmake-js &&
         echo "$HOME/.cmake-js/bin" >> "$GITHUB_PATH"))
