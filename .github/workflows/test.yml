@@ -15,14 +15,14 @@ on:
 jobs:
   nim:
     name: nim tests
-    uses: nimbase/setup-nim-action/.github/workflows/test_clue.yml@v1
+    uses: nimbase/setup-nim-action/.github/workflows/test_clue.yml@main
     with:
       nim-version: '2.2.x'
       os: '[{"os":"ubuntu-latest"},{"os":"macos-latest"}]'
 
   napi:
     name: napi addon
-    uses: nimbase/setup-nim-action/.github/workflows/test_clue.yml@v1
+    uses: nimbase/setup-nim-action/.github/workflows/test_clue.yml@main
     with:
       nim-version: '2.2.x'
       os: '[{"os":"ubuntu-latest"},{"os":"macos-latest"}]'
