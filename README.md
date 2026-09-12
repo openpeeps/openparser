@@ -2,7 +2,7 @@
   A tiny collection of high-performance parsers and dumpers<br>
   JSON &bullet; YAML &bullet; XML &bullet; TOML &bullet; CSV <br>
   BSON &bullet; Plist &bullet; HTML &bullet; CSS &bullet; RSS &bullet; Atom<br>
-  DotEnv &bullet; iCal &bullet; NIF &bullet; SQL &bullet; Regex &bullet; Gettext &bullet; FBE &bullet; QR &bullet; SVG &bullet; Colors<br>
+  DotEnv &bullet; iCal &bullet; vCard &bullet; NIF &bullet; SQL &bullet; Regex &bullet; Gettext &bullet; FBE &bullet; QR &bullet; SVG &bullet; Colors<br>
   Written in Nim language
 </p>
 
@@ -37,6 +37,7 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 - RSS & Atom feed parsing, fetching, and serialization
 - DotEnv parser with variable expansion and command substitution
 - iCalendar (RFC 5545) parser and serializer with line unfolding, TEXT codecs and typed components
+- vCard (RFC 6350 + RFC 2426) parser and serializer with typed contact model and multi-card support
 - NIF (2027 Nim Intermediate Format) parser with MemFile support, Base62 LineInfo and lazy symbol expansion
 - SQL parser supporting PostgreSQL, MySQL, and SQLite dialects
 - SIMD-accelerated regex engine with capture groups and quantifiers
@@ -434,6 +435,44 @@ let fromFile = parseIcalFile("out.ics")
 **Features:** Line unfolding/folding at 75 octets (UTF-8 safe), TEXT `\, \; \\ \n` codecs, DATE / DATE-TIME (`Z` UTC) / DURATION (`-P1W`, `PT15M`), parameters with quoted values (`CN="Doe, Jane"`), `VTIMEZONE` `STANDARD`/`DAYLIGHT`, nested `VALARM`, `VEVENT`/`VTODO`/`VJOURNAL` typed objects with `extraProps` fallback for `X-` and future components, `RRULE`/`EXDATE`/`CATEGORIES` handling, `OpenParserIcalError` with line context.
 
 - [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_ical.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/ical.html)
+
+---
+
+## vCard
+
+RFC 6350 (v4.0) + RFC 2426 (v3.0) reader and writer. Parses both versions, emits 4.0 by default, mirrors the iCal API with typed objects and `extraProps` fallback.
+
+```nim
+import openparser/vcard
+
+# Parse one or more cards
+let cards = parseVCards(readFile("contacts.vcf"))
+echo cards[0].fn
+for t in cards[0].tels:
+  echo t.value, " ", t.types  # TYPE + PREF=1..100
+
+# Build from objects
+var c = VCard(version: vv40, fn: "Ada Lovelace")
+c.n = some(VCardName(family: "Lovelace", given: "Ada"))
+c.tels.add(VCardTel(value: "+1555000111", types: @["cell"], pref: some(1)))
+c.emails.add(VCardEmail(value: "ada@example.org"))
+
+# Serialize (CRLF + 75-octet folding, TEXT escaping)
+writeFile("out.vcf", toVCard(c))
+
+# QR bridge (compatible with qr/payload.makeVCard 3.0 output)
+let payload = toQrPayload(c)
+
+# File convenience + downgrade
+let fromFile = parseVCardsFile("out.vcf")
+var opts = defaultVCardOptions()
+opts.targetVersion = vv30
+writeFile("legacy.vcf", toVCard(c, opts))
+```
+
+**Features:** Line unfolding/folding at 75 octets (UTF-8 safe), TEXT `\, \; \\ \n` codecs, RFC 6868 `^n ^' ^^` param unescaping, groups (`item1.TEL`), structured `N`/`ADR`/`ORG`, `TYPE`/`PREF` for both versions (`TYPE=PREF` normalized), v3 `ENCODING=b` to v4 `data:` URI upgrade (and back on downgrade), `BDAY`/`ANNIVERSARY`/`REV` VALUE validation, `GENDER`/`KIND` typed enums (with `x-` fallback)/`CLIENTPIDMAP`, multi-card `seq[VCard]`, `extraProps` for `X-` and unknown, `OpenParserVCardError` with line context.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_vcard.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/vcard.html)
 
 ---
 

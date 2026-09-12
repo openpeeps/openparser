@@ -181,7 +181,10 @@ proc newUuidV4*(): Uuid =
 proc newUuidV5*(namespace: Uuid, name: string): Uuid =
   ## Version 5: SHA-1 name-based UUID.
   var ctx = newSha1State()
-  ctx.update(cast[string](namespace.bytes))
+  var nsData = newString(16)
+  for i in 0 .. 15:
+    nsData[i] = char(namespace.bytes[i])
+  ctx.update(nsData)
   ctx.update(name)
   let digest = ctx.finalize()
   # SHA-1 produces 20 bytes; use first 16
