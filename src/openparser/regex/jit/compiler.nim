@@ -44,7 +44,9 @@ proc compileRegex*(prog: Program, fullMatch = false): CompiledJit =
   ## checks backtrack into remaining alternatives). Returns a result
   ## with fn == nil when the program uses unsupported features
   ## (captures) or contains epsilon cycles.
-  when defined(windows) or defined(noRegexJit):
+  when defined(windows) or defined(noRegexJit) or not defined(amd64):
+    # No JIT on Windows (ABI mismatch), when explicitly disabled, or on
+    # non-x86_64 targets: the DynASM backend emits x86-64 machine code.
     return
   let numInstrs = prog.instrs.len
   if prog.numCaptures > 0 or numInstrs == 0:

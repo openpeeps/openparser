@@ -34,9 +34,10 @@ when defined(regexJitDynlib):
   proc regex_define_label*(Dst: ptr ptr dasm_State; label: cint) {.dynasm, importc: "regex_define_label".}
   proc get_regex_actions*(): pointer {.dynasm, importc: "get_regex_actions".}
 
-elif defined(windows) or defined(noRegexJit):
-  # No JIT on Windows (ABI mismatch) or when explicitly disabled: stub procs
-  # that make compileRegex return nil without linking any C code.
+elif defined(windows) or defined(noRegexJit) or not defined(amd64):
+  # No JIT on Windows (ABI mismatch), when explicitly disabled, or on
+  # non-x86_64 targets (the DynASM backend emits x86-64 machine code):
+  # stub procs that make compileRegex return nil without linking any C code.
   proc dasm_init*(Dst: ptr ptr dasm_State; maxsection: cint) = discard
   proc dasm_free*(Dst: ptr ptr dasm_State) = discard
   proc dasm_setupglobal*(Dst: ptr ptr dasm_State; gl: ptr pointer; maxgl: cuint) = discard

@@ -10,7 +10,7 @@
 ## Low-level JIT code memory allocator. Provides `allocJitCode` and
 ## `freeJitCode` backed by platform-specific routines (e.g. mmap with
 ## PROT_EXEC) declared in `regex_jit_mem.h`.
-when defined(windows) or defined(noRegexJit):
+when defined(windows) or defined(noRegexJit) or not defined(amd64):
   proc allocJitCode*(size: int): pointer = nil
   proc freeJitCode*(p: pointer, size: int) = discard
 else:
