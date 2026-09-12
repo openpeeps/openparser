@@ -1,7 +1,7 @@
 <p align="center">
   A tiny collection of high-performance parsers and dumpers<br>
-  YAML &bullet; XML &bullet; TOML &bullet; CSV <br>
-  BSON &bullet; Plist &bullet; HTML &bullet; CSS &bullet; RSS &bullet; Atom<br>
+  YAML &bullet; XML &bullet; TOML &bullet; CSV BSON &bullet; Plist &bullet;<br>
+  HTML &bullet; CSS &bullet; RSS &bullet; Atom<br>
   DotEnv &bullet; iCal &bullet; vCard &bullet; NIF &bullet; SQL &bullet; Regex &bullet; Gettext &bullet; FBE &bullet; QR &bullet; SVG &bullet; Colors<br>
   Written in Nim language
 </p>
@@ -12,10 +12,6 @@
 
 ## About
 Node.js native bindings for [openparser](https://github.com/openpeeps/openparser), a collection of fast parsers and serializers written in Nim, exposed to JavaScript through a prebuilt `.node` addon (built with [denim](https://github.com/openpeeps/denim)).
-
-```sh
-npm install @openpeeps/openparser
-```
 
 ```js
 const { yaml, vcard, qr, uuid } = require('@openpeeps/openparser');
