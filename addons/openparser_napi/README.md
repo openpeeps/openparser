@@ -1,9 +1,8 @@
 <p align="center">
-  A tiny collection of high-performance parsers and dumpers<br>
-  YAML &bullet; XML &bullet; TOML &bullet; CSV BSON &bullet; Plist &bullet;<br>
-  HTML &bullet; CSS &bullet; RSS &bullet; Atom<br>
-  DotEnv &bullet; iCal &bullet; vCard &bullet; NIF &bullet; SQL &bullet; Regex &bullet; Gettext &bullet; FBE &bullet; QR &bullet; SVG &bullet; Colors<br>
-  Written in Nim language
+  A tiny collection of high-performance parsers and dumpers 👇<br><br>
+  YAML &bullet; XML &bullet; TOML &bullet; CSV BSON &bullet; Plist &bullet; HTML &bullet; CSS &bullet; RSS &bullet; Atom<br>
+  DotEnv &bullet; iCal &bullet; vCard &bullet; NIF &bullet; SQL &bullet; Regex &bullet; Gettext &bullet; FBE &bullet; QR &bullet; SVG &bullet; Colors<br><br>
+  👑 Written in Nim language
 </p>
 
 <p align="center">
