@@ -21,28 +21,24 @@ jobs:
       os: '[{"os":"ubuntu-latest"},{"os":"macos-latest"}]'
 
   napi:
-    name: napi addon (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - run: npm install -g cmake-js
-        # `denim build --cmake` shells out to `cmake-js compile`, so the
-        # cmake-js CLI must be on PATH before the build step below.
-
-      - uses: lukka/get-cmake@latest
-
-      - uses: nimbase/setup-nim-action@v1
-        with:
-          nim-version: '2.2.x'
-          command: nimble install -y && nimble install denim -y && denim build src/openparser.nim --cmake -y
-
-      - run: node addons/openparser_napi/scripts/place-binary.js && npm test --prefix addons/openparser_napi
+    name: napi addon
+    uses: nimbase/setup-nim-action/.github/workflows/test_clue.yml@v1
+    with:
+      nim-version: '2.2.x'
+      os: '[{"os":"ubuntu-latest"},{"os":"macos-latest"}]'
+      # Node-side prerequisites, openparser-side only: the runners ship
+      # Node + npm + cmake, so only the cmake-js CLI (used by
+      # `denim build --cmake`) needs installing. GITHUB_PATH persists the
+      # fallback location to the later steps.
+      pre-install-command: >-
+        npm install -g cmake-js ||
+        (npm install --prefix "$HOME/.cmake-js" cmake-js &&
+        echo "$HOME/.cmake-js/bin" >> "$GITHUB_PATH")
+      # NB: never compile `src/openparser.nim` directly (`nim c` /
+      # `nimble build` hit the `{.error.}` guard). The build always goes
+      # through the custom denim command, which defines `-d:napibuild`.
+      pre-test-command: >-
+        nimble install denim -y &&
+        denim build src/openparser.nim --cmake -y &&
+        node addons/openparser_napi/scripts/place-binary.js &&
+        npm test --prefix addons/openparser_napi
