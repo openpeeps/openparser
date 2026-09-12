@@ -1,4 +1,4 @@
-import std/[unittest, tables, os, strutils]
+import std/[unittest, tables, os]
 import ../src/openparser/gettext/[po, mo]
 
 proc writeTempPo(content: string): string =
