@@ -9,31 +9,32 @@
 ## Like above, std/json's `%*` is excluded on purpose — bare `%*`
 ## always means denim's napi-value macro here.
 
-from ./yaml import dump
-from ./toml import parseTOML, dumpTOML
-from ./xml import fromXml, toXml
-from ./csv import parseFile
-from ./bson import toBson, fromBson
-from ./plist import parsePlist, toXmlPlist, toBPlist
-from ./rss import parseRss, toRssXml
-from ./feed import parseAtom, toAtomXml
-from ./dotenv import parseEnv
-from ./ical import parseIcal, toIcal
-from ./vcard import parseVCards, toVCards, toQrPayload
-from ./sql import parseSql, renderSql
-from ./gettext/po import openPoCatalog, compilePo, translate, close
-from ./gettext/mo import openMoCatalog, translate, close
-from ./qr import encodeQr, encodeMicro, encodeRmqr, encodeModel1,
+from ../yaml import dump
+from ../toml import parseTOML, dumpTOML
+from ../xml import fromXml, toXml
+from ../csv import parseFile
+from ../bson import toBson, fromBson
+from ../plist import parsePlist, toXmlPlist, toBPlist
+from ../rss import parseRss, toRssXml
+from ../feed import parseAtom, toAtomXml
+from ../dotenv import parseEnv
+from ../ical import parseIcal, toIcal
+from ../vcard import parseVCards, toVCards, toQrPayload
+from ../sql import parseSql, renderSql
+from ../gettext/po import openPoCatalog, compilePo, translate, close
+from ../gettext/mo import openMoCatalog, translate, close
+from ../qr import encodeQr, encodeMicro, encodeRmqr, encodeModel1,
   encodeSqrc, encodeAqr, buildSqrcPayload, decodeSqrcText, splitSqrcText,
   MicroVersion, QrEcLevel, defaultQrEncodeOptions, makeWifi, makeMecard, makeUrl, makeSms, makeEmail, toSvg
-from ./svg import parseSvg, toSvg, parsePathData
-from ./colors import parseColor, isValidColor, lighten, darken, complement,
+from ../svg import parseSvg, toSvg, parsePathData
+from ../colors import parseColor, isValidColor, lighten, darken, complement,
   contrastRatio
-from ./css import parseCss, toString
-from ./uuid import Uuid, parseUuid, isValidUuid, newUuidV1, newUuidV2,
+from ../css import parseCss, toString
+from ../uuid import Uuid, parseUuid, isValidUuid, newUuidV1, newUuidV2,
   newUuidV3, newUuidV4, newUuidV5, newUuidV6, newUuidV7, newUuidV8, nilUuid,
   UuidNamespace, version, variant, `$`
-from ./path import parsePath
+from ../path import parsePath
+from ../fuzzy import FuzzyOptions, fuzzyScore, fuzzySearch
 
 init proc(module: Module) =
   # ------------------------------------------------------------- yaml
@@ -515,3 +516,37 @@ init proc(module: Module) =
 
   module.register("path", [("parse", pathParse),
                            ("normalize", pathNormalize)])
+
+  # ------------------------------------------------------------ fuzzy
+  proc fuzzyScoreSingle(query: string, candidate: string,
+                        caseSensitive: bool) {.export_napi: false.} =
+    ## Score one candidate: {matched, score, positions}.
+    let r = fuzzyScore(args.get("query").getStr(),
+                       args.get("candidate").getStr(),
+                       FuzzyOptions(caseSensitive: args.get("caseSensitive").getBool()))
+    var o = newJObject()
+    o["matched"] = %r.matched
+    o["score"] = %r.score
+    var arr = newJArray()
+    for p in r.positions: arr.add(%p)
+    o["positions"] = arr
+    return jsParse(o)
+
+  proc fuzzySearchMulti(query: string, candidates: string,
+                        caseSensitive: bool, limit: int,
+                        minScore: string) {.export_napi: false.} =
+    ## Rank candidates (JSON array string): [{text, score, positions}].
+    ## Floats cross as strings per NAPI-safe params rule.
+    var cands: seq[string] = @[]
+    for n in parseJson(args.get("candidates").getStr()).elems:
+      cands.add(n.getStr())
+    let res = fuzzySearch(args.get("query").getStr(), cands,
+                FuzzyOptions(caseSensitive: args.get("caseSensitive").getBool(),
+                             limit: args.get("limit").getInt(),
+                             minScore: parseFloat(args.get("minScore").getStr())))
+    var arr = newJArray()
+    for m in res: arr.add(fuzzyMatchToJson(m))
+    return jsParse(arr)
+
+  module.register("fuzzy", [("score", fuzzyScoreSingle),
+                            ("search", fuzzySearchMulti)])

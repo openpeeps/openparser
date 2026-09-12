@@ -1,6 +1,6 @@
 ## Shared JsonNode converters for the Node.js addon.
 ##
-## Included from `src/openparser.nim` under `napibuild` only, so the
+## Included from `.src/openparser.nim` under `napibuild` only, so the
 ## library itself is unaffected. NOTE: `import std/json except %*` is
 ## deliberate — denim exports its own `%*` macro for napi values, and
 ## using std/json's `%*` here would resolve to denim's and fail to
@@ -11,41 +11,42 @@ import std/json except `%*`
 import std/[base64, memfiles, os, strutils, options, tempfiles, times,
   tables]
 
-from ./yaml import parseYAML, YamlNode, YAMLObject, yamlString, yamlInteger,
+from ../yaml import parseYAML, YamlNode, YAMLObject, yamlString, yamlInteger,
   yamlFloat, yamlBoolean, yamlNull, yamlObject, yamlArray
-from ./toml import parseTOML, TomlNode,
+from ../toml import parseTOML, TomlNode,
   tvkString, tvkInteger, tvkFloat, tvkBoolean, tvkDateTime, tvkArray, tvkTable,
   newTomlString, newTomlInteger, newTomlFloat, newTomlBoolean,
   newTomlArray, newTomlTable
-from ./xml import fromXml, XmlNode,
+from ../xml import fromXml, XmlNode,
   xnElement, xnText, xnComment, xnCdata, xnProlog, xnDoctype
-from ./csv import parseFile, parseCsv, CsvFieldSlice, CsvOptions,
+from ../csv import parseFile, parseCsv, CsvFieldSlice, CsvOptions,
   defaultCsvOptions, toString
-from ./bson import toBson, fromBson
-from ./plist import parsePlist, toXmlPlist, toBPlist
-from ./rss import RssFeed, RssItem, RssMediaContent
-from ./feed import AtomFeed, AtomEntry, AtomPerson, AtomLink, AtomCategory,
+from ../bson import toBson, fromBson
+from ../plist import parsePlist, toXmlPlist, toBPlist
+from ../rss import RssFeed, RssItem, RssMediaContent
+from ../feed import AtomFeed, AtomEntry, AtomPerson, AtomLink, AtomCategory,
   AtomText, AtomContent, AtomGenerator
-from ./dotenv import DotenvEntry
-from ./ical import IcalCalendar, IcalComponent, IcalEvent, IcalTodo,
+from ../dotenv import DotenvEntry
+from ../ical import IcalCalendar, IcalComponent, IcalEvent, IcalTodo,
   IcalJournal, IcalTimezone, IcalOther, IcalAlarm, IcalDt, IcalDuration,
   IcalPerson, IcalTrigger, IcalTzObservance, IcalProp, IcalParam,
   IcalGenericSub, IcalDateTime, formatIcalDateTime, formatIcalDuration,
   cckEvent, cckTodo, cckJournal, cckTimezone, cckOther, trkRelative
-from ./vcard import VCard, vv40, vcardKindStr, VCardProp, VCardParam
-from ./sql import SqlNode, SqlDriver, nkIdent, nkQuotedIdent, nkStringLit,
+from ../vcard import VCard, vv40, vcardKindStr, VCardProp, VCardParam
+from ../sql import SqlNode, SqlDriver, nkIdent, nkQuotedIdent, nkStringLit,
   nkBitStringLit, nkHexStringLit, nkIntegerLit, nkNumericLit, nkPlaceholder,
   nkRaw
-from ./qr import QrMatrix
-from ./svg import SvgPathSeg
-from ./css import CssNode, CssStyleSheet, CssValue,
+from ../qr import QrMatrix
+from ../svg import SvgPathSeg
+from ../css import CssNode, CssStyleSheet, CssValue,
   cssStyleSheet, cssRuleSet, cssSelector, cssDeclaration, cssComment,
   cssAtRule, cssValue,
   cvkFunction, cvkNumber, cvkDimension, cvkPercentage, cvkString, cvkUrl,
   cvkIdent, cvkHash, cvkImportant, cvkBlock, cvkPreserved, cvkComment
-from ./colors import Color, toHex, toHex8, toRgbString, toHslString,
+from ../colors import Color, toHex, toHex8, toRgbString, toHslString,
   toHsvString, toCmykString, toLabString, toOklchString, toName
-from ./path import Path
+from ../path import Path
+from ../fuzzy import FuzzyMatch, FuzzyOptions, fuzzyScore, fuzzySearch
 
 template jsParse(node: JsonNode): napi_value =
   ## Bridge a JsonNode to a live JS object via JSON.parse.
@@ -945,3 +946,13 @@ proc svgPathToJson(segs: seq[SvgPathSeg]): JsonNode =
     for f in s.args: a.add(%f)
     o["args"] = a
     result.add(o)
+
+# ------------------------------------------------------------------- fuzzy
+
+proc fuzzyMatchToJson(m: FuzzyMatch): JsonNode =
+  result = newJObject()
+  result["text"] = %m.text
+  result["score"] = %m.score
+  var arr = newJArray()
+  for p in m.positions: arr.add(%p)
+  result["positions"] = arr
