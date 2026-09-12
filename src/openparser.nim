@@ -5,13 +5,19 @@
 #          https://github.com/openpeeps/openparser
 
 when defined(napibuild):
-  discard
+  # Node.js native addon entry point. Built separately via
+  # `denim build src/openparser.nim --cmake -y` so the library itself
+  # gains no denim dependency and zero overhead.
+  import denim
+  include ./openparser/napi_convert
+  include ./openparser/napi_bridge
+
 elif defined(builddocs):
   # For documentation purposes, we re-export all parsers here
   import ./openparser/[json, csv, rss, feed, yaml, dotenv,
-                    fbe, toml, bson, xml, nif, ical, plist, css, svg]
+                    fbe, toml, bson, xml, nif, ical, vcard, plist, css, svg]
   export json, csv, rss, feed, yaml, dotenv,
-      fbe, toml, bson, xml, nif, ical, plist, css, svg
+      fbe, toml, bson, xml, nif, ical, vcard, plist, css, svg
 
   import ./openparser/gettext/[po, mo]
   export po, mo
