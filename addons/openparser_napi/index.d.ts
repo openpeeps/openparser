@@ -683,6 +683,26 @@ export namespace path {
   function normalize(s: string): string;
 }
 
+// ---------------------------------------------------------------- fuzzy
+export interface FuzzyMatch {
+  text: string;
+  score: number;
+  positions: number[];
+}
+
+export interface FuzzyScore {
+  matched: boolean;
+  score: number;
+  positions: number[];
+}
+
+export namespace fuzzy {
+  /** Score one candidate: {matched, score, positions}. */
+  function score(query: string, candidate: string, caseSensitive: boolean): FuzzyScore;
+  /** Rank candidates best-first. `candidates` is a JSON array string; `minScore` crosses as string. */
+  function search(query: string, candidates: string, caseSensitive: boolean, limit: number, minScore: string): FuzzyMatch[];
+}
+
 /** Filesystem path of the loaded `.node` binary. */
 export const binaryPath: string;
 

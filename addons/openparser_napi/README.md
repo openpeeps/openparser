@@ -155,6 +155,25 @@ qr.decodeSqrc(payload, key);    // => { ok: true, publicText, privateText, scann
 qr.encodeSqrc('public area', 'secret area', key); // rendered SVG symbol
 ```
 
+### Fuzzy — SIMD-accelerated fuzzy search
+
+```js
+const { fuzzy } = require('@openpeeps/openparser');
+
+// Score one candidate: every query char must appear in order.
+fuzzy.score('abc', 'abc', false);
+// => { matched: true, score: 27.333, positions: [0, 1, 2] }
+fuzzy.score('abc', 'axbyc', false); // gapped: lower score, still matched
+fuzzy.score('A', 'a', true);        // case-sensitive: { matched: false, … }
+
+// Rank candidates best-first. `candidates` is a JSON array string,
+// `minScore` crosses as string, `limit` 0 = no limit.
+const words = ['application', 'apple', 'pineapple', 'app'];
+fuzzy.search('app', JSON.stringify(words), false, 2, '0');
+// => [{ text: 'app', score: 27.333, positions: [0, 1, 2] },
+//     { text: 'apple', score: 16.4, positions: [0, 1, 2] }]
+```
+
 ## Supported platforms
 
 Prebuilt binaries ship under `bin/<platform>-<arch>/openparser.node` and are selected at load time from `process.platform`/`process.arch`:

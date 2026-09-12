@@ -37,7 +37,7 @@ if (!fs.existsSync(src)) {
   process.exit(1);
 }
 
-const destDir = path.join(__dirname, 'bin', `${plat}-${os.arch()}`);
+const destDir = path.join(__dirname, '..', 'bin', `${plat}-${os.arch()}`);
 fs.mkdirSync(destDir, { recursive: true });
 fs.copyFileSync(src, path.join(destDir, 'openparser.node'));
 console.log(`openparser-napi: placed binary for ${plat}-${os.arch()}`);
