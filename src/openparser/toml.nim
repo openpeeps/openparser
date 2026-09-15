@@ -510,21 +510,19 @@ proc put*(obj: OrderedTableRef[string, TomlNode], key: string, value: TomlNode) 
 #
 # Parser API
 #
-let tokens = {
-  ';': ttkComment,
-  '#': ttkComment,
-  '"': ttkString,
-  '\'': ttkString,
-  '=': ttkEquals,
-  '.': ttkDot,
-  ',': ttkComma,
-  '[': ttkLB,
-  ']': ttkRB,
-  '{': ttkLC,
-  '}': ttkRC
-}.toTable
-
 const strQuote = ['\'', '"']
+proc singleCharTokenKind(c: char): TomlTokenKind =
+  ## Maps a single-character token to its kind. A `case` (instead of a
+  ## lookup table) keeps the lexer evaluable at compile time (NimVM).
+  case c
+  of '=': ttkEquals
+  of '.': ttkDot
+  of ',': ttkComma
+  of '[': ttkLB
+  of ']': ttkRB
+  of '{': ttkLC
+  of '}': ttkRC
+  else: ttkError
 proc nextToken*(p: var TomlParser): TomlToken =
   ## Lexical analysis to produce the next token from the input
   var wsBefore = 0
@@ -552,7 +550,7 @@ proc nextToken*(p: var TomlParser): TomlToken =
   of '0'..'9', '-', '+':
     result.value = p.lex.readNumber(result.kind)
   of '=', '.', ',', '[', ']', '{', '}':
-    result.kind = tokens[p.lex.current]
+    result.kind = singleCharTokenKind(p.lex.current)
     advance(p.lex)
   of 'a'..'z', 'A'..'Z', '_':
     if p.lex.current in {'t', 'T', 'f', 'F'}:
@@ -826,14 +824,95 @@ proc parseTOML*(input: TOML): TomlDocument =
   result = newTomlTable()
   result.tableVal = root.tableVal
 
+#
+# Typed mapping API
+#
+
+proc fromTomlNode[T](n: TomlNode, v: var T, path: string) =
+  ## Map a single `TomlNode` into `v`. `path` is the dotted key path used
+  ## in error messages.
+  when T is string:
+    if n == nil or n.kind != tvkString:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML string at `" & path & "`")
+    v = n.strVal
+  elif T is bool:
+    if n == nil or n.kind != tvkBoolean:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML boolean at `" & path & "`")
+    v = n.boolVal
+  elif T is SomeInteger:
+    if n == nil or n.kind != tvkInteger:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML integer at `" & path & "`")
+    try:
+      v = T(n.intVal)
+    except RangeDefect:
+      raise newException(OpenParserTomlError,
+        "Integer out of range at `" & path & "`")
+  elif T is SomeFloat:
+    if n == nil:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML float at `" & path & "`")
+    case n.kind
+    of tvkFloat:
+      v = T(n.floatVal)
+    of tvkInteger:
+      v = T(n.intVal)
+    else:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML float at `" & path & "`")
+  elif T is seq:
+    if n == nil or n.kind != tvkArray:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML array at `" & path & "`")
+    v.setLen(0)
+    for i, item in n.arrayVal:
+      var e: typeof(v[0])  # unevaluated; safe on the empty seq
+      fromTomlNode(item, e, path & "[" & $i & "]")
+      v.add(e)
+  elif T is (ref object):
+    if n == nil or n.kind != tvkTable:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML table at `" & path & "`")
+    if v.isNil:
+      new(v)
+    for fieldName, fieldVal in v[].fieldPairs:
+      if n.tableVal.hasKey(fieldName):
+        let child = if path.len == 0: fieldName else: path & "." & fieldName
+        fromTomlNode(n.tableVal[fieldName], fieldVal, child)
+  elif T is object:
+    if n == nil or n.kind != tvkTable:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML table at `" & path & "`")
+    for fieldName, fieldVal in v.fieldPairs:
+      if n.tableVal.hasKey(fieldName):
+        let child = if path.len == 0: fieldName else: path & "." & fieldName
+        fromTomlNode(n.tableVal[fieldName], fieldVal, child)
+  else:
+    {.error: "fromToml: unsupported field type".}
+
+proc fromToml*[T](doc: TomlDocument, v: var T) =
+  ## Map a parsed TOML document into an existing `v`.
+  ## Keys absent from the document keep their current values, so callers
+  ## can pre-fill `v` with defaults and override from a partial file.
+  ## Unknown keys are ignored; type mismatches raise `OpenParserTomlError`.
+  if doc == nil or doc.kind != tvkTable:
+    raise newException(OpenParserTomlError, "Expected a TOML table document")
+  fromTomlNode(doc, v, "")
+
 proc parseTOML*[T: object|ref object](p: var TomlParser, v: var T) =
-  ## The main parsing function that consumes tokens and builds the TOML AST
-  discard
+  ## Consume the remaining document from `p` and map it into `v`.
+  ## Keys absent from the document keep their current values in `v`.
+  var root = p.parseRoot()
+  var doc = newTomlTable()
+  doc.tableVal = root.tableVal
+  fromToml(doc, v)
 
 proc parseTOML*[T](input: TOML, t: typedesc[T]): T =
   ## Parses a TOML string into a Nim data structure of type T
   var parser = TomlParser(lex: newTomlLexer(input))
-  var tmp: T()
+  var tmp: T
   parser.curr = parser.nextToken()
   parser.next = parser.nextToken()
   parser.parseTOML(tmp)
