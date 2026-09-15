@@ -251,8 +251,11 @@ proc skipWhitespace(l: var YamlLexer, wsBeforeToken: var int): int =
   result = lineIndentAt(l, l.pos)
 
 proc readIdentifier(l: var YamlLexer): string =
-  # Read an unquoted identifier (e.g. for keys or unquoted values)
-  while l.current in {'a'..'z', 'A'..'Z', '0'..'9', '_', '-', '/', '.'}:
+  # Read an unquoted identifier (e.g. for keys or unquoted values).
+  # `~` is a plain-scalar char mid-token (only a lone `~` is null).
+  # Bytes >= 0x80 continue UTF-8 sequences byte-wise (e.g. `café`, `日本語`).
+  while l.current in {'a'..'z', 'A'..'Z', '0'..'9', '_', '-', '/', '.', '~'} or
+      l.current >= '\x80':
     result.add(l.current)
     advance(l)
 
@@ -680,6 +683,15 @@ proc nextToken*(p: var YamlParser): YamlToken =
         advance(p.lex)
         return
       else:
+        # '.' starting a plain scalar (e.g. `.github/workflows/release.yml`,
+        # `.env`): consume the full identifier. A lone '.' or '..' can never
+        # be a document-end marker here (`...` is lexed earlier at line 561).
+        if p.lex.current == '.':
+          result.kind = ytkIdentifier
+          result.value = "."
+          advance(p.lex)
+          result.value.add(p.lex.readIdentifier())
+          return
         # single char fallback
         result.kind = ytkString
         result.value = $p.lex.current
@@ -707,6 +719,20 @@ proc nextToken*(p: var YamlParser): YamlToken =
     advance(p.lex)
     result.kind = ytkString
     result.value = p.lex.readString(q)
+  of '~':
+    # lone `~` (blank/break/EOF/flow-end after) is null per Core Schema;
+    # otherwise it starts a plain scalar (e.g. `~/.ssh/id_ed25519`).
+    let afterTilde = p.lex.charAt(p.lex.pos + 1)
+    if afterTilde in {' ', '\t', '\n', '\r', '\0', ',', ']', '}'}:
+      result.kind = ytkIdentifier
+      result.value = "~"
+      advance(p.lex)
+    else:
+      result.kind = ytkIdentifier
+      result.value = "~"
+      advance(p.lex)
+      result.value.add(p.lex.readIdentifier())
+    return
   of 'a'..'z', 'A'..'Z', '_', '/':
     result.kind = ytkIdentifier
     result.value = p.lex.readIdentifier()
@@ -723,6 +749,11 @@ proc nextToken*(p: var YamlParser): YamlToken =
       advance(p.lex)
       result.value.add(p.lex.readIdentifier())
   else:
+    if p.lex.current >= '\x80':
+      # unquoted unicode plain scalar (e.g. `café`, `日本語`)
+      result.kind = ytkIdentifier
+      result.value = p.lex.readIdentifier()
+      return
     if p.lex.current.ord < 32 and p.lex.current notin {'\t','\n','\r'}:
       p.lex.error(unexpectedChar % ("\\x" & p.lex.current.ord.toHex(2)))
     result.kind = ytkString

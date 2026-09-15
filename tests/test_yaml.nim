@@ -153,3 +153,69 @@ suite "YAML Deserialization":
     check routes["/"].strValue == "index"
     check routes["/error"].strValue == "error"
     check obj["server"].objValue["api.v1"].objValue["endpoint"].strValue == "test"
+
+type DeployTarget = object
+  os: string
+  arch: string
+
+type DeployRelease = object
+  repo: string
+  workflow: string
+  artifactName: string
+  targets: seq[DeployTarget]
+
+suite "YAML typed deserialization":
+  test "plain scalar starting with a dot":
+    let yaml = """
+      repo: openpeeps/clue
+      workflow: .github/workflows/release.yml
+      artifactName: "{{project}}_{{os}}-{{arch}}"
+      targets:
+        - {os: ubuntu-latest, arch: x86_64}
+        - {os: macos-14, arch: arm64}
+    """
+    let rel = parseYAML(yaml, DeployRelease)
+    check rel.repo == "openpeeps/clue"
+    check rel.workflow == ".github/workflows/release.yml"
+    check rel.artifactName == "{{project}}_{{os}}-{{arch}}"
+    check rel.targets.len == 2
+    check rel.targets[0].os == "ubuntu-latest"
+    check rel.targets[1].arch == "arm64"
+
+  test "lone dot scalar":
+    let yaml = """
+      marker: .
+    """
+    let obj = parseYAML(yaml)
+    check obj["marker"].strValue == "."
+
+type DeployServer = object
+  host: string
+  sshKey: string
+  welcome: string
+  nothing: string
+
+suite "YAML plain scalars":
+  test "tilde-led path and lone tilde null":
+    let yaml = """
+      host: example.com
+      sshKey: ~/.ssh/id_ed25519
+    """
+    let srv = parseYAML(yaml, DeployServer)
+    check srv.host == "example.com"
+    check srv.sshKey == "~/.ssh/id_ed25519"
+    let obj = parseYAML(yaml)
+    check obj["sshKey"].strValue == "~/.ssh/id_ed25519"
+
+  test "unquoted unicode values":
+    let yaml = """
+      welcome: café au lait 日本語
+      city: München
+    """
+    let obj = parseYAML(yaml)
+    check obj["welcome"].strValue == "café au lait 日本語"
+    check obj["city"].strValue == "München"
+    # typed hook reads one token per scalar: single-token unicode value
+    let srv = parseYAML("welcome: café\nsshKey: ~/.ssh/x\n", DeployServer)
+    check srv.welcome == "café"
+    check srv.sshKey == "~/.ssh/x"
