@@ -105,6 +105,10 @@
   <li><a class="reference" href="#dumpTOML%2CTomlDocument" title="dumpTOML(doc: TomlDocument): string">dumpTOML(doc: TomlDocument): string</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">fromToml
+  <li><a class="reference" href="#fromToml%2CTomlDocument%2CT" title="fromToml[T](doc: TomlDocument; v: var T)">fromToml[T](doc: TomlDocument; v: var T)</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">get
   <li><a class="reference" href="#get%2CTomlNode%2Cstring" title="get(n: TomlNode; key: string): TomlNode">get(n: TomlNode; key: string): TomlNode</a></li>
 <li><a class="reference" href="#get%2COrderedTableRef%5Bstring%2CTomlNode%5D%2Cstring" title="get(obj: OrderedTableRef[string, TomlNode]; key: string): TomlNode">get(obj: OrderedTableRef[string, TomlNode]; key: string): TomlNode</a></li>
@@ -338,6 +342,17 @@
 </div>
 
 </div>
+<div id="fromToml-procs-all">
+  <div id="fromToml,TomlDocument,T">
+  <dt><pre><span class="Keyword">proc</span> <a href="#fromToml%2CTomlDocument%2CT"><span class="Identifier">fromToml</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">doc</span><span class="Other">:</span> <a href="#TomlDocument"><span class="Identifier">TomlDocument</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    Map a parsed TOML document into an existing <tt class="docutils literal"><span class="pre"><span class="Identifier">v</span></span></tt>. Keys absent from the document keep their current values, so callers can pre-fill <tt class="docutils literal"><span class="pre"><span class="Identifier">v</span></span></tt> with defaults and override from a partial file. Unknown keys are ignored; type mismatches raise <tt class="docutils literal"><span class="pre"><span class="Identifier">OpenParserTomlError</span></span></tt>.
+    
+  </dd>
+</div>
+
+</div>
 <div id="get-procs-all">
   <div id="get,TomlNode,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#get%2CTomlNode%2Cstring"><span class="Identifier">get</span></a><span class="Other">(</span><span class="Identifier">n</span><span class="Other">:</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a><span class="Other">;</span> <span class="Identifier">key</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
@@ -527,8 +542,8 @@
 </div>
 <div id="nextToken-procs-all">
   <div id="nextToken,TomlParser">
-  <dt><pre><span class="Keyword">proc</span> <a href="#nextToken%2CTomlParser"><span class="Identifier">nextToken</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlParser"><span class="Identifier">TomlParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#TomlToken"><span class="Identifier">TomlToken</span></a> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#nextToken%2CTomlParser"><span class="Identifier">nextToken</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlParser"><span class="Identifier">TomlParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#TomlToken"><span class="Identifier">TomlToken</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Lexical analysis to produce the next token from the input
@@ -540,7 +555,7 @@
 <div id="parseHook-procs-all">
   <div id="parseHook,TomlParser,TomlNode">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CTomlParser%2CTomlNode"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlParser"><span class="Identifier">TomlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a><span class="Other">)</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -553,7 +568,7 @@
 <div id="parseObject-procs-all">
   <div id="parseObject,TomlParser,int">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseObject%2CTomlParser%2Cint"><span class="Identifier">parseObject</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlParser"><span class="Identifier">TomlParser</span></a><span class="Other">;</span> <span class="Identifier">ln</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -566,7 +581,7 @@
 <div id="parseRoot-procs-all">
   <div id="parseRoot,TomlParser">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseRoot%2CTomlParser"><span class="Identifier">parseRoot</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlParser"><span class="Identifier">TomlParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -579,7 +594,7 @@
 <div id="parseTOML-procs-all">
   <div id="parseTOML,TOML">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseTOML%2CTOML"><span class="Identifier">parseTOML</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="#TOML"><span class="Identifier">TOML</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#TomlDocument"><span class="Identifier">TomlDocument</span></a> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -593,7 +608,7 @@
   <dt><pre><span class="Keyword">proc</span> <a href="#parseTOML%2CTomlParser%2CT"><span class="Identifier">parseTOML</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">:</span> <span class="Keyword">object</span> <span class="Operator">|</span> <span class="Keyword">ref</span> <span class="Keyword">object</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlParser"><span class="Identifier">TomlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">T</span><span class="Other">)</span></pre></dt>
   <dd>
     
-    The main parsing function that consumes tokens and builds the TOML AST
+    Consume the remaining document from <tt class="docutils literal"><span class="pre"><span class="Identifier">p</span></span></tt> and map it into <tt class="docutils literal"><span class="pre"><span class="Identifier">v</span></span></tt>. Keys absent from the document keep their current values in <tt class="docutils literal"><span class="pre"><span class="Identifier">v</span></span></tt>.
     
   </dd>
 </div>
@@ -641,7 +656,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-12 13:40:27 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-18 06:58:25 UTC</small>
       </div>
     </div>
   </div>
