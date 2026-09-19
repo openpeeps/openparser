@@ -1261,19 +1261,21 @@
           </ul></dd>
 <dt><a name="fromXml" href="#fromXml"><span>fromXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="xml: proc fromXml(mapped: MemFile): XmlNode" href="openparser/xml.html#fromXml%2CMemFile">xml: proc fromXml(mapped: MemFile): XmlNode</a></li>
-          <li><a class="reference external"
           data-doc-search-tag="xml: proc fromXml[T](mapped: MemFile; t: typedesc[T]): T" href="openparser/xml.html#fromXml%2CMemFile%2Ctypedesc%5BT%5D">xml: proc fromXml[T](mapped: MemFile; t: typedesc[T]): T</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="xml: proc fromXml(s: string): XmlNode" href="openparser/xml.html#fromXml%2Cstring">xml: proc fromXml(s: string): XmlNode</a></li>
+          data-doc-search-tag="xml: proc fromXml(mapped: MemFile; opts: XmlOptions = nil): XmlNode" href="openparser/xml.html#fromXml%2CMemFile%2CXmlOptions">xml: proc fromXml(mapped: MemFile; opts: XmlOptions = nil): XmlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc fromXml(buf: pointer; len: int; opts: XmlOptions = nil): XmlNode" href="openparser/xml.html#fromXml%2Cpointer%2Cint%2CXmlOptions">xml: proc fromXml(buf: pointer; len: int; opts: XmlOptions = nil): XmlNode</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xml: proc fromXml[T](s: string; t: typedesc[T]): T" href="openparser/xml.html#fromXml%2Cstring%2Ctypedesc%5BT%5D">xml: proc fromXml[T](s: string; t: typedesc[T]): T</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc fromXml(s: string; opts: XmlOptions = nil): XmlNode" href="openparser/xml.html#fromXml%2Cstring%2CXmlOptions">xml: proc fromXml(s: string; opts: XmlOptions = nil): XmlNode</a></li>
           </ul></dd>
 <dt><a name="fromXmlFile" href="#fromXmlFile"><span>fromXmlFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="xml: proc fromXmlFile(filename: string): XmlNode" href="openparser/xml.html#fromXmlFile%2Cstring">xml: proc fromXmlFile(filename: string): XmlNode</a></li>
-          <li><a class="reference external"
           data-doc-search-tag="xml: proc fromXmlFile[T](filename: string; t: typedesc[T]): T" href="openparser/xml.html#fromXmlFile%2Cstring%2Ctypedesc%5BT%5D">xml: proc fromXmlFile[T](filename: string; t: typedesc[T]): T</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="xml: proc fromXmlFile(filename: string; opts: XmlOptions = nil): XmlNode" href="openparser/xml.html#fromXmlFile%2Cstring%2CXmlOptions">xml: proc fromXmlFile(filename: string; opts: XmlOptions = nil): XmlNode</a></li>
           </ul></dd>
 <dt><a name="functionsJson" href="#functionsJson"><span>functionsJson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -5423,6 +5425,10 @@
 <li><a class="reference external"
           data-doc-search-tag="xml: object XmlParser" href="openparser/xml.html#XmlParser">xml: object XmlParser</a></li>
           </ul></dd>
+<dt><a name="XmlPolicy" href="#XmlPolicy"><span>XmlPolicy:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: enum XmlPolicy" href="openparser/xml.html#XmlPolicy">xml: enum XmlPolicy</a></li>
+          </ul></dd>
 <dt><a name="XmlToken" href="#XmlToken"><span>XmlToken:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xml: type XmlToken" href="openparser/xml.html#XmlToken">xml: type XmlToken</a></li>
@@ -5458,6 +5464,14 @@
 <dt><a name="xnText" href="#xnText"><span>xnText:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="xml: XmlNodeKind.xnText" href="openparser/xml.html#xnText">xml: XmlNodeKind.xnText</a></li>
+          </ul></dd>
+<dt><a name="xpLenient" href="#xpLenient"><span>xpLenient:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlPolicy.xpLenient" href="openparser/xml.html#xpLenient">xml: XmlPolicy.xpLenient</a></li>
+          </ul></dd>
+<dt><a name="xpStrict" href="#xpStrict"><span>xpStrict:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="xml: XmlPolicy.xpStrict" href="openparser/xml.html#xpStrict">xml: XmlPolicy.xpStrict</a></li>
           </ul></dd>
 <dt><a name="xtkAttributeName" href="#xtkAttributeName"><span>xtkAttributeName:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -5695,7 +5709,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-18 06:58:26 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-19 10:41:32 UTC</small>
       </div>
     </div>
   </div>
