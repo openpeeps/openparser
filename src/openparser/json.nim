@@ -325,7 +325,7 @@ proc dumpHook*[T, R](s: var string, val: T, renameVal: R) =
     s.add("}")
   else:
     s.add("{")
-    var i = 0
+    var i {.used.} = 0
     for fieldName, fieldVal in fieldPairs(val):
       if i > 0: s.add(",")
       var wireName = fieldName
@@ -1077,7 +1077,7 @@ proc parseObjectHook[T, R](parser: var JsonParser, v: var T, renameVal: R) =
       parser.error(unexpectedTokenExpected % [$parser.curr.kind, $jtkString])
 
     let key = parser.curr.value
-    var wireKey = key
+    var wireKey {.used.} = key
     when compiles(renameHook(renameVal, wireKey)):
       renameHook(renameVal, wireKey)
 
