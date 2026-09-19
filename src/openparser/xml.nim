@@ -21,6 +21,13 @@ when not defined(openparserXmlNoSimd) and (defined(amd64) or defined(i386)):
   import ./private/xml_simd
 
 type
+  XmlPolicy* = enum
+    ## Mismatched-close-tag handling for DOM parsing
+    xpLenient
+      ## Skip mismatched closing tags (default, backwards compatible)
+    xpStrict
+      ## Raise `OpenParserXmlError` on mismatched closing tags
+
   XmlOptions* = ref object
     ## Options for XML serialization
     pretty: bool
@@ -45,6 +52,8 @@ type
       ## Whether to allow DOCTYPE declarations
     allowProcessingInstructions: bool = true
       ## Whether to allow processing instructions
+    policy*: XmlPolicy = xpLenient
+      ## Close-tag mismatch handling for DOM parsing
 
   #
   # XML Token kinds
@@ -1313,6 +1322,9 @@ proc parseHook*(p: var XmlParser, v: var XmlNode) =
         if p.curr.tag == tag:
           p.advance()
           break
+        if p.options != nil and p.options.policy == xpStrict:
+          p.error("Mismatched closing tag: expected `</" & tag &
+            ">`, got `</" & p.curr.tag & ">`")
         p.advance()
         continue
 
@@ -1456,22 +1468,22 @@ proc parseXml(parser: var XmlParser, v: var XmlNode) =
   parser.parseHook(v)
 
 proc parseXmlRoot(parser: var XmlParser, v: var XmlNode) =
-  ## Parse the root of an XML document
-  case parser.curr.kind
-  of xtkTagOpen:
-    parser.parseHook(v)
-  of xtkProlog:
-    # Skip prolog, parse next element
-    parser.advance()
-    parser.parseHook(v)
-  of xtkDoctype:
-    parser.advance()
-    parser.parseHook(v)
-  of xtkComment:
-    parser.advance()
-    parser.parseHook(v)
-  else:
-    parser.error(unexpectedToken % [$parser.curr.kind])
+  ## Parse the root of an XML document, skipping leading prolog,
+  ## doctype, comments and whitespace (all legal XML Misc).
+  while true:
+    case parser.curr.kind
+    of xtkTagOpen:
+      parser.parseHook(v)
+      return
+    of xtkProlog, xtkDoctype, xtkComment:
+      parser.advance()
+    of xtkText:
+      if isWhitespaceOnly(parser.curr.value):
+        parser.advance()
+      else:
+        parser.error(unexpectedToken % [$parser.curr.kind])
+    else:
+      parser.error(unexpectedToken % [$parser.curr.kind])
 
 macro fromXmlMacro(x: typed, str: typed): untyped =
   var t = x.getTypeInst()[1]
@@ -1506,9 +1518,9 @@ proc fromXml*[T](s: string, t: typedesc[T]): T =
   else:
     fromXmlMacro(t, s)
 
-proc fromXml*(s: string): XmlNode =
+proc fromXml*(s: string, opts: XmlOptions = nil): XmlNode =
   ## Parse XML string into a DOM tree
-  var parser = XmlParser(lexer: newXmlLexer(s))
+  var parser = XmlParser(lexer: newXmlLexer(s), options: opts)
   parser.curr = parser.nextToken()
   parser.next = parser.nextToken()
   while parser.curr.kind in {xtkProlog, xtkDoctype, xtkComment}:
@@ -1517,9 +1529,25 @@ proc fromXml*(s: string): XmlNode =
   parser.parseXmlRoot(res)
   res
 
-proc fromXml*(mapped: MemFile): XmlNode =
+proc fromXml*(mapped: MemFile, opts: XmlOptions = nil): XmlNode =
   ## Parse XML from a memory-mapped file
-  var parser = XmlParser(lexer: newXmlLexer(mapped.mem, mapped.size))
+  var parser = XmlParser(lexer: newXmlLexer(mapped.mem, mapped.size),
+    options: opts)
+  parser.curr = parser.nextToken()
+  parser.next = parser.nextToken()
+  while parser.curr.kind in {xtkProlog, xtkDoctype, xtkComment}:
+    parser.advance()
+  var res: XmlNode
+  parser.parseXmlRoot(res)
+  res
+
+proc fromXml*(buf: pointer, len: int, opts: XmlOptions = nil): XmlNode =
+  ## Parse XML from a borrowed buffer (no copy). The caller must keep
+  ## the buffer alive for the duration of the call; the returned DOM
+  ## owns its strings and outlives the buffer.
+  if buf == nil or len <= 0:
+    raise newException(OpenParserXmlError, "empty XML buffer")
+  var parser = XmlParser(lexer: newXmlLexer(buf, len), options: opts)
   parser.curr = parser.nextToken()
   parser.next = parser.nextToken()
   while parser.curr.kind in {xtkProlog, xtkDoctype, xtkComment}:
@@ -1544,11 +1572,11 @@ proc fromXml*[T](mapped: MemFile, t: typedesc[T]): T =
     parser.parseXml(tmp)
     tmp
 
-proc fromXmlFile*(filename: string): XmlNode =
+proc fromXmlFile*(filename: string, opts: XmlOptions = nil): XmlNode =
   ## Parse XML from a file on disk using memory-mapped I/O
   var mf = memfiles.open(filename, fmRead)
   defer: mf.close()
-  fromXml(mf)
+  fromXml(mf, opts)
 
 proc fromXmlFile*[T](filename: string, t: typedesc[T]): T =
   ## Parse XML from a file on disk into type `T`
