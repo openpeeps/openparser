@@ -109,6 +109,7 @@ type
     prev*, curr*, next*: YamlToken
     options*: YamlOptions
     depth*: int
+    flowDepth*: int
     anchors*: Table[string, YamlNode]
 
   YamlOptions* = ref object
@@ -1669,10 +1670,13 @@ template parseYamlMappingPairs*(body: untyped) {.dirty.} =
   ## Injects `key` into `body`.
   if p.curr.kind == ytkLC:
     p.advance() # '{'
+    inc p.flowDepth
     while p.curr.kind != ytkRC:
       if p.curr.kind == ytkEOF:
+        dec p.flowDepth
         p.error(errorEndOfFile % ["inline object"])
       if p.curr.kind notin {ytkIdentifier, ytkString}:
+        dec p.flowDepth
         p.error(unexpectedTokenExpected % [$p.curr.kind, "mapping key"])
 
       let key {.inject.} = p.curr.value
@@ -1680,6 +1684,7 @@ template parseYamlMappingPairs*(body: untyped) {.dirty.} =
       p.advance()
 
       if p.curr.kind != ytkColon:
+        dec p.flowDepth
         p.error(unexpectedTokenExpected % [$p.curr.kind, $ytkColon])
       p.advance()
 
@@ -1688,7 +1693,9 @@ template parseYamlMappingPairs*(body: untyped) {.dirty.} =
       if p.curr.kind == ytkComma:
         p.advance()
       elif p.curr.kind != ytkRC:
+        dec p.flowDepth
         p.error(unexpectedTokenExpected % [$p.curr.kind, "comma or }"])
+    dec p.flowDepth
     p.advance() # '}'
   else:
     if p.curr.kind notin {ytkIdentifier, ytkString, ytkEOF}:
@@ -1730,6 +1737,29 @@ template parseYamlMappingPairs*(body: untyped) {.dirty.} =
 #
 # Parse Hooks
 #
+proc collectTypedPlainLine(p: var YamlParser): string =
+  ## Collects all tokens on the current line into a single plain scalar string,
+  ## preserving original spacing via wsno. Mirrors parsePlainUnquoted but always
+  ## returns a string (no bool/int coercion). In flow context (flowDepth > 0)
+  ## stops before ',', ']' and '}' so inline delimiters stay for the caller.
+  let lineNo = p.curr.line
+  var count = 0
+  var buf = ""
+  while p.curr.kind != ytkEOF and p.curr.line == lineNo:
+    if p.curr.kind == ytkComment:
+      break
+    if p.flowDepth > 0 and p.curr.kind in {ytkComma, ytkRB, ytkRC}:
+      break
+    if p.curr.kind in {ytkDocumentStart, ytkDocumentEnd, ytkDirective}:
+      break
+    if count > 0 and p.curr.wsno > 0:
+      buf.add(repeat(' ', p.curr.wsno))
+    let part = if p.curr.value.len > 0: p.curr.value else: tokenText(p.curr)
+    buf.add(part)
+    inc count
+    p.advance()
+  return buf
+
 proc parseHook*[T](p: var YamlParser, v: var Option[T]) =
   # Parse an `Option[T]` field.
   # - `null` / `~` / EOF = `none(T)`
@@ -1786,11 +1816,34 @@ proc parseHook*(p: var YamlParser, v: var string) =
     if hasAnchor:
       p.anchors[anchorName] = YamlNode(kind: yamlString, strValue: v)
     return
-  else:
-    v = p.curr.value
+  of ytkEOF:
+    v = ""
     if hasAnchor:
       p.anchors[anchorName] = YamlNode(kind: yamlString, strValue: v)
-    p.advance()
+    return
+  else:
+    # Empty value: `key:` with nothing on the same line. prev is the ':' (or
+    # anchor/tag following it). If curr is on a later line at same/shallower
+    # indent it is a sibling key, treat as empty without consuming.
+    if p.prev != nil and p.curr.line != p.prev.line:
+      if p.curr.indent <= p.prev.indent:
+        v = ""
+        if hasAnchor:
+          p.anchors[anchorName] = YamlNode(kind: yamlString, strValue: v)
+        return
+      # Indented content on the next line: either a nested mapping/sequence
+      # (type error for a string) or a plain scalar continuation.
+      if p.curr.kind == ytkDash:
+        p.error(unexpectedTokenExpected % [$p.curr.kind, "string scalar"])
+      if (p.curr.kind in {ytkIdentifier, ytkString}) and p.next.kind == ytkColon:
+        p.error(unexpectedTokenExpected % [p.curr.value, "string scalar"])
+      if p.curr.kind in {ytkLB, ytkLC}:
+        p.error(unexpectedTokenExpected % [$p.curr.kind, "string scalar"])
+      # Otherwise fall through and collect the indented plain line(s).
+    v = p.collectTypedPlainLine()
+    if hasAnchor:
+      p.anchors[anchorName] = YamlNode(kind: yamlString, strValue: v)
+    return
 
 proc parseHook*(p: var YamlParser, v: var bool) =
   ## A hook to parse boolean fields (anchor aware)
@@ -1883,8 +1936,10 @@ proc parseHook*[T](p: var YamlParser, v: var set[T]) =
   of ytkLB:
     # inline: [a, b, c]
     p.advance() # '['
+    inc p.flowDepth
     while p.curr.kind != ytkRB:
       if p.curr.kind == ytkEOF:
+        dec p.flowDepth
         p.error(errorEndOfFile % ["inline array"])
       var item: T
       p.parseHook(item)
@@ -1892,7 +1947,9 @@ proc parseHook*[T](p: var YamlParser, v: var set[T]) =
       if p.curr.kind == ytkComma:
         p.advance()
       elif p.curr.kind != ytkRB:
+        dec p.flowDepth
         p.error(unexpectedTokenExpected % [$p.curr.kind, "comma or ]"])
+    dec p.flowDepth
     p.advance() # ']'
   of ytkDash:
     # block:
@@ -1922,8 +1979,10 @@ proc parseHook*[T](p: var YamlParser, v: var seq[T]) =
   of ytkLB:
     # inline: [a, b, c]
     p.advance() # '['
+    inc p.flowDepth
     while p.curr.kind != ytkRB:
       if p.curr.kind == ytkEOF:
+        dec p.flowDepth
         p.error(errorEndOfFile % ["inline array"])
       var item: T
       p.parseHook(item)
@@ -1932,7 +1991,9 @@ proc parseHook*[T](p: var YamlParser, v: var seq[T]) =
       if p.curr.kind == ytkComma:
         p.advance()
       elif p.curr.kind != ytkRB:
+        dec p.flowDepth
         p.error(unexpectedTokenExpected % [$p.curr.kind, "comma or ]"])
+    dec p.flowDepth
     p.advance() # ']'
 
   of ytkDash:
@@ -1966,11 +2027,14 @@ proc parseHook*[N: static[int]; T](p: var YamlParser, v: var array[N, T]) =
   of ytkLB:
     # inline: [a, b, c]
     p.advance() # '['
+    inc p.flowDepth
     while p.curr.kind != ytkRB:
       if p.curr.kind == ytkEOF:
+        dec p.flowDepth
         p.error(errorEndOfFile % ["inline array"])
       
       if idx >= N:
+        dec p.flowDepth
         p.error("Sequence has more items than array size (" & $N & ")")
       
       var item: T
@@ -1981,7 +2045,9 @@ proc parseHook*[N: static[int]; T](p: var YamlParser, v: var array[N, T]) =
       if p.curr.kind == ytkComma:
         p.advance()
       elif p.curr.kind != ytkRB:
+        dec p.flowDepth
         p.error(unexpectedTokenExpected % [$p.curr.kind, "comma or ]"])
+    dec p.flowDepth
     p.advance() # ']'
 
   of ytkDash:

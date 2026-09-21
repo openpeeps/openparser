@@ -215,7 +215,156 @@ suite "YAML plain scalars":
     let obj = parseYAML(yaml)
     check obj["welcome"].strValue == "café au lait 日本語"
     check obj["city"].strValue == "München"
-    # typed hook reads one token per scalar: single-token unicode value
-    let srv = parseYAML("welcome: café\nsshKey: ~/.ssh/x\n", DeployServer)
-    check srv.welcome == "café"
+    # typed hook consumes the full plain line, not a single token
+    let srv = parseYAML("welcome: café au lait 日本語\nsshKey: ~/.ssh/x\n", DeployServer)
+    check srv.welcome == "café au lait 日本語"
     check srv.sshKey == "~/.ssh/x"
+
+type Recipe = object
+  name: string
+  description: string
+
+suite "YAML unquoted plain scalars":
+  test "multi-word with slashes (reported bug)":
+    let yaml = """
+      name: myrecipe
+      description: JWT/JWS auth via nimbase/jose
+    """
+    let obj = parseYAML(yaml)
+    check obj["description"].strValue == "JWT/JWS auth via nimbase/jose"
+    let r = parseYAML(yaml, Recipe)
+    check r.name == "myrecipe"
+    check r.description == "JWT/JWS auth via nimbase/jose"
+
+  test "typed multi-word unicode":
+    let yaml = """
+      welcome: café au lait
+      city: München Stadt
+    """
+    let obj = parseYAML(yaml)
+    check obj["welcome"].strValue == "café au lait"
+    let srv = parseYAML("welcome: café au lait\ncity: x\nsshKey: y\nnothing: z\n", DeployServer)
+    check srv.welcome == "café au lait"
+
+  test "emoji unquoted":
+    let yaml = """
+      title: 🚀 deploy now
+      status: ✅ done 🌍
+      single: 🎉
+    """
+    let obj = parseYAML(yaml)
+    check obj["title"].strValue == "🚀 deploy now"
+    check obj["status"].strValue == "✅ done 🌍"
+    check obj["single"].strValue == "🎉"
+    type EmojiRec = object
+      title: string
+      status: string
+    let e = parseYAML(yaml, EmojiRec)
+    check e.title == "🚀 deploy now"
+    check e.status == "✅ done 🌍"
+
+  test "japanese unquoted":
+    let yaml = """
+      title: 日本語テスト
+      desc: こんにちは 世界
+      mixed: JWT認証 via テスト 🚀
+    """
+    let obj = parseYAML(yaml)
+    check obj["title"].strValue == "日本語テスト"
+    check obj["desc"].strValue == "こんにちは 世界"
+    check obj["mixed"].strValue == "JWT認証 via テスト 🚀"
+    type JpRec = object
+      title: string
+      desc: string
+      mixed: string
+    let j = parseYAML(yaml, JpRec)
+    check j.title == "日本語テスト"
+    check j.desc == "こんにちは 世界"
+    check j.mixed == "JWT認証 via テスト 🚀"
+
+  test "russian unquoted":
+    let yaml = """
+      title: Привет
+      desc: Привет мир тест
+      mixed: описание Тестовая строка café 🌍
+    """
+    let obj = parseYAML(yaml)
+    check obj["title"].strValue == "Привет"
+    check obj["desc"].strValue == "Привет мир тест"
+    check obj["mixed"].strValue == "описание Тестовая строка café 🌍"
+    type RuRec = object
+      title: string
+      desc: string
+      mixed: string
+    let r = parseYAML(yaml, RuRec)
+    check r.title == "Привет"
+    check r.desc == "Привет мир тест"
+    check r.mixed == "описание Тестовая строка café 🌍"
+
+  test "mixed everything with comment":
+    let yaml = """
+      description: JWT/JWS auth via nimbase/jose 🚀 日本語 Привет café # trailing comment
+    """
+    let obj = parseYAML(yaml)
+    check obj["description"].strValue == "JWT/JWS auth via nimbase/jose 🚀 日本語 Привет café"
+    let rec = parseYAML("name: x\ndescription: JWT/JWS auth via nimbase/jose 🚀 日本語 Привет café # c\n", Recipe)
+    check rec.description == "JWT/JWS auth via nimbase/jose 🚀 日本語 Привет café"
+
+  test "block sequence of unquoted strings":
+    let yaml = """
+      items:
+        - hello world
+        - café au lait
+        - こんにちは 世界
+        - Привет мир
+        - hello 🌍 world
+    """
+    let obj = parseYAML(yaml)
+    let arr = obj["items"].arrValue
+    check arr.len == 5
+    check arr[0].strValue == "hello world"
+    check arr[1].strValue == "café au lait"
+    check arr[2].strValue == "こんにちは 世界"
+    check arr[3].strValue == "Привет мир"
+    check arr[4].strValue == "hello 🌍 world"
+    type SeqRec = object
+      items: seq[string]
+    let s = parseYAML(yaml, SeqRec)
+    check s.items.len == 5
+    check s.items[0] == "hello world"
+    check s.items[1] == "café au lait"
+    check s.items[2] == "こんにちは 世界"
+    check s.items[3] == "Привет мир"
+    check s.items[4] == "hello 🌍 world"
+
+  test "inline flow with multi-word strings":
+    let yaml = """
+      obj: {greeting: hello world, city: München Stadt}
+      arr: [hello world, café au lait]
+    """
+    let obj = parseYAML(yaml)
+    check obj["obj"].objValue["greeting"].strValue == "hello world"
+    check obj["obj"].objValue["city"].strValue == "München Stadt"
+    check obj["arr"].arrValue[0].strValue == "hello world"
+    check obj["arr"].arrValue[1].strValue == "café au lait"
+    type FlowRec = object
+      arr: seq[string]
+    let f = parseYAML("arr: [hello world, café au lait]\n", FlowRec)
+    check f.arr.len == 2
+    check f.arr[0] == "hello world"
+    check f.arr[1] == "café au lait"
+
+  test "empty string value stays empty":
+    let yaml = """
+      name: filled
+      description:
+      other: next
+    """
+    type EmptyRec = object
+      name: string
+      description: string
+      other: string
+    let e = parseYAML(yaml, EmptyRec)
+    check e.name == "filled"
+    check e.description == ""
+    check e.other == "next"
