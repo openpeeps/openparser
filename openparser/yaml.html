@@ -91,6 +91,7 @@
   prev*, curr*, next*: YamlToken
   options*: YamlOptions
   depth*: int
+  flowDepth*: int
   anchors*: Table[string, YamlNode]">YamlParser</a></li>
 <li><a class="reference" href="#YamlToken" title="YamlToken = ref object
   kind*: YamlTokenKind
@@ -376,6 +377,7 @@
   <span class="Identifier">prev</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">curr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">next</span><span class="Operator">*</span><span class="Other">:</span> <a href="#YamlToken"><span class="Identifier">YamlToken</span></a>
   <span class="Identifier">options</span><span class="Operator">*</span><span class="Other">:</span> <a href="#YamlOptions"><span class="Identifier">YamlOptions</span></a>
   <span class="Identifier">depth</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
+  <span class="Identifier">flowDepth</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
   <span class="Identifier">anchors</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span></pre></dt>
   <dd>
     
@@ -532,7 +534,7 @@
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Retrieves a value by key, supporting dot notation for nested access
+    Retrieves a value by key, supporting dot notation for nested access. Missing keys return <tt class="docutils literal"><span class="pre"><span class="Keyword">nil</span></span></tt> (never raises <tt class="docutils literal"><span class="pre"><span class="Identifier">KeyError</span></span></tt>).
     
   </dd>
 </div>
@@ -975,7 +977,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-19 10:41:31 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-23 17:49:51 UTC</small>
       </div>
     </div>
   </div>
