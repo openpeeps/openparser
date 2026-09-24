@@ -368,3 +368,173 @@ suite "YAML unquoted plain scalars":
     check e.name == "filled"
     check e.description == ""
     check e.other == "next"
+
+suite "YAML top-level sequences":
+  test "sequence of scalars at document root":
+    let yaml = "- apple\n- banana\n- cherry\n"
+    let node = parseYAMLNode(yaml)
+    check node.kind == yamlArray
+    check node.arrValue.len == 3
+    check node.arrValue[0].strValue == "apple"
+    check node.arrValue[1].strValue == "banana"
+    check node.arrValue[2].strValue == "cherry"
+
+  test "sequence of mappings at document root":
+    let yaml = """
+      - name: ALPHA BANK
+        city: NEW YORK,NY
+        swift: ABNKUS33
+      - name: BETA BANK
+        city: BOSTON,MA
+        swift: BTBKUS31
+    """
+    let node = parseYAMLNode(yaml)
+    check node.kind == yamlArray
+    check node.arrValue.len == 2
+    check node.arrValue[0].objValue["name"].strValue == "ALPHA BANK"
+    check node.arrValue[0].objValue["city"].strValue == "NEW YORK,NY"
+    check node.arrValue[0].objValue["swift"].strValue == "ABNKUS33"
+    check node.arrValue[1].objValue["name"].strValue == "BETA BANK"
+    check node.arrValue[1].objValue["swift"].strValue == "BTBKUS31"
+
+  test "sequence of mappings with explicit nulls":
+    let yaml = "- name: ALPHA BANK\n  branch: null\n  swift: ABNKUS33\n"
+    let node = parseYAMLNode(yaml)
+    check node.kind == yamlArray
+    check node.arrValue.len == 1
+    check node.arrValue[0].objValue["branch"].kind == yamlNull
+    check node.arrValue[0].objValue["swift"].strValue == "ABNKUS33"
+
+  test "nested mapping root is unaffected":
+    let node = parseYAMLNode("key: value\n")
+    check node.kind == yamlObject
+    check node.objValue["key"].strValue == "value"
+
+  test "scalar roots":
+    check parseYAMLNode("42").intValue == 42
+    check parseYAMLNode("hello world").strValue == "hello world"
+    check parseYAMLNode("null").kind == yamlNull
+    check parseYAMLNode("").kind == yamlNull
+
+  test "typed deserialization from a root sequence":
+    type Bank = object
+      name: string
+      swift: string
+    let banks = parseYAML("""
+      - name: ALPHA BANK
+        swift: ABNKUS33
+      - name: BETA BANK
+        swift: BTBKUS31
+    """, seq[Bank])
+    check banks.len == 2
+    check banks[0].name == "ALPHA BANK"
+    check banks[0].swift == "ABNKUS33"
+    check banks[1].name == "BETA BANK"
+    check banks[1].swift == "BTBKUS31"
+
+suite "YAML scalar mapping keys":
+  test "numeric keys in a block mapping":
+    let obj = parseYAML("02: Canillo\n7: Escaldes-Engordany\n")
+    check obj["02"].strValue == "Canillo"
+    check obj["7"].strValue == "Escaldes-Engordany"
+
+  test "numeric keys via typed table hook":
+    type Region = object
+      states: Table[string, string]
+    let obj = parseYAML("states:\n  02: Canillo\n  A: Any\n", Region)
+    check obj.states["02"] == "Canillo"
+    check obj.states["A"] == "Any"
+
+  test "numeric keys in an inline mapping":
+    let obj = parseYAML("obj: {1: one, 2.5: two}\n")
+    check obj["obj"].objValue["1"].strValue == "one"
+    check obj["obj"].objValue["2.5"].strValue == "two"
+
+  test "plain scalar keys that begin with digits":
+    let obj = parseYAML("040s: Izola\n12abc: Mixed\n1.0.0: Version\n")
+    check obj["040s"].strValue == "Izola"
+    check obj["12abc"].strValue == "Mixed"
+    check obj["1.0.0"].strValue == "Version"
+    type Codes = object
+      states: Table[string, string]
+    let typed = parseYAML("states:\n  040s: Izola\n  07: Piran\n", Codes)
+    check typed.states["040s"] == "Izola"
+    check typed.states["07"] == "Piran"
+
+  test "apostrophe inside a plain scalar is not a quote":
+    let obj = parseYAML("name: SWEDISH BANKERS' ASSOCIATION\nbranch: STANDBY LC'S\n")
+    check obj["name"].strValue == "SWEDISH BANKERS' ASSOCIATION"
+    check obj["branch"].strValue == "STANDBY LC'S"
+
+  test "apostrophe inside a plain scalar in a root sequence":
+    type Bank = object
+      name, city, branch: string
+    let banks = parseYAML("""
+      - name: MEYDAN SA'AT
+        city: TEHRAN
+        branch: HEAD OFFICE
+    """, seq[Bank])
+    check banks.len == 1
+    check banks[0].name == "MEYDAN SA'AT"
+    check banks[0].branch == "HEAD OFFICE"
+
+suite "YAML empty and null values":
+  type Optionals = object
+    codes: seq[string]
+    name: seq[string]
+    lengths: seq[string]
+    prefixes: seq[int]
+    regex: string
+    charset: string
+
+  test "omitted and null sequence fields become empty":
+    let o = parseYAML("""
+      codes:
+        - EUR
+      name:
+      lengths: []
+      prefixes:
+      regex: null
+      charset: varchar
+    """, Optionals)
+    check o.codes == @["EUR"]
+    check o.name.len == 0
+    check o.lengths.len == 0
+    check o.prefixes.len == 0
+    check o.regex == ""
+    check o.charset == "varchar"
+
+  test "quoted null is kept as text":
+    let o = parseYAML("""
+      regex: "null"
+      charset: 'null'
+    """, Optionals)
+    check o.regex == "null"
+    check o.charset == "null"
+
+  test "tilde is also null":
+    let o = parseYAML("regex: ~\ncharset: varchar\n", Optionals)
+    check o.regex == ""
+    check o.charset == "varchar"
+
+  test "sequence still parses after an omitted sibling":
+    let o = parseYAML("""
+      name:
+      codes:
+        - USD
+        - EUR
+      charset: varchar
+    """, Optionals)
+    check o.name.len == 0
+    check o.codes == @["USD", "EUR"]
+    check o.charset == "varchar"
+
+  test "multi-document streams keep sequence and scalar roots":
+    let docs = parseYAMLStreamNodes("- name: ALPHA\n---\nkey: value\n---\n42\n")
+    check docs.len == 3
+    check docs[0].kind == yamlArray
+    check docs[0].arrValue[0].objValue["name"].strValue == "ALPHA"
+    check docs[1].kind == yamlObject
+    check docs[1].objValue["key"].strValue == "value"
+    check docs[2].kind == yamlInteger
+    check docs[2].intValue == 42

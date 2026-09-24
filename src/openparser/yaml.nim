@@ -531,6 +531,16 @@ const tokens = {
 proc isAnchorChar(c: char): bool =
   c in {'a'..'z','A'..'Z','0'..'9','_','-'}
 
+proc atScalarStart(l: YamlLexer): bool =
+  ## True when the current character opens a new node rather than continuing
+  ## an existing plain scalar.
+  ##
+  ## A quote only begins a quoted scalar at a node boundary. Inside a plain
+  ## scalar an apostrophe is an ordinary character, so `STANDBY LC'S` must not
+  ## be lexed as the start of a single-quoted scalar (§7.3.2).
+  if l.pos == 0: return true
+  l.charAt(l.pos - 1) in {' ', '\t', '\n', '\r', ':', ',', '[', '{', '?'}
+
 proc nextToken*(p: var YamlParser): YamlToken =
   ## Lexical analysis to produce the next token from the input
   var wsBefore = 0
@@ -714,9 +724,22 @@ proc nextToken*(p: var YamlParser): YamlToken =
         while p.lex.current in {'0'..'9','_'}:
           result.value.add(p.lex.current)
           advance(p.lex)
+      # A plain scalar may start with digits and continue with letters
+      # (`040s`, `12abc`). Such a token is never a number: reclassify it and
+      # keep reading so the whole word stays a single scalar.
+      if p.lex.current in {'a'..'z', 'A'..'Z', '_', '-', '/'} or
+          p.lex.current >= '\x80':
+        result.kind = ytkIdentifier
+        result.value.add(p.lex.readIdentifier())
       return
   of '"', '\'':
     let q = p.lex.current
+    if not p.lex.atScalarStart():
+      # Mid-scalar quote: an ordinary plain character, not a quoted scalar.
+      result.kind = ytkString
+      result.value = $q
+      advance(p.lex)
+      return
     advance(p.lex)
     result.kind = ytkString
     result.value = p.lex.readString(q)
@@ -1414,23 +1437,47 @@ proc skipDirectivesAndDocs(p: var YamlParser) =
       continue
     break
 
-proc parseRoot(p: var YamlParser): YAMLObject =
-  result = newOrderedTable[string, YamlNode]()
+proc parseDocument(p: var YamlParser): YamlNode =
+  ## Parse exactly one document, which may be a block mapping, a block
+  ## sequence, a flow collection or a bare scalar.
+  ##
+  ## This is root-aware: `parseValue` alone cannot distinguish a block
+  ## sequence from a block mapping without inspecting the leading token.
   p.skipDirectivesAndDocs()
   if p.curr.kind == ytkEOF or p.curr.kind == ytkDocumentEnd:
-    return
-  # Handle top-level sequence not only mapping? If starts with dash -> sequence doc
-  # For historical compat, root is mapping; preserve mapping path but handle doc being sequence/scalar via single-key wrapper? Actually parseMapping expects mapping; keep it but also skip
-  if p.curr.kind == ytkDash:
-    # sequence document: represent as special? For now, treat as mapping with empty? Instead, create mapping with single key? Better: if root is sequence, parse as sequence and store under empty? But spec: stream may be sequence; for YAMLObject root we keep mapping expectation -> if dash, parse sequence and return empty mapping? Simpler: if dash, just parse sequence and ignore? For API compat, handle dash as mapping failure: try mapping, fallback to sequence?
-    # Keep original behavior: mapping only
-    result = parseMapping(p, p.curr.indent)
-    return
-  # Accept indented top-level YAML (common in triple-quoted test strings).
-  if p.curr.kind in {ytkIdentifier, ytkString, ytkInteger, ytkFloat} and p.next.kind != ytkColon:
-    # scalar document? treat as empty mapping per historical
-    discard
-  result = parseMapping(p, p.curr.indent)
+    return newYamlNull()
+  case p.curr.kind
+  of ytkDash:
+    # A block sequence as the document root. `parseMapping` cannot consume a
+    # leading dash, so the document is wrapped into an array node here.
+    return YamlNode(kind: yamlArray, arrValue: parseSequence(p, p.curr.indent))
+  of ytkLC:
+    return parseInlineObject(p)
+  of ytkLB:
+    return parseInlineArray(p)
+  of ytkIdentifier, ytkString, ytkInteger, ytkFloat:
+    if p.next.kind == ytkColon:
+      return YamlNode(kind: yamlObject, objValue: parseMapping(p, p.curr.indent))
+    # Bare scalar document. Pass a non-negative parent indent so the scalar
+    # is not treated as a flow scalar (a root scalar may contain commas).
+    return parseValue(p, 0)
+  of ytkPipe:
+    return parseBlockString(p, p.curr.indent, folded = false)
+  of ytkGT:
+    return parseBlockString(p, p.curr.indent, folded = true)
+  else:
+    p.error(unexpectedTokenExpected % [$p.curr.kind, "document"])
+
+proc parseRoot(p: var YamlParser): YAMLObject =
+  ## Parse the first document and return it as a mapping.
+  ##
+  ## Backwards-compatible wrapper: a document whose root is a sequence or a
+  ## scalar has no mapping to return, so an empty table is produced. Use
+  ## `parseYAMLNode` to read sequence and scalar documents.
+  result = newOrderedTable[string, YamlNode]()
+  let doc = p.parseDocument()
+  if doc.kind == yamlObject:
+    result = doc.objValue
 
 proc nimStringLiteral(s: string): string =
   result = "\""
@@ -1609,6 +1656,7 @@ proc initYamlParser*(input: YAML, opts: YamlOptions = nil): YamlParser =
     result.next = result.nextToken()
 
 proc parseYAML*(input: YAML): YAMLObject =
+  ## Parse the first document of a YAML string as a mapping.
   var p = initYamlParser(input)
   p.parseRoot()
 
@@ -1616,34 +1664,62 @@ proc parseYAML*(input: YAML, opts: YamlOptions): YAMLObject =
   var p = initYamlParser(input, opts)
   p.parseRoot()
 
-proc parseYAMLStream*(input: YAML, opts: YamlOptions = nil): seq[YAMLObject] =
-  ## Parse multi-document stream, returning each document as YAMLObject
+proc parseYAMLNode*(input: YAML): YamlNode =
+  ## Parse the first document of a YAML string into a `YamlNode`.
+  ##
+  ## Unlike `parseYAML`, this preserves documents whose root is a sequence or
+  ## a scalar, which YAML permits and `YAMLObject` cannot represent.
+  var p = initYamlParser(input)
+  p.parseDocument()
+
+proc parseYAMLNode*(input: YAML, opts: YamlOptions): YamlNode =
+  ## Parse the first document of a YAML string into a `YamlNode`.
+  var p = initYamlParser(input, opts)
+  p.parseDocument()
+
+proc parseYAMLStreamNodes*(input: YAML, opts: YamlOptions = nil): seq[YamlNode] =
+  ## Parse a multi-document stream, preserving sequence and scalar documents.
   var p = initYamlParser(input, opts)
   result = @[]
-  p.skipDirectivesAndDocs()
-  while p.curr.kind != ytkEOF:
+  while true:
+    p.skipDirectivesAndDocs()
+    if p.curr.kind == ytkEOF: break
     if p.curr.kind == ytkDocumentEnd:
       p.advance()
-      p.skipDirectivesAndDocs()
       continue
     if p.curr.kind == ytkDocumentStart:
       p.advance()
       p.skipDirectivesAndDocs()
-    let doc = p.parseRoot()
-    result.add(doc)
-    # skip trailing comments/markers
+      if p.curr.kind == ytkEOF: break
+    # `parseDocument` consumes a whole document, so there is nothing left to
+    # skip afterwards. Advancing here would eat the next document's first token.
+    result.add(p.parseDocument())
+  if result.len == 0:
+    result.add(newYamlNull())
+
+proc parseYAMLStream*(input: YAML, opts: YamlOptions = nil): seq[YAMLObject] =
+  ## Parse multi-document stream, returning each document as YAMLObject
+  ##
+  ## A document whose root is a sequence or a scalar has no mapping to
+  ## return, so an empty table is used for those. Use `parseYAMLStreamNodes`
+  ## to read them.
+  var p = initYamlParser(input, opts)
+  result = @[]
+  while true:
     p.skipDirectivesAndDocs()
+    if p.curr.kind == ytkEOF: break
     if p.curr.kind == ytkDocumentEnd:
       p.advance()
-      p.skipDirectivesAndDocs()
-    elif p.curr.kind == ytkDocumentStart:
       continue
-    elif p.curr.kind == ytkEOF:
-      break
+    if p.curr.kind == ytkDocumentStart:
+      p.advance()
+      p.skipDirectivesAndDocs()
+      if p.curr.kind == ytkEOF: break
+    let doc = p.parseDocument()
+    if doc.kind == yamlObject:
+      result.add(doc.objValue)
     else:
-      # stray tokens remain but parseRoot consumed mapping; advance to next doc marker
-      if p.curr.kind != ytkEOF:
-        p.advance()
+      result.add(newOrderedTable[string,YamlNode]())
   if result.len == 0:
     result.add(newOrderedTable[string,YamlNode]())
 
@@ -1680,7 +1756,7 @@ template parseYamlMappingPairs*(body: untyped) {.dirty.} =
       if p.curr.kind == ytkEOF:
         dec p.flowDepth
         p.error(errorEndOfFile % ["inline object"])
-      if p.curr.kind notin {ytkIdentifier, ytkString}:
+      if p.curr.kind notin {ytkIdentifier, ytkString, ytkInteger, ytkFloat}:
         dec p.flowDepth
         p.error(unexpectedTokenExpected % [$p.curr.kind, "mapping key"])
 
@@ -1703,7 +1779,9 @@ template parseYamlMappingPairs*(body: untyped) {.dirty.} =
     dec p.flowDepth
     p.advance() # '}'
   else:
-    if p.curr.kind notin {ytkIdentifier, ytkString, ytkEOF}:
+    # Any scalar may be a mapping key (YAML 1.2), not just identifiers and
+    # quoted strings: `02: "Canillo"` is a valid entry.
+    if p.curr.kind notin {ytkIdentifier, ytkString, ytkInteger, ytkFloat, ytkEOF}:
       p.error(unexpectedTokenExpected % [$p.curr.kind, "mapping key"])
     
     if p.curr.kind == ytkEOF:
@@ -1718,7 +1796,7 @@ template parseYamlMappingPairs*(body: untyped) {.dirty.} =
     # effectiveIndent == baseIndent == dash-line indent.
     # After parsing that key, effectiveIndent is promoted to the
     # continuation indent (e.g. 4), and the loop continues correctly
-    while p.curr.kind in {ytkIdentifier, ytkString} and
+    while p.curr.kind in {ytkIdentifier, ytkString, ytkInteger, ytkFloat} and
         p.curr.indent == effectiveIndent:
       let key {.inject.} = p.curr.value
       p.advance()
@@ -1735,7 +1813,7 @@ template parseYamlMappingPairs*(body: untyped) {.dirty.} =
       # Promote effectiveIndent once when continuation keys
       # sit deeper than the inline-after-dash first key.
       if effectiveIndent == baseIndent and
-          p.curr.kind in {ytkIdentifier, ytkString} and
+          p.curr.kind in {ytkIdentifier, ytkString, ytkInteger, ytkFloat} and
           p.curr.indent > baseIndent:
         effectiveIndent = p.curr.indent
 
@@ -1780,6 +1858,12 @@ proc parseHook*[T](p: var YamlParser, v: var Option[T]) =
 
 proc parseHook*(p: var YamlParser, v: var string) =
   ## A hook to parse string fields (with anchor/alias/tag support)
+  if isYamlNullToken(p.curr):
+    # An unquoted `null` or `~` is a null scalar, not the four letters "null".
+    # A quoted `"null"` arrives as ytkString and is kept verbatim.
+    v = ""
+    p.advance()
+    return
   if p.curr.kind == ytkAlias:
     let name = p.curr.value
     p.advance()
@@ -1980,6 +2064,14 @@ proc parseHook*[T](p: var YamlParser, v: var set[T]) =
 proc parseHook*[T](p: var YamlParser, v: var seq[T]) =
   ## Parse YAML sequence into seq[T]
   v.setLen(0)
+  # `key:` with no value is an empty sequence, mirroring how the string hook
+  # treats the same shape. Without this a field whose value is omitted would
+  # be mistaken for the following sibling key.
+  if p.curr.kind != ytkEOF and
+      p.curr.kind in {ytkIdentifier, ytkString, ytkInteger, ytkFloat} and
+      p.next.kind == ytkColon and p.prev != nil and
+      p.curr.line != p.prev.line and p.curr.indent <= p.prev.indent:
+    return
   case p.curr.kind
   of ytkLB:
     # inline: [a, b, c]
@@ -2234,6 +2326,34 @@ proc parseYAML*[T: object|ref object](p: var YamlParser, v: var T) =
   else:
     p.error(unexpectedTokenExpected % [$p.curr.kind, "mapping/object"])
 
+proc parseYAML*[T](p: var YamlParser, v: var seq[T]) =
+  ## Parse a top-level YAML sequence into `v`.
+  ##
+  ## A document whose root is a block sequence cannot be read into a single
+  ## object, so `parseYAML[T]` for `object` rejects it. This overload accepts
+  ## `seq[T]` and fills it item by item.
+  v.setLen(0)
+  case p.curr.kind
+  of ytkEOF:
+    return
+  of ytkLB:
+    p.parseHook(v)
+    return
+  of ytkDash:
+    discard
+  else:
+    p.error(unexpectedTokenExpected % [$p.curr.kind, "sequence"])
+  let seqIndent = p.curr.indent
+  while p.curr.kind == ytkDash and p.curr.indent == seqIndent:
+    let dashLine = p.curr.line
+    p.advance() # '-'
+    if p.curr.kind == ytkEOF:
+      break
+    var item: T
+    if p.curr.line == dashLine or p.curr.indent > seqIndent:
+      p.parseHook(item)
+    v.add(item)
+
 macro parseYamlMacro(x: typed, str: typed): untyped =
   var objIdent = x.getTypeImpl()[1]
   var
@@ -2241,16 +2361,9 @@ macro parseYamlMacro(x: typed, str: typed): untyped =
     blockStmtId = genSym(nskLabel, "openparserYaml")
   add blockStmtList, quote do:
     var
-      tmp = `objIdent`()
-      p = YamlParser(lex: newYamlLexer(`str`))
-    
-    p.lex.current = p.lex.charAt(0)
-    p.curr = p.nextToken()
-    p.next = p.nextToken()
-    while p.curr.kind == ytkComment:
-      p.curr = p.next
-      p.next = p.nextToken()
-    
+      tmp: `objIdent`
+      p = initYamlParser(`str`)
+
     p.parseYAML(tmp)
     ensureMove(tmp) # return the parsed object
   var blockStmt = newBlockStmt(blockStmtId, blockStmtList)
