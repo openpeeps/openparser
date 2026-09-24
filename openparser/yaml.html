@@ -245,10 +245,20 @@
 <li><a class="reference" href="#parseYAML%2CYAML%2CYamlOptions" title="parseYAML(input: YAML; opts: YamlOptions): YAMLObject">parseYAML(input: YAML; opts: YamlOptions): YAMLObject</a></li>
 <li><a class="reference" href="#parseYAML%2CYamlParser%2CT" title="parseYAML[T: object | ref object](p: var YamlParser; v: var T)">parseYAML[T: object | ref object](p: var YamlParser; v: var T)</a></li>
 <li><a class="reference" href="#parseYAML%2CYAML%2Ctypedesc%5BT%5D" title="parseYAML[T](input: YAML; t: typedesc[T]): T">parseYAML[T](input: YAML; t: typedesc[T]): T</a></li>
+<li><a class="reference" href="#parseYAML%2CYamlParser%2Cseq%5BT%5D" title="parseYAML[T](p: var YamlParser; v: var seq[T])">parseYAML[T](p: var YamlParser; v: var seq[T])</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">parseYAMLNode
+  <li><a class="reference" href="#parseYAMLNode%2CYAML" title="parseYAMLNode(input: YAML): YamlNode">parseYAMLNode(input: YAML): YamlNode</a></li>
+<li><a class="reference" href="#parseYAMLNode%2CYAML%2CYamlOptions" title="parseYAMLNode(input: YAML; opts: YamlOptions): YamlNode">parseYAMLNode(input: YAML; opts: YamlOptions): YamlNode</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">parseYAMLStream
   <li><a class="reference" href="#parseYAMLStream%2CYAML%2CYamlOptions" title="parseYAMLStream(input: YAML; opts: YamlOptions = nil): seq[YAMLObject]">parseYAMLStream(input: YAML; opts: YamlOptions = nil): seq[YAMLObject]</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">parseYAMLStreamNodes
+  <li><a class="reference" href="#parseYAMLStreamNodes%2CYAML%2CYamlOptions" title="parseYAMLStreamNodes(input: YAML; opts: YamlOptions = nil): seq[YamlNode]">parseYAMLStreamNodes(input: YAML; opts: YamlOptions = nil): seq[YamlNode]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">put
@@ -872,7 +882,7 @@
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    
+    Parse the first document of a YAML string as a mapping.
     
   </dd>
 </div>
@@ -902,6 +912,41 @@
     
   </dd>
 </div>
+<div id="parseYAML,YamlParser,seq[T]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAML%2CYamlParser%2Cseq%5BT%5D"><span class="Identifier">parseYAML</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#YamlParser"><span class="Identifier">YamlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    <p>Parse a top-level YAML sequence into <tt class="docutils literal"><span class="pre"><span class="Identifier">v</span></span></tt>.</p>
+<p>A document whose root is a block sequence cannot be read into a single object, so <tt class="docutils literal"><span class="pre"><span class="Identifier">parseYAML</span><span class="Punctuation">[</span><span class="Identifier">T</span><span class="Punctuation">]</span></span></tt> for <tt class="docutils literal"><span class="pre"><span class="Keyword">object</span></span></tt> rejects it. This overload accepts <tt class="docutils literal"><span class="pre"><span class="Identifier">seq</span><span class="Punctuation">[</span><span class="Identifier">T</span><span class="Punctuation">]</span></span></tt> and fills it item by item.</p>
+
+    
+  </dd>
+</div>
+
+</div>
+<div id="parseYAMLNode-procs-all">
+  <div id="parseYAMLNode,YAML">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAMLNode%2CYAML"><span class="Identifier">parseYAMLNode</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="#YAML"><span class="Identifier">YAML</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    <p>Parse the first document of a YAML string into a <tt class="docutils literal"><span class="pre"><span class="Identifier">YamlNode</span></span></tt>.</p>
+<p>Unlike <tt class="docutils literal"><span class="pre"><span class="Identifier">parseYAML</span></span></tt>, this preserves documents whose root is a sequence or a scalar, which YAML permits and <tt class="docutils literal"><span class="pre"><span class="Identifier">YAMLObject</span></span></tt> cannot represent.</p>
+
+    
+  </dd>
+</div>
+<div id="parseYAMLNode,YAML,YamlOptions">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAMLNode%2CYAML%2CYamlOptions"><span class="Identifier">parseYAMLNode</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="#YAML"><span class="Identifier">YAML</span></a><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="#YamlOptions"><span class="Identifier">YamlOptions</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#YamlNode"><span class="Identifier">YamlNode</span></a> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Parse the first document of a YAML string into a <tt class="docutils literal"><span class="pre"><span class="Identifier">YamlNode</span></span></tt>.
+    
+  </dd>
+</div>
 
 </div>
 <div id="parseYAMLStream-procs-all">
@@ -911,7 +956,22 @@
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Parse multi-document stream, returning each document as YAMLObject
+    <p>Parse multi-document stream, returning each document as YAMLObject</p>
+<p>A document whose root is a sequence or a scalar has no mapping to return, so an empty table is used for those. Use <tt class="docutils literal"><span class="pre"><span class="Identifier">parseYAMLStreamNodes</span></span></tt> to read them.</p>
+
+    
+  </dd>
+</div>
+
+</div>
+<div id="parseYAMLStreamNodes-procs-all">
+  <div id="parseYAMLStreamNodes,YAML,YamlOptions">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseYAMLStreamNodes%2CYAML%2CYamlOptions"><span class="Identifier">parseYAMLStreamNodes</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="#YAML"><span class="Identifier">YAML</span></a><span class="Other">;</span> <span class="Identifier">opts</span><span class="Other">:</span> <a href="#YamlOptions"><span class="Identifier">YamlOptions</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#YamlNode"><span class="Identifier">YamlNode</span></a><span class="Other">]</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserYamlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Parse a multi-document stream, preserving sequence and scalar documents.
     
   </dd>
 </div>
@@ -977,7 +1037,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-23 17:49:51 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-24 20:23:55 UTC</small>
       </div>
     </div>
   </div>
