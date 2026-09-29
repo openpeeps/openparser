@@ -173,3 +173,35 @@ suite "HTML parser – edge cases":
     let doc = parseHtml("<div><span><b>text", defaulHtmlParsingPolicy())
     check doc.nodes.len == 1
     check doc.nodes[0].tag == tagDiv
+
+suite "HTML parser – strict policy and boolean attributes":
+
+  test "strict policy accepts closed documents":
+    var policy = defaulHtmlParsingPolicy()
+    policy.allowUnclosedTags = false
+    policy.allowInvalidSyntax = false
+    let doc = parseHtml("<article><h1>Hello</h1><p>one</p><p>two</p></article>", policy)
+    check doc.nodes.len == 1
+    check doc.nodes[0].tag == tagArticle
+    check doc.nodes[0].children.len == 3
+
+  test "strict policy rejects unclosed documents":
+    var policy = defaulHtmlParsingPolicy()
+    policy.allowUnclosedTags = false
+    policy.allowInvalidSyntax = false
+    expect HtmlParserError:
+      discard parseHtml("<div><p>Text", policy)
+
+  test "boolean attribute before other attributes":
+    let doc = parseHtml("""<input disabled type="text">""")
+    check doc.nodes[0].attributes["disabled"] == ""
+    check doc.nodes[0].attributes["type"] == "text"
+
+  test "trailing boolean attributes":
+    let doc = parseHtml("""<input type="text" disabled>""")
+    check doc.nodes[0].attributes["type"] == "text"
+    check doc.nodes[0].attributes["disabled"] == ""
+
+  test "unquoted attribute values still work":
+    let doc = parseHtml("""<input type=text>""")
+    check doc.nodes[0].attributes["type"] == "text"

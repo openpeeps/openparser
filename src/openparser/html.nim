@@ -560,16 +560,20 @@ proc parseAttributes(p: var HtmlParser, node: var HtmlNode) =
       if p.curr.kind in {tkAttributeName, tkText}:
         var name = p.curr.value
         discard p.advance()
-        
-        # Skip stray '=' tokens (lexer may have emitted '=' as tkText)
+
+        # Skip stray '=' tokens (lexer may have emitted '=' as tkText).
+        # Only a value following '=' may be consumed as unquoted; otherwise
+        # a boolean attribute would swallow the next attribute's name.
+        var hasEq = false
         if p.curr.kind == tkText and p.curr.value == "=":
+          hasEq = true
           discard p.advance()
 
         var value = ""
         if p.curr.kind == tkAttributeValue:
           value = p.curr.value
           discard p.advance()
-        elif p.curr.kind == tkText:
+        elif hasEq and p.curr.kind == tkText:
           # Unquoted attribute value (e.g., attr=value)
           value = p.curr.value
           discard p.advance()
@@ -614,12 +618,14 @@ proc parseElement(p: var HtmlParser): HtmlNode =
   if node.isSelfClosing:
     return node
 
+  var closed = false
   while p.curr.kind != tkEOF:
     # Closing tag for this element?
     if p.curr.kind == tkTagClose and p.curr.value == tagName:
       discard p.advance()                     # consume the tag name
       if p.curr.kind == tkTagClose and p.curr.value.len == 0:
         discard p.advance()                   # consume the trailing `>`
+      closed = true
       break
 
     # Stray `>` that closes the opening tag (e.g. `<br>`).
@@ -644,7 +650,7 @@ proc parseElement(p: var HtmlParser): HtmlNode =
       discard p.advance()
 
   # Reached EOF without finding the matching closing tag.
-  if p.curr.kind == tkEOF and not p.policy.allowUnclosedTags:
+  if p.curr.kind == tkEOF and not closed and not p.policy.allowUnclosedTags:
     p.error("Unclosed tag: <" & tagName & ">")
 
   result = node
