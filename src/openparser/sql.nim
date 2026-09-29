@@ -50,7 +50,7 @@ type
     current: char
 
   QuoteKind* = enum
-    qkNone, qkSingle, qkDouble, qkBacktick
+    qkNone, qkSingle, qkDouble, qkBacktick, qkBracket
 
   SqlToken* = object
     kind: SqlTokenKind
@@ -62,6 +62,30 @@ type
   
   SqlDriver* = enum
     generic, pgsql, mysql, sqlite
+
+  SqlFeature* = enum
+    ## Capability flags used for strict per-driver validation.
+    featHashComment,      ## `#` line comment (MySQL)
+    featBacktickIdent,    ## `` `ident` `` quoting (MySQL, SQLite-compat)
+    featBracketIdent,     ## `[ident]` quoting (SQLite / MSSQL-compat)
+    featDoubleQuoteIdent, ## `"ident"` as identifier (PG, SQLite)
+    featDoubleQuoteString,## `"str"` as string literal (MySQL default)
+    featBackslashEscape,  ## `\n` etc. inside strings (MySQL, PG E'...')
+    featPlaceholderPg,    ## `$1` positional (PostgreSQL)
+    featPlaceholderQmark, ## `?` / `?NN` (MySQL, SQLite)
+    featPlaceholderNamed, ## `:name`, `@name`, `$name` (SQLite)
+    featCastOperator,     ## `::type` cast (PostgreSQL)
+    featLimitComma,       ## `LIMIT offset, count` (MySQL, SQLite-compat)
+    featFetchFirst,       ## `FETCH FIRST n ROWS ONLY` (PostgreSQL)
+    featReturning,        ## `RETURNING` clause (PostgreSQL, SQLite)
+    featOnConflict,       ## `ON CONFLICT` upsert (PostgreSQL, SQLite)
+    featOnDuplicateKey,   ## `ON DUPLICATE KEY UPDATE` (MySQL)
+    featReplaceInto,      ## `REPLACE INTO` (MySQL, SQLite)
+    featDistinctOn,       ## `DISTINCT ON (...)` (PostgreSQL)
+    featWindow,           ## `OVER (...)` window functions
+    featDollarQuote,      ## `$tag$...$tag$` strings (PostgreSQL)
+    featIlike,            ## `ILIKE` operator (PostgreSQL)
+    featPragma            ## `PRAGMA`, `VACUUM`, `ATTACH` (SQLite)
 
   SqlParser* = object
     dialect: SqlDriver
@@ -99,14 +123,75 @@ const
     "returning", "if", "exists", "all", "case", "when", "then", "else", "end",
     "union", "intersect", "except", "with", "recursive", "lateral", "for",
     "each", "row", "grant", "revoke", "comment", "analyze", "explain", "cascade",
-    "restrict", "by"
+    "restrict", "by",
+    "pragma", "vacuum", "attach", "detach", "conflict", "duplicate",
+    "fetch", "first", "rows", "only", "over", "partition", "range",
+    "engine", "auto_increment"
   ]
 
+  pgsqlExtraKeywords = ["ilike", "returning", "conflict", "fetch", "first", "rows",
+    "only", "over", "partition", "distinct", "deferrable", "initially", "deferred",
+    "immediate", "each", "row", "do", "nothing"]
+  mysqlExtraKeywords = ["engine", "auto_increment", "unsigned", "zerofill",
+    "duplicate", "replace", "lock", "unlock", "show", "describe", "use", "binary"]
+  sqliteExtraKeywords = ["pragma", "vacuum", "attach", "detach", "conflict",
+    "ignore", "abort", "fail", "rollback", "autoincrement", "without", "rowid", "strict"]
+
+proc dialectAllows*(d: SqlDriver, f: SqlFeature): bool =
+  ## Strict capability matrix. `generic` allows everything.
+  if d == generic: return true
+  case f
+  of featHashComment: d == mysql
+  of featBacktickIdent: d in {mysql, sqlite}
+  of featBracketIdent: d == sqlite
+  of featDoubleQuoteIdent: d in {pgsql, sqlite}
+  of featDoubleQuoteString: d == mysql
+  of featBackslashEscape: d == mysql
+  of featPlaceholderPg: d == pgsql
+  of featPlaceholderQmark: d in {mysql, sqlite}
+  of featPlaceholderNamed: d == sqlite
+  of featCastOperator: d == pgsql
+  of featLimitComma: d in {mysql, sqlite}
+  of featFetchFirst: d == pgsql
+  of featReturning: d in {pgsql, sqlite}
+  of featOnConflict: d in {pgsql, sqlite}
+  of featOnDuplicateKey: d == mysql
+  of featReplaceInto: d in {mysql, sqlite}
+  of featDistinctOn: d == pgsql
+  of featWindow: d in {pgsql, sqlite}
+  of featDollarQuote: d == pgsql
+  of featIlike: d == pgsql
+  of featPragma: d == sqlite
+
+proc dialectName*(d: SqlDriver): string =
+  case d
+  of generic: "generic"
+  of pgsql: "pgsql"
+  of mysql: "mysql"
+  of sqlite: "sqlite"
+
 proc isReserved*(s: string): bool =
-  ## Case-insensitive reserved keyword check
+  ## Case-insensitive reserved keyword check (generic dialect).
   let low = s.toLowerAscii
   for kw in reservedKeywords:
     if low == kw: return true
+  return false
+
+proc isReserved*(s: string, d: SqlDriver): bool =
+  ## Dialect-aware reserved keyword check.
+  if isReserved(s): return true
+  let low = s.toLowerAscii
+  case d
+  of pgsql:
+    for kw in pgsqlExtraKeywords:
+      if low == kw: return true
+  of mysql:
+    for kw in mysqlExtraKeywords:
+      if low == kw: return true
+  of sqlite:
+    for kw in sqliteExtraKeywords:
+      if low == kw: return true
+  of generic: discard
   return false
 
 proc charAt(l: SqlLexer, idx: int): char {.inline.} =
@@ -207,13 +292,15 @@ proc readNumber(l: var SqlLexer): string =
 proc nextToken(p: var SqlParser): SqlToken {.discardable.} =
   skipWhitespace(p.lexer)
   # Skip line and block comments
-  # Skip line and block comments
   if p.lexer.current == '-' and p.lexer.charAt(p.lexer.pos + 1) == '-':
     # consume until end of line
     while p.lexer.current != '\0' and p.lexer.current notin {'\n', '\r'}:
       advance(p.lexer)
     return nextToken(p)
   if p.lexer.current == '#':
+    if not dialectAllows(p.dialect, featHashComment):
+      p.error("`#` line comments are only supported by the mysql driver (got " &
+        dialectName(p.dialect) & ")")
     while p.lexer.current != '\0' and p.lexer.current notin {'\n', '\r'}:
       advance(p.lexer)
     return nextToken(p)
@@ -249,20 +336,71 @@ proc nextToken(p: var SqlParser): SqlToken {.discardable.} =
       advance(p.lexer)
     result.value = buf
   of '$':
-    # PostgreSQL placeholders: $1, $2, $3, etc.
-    result.kind = tkPlaceholder
-    var value = newStringOfCap(8)
-    value.add('$')
-    advance(p.lexer) # consume '$'
-    # Must have at least one digit after $
-    if p.lexer.current notin {'0'..'9'}:
-      p.error(unexpectedChar % $p.lexer.current)
-    while p.lexer.current in {'0'..'9'}:
-      value.add(p.lexer.current)
+    # `$` starts: PG `$1` positional, SQLite `$name`, or PG `$tag$...$tag$` dollar-quote.
+    # Try dollar-quoted string first: $tag$body$tag$  (tag may be empty: $$body$$)
+    var j = p.lexer.pos + 1
+    var tag = newStringOfCap(8)
+    while j < p.lexer.len and p.lexer.charAt(j) in {'a'..'z', 'A'..'Z', '_', '0'..'9'}:
+      tag.add(p.lexer.charAt(j))
+      inc j
+    if j < p.lexer.len and p.lexer.charAt(j) == '$':
+      # candidate dollar-quote opener: $tag$
+      if not dialectAllows(p.dialect, featDollarQuote):
+        p.error("dollar-quoted strings are only supported by the pgsql driver (got " &
+          dialectName(p.dialect) & ")")
+      let opener = "$" & tag & "$"
+      # consume opener
+      for _ in 0 ..< opener.len: advance(p.lexer)
+      var body = newStringOfCap(64)
+      while true:
+        if p.lexer.current == '\0':
+          p.error(errorEndOfFile % "dollar-quoted string")
+        # check for closer
+        var k = 0
+        var match = true
+        while k < opener.len:
+          if p.lexer.charAt(p.lexer.pos + k) != opener[k]:
+            match = false
+            break
+          inc k
+        if match:
+          for _ in 0 ..< opener.len: advance(p.lexer)
+          break
+        body.add(p.lexer.current)
+        advance(p.lexer)
+      result.kind = tkStringLiteral
+      result.quote = qkSingle
+      result.value = body
+    elif p.lexer.charAt(p.lexer.pos + 1) in {'0'..'9'}:
+      if not dialectAllows(p.dialect, featPlaceholderPg):
+        p.error("`$1` placeholders are only supported by the pgsql driver (got " &
+          dialectName(p.dialect) & ")")
+      result.kind = tkPlaceholder
+      var value = newStringOfCap(8)
+      value.add('$')
       advance(p.lexer)
-    result.value = value
+      while p.lexer.current in {'0'..'9'}:
+        value.add(p.lexer.current)
+        advance(p.lexer)
+      result.value = value
+    elif p.lexer.charAt(p.lexer.pos + 1) in {'a'..'z', 'A'..'Z', '_'}:
+      if not dialectAllows(p.dialect, featPlaceholderNamed):
+        p.error("`$name` placeholders are only supported by the sqlite driver (got " &
+          dialectName(p.dialect) & ")")
+      result.kind = tkPlaceholder
+      var value = newStringOfCap(12)
+      value.add('$')
+      advance(p.lexer)
+      while p.lexer.current in {'a'..'z', 'A'..'Z', '0'..'9', '_'}:
+        value.add(p.lexer.current)
+        advance(p.lexer)
+      result.value = value
+    else:
+      p.error(unexpectedChar % "$")
   of '?':
-    # SQLite-style placeholders: ? or ?NN
+    # `?` / `?NN` placeholders (MySQL, SQLite)
+    if not dialectAllows(p.dialect, featPlaceholderQmark):
+      p.error("`?` placeholders are not supported by the " & dialectName(p.dialect) & " driver")
     result.kind = tkPlaceholder
     var value = newStringOfCap(4)
     value.add('?')
@@ -275,11 +413,16 @@ proc nextToken(p: var SqlParser): SqlToken {.discardable.} =
   of ':':
     # Could be a named placeholder like :name, a cast operator ::, or just a colon token.
     if p.lexer.charAt(p.lexer.pos + 1) == ':':
-      # PostgreSQL cast operator ::
+      if not dialectAllows(p.dialect, featCastOperator):
+        p.error("`::` cast operator is only supported by the pgsql driver (got " &
+          dialectName(p.dialect) & "); use CAST(x AS type) instead")
       result.kind = tkOperator
       result.value = "::"
       advance(p.lexer); advance(p.lexer)
     elif p.lexer.charAt(p.lexer.pos + 1) in {'a'..'z', 'A'..'Z', '_'}:
+      if not dialectAllows(p.dialect, featPlaceholderNamed):
+        p.error("`:name` placeholders are only supported by the sqlite driver (got " &
+          dialectName(p.dialect) & ")")
       result.kind = tkPlaceholder
       var value = newStringOfCap(12)
       value.add(':')
@@ -292,8 +435,11 @@ proc nextToken(p: var SqlParser): SqlToken {.discardable.} =
       result.kind = tkColon
       advance(p.lexer)
   of '@':
-    # Handle @name style placeholders (common in some DB libs)
+    # `@name` placeholders (SQLite)
     if p.lexer.charAt(p.lexer.pos + 1) in {'a'..'z', 'A'..'Z', '_'}:
+      if not dialectAllows(p.dialect, featPlaceholderNamed):
+        p.error("`@name` placeholders are only supported by the sqlite driver (got " &
+          dialectName(p.dialect) & ")")
       result.kind = tkPlaceholder
       var value = newStringOfCap(12)
       value.add('@')
@@ -315,29 +461,53 @@ proc nextToken(p: var SqlParser): SqlToken {.discardable.} =
     result.kind = tkDot
     advance(p.lexer)
   of '(', ')', '[', ']':
-    case p.lexer.current
-    of '(':
-      result.kind = tkLP
-    of ')':
-      result.kind = tkRP
-    of '[':
-      result.kind = tkLB
-    of ']':
-      result.kind = tkRB
-    else: discard
-    advance(p.lexer)
+    if p.lexer.current == '[' and dialectAllows(p.dialect, featBracketIdent):
+      # SQLite `[ident]` quoting: consume as a single quoted-identifier token.
+      advance(p.lexer) # consume '['
+      var value = newStringOfCap(16)
+      while p.lexer.current != '\0' and p.lexer.current != ']':
+        value.add(p.lexer.current)
+        advance(p.lexer)
+      if p.lexer.current != ']':
+        p.error(errorEndOfFile % "bracket-quoted identifier")
+      advance(p.lexer) # consume ']'
+      result.kind = tkStringLiteral
+      result.quote = qkBracket
+      result.value = value
+    else:
+      case p.lexer.current
+      of '(':
+        result.kind = tkLP
+      of ')':
+        result.kind = tkRP
+      of '[':
+        result.kind = tkLB
+      of ']':
+        result.kind = tkRB
+      else: discard
+      advance(p.lexer)
   of '\'', '"', '`':
     let quoteChar = p.lexer.current
+    # Strict per-driver quote validation.
+    case p.dialect
+    of pgsql:
+      if quoteChar == '`':
+        p.error("backtick quoting is not supported by the pgsql driver; use \"ident\" instead")
+    of mysql:
+      discard # ', ", ` all allowed (" is a string in default mode)
+    of sqlite:
+      discard # ', ", `, [...] all allowed
+    of generic:
+      discard
     result.kind = tkStringLiteral
     var value = newStringOfCap(16)
 
     # Determine whether backslash escapes should be processed:
-    # - MySQL accepts backslash escapes inside quoted strings
-    # - PostgreSQL accepts backslash escapes when the preceding token is an identifier "E" (E'...')
-    var escapesEnabled = false
-    if p.dialect == SqlDriver.mysql:
-      escapesEnabled = true
-    elif p.prev.kind == tkIdentifier and cmpIgnoreCase(p.prev.value, "E") == 0 and quoteChar == '\'':
+    # - MySQL always processes backslash escapes.
+    # - Other dialects only for E'...' prefix (p.curr holds the `E` token
+    #   while the string body is being lexed as lookahead).
+    var escapesEnabled = dialectAllows(p.dialect, featBackslashEscape)
+    if quoteChar == '\'' and p.curr.kind == tkKeyword and cmpIgnoreCase(p.curr.value, "E") == 0:
       escapesEnabled = true
 
     advance(p.lexer) # consume opening quote
@@ -517,7 +687,30 @@ type
     nkAlterRenameTable,
     nkAlterAddConstraint,
     nkAlterSetDefault,
-    nkAlterDropDefault
+    nkAlterDropDefault,
+    # Expression / SELECT extensions
+    nkCase,
+    nkWhen,
+    nkElse,
+    nkCast,
+    nkWindow,
+    nkWith,
+    nkCte,
+    nkFetch,
+    nkDistinctOn,
+    # DML extensions
+    nkReturning,
+    nkOnConflict,
+    nkOnDuplicateKey,
+    nkReplace,
+    # DDL extensions
+    nkCreateView,
+    nkCreateViewIfNotExists,
+    nkCreateSchema,
+    nkCreateSchemaIfNotExists,
+    nkPragma,
+    nkVacuum,
+    nkAttach
 
 
 const
@@ -575,6 +768,12 @@ proc add*(father, n: SqlNode) =
 # Parse handlers
 #
 proc parseSelect(p: var SqlParser; topLevel = true): SqlNode
+proc parseWith(p: var SqlParser; topLevel = true): SqlNode
+proc parseInsert*(p: var SqlParser): SqlNode
+proc parseUpdate*(p: var SqlParser): SqlNode
+proc parseDelete*(p: var SqlParser): SqlNode
+proc parseReplace*(p: var SqlParser): SqlNode
+proc readDataType(p: var SqlParser): SqlNode
 
 proc isKeyw(p: SqlParser, keyw: string): bool =
   p.curr.kind == tkKeyword and cmpIgnoreCase(p.curr.value, keyw) == 0
@@ -624,14 +823,105 @@ proc parseFunctionCall*(p: var SqlParser; callee: SqlNode): SqlNode {.discardabl
       p.error(unexpectedTokenExpected % [$p.curr.value, ", or )"])
   result = newNode(nkCall, args)
 
+proc parseCase(p: var SqlParser): SqlNode =
+  ## Parse `CASE [operand] WHEN cond THEN res ... [ELSE res] END`.
+  p.advance() # consume CASE
+  result = newNode(nkCase)
+  # optional operand: if next is not WHEN, parse operand expression
+  if not p.isKeyw("when"):
+    result.add(p.parseExpression())
+  while p.isKeyw("when"):
+    p.advance() # consume WHEN
+    var w = newNode(nkWhen)
+    w.add(p.parseExpression())
+    if not p.isKeyw("then"):
+      p.error(unexpectedTokenExpected % [$p.curr.value, "THEN"])
+    p.advance()
+    w.add(p.parseExpression())
+    result.add(w)
+  if p.isKeyw("else"):
+    p.advance()
+    var e = newNode(nkElse)
+    e.add(p.parseExpression())
+    result.add(e)
+  if not p.isKeyw("end"):
+    p.error(unexpectedTokenExpected % [$p.curr.value, "END"])
+  p.advance()
+
+proc parseCast(p: var SqlParser): SqlNode =
+  ## Parse `CAST(expr AS type)`.
+  p.advance() # consume CAST
+  if p.curr.kind != tkLP:
+    p.error(unexpectedTokenExpected % [$p.curr.value, "("])
+  p.advance()
+  result = newNode(nkCast)
+  result.add(p.parseExpression())
+  if not p.isKeyw("as"):
+    p.error(unexpectedTokenExpected % [$p.curr.value, "AS"])
+  p.advance()
+  result.add(readDataType(p))
+  if p.curr.kind != tkRP:
+    p.error(unexpectedTokenExpected % [$p.curr.value, ")"])
+  p.advance()
+
 proc parsePrimary(p: var SqlParser): SqlNode =
   # Parse a primary expression: identifiers, literals,
   # parenthesized expressions, function calls, etc.
+  # CASE / CAST / EXISTS are keyword-led primaries.
+  if p.isKeyw("case"):
+    result = p.parseCase()
+    # allow OVER after CASE (window over case expr is rare but harmless)
+    if p.isKeyw("over"):
+      if not dialectAllows(p.dialect, featWindow):
+        p.error("OVER window clause is not supported by the " & dialectName(p.dialect) & " driver")
+      p.advance()
+      var w = newNode(nkWindow)
+      w.add(result)
+      if p.curr.kind != tkLP:
+        p.error(unexpectedTokenExpected % [$p.curr.value, "("])
+      p.advance()
+      var spec = newNode(nkColumnList)
+      while p.curr.kind != tkRP and p.curr.kind != tkEOF:
+        spec.add(p.parseExpression())
+        if p.curr.kind == tkComma: p.advance()
+        else: break
+      if p.curr.kind != tkRP:
+        p.error(unexpectedTokenExpected % [$p.curr.value, ")"])
+      p.advance()
+      w.add(spec)
+      result = w
+    return result
+  if p.isKeyw("cast") and p.next.kind == tkLP:
+    result = p.parseCast()
+    return result
+  if p.isKeyw("exists") and p.next.kind == tkLP:
+    p.advance() # consume EXISTS
+    p.advance() # consume "("
+    if not p.isKeyw("select"):
+      p.error(unexpectedTokenExpected % [$p.curr.value, "SELECT"])
+    let sub = p.parseSelect(false)
+    if p.curr.kind != tkRP:
+      p.error(unexpectedTokenExpected % [$p.curr.value, ")"])
+    p.advance()
+    result = newNode(nkCall, @[newNode(nkIdent, "exists"), newNode(nkPrGroup, @[sub])])
+    return result
+  # B'..' / X'..' / E'..' prefix: keyword B/X/E immediately followed by single-quoted string.
+  if p.curr.kind == tkKeyword and p.next.kind == tkStringLiteral and
+      p.next.quote == qkSingle and p.curr.value.len == 1 and
+      p.curr.value[0] in {'B', 'b', 'X', 'x', 'E', 'e'}:
+    let pre = p.curr.value[0]
+    p.advance() # consume prefix
+    let body = p.curr.value
+    p.advance()
+    case pre
+    of 'B', 'b': return newNode(nkBitStringLit, body)
+    of 'X', 'x': return newNode(nkHexStringLit, body)
+    else: return newNode(nkStringLit, body, qkSingle)
   case p.curr.kind
   of tkLP:
     # parenthesized expression (could be a grouped expr or subquery)
     p.advance() # consume "("
-    if p.isKeyw("select"):
+    if p.isKeyw("select") or p.isKeyw("with"):
       let sub = p.parseSelect(false)
       if p.curr.kind != tkRP:
         p.error(unexpectedTokenExpected % [$p.curr.value, ")"])
@@ -658,7 +948,7 @@ proc parsePrimary(p: var SqlParser): SqlNode =
         left = newNode(nkDot, @[left, right])
         continue
       elif p.curr.kind == tkStringLiteral:
-        let right = newNode(nkQuotedIdent, p.curr.value)
+        let right = newNode(nkQuotedIdent, p.curr.value, p.curr.quote)
         p.advance()
         left = newNode(nkDot, @[left, right])
         continue
@@ -677,10 +967,57 @@ proc parsePrimary(p: var SqlParser): SqlNode =
       result = p.parseFunctionCall(left)
     else:
       result = left
+    # window: expr OVER (...) / OVER identifier
+    if p.isKeyw("over"):
+      if not dialectAllows(p.dialect, featWindow):
+        p.error("OVER window clause is not supported by the " & dialectName(p.dialect) & " driver")
+      p.advance()
+      var w = newNode(nkWindow)
+      w.add(result)
+      if p.curr.kind == tkLP:
+        p.advance()
+        var spec = newNode(nkColumnList)
+        # PARTITION BY ... / ORDER BY ... / ROWS ... inside OVER: parse as raw expr list
+        while p.curr.kind != tkRP and p.curr.kind != tkEOF:
+          # allow PARTITION BY / ORDER BY keywords inside window spec
+          if p.isKeyw("partition") or p.isKeyw("order") or p.isKeyw("rows") or
+              p.isKeyw("range") or p.isKeyw("between"):
+            var kwBuf = newStringOfCap(24)
+            # consume up to 2 keywords (e.g. PARTITION BY), normalized lowercase
+            kwBuf.add(p.curr.value.toLowerAscii)
+            p.advance()
+            if p.isKeyw("by"):
+              kwBuf.add(" by")
+              p.advance()
+            spec.add(newNode(nkIdent, kwBuf))
+            continue
+          spec.add(p.parseExpression())
+          if p.curr.kind == tkComma: p.advance()
+          # else: continue loop so PARTITION BY / ORDER BY markers are handled
+        if p.curr.kind != tkRP:
+          p.error(unexpectedTokenExpected % [$p.curr.value, ")"])
+        p.advance()
+        w.add(spec)
+      elif p.curr.kind in {tkIdentifier, tkKeyword}:
+        w.add(newNode(nkIdent, p.curr.value))
+        p.advance()
+      else:
+        p.error(unexpectedTokenExpected % [$p.curr.value, "( or window name"])
+      result = w
 
   of tkStringLiteral:
-    result = newNode(nkStringLit, p.curr.value, p.curr.quote)
-    p.advance()
+    # Quote-kind + dialect determines ident vs string in expression context:
+    # `[...]` / backticks are always identifiers; `"..."` is an identifier
+    # for pgsql/sqlite but a string for mysql/generic.
+    if p.curr.quote == qkBracket or p.curr.quote == qkBacktick:
+      result = newNode(nkQuotedIdent, p.curr.value, p.curr.quote)
+      p.advance()
+    elif p.curr.quote == qkDouble and p.dialect in {pgsql, sqlite}:
+      result = newNode(nkQuotedIdent, p.curr.value, p.curr.quote)
+      p.advance()
+    else:
+      result = newNode(nkStringLit, p.curr.value, p.curr.quote)
+      p.advance()
   of tkNumericLiteral:
     if p.curr.value.contains('.'):
       result = newNode(nkNumericLit, p.curr.value)
@@ -779,6 +1116,9 @@ proc parseExpression(p: var SqlParser; minPrec = 1): SqlNode {.discardable.} =
         prec = getPrecedence(op)
         tokensToConsume = 1
       elif low == "in" or low == "like" or low == "ilike" or low == "between":
+        if low == "ilike" and not dialectAllows(p.dialect, featIlike):
+          p.error("ILIKE is only supported by the pgsql driver (got " &
+            dialectName(p.dialect) & "); use LIKE instead")
         op = low
         prec = getPrecedence(op)
         tokensToConsume = 1
@@ -787,6 +1127,9 @@ proc parseExpression(p: var SqlParser; minPrec = 1): SqlNode {.discardable.} =
         if p.next.kind == tkKeyword:
           let nextLow = p.next.value.toLowerAscii
           if nextLow == "like" or nextLow == "ilike" or nextLow == "in" or nextLow == "between":
+            if nextLow == "ilike" and not dialectAllows(p.dialect, featIlike):
+              p.error("ILIKE is only supported by the pgsql driver (got " &
+                dialectName(p.dialect) & "); use LIKE instead")
             op = "not " & nextLow
             prec = getPrecedence(nextLow)
             tokensToConsume = 2
@@ -828,7 +1171,7 @@ proc readName(p: var SqlParser): SqlNode =
     p.advance()
     return n
   elif p.curr.kind == tkStringLiteral:
-    let n = newNode(nkQuotedIdent, p.curr.value)
+    let n = newNode(nkQuotedIdent, p.curr.value, p.curr.quote)
     p.advance()
     return n
   else:
@@ -838,11 +1181,11 @@ proc parseFromItem(p: var SqlParser): SqlNode =
   # minimal FROM item p: table_name [AS] alias
   var item = newNode(nkFromItemPair)
 
-  # Support subquery / parenthesized source: (SELECT ...) or (...expr...)
+  # Support subquery / parenthesized source: (SELECT .../WITH ...) or (...expr...)
   if p.curr.kind == tkLP:
     p.advance() # consume "("
-    if p.isKeyw("select"):
-      # subquery in parens: (SELECT ...)
+    if p.isKeyw("select") or p.isKeyw("with"):
+      # subquery in parens: (SELECT ... / WITH ... SELECT ...)
       let sub = p.parseSelect(false)
       item.add(newNode(nkPrGroup, @[sub]))
       if p.curr.kind != tkRP:
@@ -901,7 +1244,7 @@ proc parseFromItem(p: var SqlParser): SqlNode =
     item.add(newNode(nkIdent, p.curr.value))
     p.advance()
   elif p.curr.kind == tkStringLiteral:
-    item.add(newNode(nkQuotedIdent, p.curr.value))
+    item.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
     p.advance()
   else:
     p.error(unexpectedToken % $p.curr.value)
@@ -909,10 +1252,10 @@ proc parseFromItem(p: var SqlParser): SqlNode =
   # optional AS or implicit alias, but not a clause keyword or reserved keyword
   if p.isKeyw("as"):
     p.advance()
-    if (p.curr.kind == tkIdentifier) or (p.curr.kind == tkKeyword and not isReserved(p.curr.value)):
+    if (p.curr.kind == tkIdentifier) or (p.curr.kind == tkKeyword and not isReserved(p.curr.value, p.dialect)):
       item.add(newNode(nkIdent, p.curr.value))
       p.advance()
-  elif (p.curr.kind == tkIdentifier) or (p.curr.kind == tkKeyword and not isReserved(p.curr.value)):
+  elif (p.curr.kind == tkIdentifier) or (p.curr.kind == tkKeyword and not isReserved(p.curr.value, p.dialect)):
     # implicit alias
     item.add(newNode(nkIdent, p.curr.value))
     p.advance()
@@ -1082,11 +1425,76 @@ proc parseColumnConstraints(p: var SqlParser): seq[SqlNode] =
       break
   result = constraints
 
+proc parseWith(p: var SqlParser; topLevel = true): SqlNode =
+  ## Parse `WITH [RECURSIVE] cte AS [(cols)] AS (select) [, ...] <select|insert|update|delete>`.
+  p.advance() # consume WITH
+  result = newNode(nkWith)
+  if p.isKeyw("recursive"):
+    result.add(newNode(nkIdent, "recursive"))
+    p.advance()
+  while true:
+    if p.curr.kind notin {tkIdentifier, tkKeyword}:
+      p.error(unexpectedToken % $p.curr.value)
+    var cte = newNode(nkCte)
+    cte.add(newNode(nkIdent, p.curr.value))
+    p.advance()
+    if p.curr.kind == tkLP:
+      # optional column alias list
+      cte.add(parseParenExprList(p))
+    if not p.isKeyw("as"):
+      p.error(unexpectedTokenExpected % [$p.curr.value, "AS"])
+    p.advance()
+    if p.curr.kind != tkLP:
+      p.error(unexpectedTokenExpected % [$p.curr.value, "("])
+    p.advance() # consume "("
+    # CTE body is a SELECT (which itself may contain UNION)
+    if not (p.isKeyw("select") or p.isKeyw("with")):
+      p.error(unexpectedTokenExpected % [$p.curr.value, "SELECT"])
+    var body: SqlNode
+    if p.isKeyw("with"):
+      body = p.parseWith(false)
+    else:
+      body = p.parseSelect(false)
+    cte.add(body)
+    if p.curr.kind != tkRP:
+      p.error(unexpectedTokenExpected % [$p.curr.value, ")"])
+    p.advance()
+    result.add(cte)
+    if p.curr.kind == tkComma:
+      p.advance()
+      continue
+    break
+  # main statement after CTEs
+  if p.isKeyw("select"):
+    result.add(p.parseSelect(false))
+  elif p.isKeyw("insert"):
+    result.add(p.parseInsert())
+  elif p.isKeyw("update"):
+    result.add(p.parseUpdate())
+  elif p.isKeyw("delete"):
+    result.add(p.parseDelete())
+  else:
+    p.error(unexpectedTokenExpected % [$p.curr.value, "SELECT/INSERT/UPDATE/DELETE"])
+  if topLevel:
+    skipSemiColon(p)
+
 proc parseSelect(p: var SqlParser; topLevel = true): SqlNode =
+  # WITH is handled by the caller (parseRoot / subquery) via parseWith;
+  # if we encounter it here (CTE body recursion), delegate.
+  if p.isKeyw("with"):
+    return p.parseWith(topLevel)
   p.advance()
   if p.isKeyw("distinct"):
     result = newNode(nkSelectDistinct)
     p.advance()
+    if p.isKeyw("on"):
+      if not dialectAllows(p.dialect, featDistinctOn):
+        p.error("DISTINCT ON is only supported by the pgsql driver (got " &
+          dialectName(p.dialect) & ")")
+      p.advance()
+      var d = newNode(nkDistinctOn)
+      d.add(parseParenExprList(p))
+      result.add(d)
   else:
     # "ALL" or default
     if p.isKeyw("all"): p.advance()
@@ -1105,7 +1513,7 @@ proc parseSelect(p: var SqlParser; topLevel = true): SqlNode =
       if p.isKeyw("as"):
         p.advance()
         pair.add(p.parseExpression())
-      elif (p.curr.kind == tkIdentifier) or (p.curr.kind == tkKeyword and not isReserved(p.curr.value)):
+      elif (p.curr.kind == tkIdentifier) or (p.curr.kind == tkKeyword and not isReserved(p.curr.value, p.dialect)):
         # allow implicit alias without AS, but avoid treating clause/reserved keywords as aliases
         pair.add(p.parseExpression())
       columns.add(pair)
@@ -1229,28 +1637,45 @@ proc parseSelect(p: var SqlParser; topLevel = true): SqlNode =
       p.advance()
     result.add(orderNode)
 
-  # LIMIT / OFFSET (support MySQL, SQLite styles and PostgreSQL)
+  # LIMIT / OFFSET with strict per-driver validation.
   if p.isKeyw("limit"):
     p.advance()
     var limitNode = newNode(nkLimit)
-    # MySQL: LIMIT offset, count  or LIMIT count [OFFSET offset]
-    if p.curr.kind == tkNumericLiteral:
-      # read first numeric
-      limitNode.add(newNode(nkIntegerLit, p.curr.value))
+    if p.curr.kind == tkNumericLiteral or p.curr.kind == tkPlaceholder:
+      if p.curr.kind == tkNumericLiteral:
+        limitNode.add(newNode(nkIntegerLit, p.curr.value))
+      else:
+        limitNode.add(newNode(nkPlaceholder, p.curr.value))
       p.advance()
       if p.curr.kind == tkComma:
-        # LIMIT offset, count
+        if not dialectAllows(p.dialect, featLimitComma):
+          p.error("LIMIT offset, count is not supported by the " & dialectName(p.dialect) &
+            " driver; use LIMIT count OFFSET offset instead")
         p.advance()
         if p.curr.kind == tkNumericLiteral:
           limitNode.add(newNode(nkIntegerLit, p.curr.value))
           p.advance()
+        elif p.curr.kind == tkPlaceholder:
+          limitNode.add(newNode(nkPlaceholder, p.curr.value))
+          p.advance()
+        else:
+          p.error(unexpectedTokenExpected % [$p.curr.value, "numeric limit"])
       elif p.isKeyw("offset"):
+        # LIMIT count OFFSET offset (PG form with LIMIT keyword first)
         p.advance()
         if p.curr.kind == tkNumericLiteral:
           var offNode = newNode(nkOffset)
           offNode.add(newNode(nkIntegerLit, p.curr.value))
           p.advance()
           result.add(offNode)
+        elif p.curr.kind == tkPlaceholder:
+          var offNode = newNode(nkOffset)
+          offNode.add(newNode(nkPlaceholder, p.curr.value))
+          p.advance()
+          result.add(offNode)
+    elif p.isKeyw("all"):
+      limitNode.add(newNode(nkIdent, "all"))
+      p.advance()
     result.add(limitNode)
 
   elif p.isKeyw("offset"):
@@ -1259,15 +1684,70 @@ proc parseSelect(p: var SqlParser; topLevel = true): SqlNode =
     if p.curr.kind == tkNumericLiteral:
       offOnly.add(newNode(nkIntegerLit, p.curr.value))
       p.advance()
+    elif p.curr.kind == tkPlaceholder:
+      offOnly.add(newNode(nkPlaceholder, p.curr.value))
+      p.advance()
+    # PG: OFFSET n ROWS / ROW
+    if p.isKeyw("row") or p.isKeyw("rows"):
+      p.advance()
     result.add(offOnly)
 
-  # PostgreSQL RETURNING (consume, attach as raw node)
-  if p.dialect == SqlDriver.pgsql and p.isKeyw("returning"):
+  # FETCH FIRST n ROWS ONLY (PostgreSQL)
+  if p.isKeyw("fetch"):
+    if not dialectAllows(p.dialect, featFetchFirst):
+      p.error("FETCH FIRST is only supported by the pgsql driver (got " &
+        dialectName(p.dialect) & ")")
     p.advance()
-    var ret = newNode(nkRaw)
-    ret.strVal = "returning"
-    ret.add(p.parseExpression())
+    if not p.isKeyw("first"):
+      p.error(unexpectedTokenExpected % [$p.curr.value, "FIRST"])
+    p.advance()
+    var f = newNode(nkFetch)
+    if p.curr.kind == tkNumericLiteral:
+      f.add(newNode(nkIntegerLit, p.curr.value))
+      p.advance()
+    if p.isKeyw("rows") or p.isKeyw("row"):
+      p.advance()
+      if p.isKeyw("only"):
+        f.add(newNode(nkIdent, "only"))
+        p.advance()
+    result.add(f)
+
+  # RETURNING (PostgreSQL, SQLite)
+  if p.isKeyw("returning"):
+    if not dialectAllows(p.dialect, featReturning):
+      p.error("RETURNING is not supported by the " & dialectName(p.dialect) & " driver")
+    p.advance()
+    var ret = newNode(nkReturning)
+    if p.isOpr("*"):
+      ret.add(newNode(nkIdent, "*"))
+      p.advance()
+    else:
+      while true:
+        ret.add(p.parseExpression())
+        if p.curr.kind == tkComma:
+          p.advance()
+          continue
+        break
     result.add(ret)
+  # UNION / INTERSECT / EXCEPT chaining
+  while p.isKeyw("union") or p.isKeyw("intersect") or p.isKeyw("except"):
+    let setOp = p.curr.value.toLowerAscii
+    p.advance()
+    var setNode =
+      if setOp == "union": newNode(nkUnion)
+      elif setOp == "intersect": newNode(nkIntersect)
+      else: newNode(nkExcept)
+    if p.isKeyw("all") or p.isKeyw("distinct"):
+      setNode.add(newNode(nkIdent, p.curr.value.toLowerAscii))
+      p.advance()
+    setNode.add(result)
+    if p.isKeyw("select"):
+      setNode.add(p.parseSelect(false))
+    elif p.isKeyw("with"):
+      setNode.add(p.parseWith(false))
+    else:
+      p.error(unexpectedTokenExpected % [$p.curr.value, "SELECT"])
+    result = setNode
   if topLevel:
     skipSemiColon(p)
 
@@ -1302,10 +1782,27 @@ proc parseValueList(p: var SqlParser): SqlNode =
     break
 
 proc parseInsert*(p: var SqlParser): SqlNode =
-  # This is a very minimal INSERT parser that only supports the syntax generated by ozark's insert macro.
-  # It can be extended in the future to support more complex insert statements if needed.
+  ## INSERT with strict per-driver upsert handling:
+  ##   PG/SQLite: ON CONFLICT ... DO NOTHING / DO UPDATE SET ...
+  ##   MySQL: ON DUPLICATE KEY UPDATE ...
+  ##   MySQL/SQLite: REPLACE INTO (via parseReplace)
+  ##   SQLite: INSERT OR IGNORE/REPLACE/... INTO
   p.advance() # consume "insert"
   var insertNode = newNode(nkInsert)
+  # SQLite: INSERT OR conflict-algorithm INTO
+  if p.isKeyw("or") and p.dialect in {sqlite, generic}:
+    p.advance()
+    if p.curr.kind notin {tkIdentifier, tkKeyword}:
+      p.error(unexpectedTokenExpected % [$p.curr.value, "conflict algorithm"])
+    let algo = p.curr.value.toLowerAscii
+    if algo notin ["ignore", "replace", "abort", "fail", "rollback"]:
+      p.error(unexpectedToken % $p.curr.value)
+    if p.dialect == sqlite or p.dialect == generic:
+      insertNode.add(newNode(nkIdent, "or " & algo))
+    p.advance()
+  elif p.isKeyw("or") and p.dialect notin {sqlite, generic}:
+    p.error("INSERT OR ... is only supported by the sqlite driver (got " &
+      dialectName(p.dialect) & ")")
   if not p.isKeyw("into"):
     p.error(unexpectedTokenExpected % [$p.curr.value, "into"])
   p.advance() # consume "into"
@@ -1314,7 +1811,7 @@ proc parseInsert*(p: var SqlParser): SqlNode =
     insertNode.add(newNode(nkIdent, p.curr.value))
     p.advance()
   elif p.curr.kind == tkStringLiteral:
-    insertNode.add(newNode(nkQuotedIdent, p.curr.value))
+    insertNode.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
     p.advance()
   else:
     p.error(unexpectedToken % $p.curr.value)
@@ -1327,7 +1824,7 @@ proc parseInsert*(p: var SqlParser): SqlNode =
         columns.add(newNode(nkIdent, p.curr.value))
         p.advance()
       elif p.curr.kind == tkStringLiteral:
-        columns.add(newNode(nkQuotedIdent, p.curr.value))
+        columns.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
         p.advance()
       else:
         p.error(unexpectedToken % $p.curr.value)
@@ -1340,20 +1837,171 @@ proc parseInsert*(p: var SqlParser): SqlNode =
         p.error(unexpectedToken % $p.curr.value)
     p.advance() # consume ")"
     insertNode.add(columns)
+
+  # VALUES | SELECT | DEFAULT VALUES
+  if p.isKeyw("values"):
+    insertNode.add(p.parseValueList())
+  elif p.isKeyw("select") or p.isKeyw("with"):
+    insertNode.add(p.parseSelect(false))
+  elif p.isKeyw("default"):
+    p.advance()
     if not p.isKeyw("values"):
       p.error(unexpectedTokenExpected % [$p.curr.value, "VALUES"])
-    insertNode.add(p.parseValueList())
+    p.advance()
+    insertNode.add(newNode(nkIdent, "default values"))
   else:
-    # No column list, just value list
-    insertNode.add(p.parseValueList())
+    p.error(unexpectedTokenExpected % [$p.curr.value, "VALUES/SELECT"])
+
+  # Upserts
+  if p.isKeyw("on"):
+    # Could be ON CONFLICT (PG/SQLite) or ON DUPLICATE (MySQL)
+    if p.next.kind == tkKeyword and cmpIgnoreCase(p.next.value, "conflict") == 0:
+      if not dialectAllows(p.dialect, featOnConflict):
+        p.error("ON CONFLICT is not supported by the " & dialectName(p.dialect) & " driver")
+      p.advance(); p.advance() # ON CONFLICT
+      var oc = newNode(nkOnConflict)
+      if p.curr.kind == tkLP:
+        oc.add(parseParenExprList(p))
+      if p.isKeyw("where"):
+        p.advance()
+        var w = newNode(nkWhere)
+        w.add(p.parseExpression())
+        oc.add(w)
+      if p.isKeyw("do"):
+        p.advance()
+        if p.isKeyw("nothing"):
+          oc.add(newNode(nkIdent, "do nothing"))
+          p.advance()
+        elif p.isKeyw("update"):
+          p.advance()
+          if not p.isKeyw("set"):
+            p.error(unexpectedTokenExpected % [$p.curr.value, "SET"])
+          p.advance()
+          var assigns = newNode(nkSelectColumns)
+          while true:
+            var left = p.parsePrimary()
+            if not (p.curr.kind == tkOperator and p.curr.value == "="):
+              p.error(unexpectedTokenExpected % [$p.curr.value, "="])
+            p.advance()
+            var right = p.parseExpression()
+            assigns.add(newNode(nkAsgn, @[left, right]))
+            if p.curr.kind == tkComma:
+              p.advance()
+              continue
+            break
+          oc.add(assigns)
+          if p.isKeyw("where"):
+            p.advance()
+            var w2 = newNode(nkWhere)
+            w2.add(p.parseExpression())
+            oc.add(w2)
+        else:
+          p.error(unexpectedTokenExpected % [$p.curr.value, "NOTHING/UPDATE"])
+      insertNode.add(oc)
+    elif p.next.kind == tkKeyword and cmpIgnoreCase(p.next.value, "duplicate") == 0:
+      if not dialectAllows(p.dialect, featOnDuplicateKey):
+        p.error("ON DUPLICATE KEY UPDATE is only supported by the mysql driver (got " &
+          dialectName(p.dialect) & ")")
+      p.advance(); p.advance() # ON DUPLICATE
+      if not p.isKeyw("key"):
+        p.error(unexpectedTokenExpected % [$p.curr.value, "KEY"])
+      p.advance()
+      if not p.isKeyw("update"):
+        p.error(unexpectedTokenExpected % [$p.curr.value, "UPDATE"])
+      p.advance()
+      var od = newNode(nkOnDuplicateKey)
+      while true:
+        var left = p.parsePrimary()
+        if not (p.curr.kind == tkOperator and p.curr.value == "="):
+          p.error(unexpectedTokenExpected % [$p.curr.value, "="])
+        p.advance()
+        od.add(newNode(nkAsgn, @[left, p.parseExpression()]))
+        if p.curr.kind == tkComma:
+          p.advance()
+          continue
+        break
+      insertNode.add(od)
+    else:
+      # not an upsert; leave ON for error downstream
+      discard
+
+  # RETURNING (PG/SQLite only)
+  if p.isKeyw("returning"):
+    if not dialectAllows(p.dialect, featReturning):
+      p.error("RETURNING is not supported by the " & dialectName(p.dialect) & " driver")
+    p.advance()
+    var ret = newNode(nkReturning)
+    if p.isOpr("*"):
+      ret.add(newNode(nkIdent, "*"))
+      p.advance()
+    else:
+      while true:
+        ret.add(p.parseExpression())
+        if p.curr.kind == tkComma:
+          p.advance()
+          continue
+        break
+    insertNode.add(ret)
   skipSemiColon(p)
   result = insertNode
+
+proc parseReplace*(p: var SqlParser): SqlNode =
+  ## REPLACE INTO (MySQL, SQLite).
+  p.advance() # consume "replace"
+  if not dialectAllows(p.dialect, featReplaceInto):
+    p.error("REPLACE INTO is not supported by the " & dialectName(p.dialect) & " driver")
+  var rep = newNode(nkReplace)
+  if not p.isKeyw("into"):
+    p.error(unexpectedTokenExpected % [$p.curr.value, "INTO"])
+  p.advance()
+  if p.curr.kind in {tkIdentifier, tkKeyword}:
+    rep.add(newNode(nkIdent, p.curr.value))
+    p.advance()
+  elif p.curr.kind == tkStringLiteral:
+    rep.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
+    p.advance()
+  else:
+    p.error(unexpectedToken % $p.curr.value)
+  if p.curr.kind == tkLP:
+    p.advance()
+    var columns = newNode(nkColumnList)
+    while true:
+      if p.curr.kind in {tkIdentifier, tkKeyword}:
+        columns.add(newNode(nkIdent, p.curr.value))
+        p.advance()
+      elif p.curr.kind == tkStringLiteral:
+        columns.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
+        p.advance()
+      else:
+        p.error(unexpectedToken % $p.curr.value)
+      if p.curr.kind == tkComma:
+        p.advance()
+        continue
+      elif p.curr.kind == tkRP:
+        break
+      else:
+        p.error(unexpectedToken % $p.curr.value)
+    p.advance()
+    rep.add(columns)
+  if p.isKeyw("values"):
+    rep.add(p.parseValueList())
+  elif p.isKeyw("select") or p.isKeyw("with"):
+    rep.add(p.parseSelect(false))
+  elif p.isKeyw("default"):
+    p.advance()
+    if not p.isKeyw("values"):
+      p.error(unexpectedTokenExpected % [$p.curr.value, "VALUES"])
+    p.advance()
+    rep.add(newNode(nkIdent, "default values"))
+  else:
+    p.error(unexpectedTokenExpected % [$p.curr.value, "VALUES/SELECT"])
+  skipSemiColon(p)
+  result = rep
 
 #
 # Parse DELETE
 #
 proc parseDelete*(p: var SqlParser): SqlNode =
-  # Minimal DELETE parser for syntax generated by ozark's delete macro.
   p.advance() # consume "delete"
   if not p.isKeyw("from"):
     p.error(unexpectedTokenExpected % [$p.curr.value, "from"])
@@ -1364,16 +2012,68 @@ proc parseDelete*(p: var SqlParser): SqlNode =
     deleteNode.add(newNode(nkIdent, p.curr.value))
     p.advance()
   elif p.curr.kind == tkStringLiteral:
-    deleteNode.add(newNode(nkQuotedIdent, p.curr.value))
+    deleteNode.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
     p.advance()
   else:
     p.error(unexpectedToken % $p.curr.value)
+
+  # USING (PostgreSQL)
+  if p.isKeyw("using"):
+    if p.dialect notin {pgsql, generic}:
+      p.error("DELETE USING is only supported by the pgsql driver (got " &
+        dialectName(p.dialect) & ")")
+    p.advance()
+    var u = newNode(nkUsing)
+    u.add(p.parseFromItem())
+    while p.curr.kind == tkComma:
+      p.advance()
+      u.add(p.parseFromItem())
+    deleteNode.add(u)
 
   if p.isKeyw("where"):
     p.advance()
     var whereNode = newNode(nkWhere)
     whereNode.add(p.parseExpression())
     deleteNode.add(whereNode)
+
+  # ORDER BY / LIMIT (MySQL, SQLite)
+  if p.isKeyw("order"):
+    if p.dialect == pgsql:
+      p.error("DELETE ORDER BY is not supported by the pgsql driver")
+    p.advance()
+    if p.isKeyw("by"): p.advance()
+    var orderNode = newNode(nkOrder)
+    while true:
+      orderNode.add(p.parseExpression())
+      if p.curr.kind != tkComma: break
+      p.advance()
+    deleteNode.add(orderNode)
+  if p.isKeyw("limit"):
+    if p.dialect == pgsql:
+      p.error("DELETE LIMIT is not supported by the pgsql driver")
+    p.advance()
+    var lim = newNode(nkLimit)
+    if p.curr.kind == tkNumericLiteral:
+      lim.add(newNode(nkIntegerLit, p.curr.value))
+      p.advance()
+    deleteNode.add(lim)
+
+  if p.isKeyw("returning"):
+    if not dialectAllows(p.dialect, featReturning):
+      p.error("RETURNING is not supported by the " & dialectName(p.dialect) & " driver")
+    p.advance()
+    var ret = newNode(nkReturning)
+    if p.isOpr("*"):
+      ret.add(newNode(nkIdent, "*"))
+      p.advance()
+    else:
+      while true:
+        ret.add(p.parseExpression())
+        if p.curr.kind == tkComma:
+          p.advance()
+          continue
+        break
+    deleteNode.add(ret)
 
   skipSemiColon(p)
   result = deleteNode
@@ -1514,7 +2214,7 @@ proc parseCreate*(p: var SqlParser): SqlNode =
             colDef.add(newNode(nkIdent, p.curr.value))
             p.advance()
           elif p.curr.kind == tkStringLiteral:
-            colDef.add(newNode(nkQuotedIdent, p.curr.value))
+            colDef.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
             p.advance()
           else:
             p.error(unexpectedToken % $p.curr.value)
@@ -1538,8 +2238,24 @@ proc parseCreate*(p: var SqlParser): SqlNode =
           break
         else:
           p.error(unexpectedTokenExpected % [$p.curr.value, ", or )"])
-    # optional table options (ignored) like WITH (...) or USING ... or PARTITION BY etc.
-    # We skip until semicolon or next clause. For now we stop here and add createNode
+    # optional table options: WITHOUT ROWID / STRICT (SQLite), ENGINE=... (MySQL)
+    if p.isKeyw("without") and p.dialect in {sqlite, generic}:
+      p.advance()
+      if not p.isKeyw("rowid"):
+        p.error(unexpectedTokenExpected % [$p.curr.value, "ROWID"])
+      p.advance()
+      createNode.add(newNode(nkIdent, "without rowid"))
+    if p.isKeyw("strict") and p.dialect in {sqlite, generic}:
+      p.advance()
+      createNode.add(newNode(nkIdent, "strict"))
+    if p.isKeyw("engine") and p.dialect in {mysql, generic}:
+      p.advance()
+      if p.curr.kind == tkOperator and p.curr.value == "=":
+        p.advance()
+      if p.curr.kind in {tkIdentifier, tkKeyword}:
+        var e = newNode(nkIdent, "engine=" & p.curr.value)
+        p.advance()
+        createNode.add(e)
     skipSemiColon(p)
     result = createNode
     return result
@@ -1575,6 +2291,36 @@ proc parseCreate*(p: var SqlParser): SqlNode =
     createNode.add(enumNode)
     skipSemiColon(p)
     return createNode
+
+  if p.isKeyw("view"):
+    p.advance()
+    let ifNot = readIfNotExists(p)
+    var v = if ifNot: newNode(nkCreateViewIfNotExists) else: newNode(nkCreateView)
+    if p.isKeyw("temp") or p.isKeyw("temporary"):
+      v.add(newNode(nkIdent, "temp"))
+      p.advance()
+    v.add(readName(p))
+    if p.curr.kind == tkLP:
+      v.add(parseParenExprList(p))
+    if not p.isKeyw("as"):
+      p.error(unexpectedTokenExpected % [$p.curr.value, "AS"])
+    p.advance()
+    if p.isKeyw("select") or p.isKeyw("with"):
+      v.add(p.parseSelect(false))
+    else:
+      p.error(unexpectedTokenExpected % [$p.curr.value, "SELECT"])
+    skipSemiColon(p)
+    return v
+
+  if p.isKeyw("schema") or p.isKeyw("database"):
+    let isSchema = p.isKeyw("schema")
+    p.advance()
+    let ifNot = readIfNotExists(p)
+    var s = if ifNot: newNode(nkCreateSchemaIfNotExists) else: newNode(nkCreateSchema)
+    s.add(newNode(nkIdent, if isSchema: "schema" else: "database"))
+    s.add(readName(p))
+    skipSemiColon(p)
+    return s
 
   # Support "CREATE [UNIQUE] INDEX"
   var isUnique = false
@@ -1619,16 +2365,31 @@ proc parseUpdate*(p: var SqlParser): SqlNode =
   p.advance() # consume "update"
   var updateNode = newNode(nkUpdate)
 
-  # optional ONLY (Postgres)
-  if p.isKeyw("only") and p.dialect == SqlDriver.pgsql:
+  # optional ONLY (PostgreSQL only; also allow generic)
+  if p.isKeyw("only"):
+    if p.dialect in {mysql, sqlite}:
+      p.error("ONLY is only supported by the pgsql driver (got " &
+        dialectName(p.dialect) & ")")
     p.advance()
+    if p.curr.kind == tkLP:
+      # ONLY (table)
+      if p.next.kind in {tkIdentifier, tkKeyword}:
+        p.advance()
+        if p.curr.kind in {tkIdentifier, tkKeyword}:
+          updateNode.add(newNode(nkIdent, p.curr.value))
+          p.advance()
+        if p.curr.kind != tkRP:
+          p.error(unexpectedTokenExpected % [$p.curr.value, ")"])
+        p.advance()
+      else:
+        p.error(unexpectedToken % $p.curr.value)
 
   # target table
   if p.curr.kind in {tkIdentifier, tkKeyword}:
     updateNode.add(newNode(nkIdent, p.curr.value))
     p.advance()
   elif p.curr.kind == tkStringLiteral:
-    updateNode.add(newNode(nkQuotedIdent, p.curr.value))
+    updateNode.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
     p.advance()
   else:
     p.error(unexpectedToken % $p.curr.value)
@@ -1637,16 +2398,16 @@ proc parseUpdate*(p: var SqlParser): SqlNode =
   # alias only when the token is an identifier
   if p.isKeyw("as"):
     p.advance()
-    if p.curr.kind == tkIdentifier or (p.curr.kind == tkKeyword and not isReserved(p.curr.value)):
+    if p.curr.kind == tkIdentifier or (p.curr.kind == tkKeyword and not isReserved(p.curr.value, p.dialect)):
       if p.curr.kind == tkIdentifier:
         updateNode.add(newNode(nkIdent, p.curr.value))
       else:
         updateNode.add(newNode(nkIdent, p.curr.value))
       p.advance()
     elif p.curr.kind == tkStringLiteral:
-      updateNode.add(newNode(nkQuotedIdent, p.curr.value))
+      updateNode.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
       p.advance()
-  elif p.curr.kind == tkIdentifier or (p.curr.kind == tkKeyword and not isReserved(p.curr.value)):
+  elif p.curr.kind == tkIdentifier or (p.curr.kind == tkKeyword and not isReserved(p.curr.value, p.dialect)):
     # implicit alias (identifier or non-reserved keyword).
     # Do NOT accept bare reserved keywords like SET.
     if p.curr.kind == tkIdentifier:
@@ -1738,17 +2499,45 @@ proc parseUpdate*(p: var SqlParser): SqlNode =
     whereNode.add(p.parseExpression())
     updateNode.add(whereNode)
 
-  # RETURNING (Postgres-style and generic support)
-  if p.isKeyw("returning"):
+  # ORDER BY / LIMIT (MySQL, SQLite only)
+  if p.isKeyw("order"):
+    if p.dialect in {pgsql}:
+      p.error("UPDATE ORDER BY is not supported by the pgsql driver")
     p.advance()
-    var retCols = newNode(nkSelectColumns)
+    if p.isKeyw("by"): p.advance()
+    var orderNode = newNode(nkOrder)
     while true:
-      retCols.add(p.parseExpression())
-      if p.curr.kind == tkComma:
-        p.advance()
-        continue
-      else:
-        break
+      orderNode.add(p.parseExpression())
+      if p.curr.kind != tkComma: break
+      p.advance()
+    updateNode.add(orderNode)
+  if p.isKeyw("limit"):
+    if p.dialect in {pgsql}:
+      p.error("UPDATE LIMIT is not supported by the pgsql driver")
+    p.advance()
+    var lim = newNode(nkLimit)
+    if p.curr.kind == tkNumericLiteral:
+      lim.add(newNode(nkIntegerLit, p.curr.value))
+      p.advance()
+    updateNode.add(lim)
+
+  # RETURNING (PostgreSQL, SQLite only)
+  if p.isKeyw("returning"):
+    if not dialectAllows(p.dialect, featReturning):
+      p.error("RETURNING is not supported by the " & dialectName(p.dialect) & " driver")
+    p.advance()
+    var retCols = newNode(nkReturning)
+    if p.isOpr("*"):
+      retCols.add(newNode(nkIdent, "*"))
+      p.advance()
+    else:
+      while true:
+        retCols.add(p.parseExpression())
+        if p.curr.kind == tkComma:
+          p.advance()
+          continue
+        else:
+          break
     updateNode.add(retCols)
 
   skipSemiColon(p)
@@ -1832,6 +2621,47 @@ proc parseAlterTable*(p: var SqlParser): SqlNode =
         var addC = newNode(nkAlterAddConstraint)
         addC.add(parseTableConstraint(p))
         node.add(addC)
+      elif p.isKeyw("primary") or p.isKeyw("unique") or p.isKeyw("foreign") or p.isKeyw("check"):
+        # ADD PRIMARY KEY / UNIQUE / FOREIGN KEY / CHECK without CONSTRAINT keyword
+        var addC = newNode(nkAlterAddConstraint)
+        # rewind one step: parseTableConstraint expects optional CONSTRAINT prefix,
+        # so call it via a temporary re-parse by stepping back is complex;
+        # instead build directly.
+        var cnode = newNode(nkConstraint)
+        if p.isKeyw("primary"):
+          p.advance()
+          if p.isKeyw("key"): p.advance()
+          var pk = newNode(nkPrimaryKey)
+          if p.curr.kind == tkLP: pk.add(parseParenExprList(p))
+          cnode.add(pk)
+        elif p.isKeyw("unique"):
+          p.advance()
+          var uq = newNode(nkUnique)
+          if p.curr.kind == tkLP: uq.add(parseParenExprList(p))
+          cnode.add(uq)
+        elif p.isKeyw("foreign"):
+          p.advance()
+          if p.isKeyw("key"): p.advance()
+          var fk = newNode(nkForeignKey)
+          if p.curr.kind == tkLP: fk.add(parseParenExprList(p))
+          if not p.isKeyw("references"):
+            p.error(unexpectedTokenExpected % [$p.curr.value, "REFERENCES"])
+          p.advance()
+          fk.add(readName(p))
+          if p.curr.kind == tkLP: fk.add(parseParenExprList(p))
+          cnode.add(fk)
+        elif p.isKeyw("check"):
+          p.advance()
+          if p.curr.kind != tkLP: p.error(unexpectedTokenExpected % [$p.curr.value, "("])
+          p.advance()
+          var expr = p.parseExpression()
+          if p.curr.kind != tkRP: p.error(unexpectedTokenExpected % [$p.curr.value, ")"])
+          p.advance()
+          var chk = newNode(nkCheck)
+          chk.add(expr)
+          cnode.add(chk)
+        addC.add(cnode)
+        node.add(addC)
       else:
         # ADD [COLUMN] column definition
         if p.isKeyw("column"):
@@ -1841,7 +2671,7 @@ proc parseAlterTable*(p: var SqlParser): SqlNode =
           colDef.add(newNode(nkIdent, p.curr.value))
           p.advance()
         elif p.curr.kind == tkStringLiteral:
-          colDef.add(newNode(nkQuotedIdent, p.curr.value))
+          colDef.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
           p.advance()
         else:
           p.error(unexpectedToken % $p.curr.value)
@@ -1855,6 +2685,56 @@ proc parseAlterTable*(p: var SqlParser): SqlNode =
         var addNode = newNode(nkAlterAddColumn)
         addNode.add(colDef)
         node.add(addNode)
+    elif p.isKeyw("modify") or p.isKeyw("change"):
+      # MySQL: MODIFY [COLUMN] coldef / CHANGE [COLUMN] old new coldef
+      if p.dialect notin {mysql, generic}:
+        p.error("MODIFY/CHANGE COLUMN is only supported by the mysql driver (got " &
+          dialectName(p.dialect) & ")")
+      let isChange = p.isKeyw("change")
+      p.advance()
+      if p.isKeyw("column"): p.advance()
+      var colDef = newNode(nkColumnDef)
+      if p.curr.kind in {tkIdentifier, tkKeyword, tkStringLiteral}:
+        if p.curr.kind == tkStringLiteral:
+          colDef.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
+        else:
+          colDef.add(newNode(nkIdent, p.curr.value))
+        p.advance()
+      else:
+        p.error(unexpectedToken % $p.curr.value)
+      if isChange:
+        # second name is the new definition name
+        if p.curr.kind in {tkIdentifier, tkKeyword, tkStringLiteral}:
+          var newDef = newNode(nkColumnDef)
+          if p.curr.kind == tkStringLiteral:
+            newDef.add(newNode(nkQuotedIdent, p.curr.value, p.curr.quote))
+          else:
+            newDef.add(newNode(nkIdent, p.curr.value))
+          p.advance()
+          if p.curr.kind in {tkIdentifier, tkKeyword, tkLP}:
+            newDef.add(readDataType(p))
+          let cons2 = parseColumnConstraints(p)
+          for c in cons2: newDef.add(c)
+          var alt = newNode(nkAlterAlterColumn)
+          alt.add(colDef[0])
+          alt.add(newDef)
+          node.add(alt)
+          # skip to next action handling below
+          if p.curr.kind == tkComma:
+            p.advance()
+            continue
+          break
+        else:
+          p.error(unexpectedToken % $p.curr.value)
+      if p.curr.kind in {tkIdentifier, tkKeyword, tkLP}:
+        colDef.add(readDataType(p))
+      let cons = parseColumnConstraints(p)
+      for c in cons: colDef.add(c)
+      var altM = newNode(nkAlterAlterColumn)
+      altM.add(colDef[0])
+      if colDef.len > 1: altM.add(colDef[1])
+      for i in 2 ..< colDef.len: altM.add(colDef[i])
+      node.add(altM)
 
     elif p.isKeyw("drop"):
       p.advance()
@@ -2031,6 +2911,62 @@ proc parseDrop*(p: var SqlParser): SqlNode =
   result = dropNode
 
 
+proc parsePragma(p: var SqlParser): SqlNode =
+  ## PRAGMA name [= value | (args)] (SQLite only).
+  p.advance() # consume PRAGMA
+  if not dialectAllows(p.dialect, featPragma):
+    p.error("PRAGMA is only supported by the sqlite driver (got " &
+      dialectName(p.dialect) & ")")
+  result = newNode(nkPragma)
+  if p.curr.kind in {tkIdentifier, tkKeyword}:
+    result.add(newNode(nkIdent, p.curr.value))
+    p.advance()
+  else:
+    p.error(unexpectedToken % $p.curr.value)
+  if p.curr.kind == tkOperator and p.curr.value == "=":
+    p.advance()
+    result.add(p.parseExpression())
+  elif p.curr.kind == tkLP:
+    p.advance()
+    while p.curr.kind != tkRP and p.curr.kind != tkEOF:
+      result.add(p.parseExpression())
+      if p.curr.kind == tkComma: p.advance()
+      else: break
+    if p.curr.kind != tkRP:
+      p.error(unexpectedTokenExpected % [$p.curr.value, ")"])
+    p.advance()
+  skipSemiColon(p)
+
+proc parseVacuumAttach(p: var SqlParser): SqlNode =
+  ## VACUUM [table] [INTO file] / ATTACH expr AS name (SQLite only).
+  if p.isKeyw("vacuum"):
+    p.advance()
+    if not dialectAllows(p.dialect, featPragma):
+      p.error("VACUUM is only supported by the sqlite driver (got " &
+        dialectName(p.dialect) & ")")
+    result = newNode(nkVacuum)
+    if p.curr.kind in {tkIdentifier, tkKeyword} and not p.isKeyw("into"):
+      result.add(newNode(nkIdent, p.curr.value))
+      p.advance()
+    if p.isKeyw("into"):
+      p.advance()
+      result.add(p.parseExpression())
+    skipSemiColon(p)
+  elif p.isKeyw("attach"):
+    p.advance()
+    if not dialectAllows(p.dialect, featPragma):
+      p.error("ATTACH is only supported by the sqlite driver (got " &
+        dialectName(p.dialect) & ")")
+    result = newNode(nkAttach)
+    result.add(p.parseExpression())
+    if not p.isKeyw("as"):
+      p.error(unexpectedTokenExpected % [$p.curr.value, "AS"])
+    p.advance()
+    result.add(p.parseExpression())
+    skipSemiColon(p)
+  else:
+    p.error(unexpectedToken % $p.curr.value)
+
 #
 # Root parser
 #
@@ -2039,10 +2975,12 @@ proc parseRoot(p: var SqlParser): SqlNode =
   while p.curr.kind != tkEOF:
     case p.curr.kind
     of tkKeyword:
-      if p.isKeyw("select"):
+      if p.isKeyw("select") or p.isKeyw("with"):
         result.add(p.parseSelect())
       elif p.isKeyw("insert"):
         result.add(p.parseInsert())
+      elif p.isKeyw("replace"):
+        result.add(p.parseReplace())
       elif p.isKeyw("create"):
         result.add(p.parseCreate())
       elif p.isKeyw("drop"):
@@ -2053,7 +2991,11 @@ proc parseRoot(p: var SqlParser): SqlNode =
         result.add(p.parseDelete())
       elif p.isKeyw("update"):
         result.add(p.parseUpdate())
-      else: 
+      elif p.isKeyw("pragma"):
+        result.add(p.parsePragma())
+      elif p.isKeyw("vacuum") or p.isKeyw("attach"):
+        result.add(p.parseVacuumAttach())
+      else:
         p.error(unexpectedToken % $p.curr.value)
     else:
       p.error(unexpectedToken % $p.curr.value)
@@ -2085,6 +3027,7 @@ type
   SqlWriter = object
     indent: int
     upperCase: bool
+    dialect: SqlDriver
     buffer: string
 
 proc add(s: var SqlWriter, thing: char) =
@@ -2147,16 +3090,21 @@ proc addMulti(s: var SqlWriter, n: SqlNode, sep = ',', prefix, suffix: char) =
 
 proc ra(n: SqlNode, s: var SqlWriter) {.gcsafe.} =
   case n.kind
-  of nkBitStringLit, nkHexStringLit, nkIntegerLit, nkNumericLit, nkRaw, nkIdent:
+  of nkIntegerLit, nkNumericLit, nkRaw, nkIdent:
     s.add(n.strVal)
+  of nkBitStringLit:
+    s.add("B'"); s.add(n.strVal); s.add("'")
+  of nkHexStringLit:
+    s.add("X'"); s.add(n.strVal); s.add("'")
   of nkStringLit:
     escape(s, n.strVal)
-  
+
   of nkQuotedIdent:
     case n.quote
     of qkSingle:   s.add("'"); s.add(n.strVal); s.add("'")
     of qkDouble:   s.add("\""); s.add(n.strVal); s.add("\"")
     of qkBacktick: s.add("`"); s.add(n.strVal); s.add("`")
+    of qkBracket:  s.add("["); s.add(n.strVal); s.add("]")
     else:          s.add(n.strVal)
   of nkPrefix:
     # render unary/prefix operators: "NOT expr" or "-expr"
@@ -2197,18 +3145,26 @@ proc ra(n: SqlNode, s: var SqlWriter) {.gcsafe.} =
       of nkOrder: ra(c, s)
       of nkLimit: ra(c, s)
       of nkOffset: ra(c, s)
+      of nkFetch: ra(c, s)
+      of nkReturning: ra(c, s)
       of nkSelectColumns:
-        # used for RETURNING
+        # legacy RETURNING encoding
         s.addKeyw(" returning ")
         ra(c, s)
       else:
         s.add(" ")
         ra(c, s)
-  
+
   of nkSelectDistinct:
     s.addKeyw("select distinct ")
-    ra(n[0], s) # columns
-    for i in 1 ..< n.len:
+    var startIdx = 0
+    if n.len > 0 and n[0].kind == nkDistinctOn:
+      ra(n[0], s)
+      s.add(" ")
+      startIdx = 1
+    if startIdx < n.len:
+      ra(n[startIdx], s) # columns
+    for i in startIdx + 1 ..< n.len:
       let c = n[i]
       case c.kind
       of nkFrom: ra(c, s)
@@ -2218,12 +3174,107 @@ proc ra(n: SqlNode, s: var SqlWriter) {.gcsafe.} =
       of nkOrder: ra(c, s)
       of nkLimit: ra(c, s)
       of nkOffset: ra(c, s)
+      of nkFetch: ra(c, s)
+      of nkReturning: ra(c, s)
       of nkSelectColumns:
         s.addKeyw(" returning ")
         ra(c, s)
       else:
         s.add(" ")
         ra(c, s)
+  of nkDistinctOn:
+    s.addKeyw("on")
+    ra(n[0], s)
+  of nkFetch:
+    s.addKeyw(" fetch first ")
+    if n.len > 0: ra(n[0], s)
+    s.addKeyw(" rows only")
+  of nkReturning:
+    s.addKeyw(" returning ")
+    for i, col in n.sons:
+      if i > 0: s.add(", ")
+      ra(col, s)
+  of nkUnion, nkIntersect, nkExcept:
+    # sons: [(all/distinct marker)?, left, right] or [left, right]
+    var idx = 0
+    var marker = ""
+    if n.len == 3 and n[0].kind == nkIdent:
+      marker = n[0].strVal
+      idx = 1
+    ra(n[idx], s)
+    if n.kind == nkUnion: s.addKeyw(" union ")
+    elif n.kind == nkIntersect: s.addKeyw(" intersect ")
+    else: s.addKeyw(" except ")
+    if marker.len > 0:
+      s.addKeyw(marker & " ")
+    ra(n[idx + 1], s)
+  of nkWith:
+    s.addKeyw("with ")
+    var idx = 0
+    if n.len > 0 and n[0].kind == nkIdent and n[0].strVal == "recursive":
+      s.addKeyw("recursive ")
+      idx = 1
+    var first = true
+    var bodyIdx = n.len
+    for i in idx ..< n.len:
+      if n[i].kind == nkCte:
+        if not first: s.add(", ")
+        first = false
+        ra(n[i], s)
+      else:
+        bodyIdx = i
+        break
+    if bodyIdx < n.len:
+      s.add(" ")
+      ra(n[bodyIdx], s)
+  of nkCte:
+    ra(n[0], s)
+    var idx = 1
+    if n.len > 2:
+      # name, collist, body
+      ra(n[1], s)
+      idx = 2
+    s.addKeyw(" as (")
+    ra(n[idx], s)
+    s.add(")")
+  of nkCase:
+    s.addKeyw("case")
+    var idx = 0
+    if n.len > 0 and n[0].kind notin {nkWhen, nkElse}:
+      s.add(" ")
+      ra(n[0], s)
+      idx = 1
+    while idx < n.len:
+      s.add(" ")
+      ra(n[idx], s)
+      inc idx
+    s.addKeyw(" end")
+  of nkWhen:
+    s.addKeyw("when ")
+    ra(n[0], s)
+    s.addKeyw(" then ")
+    ra(n[1], s)
+  of nkElse:
+    s.addKeyw("else ")
+    ra(n[0], s)
+  of nkCast:
+    s.addKeyw("cast(")
+    ra(n[0], s)
+    s.addKeyw(" as ")
+    ra(n[1], s)
+    s.add(")")
+  of nkWindow:
+    ra(n[0], s)
+    s.addKeyw(" over ")
+    if n.len > 1:
+      if n[1].kind == nkColumnList:
+        s.add("(")
+        for i, col in n[1].sons:
+          if i > 0: s.add(", ")
+          ra(col, s)
+        s.add(")")
+      else:
+        ra(n[1], s)
   
   of nkSelectColumns:
     for i, col in n.sons:
@@ -2347,12 +3398,65 @@ proc ra(n: SqlNode, s: var SqlWriter) {.gcsafe.} =
     s.addKeyw(" desc")
   
   of nkInsert:
-    s.addKeyw("insert into ")
-    ra(n[0], s) # table
-    if n.len > 1:
-      ra(n[1], s) # columns
-    if n.len > 2:
-      ra(n[2], s) # values
+    s.addKeyw("insert ")
+    var idx = 0
+    # optional SQLite OR conflict algorithm prefix
+    if n.len > 0 and n[0].kind == nkIdent and n[0].strVal.toLowerAscii.startsWith("or "):
+      s.addKeyw(n[0].strVal & " ")
+      idx = 1
+    s.addKeyw("into ")
+    if idx < n.len:
+      ra(n[idx], s) # table
+      inc idx
+    while idx < n.len:
+      let c = n[idx]
+      case c.kind
+      of nkColumnList: ra(c, s)
+      of nkValueList: ra(c, s)
+      of nkSelect, nkSelectDistinct, nkWith, nkUnion, nkIntersect, nkExcept:
+        s.add(" ")
+        ra(c, s)
+      of nkIdent:
+        # "default values"
+        s.add(" ")
+        ra(c, s)
+      of nkOnConflict: ra(c, s)
+      of nkOnDuplicateKey: ra(c, s)
+      of nkReturning: ra(c, s)
+      else:
+        s.add(" ")
+        ra(c, s)
+      inc idx
+  of nkOnConflict:
+    s.addKeyw(" on conflict")
+    for c in n.sons:
+      if c.kind == nkIdent and c.strVal == "do nothing":
+        s.addKeyw(" do nothing")
+      elif c.kind == nkWhere:
+        ra(c, s)
+      elif c.kind == nkColumnList:
+        ra(c, s)
+      elif c.kind == nkSelectColumns:
+        s.addKeyw(" do update set ")
+        ra(c, s)
+      else:
+        s.add(" ")
+        ra(c, s)
+  of nkOnDuplicateKey:
+    s.addKeyw(" on duplicate key update ")
+    for i, a in n.sons:
+      if i > 0: s.add(", ")
+      ra(a, s)
+  of nkReplace:
+    s.addKeyw("replace into ")
+    if n.len > 0: ra(n[0], s)
+    for i in 1 ..< n.len:
+      let c = n[i]
+      if c.kind == nkColumnList or c.kind == nkValueList:
+        ra(c, s)
+      else:
+        s.add(" ")
+        ra(c, s)
   
   of nkColumnList:
     s.add(" (")
@@ -2372,8 +3476,15 @@ proc ra(n: SqlNode, s: var SqlWriter) {.gcsafe.} =
   of nkDelete:
     s.addKeyw("delete from ")
     ra(n[0], s) # table
-    if n.len > 1:
-      ra(n[1], s) # where
+    for i in 1 ..< n.len:
+      let c = n[i]
+      if c.kind == nkUsing:
+        s.addKeyw(" using ")
+        for j, u in c.sons:
+          if j > 0: s.add(", ")
+          ra(u, s)
+      else:
+        ra(c, s) # where / order / limit / returning
 
   of nkCreateTable, nkCreateTableIfNotExists:
     s.addKeyw("create table ")
@@ -2381,11 +3492,68 @@ proc ra(n: SqlNode, s: var SqlWriter) {.gcsafe.} =
       s.addKeyw("if not exists ")
     ra(n[0], s) # table name
     if n.len > 1:
-      s.add(" (")
-      for i, col in n.sons[1..^1]: # skip table name
-        if i > 0: s.add(", ")
-        ra(col, s)
+      # split column defs/constraints (inside parens) from table options
+      # (WITHOUT ROWID / STRICT / ENGINE=... stored as trailing nkIdent)
+      var ncols = n.len - 1
+      while ncols > 0 and n[ncols].kind == nkIdent and
+          n[ncols].strVal.toLowerAscii in ["without rowid", "strict"] or
+          (n[ncols].kind == nkIdent and n[ncols].strVal.toLowerAscii.startsWith("engine=")):
+        dec ncols
+      if ncols > 0:
+        s.add(" (")
+        for i in 1 .. ncols:
+          if i > 1: s.add(", ")
+          ra(n[i], s)
+        s.add(")")
+      for i in ncols + 1 ..< n.len:
+        s.add(" ")
+        ra(n[i], s)
+  of nkCreateView, nkCreateViewIfNotExists:
+    s.addKeyw("create view ")
+    if n.kind == nkCreateViewIfNotExists:
+      s.addKeyw("if not exists ")
+    var idx = 0
+    if n.len > 1 and n[0].kind == nkIdent and n[0].strVal == "temp":
+      s.addKeyw("temp ")
+      idx = 1
+    if idx < n.len: ra(n[idx], s); inc idx
+    if idx < n.len and n[idx].kind == nkColumnList:
+      ra(n[idx], s); inc idx
+    if idx < n.len:
+      s.addKeyw(" as ")
+      ra(n[idx], s)
+  of nkCreateSchema, nkCreateSchemaIfNotExists:
+    s.addKeyw("create ")
+    if n.len > 0: ra(n[0], s)
+    else: s.addKeyw("schema")
+    if n.kind == nkCreateSchemaIfNotExists:
+      s.addKeyw(" if not exists ")
+    else:
+      s.add(" ")
+    if n.len > 1: ra(n[1], s)
+  of nkPragma:
+    s.addKeyw("pragma ")
+    if n.len > 0: ra(n[0], s)
+    if n.len > 1:
+      s.add(" = ")
+      ra(n[1], s)
+    if n.len > 2:
+      s.add("(")
+      for i in 1 ..< n.len:
+        if i > 1: s.add(", ")
+        ra(n[i], s)
       s.add(")")
+  of nkVacuum:
+    s.addKeyw("vacuum")
+    for c in n.sons:
+      s.add(" ")
+      ra(c, s)
+  of nkAttach:
+    s.addKeyw("attach ")
+    if n.len > 0: ra(n[0], s)
+    if n.len > 1:
+      s.addKeyw(" as ")
+      ra(n[1], s)
 
   of nkCreateType, nkCreateTypeIfNotExists:
     s.addKeyw("create ")
@@ -2438,18 +3606,30 @@ proc ra(n: SqlNode, s: var SqlWriter) {.gcsafe.} =
   of nkUpdate:
     s.addKeyw("update ")
     if n.len > 0:
-      ra(n[0], s) # table (and optional alias if present as child[1])
-    # assignments expected as next child (nkSelectColumns of nkAsgn)
-    if n.len > 1:
-      s.addKeyw(" set ")
+      ra(n[0], s) # table
+    var idx = 1
+    # optional alias (nkIdent right after table, before assignments)
+    if n.len > 2 and n[1].kind == nkIdent and n[2].kind == nkSelectColumns:
+      s.addKeyw(" as ")
       ra(n[1], s)
-    # optional FROM/WHERE/RETURNING children follow
-    for i in 2 ..< n.len:
-      let c = n[i]
-      # nkFrom, nkWhere, nkSelectColumns (returning)
+      idx = 2
+    elif n.len > 2 and n[1].kind == nkQuotedIdent and n[2].kind == nkSelectColumns:
+      s.addKeyw(" as ")
+      ra(n[1], s)
+      idx = 2
+    if idx < n.len and n[idx].kind == nkSelectColumns:
+      s.addKeyw(" set ")
+      ra(n[idx], s)
+      inc idx
+    while idx < n.len:
+      let c = n[idx]
       if c.kind == nkFrom:
         ra(c, s)
       elif c.kind == nkWhere:
+        ra(c, s)
+      elif c.kind == nkOrder or c.kind == nkLimit:
+        ra(c, s)
+      elif c.kind == nkReturning:
         ra(c, s)
       elif c.kind == nkSelectColumns:
         s.addKeyw(" returning ")
@@ -2457,6 +3637,7 @@ proc ra(n: SqlNode, s: var SqlWriter) {.gcsafe.} =
       else:
         s.add(" ")
         ra(c, s)
+      inc idx
 
   of nkCall:
     # callee is first son, remaining sons are arguments
@@ -2604,21 +3785,45 @@ proc ra(n: SqlNode, s: var SqlWriter) {.gcsafe.} =
       elif c.kind == nkAlterDropColumn:
         s.addKeyw(" drop column ")
         ra(c[0], s)
+        if c.len > 1:
+          s.add(" ")
+          ra(c[1], s)
       elif c.kind == nkAlterAlterColumn:
         s.addKeyw(" alter column ")
         ra(c[0], s)
+        if c.len > 1:
+          s.add(" ")
+          ra(c[1], s)
+        for j in 2 ..< c.len:
+          s.add(" ")
+          ra(c[j], s)
       elif c.kind == nkAlterRenameColumn:
         s.addKeyw(" rename column ")
         ra(c[0], s)
+        if c.len > 1:
+          s.addKeyw(" to ")
+          ra(c[1], s)
       elif c.kind == nkAlterRenameTable:
         s.addKeyw(" rename to ")
         ra(c[0], s)
+      elif c.kind == nkAlterSetDefault:
+        s.addKeyw(" alter column ")
+        ra(c[0], s)
+        s.addKeyw(" set default ")
+        if c.len > 1: ra(c[1], s)
+      elif c.kind == nkAlterDropDefault:
+        s.addKeyw(" alter column ")
+        ra(c[0], s)
+        s.addKeyw(" drop default")
   of nkLimit:
     s.addKeyw(" limit ")
-    ra(n[0], s)
+    if n.len > 0: ra(n[0], s)
+    if n.len > 1:
+      s.add(", ")
+      ra(n[1], s)
   of nkOffset:
     s.addKeyw(" offset ")
-    ra(n[0], s)
+    if n.len > 0: ra(n[0], s)
   of nkPrGroup:
     # handle parenthesized groups (e.g. in expressions, subqueries or parenthesized
     # table expressions). If the child is an nkFrom, render its items without
@@ -2659,9 +3864,11 @@ proc ra(n: SqlNode, s: var SqlWriter) {.gcsafe.} =
   else:
     s.add("/* unhandled node kind: " & $n.kind & " */")
 
-proc renderSql*(n: SqlNode, upperCase = false): string =
+proc renderSql*(n: SqlNode, upperCase = false, dialect: SqlDriver = SqlDriver.generic): string =
   ## Converts an SQL abstract syntax tree to its string representation.
-  var s = SqlWriter(buffer: "", upperCase: upperCase)
+  ## `dialect` currently only affects future identifier-quoting choices;
+  ## the AST already preserves original quote styles.
+  var s = SqlWriter(buffer: "", upperCase: upperCase, dialect: dialect)
   ra(n, s)
   return s.buffer
 

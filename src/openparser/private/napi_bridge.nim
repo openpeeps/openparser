@@ -193,8 +193,8 @@ init proc(module: Module) =
 
   proc sqlNormalize(src: string, driver: string) {.export_napi: false.} =
     ## Canonicalize SQL via parse/render round-trip.
-    return %*renderSql(parseSql(args.get("src").getStr(),
-      sqlDriverFromString(args.get("driver").getStr())))
+    let drv = sqlDriverFromString(args.get("driver").getStr())
+    return %*renderSql(parseSql(args.get("src").getStr(), drv), false, drv)
 
   module.register("sql", [("parse", sqlParse), ("normalize", sqlNormalize)])
 
