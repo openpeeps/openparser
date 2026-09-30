@@ -23,6 +23,17 @@ export namespace yaml {
   function parse(src: string): any;
   /** Serialize a JSON document (as string) to YAML. */
   function dump(doc: string): string;
+  /**
+   * Split a document into its YAML frontmatter block and body.
+   *
+   * The block must open on the first line with `---` and close with `---` or
+   * `...`. An unterminated block throws.
+   */
+  function frontmatter(src: string): {
+    found: boolean;
+    frontmatter: any | null;
+    body: string;
+  };
 }
 
 // ---------------------------------------------------------------- toml

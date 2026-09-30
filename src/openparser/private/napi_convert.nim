@@ -12,7 +12,7 @@ import std/[base64, memfiles, os, strutils, options, tempfiles, times,
   tables]
 
 from ../yaml import parseYAML, YamlNode, YAMLObject, yamlString, yamlInteger,
-  yamlFloat, yamlBoolean, yamlNull, yamlObject, yamlArray
+  yamlFloat, yamlBoolean, yamlNull, yamlObject, yamlArray, splitFrontmatter
 from ../toml import parseTOML, TomlNode,
   tvkString, tvkInteger, tvkFloat, tvkBoolean, tvkDateTime, tvkArray, tvkTable,
   newTomlString, newTomlInteger, newTomlFloat, newTomlBoolean,
@@ -80,6 +80,21 @@ proc yamlParseJson(src: string): JsonNode =
   let doc: YAMLObject = parseYAML(src)
   result = newJObject()
   for k, v in doc: result[k] = yamlNodeToJson(v)
+
+proc yamlFrontmatterJson(src: string): JsonNode =
+  ## Parses a frontmatter block to a JSON object, reporting whether one was
+  ## present. An unterminated block raises, matching `splitFrontmatter`.
+  let fm = splitFrontmatter(src)
+  result = newJObject()
+  result["found"] = %fm.found
+  result["body"] = %fm.body
+  if fm.found:
+    let doc: YAMLObject = parseYAML(fm.frontmatter)
+    var meta = newJObject()
+    for k, v in doc: meta[k] = yamlNodeToJson(v)
+    result["frontmatter"] = meta
+  else:
+    result["frontmatter"] = newJNull()
 
 proc tomlToJson(n: TomlNode): JsonNode =
   return case n.kind

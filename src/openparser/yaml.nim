@@ -14,8 +14,8 @@
 ## write self-documenting Nim code that can be easily converted to YAML
 ## configuration files
 
-import std/[tables, critbits, strutils, macros,
-        typetraits, enumutils, options]
+import std/[tables, sets, critbits, strutils, macros,
+        typetraits, sequtils, options]
 
 import ./private/[types, lexutils]
 import ./json
@@ -33,12 +33,9 @@ type
     ytkRC = "}"
     ytkPipe = "|"
     ytkGT = ">"
-    ytkQuote = "\""
-    ytkSingleQuote = "'"
     ytkString
     ytkFloat
     ytkInteger
-    ytkBoolean
     ytkComment
     ytkAnchor = "&"
     ytkAlias = "*"
@@ -47,7 +44,7 @@ type
     ytkDocumentStart = "---"
     ytkDocumentEnd = "..."
     ytkDirective = "%"
-    ytkUnknown
+    ytkBlockScalar = "|"
 
   YamlToken* = ref object
     ## Represents a lexical token produced by the YAML lexer
@@ -67,6 +64,9 @@ type
     len: int
     line, col: int
     current: char
+    indentAtMarker: int
+      ## Indentation of the line a block scalar header sits on; used to
+      ## compute the auto-detected content indent (§8.1.1.1).
 
   YamlValueKind* = enum
     yamlInteger
@@ -111,6 +111,16 @@ type
     depth*: int
     flowDepth*: int
     anchors*: Table[string, YamlNode]
+    building*: HashSet[string]
+      ## Anchors whose node is still being parsed. An alias to one of these
+      ## would be a self-reference (§3.2.2 forbids it).
+    tagHandles*: Table[string, string]
+      ## Secondary tag handles declared with `%TAG` directives (§6.8.2), mapping
+      ## a handle such as `!e!` to its URI prefix. The `!` and `!!` handles are
+      ## predefined (§6.8.2).
+    flowEndLine*: int
+      ## Line of the `]`/`}` that closed the flow collection most recently
+      ## parsed, used to reject trailing content after it.
 
   YamlOptions* = ref object
     ## Options controlling YAML parsing strictness and extensions
@@ -140,7 +150,6 @@ const
   errorMaxDepth = "Maximum nesting depth exceeded"
   errorDuplicateKey = "Duplicate key `$1`"
   errorTabIndent = "Tabs must not be used as indentation (YAML §6.1)"
-  errorTrailingComma = "Trailing comma not allowed in flow collection"
   errorUndefinedAlias = "Undefined alias `*$1`"
   errorInvalidEscape = "Invalid escape sequence `\\$1`"
 
@@ -192,6 +201,26 @@ proc error*(p: var YamlParser, msg: string) =
 proc checkMaxDepth(p: var YamlParser) =
   if p.options != nil and p.options.maxDepth > 0 and p.depth > p.options.maxDepth:
     p.error(errorMaxDepth)
+
+proc isPlainFollowedByContent(l: YamlLexer, tokPos: int): bool =
+  ## True when the character following the indicator at `tokPos` is plain-safe,
+  ## which means a leading `-`, `?` or `:` is part of a plain scalar rather than
+  ## an indicator of its own (§7.3.3, `ns-plain-first`).
+  let c = l.charAt(tokPos + 1)
+  c != '\0' and c notin {' ', '\t', '\n', '\r', '\0'} and
+    c notin {',', '[', ']', '{', '}', '#', '&', '*', '!', '|', '>', '\'', '"', '%'}
+
+proc checkFlowEnd(p: var YamlParser) =
+  ## Rejects content that follows a flow collection on the same line, such as
+  ## the `c` in `a: [1, 2]c` (§7.4: a flow collection ends the node).
+  ##
+  ## A `:` may still follow, which makes the collection a complex mapping key
+  ## such as `[[a]: b]` (§8.2.2), and so may a separator or a closing bracket,
+  ## which is how nested flow collections continue (`[[1], 2]`).
+  if p.curr.line != p.flowEndLine: return
+  if p.curr.kind notin {ytkEOF, ytkComment, ytkDocumentStart, ytkDocumentEnd,
+                        ytkDirective, ytkColon, ytkComma, ytkRB, ytkRC}:
+    p.error("Unexpected content after a flow collection")
 
 proc advance(l: var YamlLexer) =
   if l.pos < l.len - 1:
@@ -274,6 +303,52 @@ proc hexVal(c: char): int =
   of 'A'..'F': ord(c) - ord('A') + 10
   else: -1
 
+proc addCodepoint(s: var string, cp: int) =
+  ## Appends a Unicode code point to `s` as UTF-8 (§7.7 escape targets).
+  if cp < 0 or cp > 0x10FFFF or (cp >= 0xD800 and cp <= 0xDFFF):
+    addCodepoint(s, 0xFFFD) # replacement character
+  elif cp <= 0x7F:
+    s.add(char(cp))
+  elif cp <= 0x7FF:
+    s.add(char(0xC0 or (cp shr 6)))
+    s.add(char(0x80 or (cp and 0x3F)))
+  elif cp <= 0xFFFF:
+    s.add(char(0xE0 or (cp shr 12)))
+    s.add(char(0x80 or ((cp shr 6) and 0x3F)))
+    s.add(char(0x80 or (cp and 0x3F)))
+  else:
+    s.add(char(0xF0 or (cp shr 18)))
+    s.add(char(0x80 or ((cp shr 12) and 0x3F)))
+    s.add(char(0x80 or ((cp shr 6) and 0x3F)))
+    s.add(char(0x80 or (cp and 0x3F)))
+
+proc foldQuotedBreak(l: var YamlLexer, dst: var string) =
+  ## Folds a line break inside a quoted scalar (§7.3.1, §7.3.2): a single
+  ## break becomes a space, and a run of N empty lines becomes N newlines
+  ## preceded by a space. The indentation of the next line is stripped.
+  var breaks = 0
+  var sawAny = false
+  while true:
+    if l.current == '\r' or l.current == '\n':
+      if l.current == '\r' and l.pos + 1 < l.len and l.charAt(l.pos + 1) == '\n':
+        advance(l)
+      if l.current == '\n': advance(l)
+      inc l.line
+      l.col = 0
+      inc breaks
+      sawAny = true
+    elif l.current in {' ', '\t'}:
+      advance(l)
+    else:
+      break
+  if not sawAny: return
+  # Flow folding (§7.3.1): a single break becomes a space; a run of N breaks
+  # becomes N-1 newlines. So `a\nb` -> "a b" and `a\n\nb` -> "a\nb".
+  for _ in 1 ..< breaks:
+    dst.add("\n")
+  if breaks == 1:
+    dst.add(' ')
+
 proc readSingleQuoted(l: var YamlLexer): string =
   ## Single-quoted per §7.3.2: '' → '
   while true:
@@ -288,9 +363,11 @@ proc readSingleQuoted(l: var YamlLexer): string =
       else:
         advance(l) # closing '
         break
-    else:
-      result.add(l.current)
-      advance(l)
+    if l.current in {'\n', '\r'}:
+      foldQuotedBreak(l, result)
+      continue
+    result.add(l.current)
+    advance(l)
 
 proc readDoubleQuoted(l: var YamlLexer): string =
   ## Double-quoted per §5.7 with full escapes
@@ -305,7 +382,7 @@ proc readDoubleQuoted(l: var YamlLexer): string =
       if l.current == '\0':
         raise newException(OpenParserYamlError, "Trailing \\ in double-quoted scalar")
       case l.current
-      of '"': result.add('"'); advance(l)
+      of '\0': result.add('\0'); advance(l)
       of '\\': result.add('\\'); advance(l)
       of '/': result.add('/'); advance(l)
       of '0': result.add('\0'); advance(l)
@@ -318,10 +395,11 @@ proc readDoubleQuoted(l: var YamlLexer): string =
       of 'r': result.add('\r'); advance(l)
       of 'e': result.add('\x1B'); advance(l)
       of ' ': result.add(' '); advance(l)
-      of '_': result.add('\xA0'); advance(l) # NBSP per spec mapping; use char approximation
-      of 'N': result.add('\x85'); advance(l) # NEL placeholder
-      of 'L': result.add('\xE2'); advance(l) # simplified: LS U+2028 not faithful single char; keep as utf8? avoid complexity - add unicode later
-      of 'P': result.add('\xE2'); advance(l)
+      of '"': result.add('"'); advance(l)
+      of '_': addCodepoint(result, 0xA0); advance(l) # NBSP
+      of 'N': addCodepoint(result, 0x85); advance(l)
+      of 'L': addCodepoint(result, 0x2028); advance(l)
+      of 'P': addCodepoint(result, 0x2029); advance(l)
       of 'x':
         advance(l)
         let h1 = hexVal(l.current)
@@ -339,21 +417,7 @@ proc readDoubleQuoted(l: var YamlLexer): string =
           if hv < 0: raise newException(OpenParserYamlError, errorInvalidEscape % "u" & $l.current)
           cp = cp * 16 + hv
           advance(l)
-        # encode cp as utf8 (BMP)
-        if cp <= 0x7F:
-          result.add(chr(cp))
-        elif cp <= 0x7FF:
-          result.add(chr(0xC0 or (cp shr 6)))
-          result.add(chr(0x80 or (cp and 0x3F)))
-        elif cp <= 0xFFFF:
-          result.add(chr(0xE0 or (cp shr 12)))
-          result.add(chr(0x80 or ((cp shr 6) and 0x3F)))
-          result.add(chr(0x80 or (cp and 0x3F)))
-        else:
-          result.add(chr(0xF0 or (cp shr 18)))
-          result.add(chr(0x80 or ((cp shr 12) and 0x3F)))
-          result.add(chr(0x80 or ((cp shr 6) and 0x3F)))
-          result.add(chr(0x80 or (cp and 0x3F)))
+        addCodepoint(result, cp)
       of 'U':
         advance(l)
         var cp = 0
@@ -362,33 +426,24 @@ proc readDoubleQuoted(l: var YamlLexer): string =
           if hv < 0: raise newException(OpenParserYamlError, errorInvalidEscape % "U" & $l.current)
           cp = cp * 16 + hv
           advance(l)
-        # encode as utf8
-        if cp <= 0x7F:
-          result.add(chr(cp))
-        elif cp <= 0x7FF:
-          result.add(chr(0xC0 or (cp shr 6)))
-          result.add(chr(0x80 or (cp and 0x3F)))
-        elif cp <= 0xFFFF:
-          result.add(chr(0xE0 or (cp shr 12)))
-          result.add(chr(0x80 or ((cp shr 6) and 0x3F)))
-          result.add(chr(0x80 or (cp and 0x3F)))
-        else:
-          result.add(chr(0xF0 or (cp shr 18)))
-          result.add(chr(0x80 or ((cp shr 12) and 0x3F)))
-          result.add(chr(0x80 or ((cp shr 6) and 0x3F)))
-          result.add(chr(0x80 or (cp and 0x3F)))
+        if cp > 0x10FFFF:
+          raise newException(OpenParserYamlError,
+            "Escape `\\U` is not a Unicode code point (max `10FFFF`)")
+        addCodepoint(result, cp)
       of '\n', '\r':
-        # escaped line break: \ + break → folded to space, trim next indent
-        # consume the break (handle CRLF)
-        if l.current == '\r' and l.pos + 1 < l.len and l.charAt(l.pos + 1) == '\n':
-          advance(l); advance(l)
-        else:
-          advance(l)
-        # skip following indentation whitespace
-        while l.current in {' ', '\t'}:
-          advance(l)
+        # An escaped line break is folded away entirely: the `\` removes the
+        # break and the following indentation, leaving no space (§7.7).
+        var before = result.len
+        foldQuotedBreak(l, result)
+        if result.len > before and result[^1] == ' ':
+          result.setLen(result.len - 1)
+        continue
       else:
         raise newException(OpenParserYamlError, errorInvalidEscape % $l.current)
+      continue
+    elif l.current in {'\n', '\r'}:
+      # An unescaped break inside a quoted scalar folds like a plain scalar.
+      foldQuotedBreak(l, result)
     else:
       result.add(l.current)
       advance(l)
@@ -511,6 +566,163 @@ proc readNumber(l: var YamlLexer, kind: var YamlTokenKind): string =
         else: break
       else: result.add(l.current); advance(l)
 
+proc leadingSpaces(s: string): int =
+  for ch in s:
+    if ch != ' ': break
+    inc result
+
+proc stripTrailingBlanks(s: string): string =
+  var e = s.len
+  while e > 0 and s[e - 1] in {' ', '\t'}: dec e
+  result = if e == s.len: s else: s[0 ..< e]
+
+proc readBlockScalar(l: var YamlLexer, folded: bool): string =
+  ## Reads a `|`/`>` block scalar directly from the raw input (§8.1).
+  ##
+  ## The lexer is positioned just after the `|`/`>` indicator. This returns
+  ## the fully processed content (indent detection, more-indented folding,
+  ## chomping) and leaves the lexer at the first line that is not part of
+  ## the block.
+  var explicitIndent = 0
+  var chomping = 0 # 0=clip, -1=strip, 1=keep
+
+  # --- header: [indent digit] [chomping indicator] in either order, then an
+  # optional trailing comment (§8.1.1.1) ---
+  while l.current in {' ', '\t'}: advance(l)
+  if l.current in {'1'..'9'}:
+    explicitIndent = ord(l.current) - ord('0')
+    advance(l)
+    while l.current in {' ', '\t'}: advance(l)
+  case l.current
+  of '-': chomping = -1; advance(l)
+  of '+': chomping = 1; advance(l)
+  else: discard
+  while l.current in {' ', '\t'}: advance(l)
+  if l.current == '#':
+    # A comment runs to the end of the header line.
+    while l.current notin {'\0', '\n', '\r'}: advance(l)
+  elif l.current notin {'\0', '\n', '\r'}:
+    l.error("Invalid block scalar header")
+
+  # Move to the start of the next line.
+  if l.current == '\r':
+    advance(l)
+    if l.current == '\n': advance(l)
+  elif l.current == '\n':
+    advance(l)
+  inc l.line
+  l.col = 0
+
+  # --- collect the raw lines belonging to the block ---
+  var raws: seq[string] = @[]
+  var contentIndent = -1
+  if explicitIndent > 0:
+    contentIndent = l.indentAtMarker + explicitIndent
+
+  while l.pos < l.len:
+    var lineEnd = l.pos
+    while lineEnd < l.len and l.input[lineEnd] notin {'\n', '\r'}:
+      inc lineEnd
+    let raw = l.input[l.pos ..< lineEnd]
+    let blank = raw.strip().len == 0
+    if blank:
+      raws.add(raw)
+    else:
+      let ind = leadingSpaces(raw)
+      if contentIndent < 0:
+        contentIndent = ind
+        if contentIndent <= l.indentAtMarker:
+          contentIndent = l.indentAtMarker + 1
+      if ind < contentIndent:
+        break # dedent ends the block; leave l.pos at this line
+      raws.add(raw)
+    # advance past this line's break
+    l.pos = lineEnd
+    l.col = lineEnd
+    if l.pos < l.len and l.input[l.pos] == '\r':
+      inc l.pos
+    if l.pos < l.len and l.input[l.pos] == '\n':
+      inc l.pos
+      inc l.line
+    l.col = 1
+    if l.pos < l.len:
+      l.current = l.charAt(l.pos)
+    else:
+      l.current = '\0'
+      l.pos = l.len
+      break
+
+  # --- split into content lines and trailing breaks ---
+  var content: seq[string] = @[]
+  var trailingBreaks = 0
+  var ci = 0
+  while ci < raws.len:
+    let raw = raws[ci]
+    let blank = raw.strip().len == 0
+    if blank:
+      # A run of N empty lines contributes N line breaks, whether the scalar is
+      # literal or folded (§8.1.3.1: "N empty lines become N line breaks").
+      var j = ci
+      while j < raws.len and raws[j].strip().len == 0: inc j
+      if j == raws.len:
+        trailingBreaks = j - ci
+        break
+      for _ in ci ..< j:
+        content.add("")
+      ci = j
+      continue
+    var text = raw
+    if text.len >= contentIndent:
+      text = text[contentIndent .. ^1]
+    else:
+      text = ""
+    content.add(stripTrailingBlanks(text))
+    inc ci
+
+  # Drop trailing empty content lines (they are breaks, not content)
+  while content.len > 0 and content[^1].len == 0:
+    content.setLen(content.len - 1)
+    inc trailingBreaks
+
+  if content.len == 0:
+    # Empty block: clip/keep still produce nothing, strip nothing.
+    return ""
+
+  # --- folding / literal assembly ---
+  var outStr = content[0]
+  if folded:
+    var prevMore = content[0].len > 0 and content[0][0] == ' '
+    var pendingBreaks = 0
+    for i in 1 ..< content.len:
+      let line = content[i]
+      var more = false
+      if line.len == 0:
+        inc pendingBreaks
+        continue
+      if pendingBreaks > 0:
+        for _ in 0 ..< pendingBreaks: outStr.add("\n")
+        pendingBreaks = 0
+      else:
+        more = line[0] == ' '
+        if more or prevMore:
+          outStr.add("\n")
+        else:
+          outStr.add(" ")
+      outStr.add(line)
+      prevMore = more
+  else:
+    for i in 1 ..< content.len:
+      outStr.add("\n")
+      outStr.add(content[i])
+
+  # --- chomping ---
+  if chomping == 1: # keep
+    for _ in 0 ..< (trailingBreaks + 1): outStr.add("\n")
+  elif chomping == 0: # clip
+    outStr.add("\n")
+  # strip: nothing appended
+  result = outStr
+
 proc tokenText(t: YamlToken): string =
   case t.kind
   of ytkIdentifier, ytkString, ytkFloat, ytkInteger: t.value
@@ -531,6 +743,15 @@ const tokens = {
 proc isAnchorChar(c: char): bool =
   c in {'a'..'z','A'..'Z','0'..'9','_','-'}
 
+proc isTagNameChar(c: char): bool =
+  ## Characters allowed in a local tag name (§6.8.2, `ns-tag-char`).
+  c in {'a'..'z','A'..'Z','0'..'9','-','_','.','+','$',',','/',';','=','?',
+        '@','&','%','!','*','\'','(',')','#'} or c.ord >= 0x80
+
+proc isUriChar(c: char): bool =
+  ## True for a character that may start or continue a tag prefix URI (§6.8.2).
+  c.ord > 0x20 and c.ord != 0x7F and c != ']' and c != '}'
+
 proc atScalarStart(l: YamlLexer): bool =
   ## True when the current character opens a new node rather than continuing
   ## an existing plain scalar.
@@ -539,7 +760,7 @@ proc atScalarStart(l: YamlLexer): bool =
   ## scalar an apostrophe is an ordinary character, so `STANDBY LC'S` must not
   ## be lexed as the start of a single-quoted scalar (§7.3.2).
   if l.pos == 0: return true
-  l.charAt(l.pos - 1) in {' ', '\t', '\n', '\r', ':', ',', '[', '{', '?'}
+  l.charAt(l.pos - 1) in {' ', '\t', '\n', '\r', ':', ',', '[', '{', '?', '|', '>'}
 
 proc nextToken*(p: var YamlParser): YamlToken =
   ## Lexical analysis to produce the next token from the input
@@ -583,12 +804,27 @@ proc nextToken*(p: var YamlParser): YamlToken =
   case p.lex.current
   of '\0':
     result.kind = ytkEOF
-  of ':', ',', '[', ']', '{', '}', '|', '>':
+  of '|', '>':
+    # Block scalar indicator. In flow context (§7.4) `|`/`>` are not allowed,
+    # so they are reported as plain characters and rejected by the parser.
+    if p.lex.atScalarStart():
+      p.lex.indentAtMarker = result.indent
+      let folded = p.lex.current == '>'
+      advance(p.lex)
+      result.kind = ytkBlockScalar
+      result.value = p.lex.readBlockScalar(folded)
+      return
+    result.kind = ytkIdentifier
+    result.value = $p.lex.current
+    advance(p.lex)
+    return
+  of ':', ',', '[', ']', '{', '}':
     result.kind = tokens[p.lex.current]
     advance(p.lex)
   of '%':
-    # directive: consume rest of line as value
-    if atLineStart and result.indent == 0:
+    # A `%` is a directive indicator only in column 0 (§6.4). Elsewhere it is
+    # an ordinary plain-scalar character (`50%`, `x%y`).
+    if result.col == 1:
       result.kind = ytkDirective
       advance(p.lex)
       var dir = ""
@@ -598,7 +834,11 @@ proc nextToken*(p: var YamlParser): YamlToken =
       result.value = dir.strip()
       return
     else:
-      p.lex.error("Unexpected '%' - directives must be at line start")
+      result.kind = ytkIdentifier
+      result.value = "%"
+      advance(p.lex)
+      result.value.add(p.lex.readIdentifier())
+      return
   of '&':
     result.kind = ytkAnchor
     advance(p.lex)
@@ -620,9 +860,28 @@ proc nextToken*(p: var YamlParser): YamlToken =
     result.value = name
     return
   of '!':
+    # A `!` opens a tag only at the start of a node. Mid-scalar it is an
+    # ordinary plain character, so `x!y` and `a: !weird` stay plain.
+    if not p.lex.atScalarStart():
+      result.kind = ytkString
+      result.value = "!"
+      advance(p.lex)
+      return
     result.kind = ytkTag
     advance(p.lex)
     var tag = "!"
+    if p.lex.current == '<':
+      # verbatim tag: `!<tag:...>` consumes through the closing '>'
+      tag = "!<"
+      advance(p.lex)
+      while p.lex.current notin {'\0', '\n', '\r', '>'}:
+        tag.add(p.lex.current)
+        advance(p.lex)
+      if p.lex.current == '>':
+        tag.add('>')
+        advance(p.lex)
+      result.value = tag
+      return
     # handle !! prefix
     if p.lex.current == '!':
       tag.add('!')
@@ -709,8 +968,16 @@ proc nextToken*(p: var YamlParser): YamlToken =
         advance(p.lex)
         return
     elif p.lex.current == '-' and not (nxt in {'0'..'9', '.', '+'}):
-      result.kind = ytkDash
-      advance(p.lex)
+      # `-` is a block-sequence indicator only when followed by a space or a
+      # break (§7.3.3). `-b` is a plain scalar, ` - ` starts an entry.
+      if nxt in {' ', '\t', '\n', '\r', '\0'}:
+        result.kind = ytkDash
+        advance(p.lex)
+      else:
+        result.kind = ytkIdentifier
+        result.value = "-"
+        advance(p.lex)
+        result.value.add(p.lex.readIdentifier())
       return
     else:
       # digit start
@@ -833,7 +1100,13 @@ proc newYamlArray*(): YamlNode =
 proc get*(n: YamlNode, key: string): YamlNode =
   ## Recursively access nested YAML data using dot-separated keys.
   ## Example: get(config, "user.name")
-  if n == nil or key.len == 0:
+  ## An empty key is valid YAML (the empty scalar), so only `n == nil` short-
+  ## circuits here.
+  if n == nil:
+    return nil
+  if key.len == 0:
+    if n.kind == yamlObject and n.objValue.hasKey(""):
+      return n.objValue[""]
     return nil
   if '.' notin key:
     if n.kind == yamlObject and n.objValue.hasKey(key):
@@ -852,10 +1125,10 @@ proc get*(n: YamlNode, key: string): YamlNode =
     return nil
   return get(nextNode, tail)
 
-proc get*(obj: YamlObject, key: string): YamlNode =
+proc get*(obj: YAMLObject, key: string): YamlNode =
   ## Retrieves a value by key, supporting dot notation for nested access.
   ## Missing keys return `nil` (never raises `KeyError`).
-  if obj.isNil or key.len == 0:
+  if obj.isNil:
     return nil
   if key.contains("."):
     let parts = key.split('.', maxsplit = 1)
@@ -930,6 +1203,21 @@ proc expectSkip*(p: var YamlParser, tkind: YamlTokenKind) =
   else:
     p.advance()
 
+type YamlParserState = tuple[lex: YamlLexer, prev, curr, nxt: YamlToken,
+                             anchors: Table[string, YamlNode]]
+
+proc snapshot*(p: YamlParser): YamlParserState =
+  ## Captures the lexer and token window so a speculative parse can be undone.
+  (p.lex, p.prev, p.curr, p.next, p.anchors)
+
+proc restore*(p: var YamlParser, s: YamlParserState) =
+  ## Restores a state captured by `snapshot`.
+  p.lex = s.lex
+  p.prev = s.prev
+  p.curr = s.curr
+  p.next = s.nxt
+  p.anchors = s.anchors
+
 proc stripUnderscores(s: string): string =
   result = newStringOfCap(s.len)
   for c in s:
@@ -966,8 +1254,18 @@ proc parseYamlFloat(s: string): float64 =
   if low == ".nan" or low == "+.nan" or low == "-.nan": return 0.0/0.0
   return parseFloat(t)
 
-proc getScalarValue(t: YamlToken): YamlNode =
-  # Convert a scalar token to a YamlNode based on its kind (Core Schema §10.3.2, strict case)
+proc getScalarValue(t: YamlToken, opts: YamlOptions = nil): YamlNode =
+  # Convert a scalar token to a YamlNode based on its kind (Core Schema
+  # §10.3.2). `opts.allowYaml11Booleans` widens the boolean/null resolution
+  # set to the YAML 1.1 rules. Quoted scalars are never resolved (§7.3.3).
+  if t.kind != ytkString and opts != nil and opts.allowYaml11Booleans:
+    let low = t.value.toLowerAscii
+    if low in ["true", "yes", "y", "on"]:
+      return YamlNode(kind: yamlBoolean, boolValue: true)
+    if low in ["false", "no", "n", "off"]:
+      return YamlNode(kind: yamlBoolean, boolValue: false)
+    if low in ["null", "~", ""]:
+      return YamlNode(kind: yamlNull)
   case t.kind
   of ytkString:
     result = YamlNode(kind: yamlString, strValue: t.value)
@@ -983,233 +1281,163 @@ proc getScalarValue(t: YamlToken): YamlNode =
     except ValueError:
       result = YamlNode(kind: yamlString, strValue: t.value)
   of ytkIdentifier:
-    # Core Schema: only lowercase "true","false" and "null"/"~"
-    if t.value == "true":
-      result = YamlNode(kind: yamlBoolean, boolValue: true)
-    elif t.value == "false":
-      result = YamlNode(kind: yamlBoolean, boolValue: false)
-    elif t.value == "null" or t.value == "~":
-      result = YamlNode(kind: yamlNull)
-    elif t.value.toLowerAscii() in ["y","n","yes","no","on","off","true","false","null","~"]:
-      # YAML 1.1 booleans are strings under Core Schema; preserve as string unless 1.1 option would coerce
-      result = YamlNode(kind: yamlString, strValue: t.value)
-    else:
-      result = YamlNode(kind: yamlString, strValue: t.value)
+    # Core Schema (§10.3.2): the null, bool and float forms below are matched
+    # with the exact case alternatives the spec lists, so `True` and `NULL`
+    # resolve while `yes`/`no`/`on`/`off` stay strings.
+    case t.value
+    of "null", "Null", "NULL", "~": result = newYamlNull()
+    of "true", "True", "TRUE": result = YamlNode(kind: yamlBoolean, boolValue: true)
+    of "false", "False", "FALSE": result = YamlNode(kind: yamlBoolean, boolValue: false)
+    else: result = YamlNode(kind: yamlString, strValue: t.value)
   else:
     raise newException(ValueError, "Expected scalar token")
 
-proc getScalarValueWithOptions(t: YamlToken, opts: YamlOptions): YamlNode =
-  if opts != nil and opts.allowYaml11Booleans:
-    let v = t.value.toLowerAscii()
-    if v in ["true","yes","y","on"]:
-      return YamlNode(kind: yamlBoolean, boolValue: true)
-    if v in ["false","no","n","off"]:
-      return YamlNode(kind: yamlBoolean, boolValue: false)
-    if v in ["null","~",""]:
-      return YamlNode(kind: yamlNull)
-  return getScalarValue(t)
-
-proc parseScalar(p: var YamlParser): YamlNode =
-  case p.curr.kind
-  of ytkString, ytkIdentifier, ytkFloat, ytkInteger:
-    result = getScalarValue(p.curr)
-    advance(p)
-  else:
-    raise newException(ValueError,
-      "Expected scalar at line " & $p.curr.line & ", col " & $p.curr.col)
-
 proc parseValue(p: var YamlParser, parentIndent: int): YamlNode
 proc parseMapping(p: var YamlParser, indent: int): YAMLObject
-proc parseSequence(p: var YamlParser, indent: int): seq[YamlNode]
 proc parseInlineArray(p: var YamlParser): YamlNode
 proc parseInlineObject(p: var YamlParser): YamlNode
 
-proc parsePlainUnquoted(p: var YamlParser, inlineMode = false): YamlNode =
-  ## Parse plain scalar on the same line.
-  ## In inline mode, stop at ',', ']' and '}'.
-  let lineNo = p.curr.line
-  let firstTok = p.curr
+proc isStructuralToken(k: YamlTokenKind): bool {.inline.} =
+  ## Tokens that can never be part of a plain scalar or plain key.
+  k in {ytkEOF, ytkComment, ytkDocumentStart, ytkDocumentEnd, ytkDirective,
+        ytkBlockScalar, ytkAnchor, ytkAlias, ytkTag, ytkQuestion}
+
+proc stopsPlainScalar(t: YamlToken, input: string, inlineMode: bool): bool =
+  ## True when `t` cannot continue a plain scalar on the current line.
+  if t.kind == ytkColon:
+    # A `:` ends a plain scalar only when followed by a space, a break or the
+    # end of input. `a:b` is one scalar; `a: b` is a mapping entry (§7.3.3).
+    let after = if t.pos + 1 < input.len: input[t.pos + 1] else: '\0'
+    return after in {' ', '\t', '\n', '\r', '\0'}
+  if isStructuralToken(t.kind): return true
+  if inlineMode and t.kind in {ytkComma, ytkRB, ytkRC}: return true
+  if t.kind in {ytkLB, ytkLC}: return true
+  false
+
+proc collectPlainLine(p: var YamlParser, inlineMode: bool, firstToken: YamlToken): (string, int) =
+  ## Collects the tokens of the current line that form a plain scalar.
+  ## Returns the joined text and the number of tokens consumed.
+  # The line is captured by value: `YamlToken` is a ref and the parser's
+  # lookahead may recycle it while this loop advances.
+  let firstLine = firstToken.line
   var count = 0
   var buf = ""
-
-  while p.curr.kind != ytkEOF and p.curr.line == lineNo:
-    if p.curr.kind == ytkComment:
-      break
-    if inlineMode and p.curr.kind in {ytkComma, ytkRB, ytkRC}:
-      break
-
+  while p.curr.kind != ytkEOF and p.curr.line == firstLine:
+    if stopsPlainScalar(p.curr, p.lex.input, inlineMode): break
     if count > 0 and p.curr.wsno > 0:
       buf.add(repeat(' ', p.curr.wsno))
-
-    # prefer token value; fallback to token text
-    # for punctuation-like tokens
     let part = if p.curr.value.len > 0: p.curr.value else: tokenText(p.curr)
     buf.add(part)
-
     inc count
     advance(p)
+  result = (buf, count)
 
-  if count == 1:
-    result = getScalarValue(firstTok) # preserves bool/int/float/null coercion
+proc plainCanContinue(p: YamlParser, parentIndent: int): bool =
+  ## True when the current token continues a plain scalar on a following line
+  ## (§7.3.3: continuation lines are more indented than the parent node and
+  ## must not start a new node).
+  if p.curr.kind == ytkEOF: return false
+  if isStructuralToken(p.curr.kind): return false
+  if p.curr.kind in {ytkLB, ytkLC}: return false
+  if p.curr.indent <= parentIndent: return false
+  if p.curr.kind == ytkDash: return false
+  # `key: value` on the continuation line starts a new mapping entry
+  if p.next.kind == ytkColon and p.next.wsno == 0: return false
+  true
+
+proc parsePlainUnquoted(p: var YamlParser, inlineMode = false, parentIndent = -1): YamlNode =
+  ## Parses a plain scalar (§7.3.3), folding continuation lines that are more
+  ## indented than `parentIndent` into single spaces.
+  let firstTok = p.curr
+  let (firstLine, firstCount) = p.collectPlainLine(inlineMode, firstTok)
+  var buf = firstLine
+
+  if not inlineMode and parentIndent >= 0:
+    # Fold continuation lines (§7.3.3 multi-line plain scalars).
+    while p.plainCanContinue(parentIndent):
+      let contTok = p.curr
+      let (contLine, contCount) = p.collectPlainLine(inlineMode, contTok)
+      if contCount == 0: break
+      buf.add(" ")
+      buf.add(contLine)
+      # `firstCount` stays put so a single-token value is still coerced below.
+      if firstCount == 0: break
+
+  if firstCount == 1 and buf == firstTok.value:
+    # A single token still gets Core Schema coercion (bool/int/float/null).
+    result = getScalarValue(firstTok, p.options)
   else:
     result = YamlNode(kind: yamlString, strValue: buf)
 
-proc parseBlockString(p: var YamlParser, parentIndent: int, folded: bool): YamlNode =
-  ## Parse YAML block scalar after '|' or '>' per §8.1
-  ## Handles header (chomping, indent indicator), indent stripping, chomping and folded vs literal.
-  let markerLine = p.curr.line
-  let markerPos = p.curr.pos
-  let markerChar = p.lex.input[markerPos]
-  advance(p) # consume '|' or '>'
-
-  # --- parse header from raw marker line (indent, chomping) ---
-  var explicitIndent = 0
-  var chomping = 0 # 0=clip, -1=strip, 1=keep
-  # capture raw marker line to extract header chars after '|' or '>'
-  proc rawLineAtLocal(input: string, pos: int): string =
-    var start = pos
-    while start > 0 and input[start - 1] notin {'\n', '\r'}:
-      dec start
-    var endPos = pos
-    while endPos < input.len and input[endPos] notin {'\n', '\r'}:
-      inc endPos
-    result = input[start ..< endPos]
-  let rawMarker = rawLineAtLocal(p.lex.input, markerPos)
-  let markerIdx = rawMarker.find(markerChar)
-  if markerIdx >= 0:
-    var hdr = ""
-    if markerIdx + 1 < rawMarker.len:
-      hdr = rawMarker[markerIdx+1 .. ^1]
-    # hdr may contain spaces, digit, chomping, comment: strip leading spaces then parse
-    var i = 0
-    while i < hdr.len and hdr[i] in {' ', '\t'}:
-      inc i
-    var digitSeen = false
-    var chopSeen = false
-    while i < hdr.len:
-      let c = hdr[i]
-      if c in {'1'..'9'} and not digitSeen:
-        explicitIndent = ord(c) - ord('0')
-        digitSeen = true
-        inc i
-      elif c == '-' and not chopSeen:
-        chomping = -1; chopSeen = true; inc i
-      elif c == '+' and not chopSeen:
-        chomping = 1; chopSeen = true; inc i
-      elif c == '#':
-        break # start of comment, ignore rest
-      elif c in {' ', '\t'}:
-        inc i
-      else:
-        break
-
-  # Skip tokens that are still on the marker line (header fragment tokens like "2", "+")
-  while p.curr.kind != ytkEOF and p.curr.line == markerLine:
+proc collectPlainKey(p: var YamlParser, inlineMode = false): string =
+  ## Collects a plain or quoted mapping key, which may span several tokens and
+  ## is terminated by `:` followed by a space (§7.3.3).
+  ##
+  ## Flow indicators (`[`, `]`, `{`, `}`, `,`) only end a key in a flow
+  ## context; a block key like `/users/{id}` contains them literally.
+  var buf = ""
+  var count = 0
+  while p.curr.kind != ytkEOF:
+    if p.curr.kind == ytkColon: break
+    if isStructuralToken(p.curr.kind) and count > 0: break
+    if inlineMode and p.curr.kind in {ytkLB, ytkRC, ytkLC, ytkComma}: break
+    if p.curr.kind == ytkDash: break
+    if count > 0 and p.curr.wsno > 0:
+      buf.add(repeat(' ', p.curr.wsno))
+    let part = if p.curr.value.len > 0: p.curr.value else: tokenText(p.curr)
+    buf.add(part)
+    inc count
     advance(p)
+  result = buf
 
-  var str: string
-  var lines: seq[string] = @[]
-  # Helper to get raw line
-  proc rawLineAt2(input: string, pos: int): string =
-    var start = pos
-    while start > 0 and input[start - 1] notin {'\n', '\r'}:
-      dec start
-    var endPos = pos
-    while endPos < input.len and input[endPos] notin {'\n', '\r'}:
-      inc endPos
-    result = input[start ..< endPos]
-  # determine contentIndent (first non-empty line indent, or explicit)
-  var contentIndent = -1
-  if explicitIndent > 0:
-    contentIndent = parentIndent + explicitIndent
-  # Collect lines until dedent
-  var tempPos = p.curr.pos
-  var tempLine = p.curr.line
-  # We need to scan using token stream but also handle empty lines where no token present.
-  # Instead, iterate token lines as before but strip.
-  while p.curr.kind != ytkEOF and (p.curr.indent >= (if contentIndent >= 0: contentIndent else: parentIndent+1) or (p.curr.line != markerLine and p.curr.indent > parentIndent and rawLineAt2(p.lex.input, p.curr.pos).strip().len == 0)):
-    # For empty lines (whitespace only), raw line strip == "" but token may not exist; we handle via token presence; however lexer skips whitespace lines, so empty lines will be seen as indent based on next token's line.
-    # Simpler: break if indent < effective contentIndent and line not empty
-    let curIndent = p.curr.indent
-    if contentIndent < 0:
-      # auto-detect from first non-empty line
-      let raw = rawLineAt2(p.lex.input, p.curr.pos)
-      if raw.strip().len != 0:
-        # count leading spaces on raw (before stripping)
-        var lead = 0
-        for ch in raw:
-          if ch == ' ': inc lead
-          else: break
-        contentIndent = lead
-        if contentIndent <= parentIndent:
-          contentIndent = parentIndent + 1
-    if contentIndent >= 0 and curIndent < contentIndent:
-      # check if line is empty (should be included anyway) - if empty, allow
-      let raw = rawLineAt2(p.lex.input, p.curr.pos)
-      if raw.strip().len != 0:
-        break
-    let curLine = p.curr.line
-    let raw = rawLineAt2(p.lex.input, p.curr.pos)
-    var content = raw
-    if contentIndent >= 0 and raw.len >= contentIndent:
-      # strip exactly contentIndent leading spaces (preserve more-indented)
-      # but raw may have been produced from charAt counting line start; truncate
-      # raw = full line with leading spaces, so slice
-      content = raw[contentIndent .. ^1]
-    elif contentIndent >= 0 and raw.len < contentIndent:
-      # line shorter than indent but empty? treat as empty
-      content = ""
-    # For folded, we will process later; store raw stripped content
-    lines.add(content)
-    # consume all tokens on this line
-    while p.curr.kind != ytkEOF and p.curr.line == curLine:
-      advance(p)
-    # also need to handle explicit empty lines without tokens: lexer skipWhitespace will have jumped over blank lines, so we miss them.
-    # Count blank lines by line number gap
-    if p.curr.kind != ytkEOF and p.curr.line > curLine + 1:
-      # there were N empty lines between
-      for _ in curLine+1 ..< p.curr.line:
-        lines.add("")
 
-  # Fold or keep per spec §8.1.3
-  if folded:
-    # Folded: single break -> space, more-indented -> preserve \n, empty -> \n
-    var outStr = ""
-    var prevEmpty = false
-    for idx, line in lines:
-      let isEmpty = line.strip().len == 0
-      let isMoreIndented = line.len > 0 and line[0] == ' '
-      if idx == 0:
-        outStr.add(line)
-      else:
-        if isEmpty:
-          outStr.add("\n")
-          outStr.add(line) # empty line content (maybe "")
-        elif isMoreIndented or prevEmpty:
-          outStr.add("\n")
-          outStr.add(line)
-        else:
-          # previous wasn't empty and current not more-indented -> fold
-          outStr.add(" ")
-          outStr.add(line.strip()) # strip? keep as is but not leading
-      prevEmpty = isEmpty
-    str = outStr
-  else:
-    # Literal: preserve \n
-    str = lines.join("\n")
+proc parseBlockString(p: var YamlParser, parentIndent: int, folded: bool): YamlNode =
+  ## Returns the block scalar whose content the lexer already read (§8.1).
+  ## `folded` is accepted for call-site compatibility; the lexer already
+  ## folded the content when the indicator was `>`.
+  discard folded
+  result = YamlNode(kind: yamlString, strValue: p.curr.value)
+  advance(p) # consume the block-scalar token
 
-  # chomping (§8.1.1.2): clip keeps one trailing \n, strip none, keep all trailing breaks (\n per empty line at end already in lines? Actually trailing break handling: lines join already includes breaks between lines, but spec trailing break is after last line: clip => one \n, strip => none, keep => preserve all trailing breaks (which our lines includes maybe one). We need to add trailing handling.
-  if lines.len > 0:
-    if chomping == 0: # clip
-      str.add("\n")
-    elif chomping == 1: # keep
-      # keep all trailing breaks: lines join produced no trailing \n beyond join; we add \n plus any extra trailing empty lines already captured? Add one + keep empties
-      str.add("\n")
-      # if last lines were empty they already contributed "\n" per join; our current join after last line without trailing \n, so chomping keep would need to preserve as is: we added one, but if there were trailing empty lines they are in lines as "" entries at end (from gap detection). Our join includes them as "\n" between, but not final? Keep as clip+empties
-      discard
-    else: # strip
-      discard
-  result = YamlNode(kind: yamlString, strValue: str)
+proc putMapping(result: var YAMLObject, p: var YamlParser, key: string, value: YamlNode) =
+  ## Inserts `key`, honouring `allowDuplicateKeys` (§3.2.1).
+  if result.hasKey(key):
+    if p.options != nil and not p.options.allowDuplicateKeys:
+      p.error(errorDuplicateKey % key)
+  result[key] = value
+
+proc mergeInto(result: var YAMLObject, src: OrderedTableRef[string, YamlNode]) =
+  ## Applies a `<<` merge key. Existing keys win over merged ones (§10.2).
+  if src != nil:
+    for k, v in src.pairs:
+      if not result.hasKey(k): result[k] = v
+
+proc renderKey(n: YamlNode): string =
+  ## Renders a node for use as a mapping key. Scalars use their plain text;
+  ## collections use a compact flow form so the key round-trips (§8.2.2).
+  if n == nil: return ""
+  case n.kind
+  of yamlString: result = n.strValue
+  of yamlInteger: result = $n.intValue
+  of yamlFloat: result = $n.floatValue
+  of yamlBoolean: result = $n.boolValue
+  of yamlNull: result = "null"
+  of yamlArray:
+    var buf = "["
+    for i, item in n.arrValue:
+      if i > 0: buf.add(", ")
+      buf.add(renderKey(item))
+    buf.add("]")
+    result = buf
+  of yamlObject:
+    var buf = "{"
+    var first = true
+    for k, v in n.objValue.pairs:
+      if not first: buf.add(", ")
+      first = false
+      buf.add(k & ": " & renderKey(v))
+    buf.add("}")
+    result = buf
 
 proc parseInlineArray(p: var YamlParser): YamlNode =
   advance(p) # ytkLB
@@ -1221,19 +1449,39 @@ proc parseInlineArray(p: var YamlParser): YamlNode =
     if p.curr.kind == ytkEOF:
       raise newException(ValueError, "Unterminated inline array")
     # forbid block constructs inside flow (§7.4)
-    if p.curr.kind in {ytkPipe, ytkGT, ytkDash}:
+    if p.curr.kind == ytkBlockScalar:
+      p.error("Block scalar not allowed in flow context")
+    if p.curr.kind == ytkDash:
       p.error("Block collection not allowed in flow context")
-    items.add(parseValue(p, -1))
+    if p.curr.kind == ytkComma:
+      # Two commas in a row would mean an empty entry; only a single trailing
+      # separator before `]` is legal (§7.4.1).
+      p.error("Missing value between commas in flow sequence")
+    let entryLine = p.curr.line
+    var item = parseValue(p, -1)
+    if p.curr.kind == ytkColon and p.curr.line == entryLine:
+      # A single `key: value` pair used as a sequence entry: `[x: y]`, or a
+      # complex key such as `[[a]: b]` (§7.4.1, §8.2.2).
+      var pair = newOrderedTable[string, YamlNode]()
+      pair.putMapping(p, renderKey(item), newYamlNull())
+      advance(p) # ':'
+      if p.curr.line == entryLine and p.curr.kind notin {ytkComma, ytkRC, ytkEOF}:
+        pair.putMapping(p, renderKey(item), parseValue(p, -1))
+      item = YamlNode(kind: yamlObject, objValue: pair)
+    items.add(item)
     if p.curr.kind == ytkComma:
       advance(p)
-      if p.curr.kind == ytkRB:
-        p.error(errorTrailingComma)
-      elif p.curr.kind == ytkEOF:
+      if p.curr.kind == ytkEOF:
         raise newException(ValueError, "Unterminated inline array")
+      if p.curr.kind == ytkRB:
+        break # a final separator before `]` is allowed (§7.4.1)
+      if p.curr.kind == ytkComma:
+        p.error("Missing value between commas in flow sequence")
     elif p.curr.kind == ytkRB:
       break
     else:
       raise newException(ValueError, "Expected ',' or ']' in inline array")
+  p.flowEndLine = p.curr.line
   advance(p) # ytkRB
   result = YamlNode(kind: yamlArray, arrValue: items)
 
@@ -1246,96 +1494,268 @@ proc parseInlineObject(p: var YamlParser): YamlNode =
   while true:
     if p.curr.kind == ytkEOF:
       raise newException(ValueError, "Unterminated inline object")
-    if p.curr.kind notin {ytkIdentifier, ytkString, ytkInteger, ytkFloat}:
-      raise newException(ValueError, "Expected key in inline object")
-    let key = p.curr.value
-    advance(p)
-    if p.curr.kind != ytkColon:
-      raise newException(ValueError, "Expected ':' in inline object")
-    advance(p)
-    if p.curr.kind in {ytkPipe, ytkGT}:
+    if p.curr.kind == ytkBlockScalar:
       p.error("Block scalar not allowed in flow context")
-    obj[key] = parseValue(p, -1)
-    if p.curr.kind == ytkComma:
+    if p.curr.kind == ytkDash:
+      p.error("Block collection not allowed in flow context")
+
+    var key = ""
+    if p.curr.kind == ytkQuestion:
+      # Explicit key in a flow mapping (§8.2.2): `{? a : 1}`.
+      advance(p)
+      if p.curr.kind == ytkColon:
+        key = ""
+      elif p.curr.kind in {ytkLB, ytkLC}:
+        key = renderKey(parseValue(p, -1))
+      else:
+        key = p.collectPlainKey()
+      if p.curr.kind != ytkColon:
+        p.error(unexpectedTokenExpected % [$p.curr.kind, $ytkColon])
       advance(p)
       if p.curr.kind == ytkRC:
-        p.error(errorTrailingComma)
-      elif p.curr.kind == ytkEOF:
+        obj.putMapping(p, key, newYamlNull())
+      else:
+        obj.putMapping(p, key, parseValue(p, -1))
+    elif p.curr.kind == ytkColon:
+      # `{: 1}` - an empty (null) key.
+      advance(p)
+      if p.curr.kind == ytkRC:
+        obj.putMapping(p, "", newYamlNull())
+      else:
+        obj.putMapping(p, "", parseValue(p, -1))
+    elif p.curr.kind in {ytkIdentifier, ytkString, ytkInteger, ytkFloat}:
+      key = p.collectPlainKey(inlineMode = true)
+      if p.curr.kind != ytkColon:
+        p.error(unexpectedTokenExpected % [$p.curr.kind, $ytkColon])
+      advance(p)
+      var entry = newYamlNull()
+      if p.curr.kind != ytkRC:
+        entry = parseValue(p, -1)
+      if key == "<<" and entry != nil and entry.kind == yamlObject:
+        obj.mergeInto(entry.objValue)
+      else:
+        obj.putMapping(p, key, entry)
+    else:
+      p.error(unexpectedTokenExpected % [$p.curr.kind, "mapping key"])
+
+    if p.curr.kind == ytkComma:
+      advance(p)
+      if p.curr.kind == ytkEOF:
         raise newException(ValueError, "Unterminated inline object")
+      if p.curr.kind == ytkRC:
+        break # a final separator before `}` is allowed (§7.4.2)
+      if p.curr.kind == ytkComma:
+        p.error("Missing key between commas in flow mapping")
     elif p.curr.kind == ytkRC:
       break
     else:
       raise newException(ValueError, "Expected ',' or '}' in inline object")
 
+  p.flowEndLine = p.curr.line
   advance(p) # consume '}'
   result = YamlNode(kind: yamlObject, objValue: obj)
 
-proc parseSequence(p: var YamlParser, indent: int): seq[YamlNode] =
-  # Parse a YAML sequence (list) starting with '-'. Uses indentation to
-  # determine nesting level. Current token must be ytkDash.
-  while p.curr.kind == ytkDash and p.curr.indent == indent:
+proc parseSequence(p: var YamlParser, dashCol: int): seq[YamlNode]
+proc applyTag(tag: string, n: YamlNode, p: var YamlParser): YamlNode
+proc expandTagHandle(p: YamlParser, tag: string): string
+
+proc parseCompactMapping(p: var YamlParser, keyIndent, dashCol: int): YamlNode =
+  ## Parses the mapping that starts at `keyIndent`, then absorbs any further
+  ## keys indented past the dash's column. Used for both `- key: value` and
+  ## `-` followed by an indented block on the next line (§8.2.1).
+  var obj = parseMapping(p, keyIndent)
+  while p.curr.indent > dashCol and
+      p.curr.kind in {ytkIdentifier, ytkString, ytkInteger, ytkFloat, ytkQuestion}:
+    let more = parseMapping(p, p.curr.indent)
+    for k, v in more.pairs:
+      obj.putMapping(p, k, v)
+  result = YamlNode(kind: yamlObject, objValue: obj)
+
+proc parseSequenceItem(p: var YamlParser, dashCol: int, dashLine: int): YamlNode =
+  ## Parses the node that follows a `-` indicator at column `dashCol`. The
+  ## node may be on the dash's own line or on following, more indented lines
+  ## (§8.2.1).
+  if p.curr.kind == ytkEOF:
+    return newYamlNull()
+  if p.curr.kind == ytkDash and p.curr.line == dashLine:
+    # `- - a`: a nested sequence on the same line.
+    return YamlNode(kind: yamlArray, arrValue: parseSequence(p, p.curr.col - 1))
+  if p.curr.line == dashLine:
+    if p.curr.kind in {ytkIdentifier, ytkString, ytkInteger, ytkFloat} and
+        p.next.kind == ytkColon:
+      # A compact mapping: `- name: Bob` plus continuation keys that are
+      # indented deeper than the dash.
+      return p.parseCompactMapping(p.curr.indent, dashCol)
+    return parseValue(p, dashCol)
+  # The node is on a following line. It belongs to this entry when it is
+  # indented past the dash's column; a `-` deeper than the dash starts an
+  # entry of a nested sequence.
+  if p.curr.indent > dashCol:
+    if p.curr.kind == ytkDash:
+      return YamlNode(kind: yamlArray, arrValue: parseSequence(p, p.curr.col - 1))
+    if p.curr.kind in {ytkIdentifier, ytkString, ytkInteger, ytkFloat} and
+        p.next.kind == ytkColon:
+      return p.parseCompactMapping(p.curr.indent, dashCol)
+    return parseValue(p, dashCol)
+  # A `-` with nothing after it is an empty (null) item.
+  newYamlNull()
+
+proc parseSequence(p: var YamlParser, dashCol: int): seq[YamlNode] =
+  ## Parses a block sequence (§8.2.1). `dashCol` is the column (0-based) a `-`
+  ## indicator must start at, which is how sibling entries are told apart from
+  ## entries of a nested sequence (`- - a`).
+  result = @[]
+  while p.curr.kind == ytkDash and p.curr.col - 1 == dashCol:
     let dashLine = p.curr.line
     advance(p) # ytkDash
+    result.add(p.parseSequenceItem(dashCol, dashLine))
+
+
+proc parseExplicitKey(p: var YamlParser, indent: int): (string, bool) =
+  ## Parses `? <node>` used as an explicit mapping key (§8.2.2). Returns the
+  ## rendered key and whether a key was actually present.
+  let markerLine = p.curr.line
+  advance(p) # consume '?'
+  if p.curr.kind == ytkEOF or (p.curr.line != markerLine and p.curr.indent <= indent):
+    return ("", false)
+  elif p.curr.line == markerLine and p.curr.kind in {ytkColon, ytkComma, ytkRC, ytkRB}:
+    # A `?` with no node after it: `? : 1` is an entry with an empty key.
+    return ("", false)
+  if p.curr.kind == ytkTag:
+    # A tag may precede the explicit key: `? !!str a : 1`.
+    let keyTag = p.expandTagHandle(p.curr.value)
+    advance(p)
     if p.curr.kind == ytkEOF:
-      result.add(YamlNode(kind: yamlNull))
-      break
+      return ("", false)
+    let (k, ok) = p.parseExplicitKey(indent)
+    if not ok: return ("", false)
+    var node = newYamlString(k)
+    if keyTag.len > 0: node = applyTag(keyTag, node, p)
+    return (node.getStr(), true)
+  case p.curr.kind
+  of ytkLB, ytkLC:
+    # A flow collection as an explicit key. The parser already sits on the
+    # opening bracket, which is where `parseValue` expects to start.
+    return (renderKey(parseValue(p, indent)), true)
+  of ytkDash:
+    let arr = parseSequence(p, p.curr.col - 1)
+    return (renderKey(YamlNode(kind: yamlArray, arrValue: arr)), true)
+  of ytkBlockScalar:
+    return (parseBlockString(p, indent, folded = false).strValue, true)
+  else:
+    if p.curr.kind in {ytkIdentifier, ytkString, ytkInteger, ytkFloat} and
+        p.next.kind == ytkColon and p.next.line == markerLine and
+        p.curr.line == markerLine:
+      # `? key: value` is really an implicit single-pair mapping
+      let obj = parseMapping(p, p.curr.indent)
+      return (renderKey(YamlNode(kind: yamlObject, objValue: obj)), true)
+    return (p.collectPlainKey(), true)
 
-    if p.curr.line == dashLine:
-      if p.curr.kind in {ytkIdentifier, ytkString} and p.next.kind == ytkColon:
-        # Sequence item like:
-        # - name: Bob
-        #   age: 25
-        # First parse keys at current indent (e.g. "name"),
-        # then merge continuation keys indented deeper than the dash indent (e.g. "age").
-        var obj = parseMapping(p, p.curr.indent)
-
-        while p.curr.kind in {ytkIdentifier, ytkString} and p.curr.indent > indent:
-          let more = parseMapping(p, p.curr.indent)
-          for k, v in more.pairs:
-            obj[k] = v
-
-        result.add(YamlNode(kind: yamlObject, objValue: obj))
-      else:
-        result.add(parseValue(p, indent))
-      continue
-    
+proc parseMappingValue(p: var YamlParser, indent, colonLine: int): YamlNode =
+  ## Reads the value of a mapping entry whose `:` sits on `colonLine`.
+  ## An empty value is null (§8.2.2, `key:` with nothing after it).
+  if p.curr.kind == ytkEOF:
+    return newYamlNull()
+  if p.curr.kind == ytkBlockScalar:
+    return parseBlockString(p, indent, folded = false)
+  if p.curr.line != colonLine:
+    # Value lives on a following line.
     if p.curr.indent > indent:
-      result.add(parseValue(p, indent))
-    else:
-      result.add(YamlNode(kind: yamlNull))
+      return parseValue(p, indent)
+    if p.curr.kind == ytkDash and p.curr.col - 1 == indent:
+      # A block sequence may sit at the same indent as its key (§8.2.1).
+      return YamlNode(kind: yamlArray, arrValue: parseSequence(p, p.curr.col - 1))
+    return newYamlNull()
+
+  # A `-` or `?` indicator cannot follow a `:` on the same line: a block
+  # sequence or an explicit key needs its own, more indented line (§8.2.1).
+  if p.curr.kind in {ytkDash, ytkQuestion} and p.curr.line == colonLine:
+    p.error("`" & $p.curr.kind & "` cannot start a value on the same line as `:`")
+
+  # A value on the same line as its `:` may not itself be `key: value`; a
+  # nested block mapping needs its own line (§8.2.1). Quoted scalars are
+  # always values, never keys, so they are excluded.
+  if p.curr.kind in {ytkIdentifier, ytkInteger, ytkFloat} and
+      p.next.kind == ytkColon and p.next.line == p.curr.line and
+      p.next.pos + 1 < p.lex.input.len and
+      p.lex.input[p.next.pos + 1] in {' ', '\t', '\n', '\r'}:
+    p.error("A mapping value cannot contain a nested `key: value` pair on the same line")
+
+  return parseValue(p, indent)
 
 proc parseMapping(p: var YamlParser, indent: int): YAMLObject =
   result = newOrderedTable[string, YamlNode]()
-  while p.curr.kind in {ytkIdentifier, ytkString, ytkInteger, ytkFloat} and p.curr.indent == indent:
-    let key = p.curr.value
-    advance(p)
+  while true:
+    # An entry may be prefixed by a tag and/or an anchor (§7.1).
+    while p.curr.kind in {ytkTag, ytkAnchor, ytkDirective}:
+      advance(p)
+    if p.curr.kind == ytkEOF: break
+    if p.curr.indent != indent: break
+    if p.curr.kind in {ytkDocumentStart, ytkDocumentEnd, ytkComma}: break
 
-    if p.curr.kind != ytkColon:
-      raise newException(ValueError,
-        "Expected ':' after key '" & key & "' at line " & $p.curr.line & ", col " & $p.curr.col)
+    var value: YamlNode
+    if p.curr.kind == ytkQuestion:
+      # Explicit key: `? <node>` then an explicit `: <node>` (§8.2.2).
+      let (key, haveKey) = p.parseExplicitKey(indent)
+      if not haveKey: break
+      if p.curr.kind == ytkEOF:
+        result.putMapping(p, key, newYamlNull())
+        continue
+      if p.curr.kind == ytkColon:
+        let colonLine = p.curr.line
+        advance(p)
+        value = p.parseMappingValue(indent, colonLine)
+      else:
+        # A `? key` with the value on a following, more indented line.
+        if p.curr.indent > indent:
+          value = parseValue(p, indent)
+        else:
+          value = newYamlNull()
+      if key == "<<" and value != nil and value.kind == yamlObject:
+        result.mergeInto(value.objValue)
+      else:
+        result.putMapping(p, key, value)
+      continue
 
-    let colonLine = p.curr.line
-    advance(p)
+    if p.curr.kind == ytkColon:
+      # `: value` with no key: a null key (§8.2.2).
+      let colonLine = p.curr.line
+      advance(p)
+      result.putMapping(p, "", p.parseMappingValue(indent, colonLine))
+      continue
 
-    if p.curr.kind == ytkEOF:
-      result[key] = YamlNode(kind: yamlNull)
+    if p.curr.kind == ytkBlockScalar:
+      # Block scalar used as a key.
+      let key = parseBlockString(p, indent, folded = false).strValue
+      if p.curr.kind == ytkEOF:
+        result.putMapping(p, key, newYamlNull())
+        continue
+      if p.curr.kind == ytkColon:
+        let colonLine = p.curr.line
+        advance(p)
+        value = p.parseMappingValue(indent, colonLine)
+      else:
+        value = newYamlNull()
+      result.putMapping(p, key, value)
+      continue
+
+    if p.curr.kind notin {ytkIdentifier, ytkString, ytkInteger, ytkFloat}:
       break
 
-    # Handle value on the same line (e.g. "key: value")
-    if p.curr.line == colonLine:
-      result[key] = parseValue(p, indent)
-      continue
-
-    # Handle block string with '|' or '>'
-    if p.curr.kind == ytkGT or p.curr.kind == ytkPipe:
-      result[key] = parseBlockString(p, indent, folded = (p.curr.kind == ytkGT))
-      continue
-
-    # Handle nested mapping or sequence
-    if p.curr.indent > indent:
-      result[key] = parseValue(p, indent)
+    let key = p.collectPlainKey()
+    if p.curr.kind != ytkColon:
+      if p.curr.kind == ytkEOF:
+        result.putMapping(p, key, newYamlNull())
+        break
+      p.error(unexpectedTokenExpected % [$p.curr.kind, $ytkColon])
+    let colonLine = p.curr.line
+    advance(p)
+    value = p.parseMappingValue(indent, colonLine)
+    if key == "<<" and value != nil and value.kind == yamlObject:
+      result.mergeInto(value.objValue)
     else:
-      result[key] = YamlNode(kind: yamlNull)
+      result.putMapping(p, key, value)
+
 
 proc cloneYamlNode(n: YamlNode): YamlNode =
   if n == nil: return nil
@@ -1356,84 +1776,231 @@ proc cloneYamlNode(n: YamlNode): YamlNode =
       s.add(cloneYamlNode(item))
     YamlNode(kind: yamlArray, arrValue: s)
 
+proc applyTag(tag: string, n: YamlNode, p: var YamlParser): YamlNode =
+  ## Applies a tag to a parsed node (§10.2, §7.1).
+  ##
+  ## `!!`-prefixed tags are Core Schema resolutions. Any other tag is
+  ## application-specific: a scalar keeps its raw text, so `!foo 12` is the
+  ## string "12" rather than the integer 12.
+  if n == nil or tag.len == 0: return n
+  if tag == "!":
+    # `!` is the non-specific tag: resolve by kind exactly as an untagged node
+    # would (§10.3.2), which for a plain scalar means the Core Schema rules.
+    return n
+  if not (tag.startsWith("!!") or tag.startsWith("tag:yaml.org,2002:")):
+    if n.kind in {yamlString, yamlInteger, yamlFloat, yamlBoolean, yamlNull}:
+      return YamlNode(kind: yamlString, strValue: n.getValue())
+    return n
+  var suffix = tag
+  if suffix.startsWith("!!"): suffix = suffix[2..^1]
+  else: suffix = suffix[18..^1]
+  # `!!str` and friends only restate a scalar's type. Applied to a collection
+  # they cannot be honoured, so the node is left alone rather than being
+  # stringified: `!!str a: 1` tags the key `a`, not the mapping (§7.1).
+  if n.kind in {yamlObject, yamlArray}: return n
+  case suffix
+  of "str":
+    result = YamlNode(kind: yamlString, strValue: n.getValue())
+  of "null":
+    result = newYamlNull()
+  of "bool":
+    let low = n.getValue().toLowerAscii()
+    if low in ["true", "yes", "on", "y"]:
+      result = YamlNode(kind: yamlBoolean, boolValue: true)
+    elif low in ["false", "no", "off", "n"]:
+      result = YamlNode(kind: yamlBoolean, boolValue: false)
+    else:
+      p.error("Cannot resolve `!!bool " & n.getValue() & "`")
+  of "int":
+    try:
+      result = YamlNode(kind: yamlInteger, intValue: parseYamlInt(n.getValue()))
+    except ValueError:
+      p.error("Cannot resolve `!!int " & n.getValue() & "`")
+  of "float":
+    try:
+      result = YamlNode(kind: yamlFloat, floatValue: parseYamlFloat(n.getValue()))
+    except ValueError:
+      p.error("Cannot resolve `!!float " & n.getValue() & "`")
+  of "seq":
+    if n.kind == yamlArray: result = n
+    elif n.kind == yamlNull: result = newYamlArray()
+    else: p.error("Cannot resolve `!!seq` from " & $n.kind)
+  of "map":
+    if n.kind == yamlObject: result = n
+    elif n.kind == yamlNull: result = newYamlObject()
+    else: p.error("Cannot resolve `!!map` from " & $n.kind)
+  else:
+    result = n
+
 proc parseValue(p: var YamlParser, parentIndent: int): YamlNode =
-  # handle anchors, aliases, tags preceding a value
+  ## Parses one node: optional anchor/tag, then an alias, scalar, block
+  ## scalar, flow collection or block collection (§7.1, §8.2.3).
+  inc p.depth
+  defer: dec p.depth
+  p.checkMaxDepth()
+
   var anchorName = ""
   var hasAnchor = false
-  # tags and directives are metadata, skip for now but preserve future
-  while p.curr.kind in {ytkDirective, ytkTag, ytkDocumentStart, ytkDocumentEnd, ytkAnchor}:
-    if p.curr.kind == ytkAnchor:
+  var tag = ""
+  var inProgress = ""
+
+  # Node properties may appear in any order: `&a !!str x`, `!!str &a x`, ...
+  while true:
+    case p.curr.kind
+    of ytkAnchor:
       anchorName = p.curr.value
       hasAnchor = true
-      p.advance()
-    elif p.curr.kind == ytkTag:
-      # tags like !!str, !!int - consumed but used only for type coercion in future
-      # For spec compliance, skip tag then parse value
-      p.advance()
-    elif p.curr.kind in {ytkDirective, ytkDocumentStart, ytkDocumentEnd}:
-      p.advance()
+      inProgress = anchorName
+      p.building.incl(anchorName)
+      advance(p)
+    of ytkTag:
+      tag = p.expandTagHandle(p.curr.value)
+      advance(p)
+    of ytkDirective, ytkDocumentStart, ytkDocumentEnd:
+      advance(p)
     else:
       break
+
+  let inlineMode = parentIndent < 0
+  # In a flow collection a node ends at `,`, the closing bracket or a comment,
+  # so properties with nothing after them yield an empty node there. In block
+  # context those characters cannot start a node, so they are errors instead.
+  if inlineMode and p.curr.kind in {ytkEOF, ytkComma, ytkRC, ytkRB, ytkDocumentStart,
+                                    ytkDocumentEnd, ytkComment} or
+     (p.prev != nil and p.curr.line != p.prev.line and p.curr.indent <= parentIndent):
+    result =
+      if tag.len == 0: newYamlNull()
+      else: applyTag(tag, newYamlString(""), p)
+    if hasAnchor:
+      p.anchors[anchorName] = cloneYamlNode(result)
+      p.building.excl(anchorName)
+    return
+
+  if not inlineMode and p.curr.kind in {ytkComma, ytkRC, ytkRB}:
+    p.error("`" & $p.curr.kind & "` cannot start a node in block context")
+
   if p.curr.kind == ytkAlias:
     let name = p.curr.value
-    p.advance()
+    advance(p)
+    if name in p.building or name == inProgress:
+      p.error("Anchor `&" & name & "` cannot refer to itself")
     if not p.anchors.hasKey(name):
       p.error(errorUndefinedAlias % name)
     result = cloneYamlNode(p.anchors[name])
-    return
-  let inlineMode = parentIndent < 0
-  case p.curr.kind
-  of ytkIdentifier:
-    if p.next.kind == ytkColon and p.curr.indent > parentIndent:
+  else:
+    case p.curr.kind
+    of ytkIdentifier, ytkString, ytkInteger, ytkFloat:
+      # A key may span several tokens, so decide between a mapping and a
+      # scalar by collecting the key and rewinding if no `:` follows.
+      let save = p.snapshot()
+      let keyIndent = p.curr.indent
+      discard p.collectPlainKey()
+      if not inlineMode and p.curr.kind == ytkColon and keyIndent > parentIndent:
+        p.restore(save)
+        result = YamlNode(kind: yamlObject, objValue: parseMapping(p, keyIndent))
+      else:
+        p.restore(save)
+        result = parsePlainUnquoted(p, inlineMode, parentIndent)
+    of ytkLB:
+      result = parseInlineArray(p)
+      p.checkFlowEnd()
+    of ytkLC:
+      result = parseInlineObject(p)
+      p.checkFlowEnd()
+    of ytkColon:
+      # A `:` not followed by whitespace begins a plain scalar such as `:x`,
+      # since `ns-plain-first` allows `:` when a plain-safe character follows
+      # it (§7.3.3).
+      if p.lex.isPlainFollowedByContent(p.curr.pos):
+        result = parsePlainUnquoted(p, inlineMode, parentIndent)
+      else:
+        p.error(unexpectedTokenExpected % [$p.curr.kind, "value"])
+    of ytkDash:
+      result = YamlNode(kind: yamlArray, arrValue: parseSequence(p, p.curr.col - 1))
+    of ytkBlockScalar:
+      result = parseBlockString(p, parentIndent, folded = false)
+    of ytkQuestion:
       let obj = parseMapping(p, p.curr.indent)
       result = YamlNode(kind: yamlObject, objValue: obj)
     else:
-      result = parsePlainUnquoted(p, inlineMode)
-  of ytkString, ytkFloat, ytkInteger:
-    result = parsePlainUnquoted(p, inlineMode)
-  of ytkLB:
-    result = parseInlineArray(p)
-  of ytkLC:
-    result = parseInlineObject(p)
-  of ytkDash:
-    let arr = parseSequence(p, p.curr.indent)
-    result = YamlNode(kind: yamlArray, arrValue: arr)
-  of ytkPipe:
-    result = parseBlockString(p, parentIndent, folded = false)
-  of ytkGT:
-    result = parseBlockString(p, parentIndent, folded = true)
-  of ytkAnchor:
-    # anchor appearing again (e.g. after tag)
-    anchorName = p.curr.value
-    hasAnchor = true
-    p.advance()
-    result = parseValue(p, parentIndent)
-  of ytkAlias:
-    let name = p.curr.value
-    p.advance()
-    if not p.anchors.hasKey(name):
-      p.error(errorUndefinedAlias % name)
-    result = cloneYamlNode(p.anchors[name])
-    return
-  else:
-    raise newException(
-      ValueError,
-      "Unexpected value token " & $p.curr.kind & " at line " & $p.curr.line & ", col " & $p.curr.col
-    )
+      p.error(unexpectedTokenExpected % [$p.curr.kind, "value"])
+
+  if tag.len > 0:
+    result = applyTag(tag, result, p)
   if hasAnchor:
     p.anchors[anchorName] = cloneYamlNode(result)
+    p.building.excl(anchorName)
+
+
+proc parseDirective(p: var YamlParser) =
+  ## Validates a `%YAML` or `%TAG` directive and applies it (§6.8).
+  ##
+  ## Any other directive name is reserved and rejected: only these two are
+  ## defined by the 1.2 specification (§3.2.3.4).
+  let raw = p.curr.value
+  let nameEnd = raw.find(' ')
+  let name = if nameEnd < 0: raw.strip() else: raw[0..<nameEnd]
+  let rest = if nameEnd < 0: "" else: raw[nameEnd..^1].strip()
+  case name
+  of "YAML":
+    let parts = rest.split('.')
+    if parts.len != 2 or parts[0].len == 0 or parts[1].len == 0 or
+        parts[0].anyIt(not (it in {'0'..'9'})) or parts[1].anyIt(not (it in {'0'..'9'})):
+      p.error("`%YAML` requires a version such as `%YAML 1.2`")
+    let major = parseInt(parts[0])
+    let minor = parseInt(parts[1])
+    # A 1.2 processor must accept 1.1 and 1.2 documents; a higher major version
+    # is rejected, a higher minor version is accepted (§6.8.1).
+    if major != 1 or minor > 2:
+      if major > 1:
+        p.error("Incompatible YAML version `%YAML " & rest & "`")
+  of "TAG":
+    let parts = rest.split(' ')
+    if parts.len != 2:
+      p.error("`%TAG` requires a handle and a prefix, e.g. `%TAG !e! tag:example.com,2000:app/`")
+    let handle = parts[0]
+    let prefix = parts[1]
+    if handle == "":
+      p.error("Empty tag handle in `%TAG`")
+    if handle != "!":
+      if handle.len < 3 or handle[0] != '!' or handle[^1] != '!' or
+          handle[1..^2].anyIt(not isTagNameChar(it)):
+        p.error("Invalid tag handle `" & handle & "` in `%TAG`")
+    if prefix.len == 0 or not isUriChar(prefix[0]):
+      p.error("Invalid tag prefix `" & prefix & "` in `%TAG`")
+    p.tagHandles[handle] = prefix
+  of "":
+    p.error("Empty directive name after `%`")
+  else:
+    p.error("Unknown directive `%`" & name & "`; only `%YAML` and `%TAG` are defined")
+
+
+proc expandTagHandle(p: YamlParser, tag: string): string =
+  ## Resolves a tag token's value to a full tag URI using the `%TAG` handles
+  ## declared for the current document (§6.8.2).
+  if tag.len == 0 or tag[0] != '!': return tag
+  if tag == "!" or tag == "!!" or tag.startsWith("!<"): return tag
+  if tag[1] != '!': return tag # the `!` handle: the tag is already a URI
+  let bang = tag.find('!', 1)
+  if bang < 0: return tag
+  let handle = tag[0..bang]
+  if not p.tagHandles.hasKey(handle): return tag
+  p.tagHandles[handle] & tag[bang + 1..^1]
+
 
 proc skipDirectivesAndDocs(p: var YamlParser) =
-  # Skip BOM already handled, directives %YAML/%TAG, document markers ---, comments
+  ## Consume the directives, document markers and comments that may precede a
+  ## document's content (§9.1, §9.2).
   while true:
     if p.curr.kind == ytkDirective:
-      p.advance()
+      p.parseDirective()
+      advance(p)
       continue
     if p.curr.kind == ytkDocumentStart:
-      p.advance()
+      advance(p)
       continue
     if p.curr.kind == ytkComment:
-      p.advance()
+      advance(p)
       continue
     break
 
@@ -1446,27 +2013,65 @@ proc parseDocument(p: var YamlParser): YamlNode =
   p.skipDirectivesAndDocs()
   if p.curr.kind == ytkEOF or p.curr.kind == ytkDocumentEnd:
     return newYamlNull()
+
+  # Node properties may precede the document's root node (§7.1).
+  var rootAnchor = ""
+  var hasRootAnchor = false
+  var rootTag = ""
+  while p.curr.kind in {ytkAnchor, ytkTag, ytkDirective}:
+    case p.curr.kind
+    of ytkAnchor:
+      rootAnchor = p.curr.value
+      hasRootAnchor = true
+      p.building.incl(rootAnchor)
+    of ytkTag:
+      rootTag = p.expandTagHandle(p.curr.value)
+    else:
+      discard
+    advance(p)
+  if p.curr.kind == ytkEOF or p.curr.kind == ytkDocumentEnd:
+    result =
+      if rootTag.len == 0: newYamlNull()
+      else: applyTag(rootTag, newYamlNull(), p)
+    if hasRootAnchor: p.building.excl(rootAnchor)
+    return result
+
   case p.curr.kind
   of ytkDash:
-    # A block sequence as the document root. `parseMapping` cannot consume a
-    # leading dash, so the document is wrapped into an array node here.
-    return YamlNode(kind: yamlArray, arrValue: parseSequence(p, p.curr.indent))
+    # A block sequence as the document root.
+    result = YamlNode(kind: yamlArray, arrValue: parseSequence(p, p.curr.col - 1))
   of ytkLC:
-    return parseInlineObject(p)
+    result = parseInlineObject(p)
   of ytkLB:
-    return parseInlineArray(p)
+    result = parseInlineArray(p)
+  of ytkQuestion, ytkColon, ytkTag, ytkAnchor:
+    # A mapping whose first entry uses an explicit key or a null key (§8.2.2).
+    result = YamlNode(kind: yamlObject, objValue: parseMapping(p, p.curr.indent))
   of ytkIdentifier, ytkString, ytkInteger, ytkFloat:
-    if p.next.kind == ytkColon:
-      return YamlNode(kind: yamlObject, objValue: parseMapping(p, p.curr.indent))
-    # Bare scalar document. Pass a non-negative parent indent so the scalar
-    # is not treated as a flow scalar (a root scalar may contain commas).
-    return parseValue(p, 0)
-  of ytkPipe:
-    return parseBlockString(p, p.curr.indent, folded = false)
-  of ytkGT:
-    return parseBlockString(p, p.curr.indent, folded = true)
+    # A plain key may span several tokens (`a b c: v`), so the decision is
+    # made after collecting the key rather than from the second token alone.
+    let save = p.snapshot()
+    discard p.collectPlainKey()
+    let isMapping = p.curr.kind == ytkColon
+    p.restore(save)
+    if isMapping:
+      result = YamlNode(kind: yamlObject, objValue: parseMapping(p, save.curr.indent))
+    else:
+      # Bare scalar document. Pass a non-negative parent indent so the scalar
+      # is not treated as a flow scalar (a root scalar may contain commas).
+      # `p.prev` is dropped: after the rewind it still points at the token
+      # before the document, and `parseValue` uses it to detect an empty value.
+      p.prev = nil
+      result = parseValue(p, 0)
+  of ytkBlockScalar:
+    result = parseBlockString(p, p.curr.indent, folded = false)
   else:
     p.error(unexpectedTokenExpected % [$p.curr.kind, "document"])
+  if rootTag.len > 0:
+    result = applyTag(rootTag, result, p)
+  if hasRootAnchor:
+    p.anchors[rootAnchor] = cloneYamlNode(result)
+    p.building.excl(rootAnchor)
 
 proc parseRoot(p: var YamlParser): YAMLObject =
   ## Parse the first document and return it as a mapping.
@@ -1483,8 +2088,8 @@ proc nimStringLiteral(s: string): string =
   result = "\""
   for ch in s:
     case ch
-    of '\\': result.add("\\\\")
-    of '\"': result.add("\\\"")
+    of '\\': result.add("\\")
+    of '"': result.add("\\\"")
     of '\n': result.add("\\n")
     of '\r': result.add("\\r")
     of '\t': result.add("\\t")
@@ -1527,128 +2132,282 @@ proc dumpHook*(s: var string, v: YamlNode) =
       dumpHook(s, item)
     s.add("]")
 
-proc dump*(json: JsonNode): YAML =
-  ## Dump from `JsonNode` to stringified YAML
-  var res: YAML
+proc toYamlNode*(j: JsonNode): YamlNode =
+  ## Converts a `JsonNode` into a `YamlNode` so both share one emitter.
+  case j.kind
+  of JNull:
+    result = newYamlNull()
+  of JBool:
+    result = YamlNode(kind: yamlBoolean, boolValue: j.getBool)
+  of JInt:
+    result = YamlNode(kind: yamlInteger, intValue: j.getInt)
+  of JFloat:
+    result = YamlNode(kind: yamlFloat, floatValue: j.getFloat)
+  of JString:
+    result = YamlNode(kind: yamlString, strValue: j.getStr)
+  of JArray:
+    var items: seq[YamlNode] = @[]
+    for item in j: items.add(toYamlNode(item))
+    result = YamlNode(kind: yamlArray, arrValue: items)
+  of JObject:
+    var obj = newOrderedTable[string, YamlNode]()
+    for k, v in j: obj[k] = toYamlNode(v)
+    result = YamlNode(kind: yamlObject, objValue: obj)
 
-  proc needsQuoting(s: string): bool =
-    if s.len == 0: return true
-    for ch in s:
-      if ch in {' ', ':', '-', '{', '}', '[', ']', ',', '#', '&', '*', '!', '|', '>', '\'', '\"', '%', '@', '`'}:
-        return true
-    # start/end with numeric-like or boolean-like might be ambiguous
-    if s[0].isDigit or s[0] == '-' or s[0] == '+':
-      return true
-    if s in ["null", "~", "true", "false"]:
-      return true
-    false
-
-  proc emitIndent(n: int) =
-    if n > 0: res.add(repeat(' ', n))
-
-  proc emitScalar(s: string) =
-    if needsQuoting(s):
-      res.add(nimStringLiteral(s))
+proc yamlStringLiteral*(s: string): string =
+  ## Renders `s` as a double-quoted YAML scalar (§7.3.3, §7.7). Always safe:
+  ## any content is escaped, so the result never depends on context.
+  result = "\""
+  for ch in s:
+    case ch
+    of '\\': result.add("\\")
+    of '"': result.add("\\\"")
+    of '\n': result.add("\\n")
+    of '\r': result.add("\\r")
+    of '\t': result.add("\\t")
+    of '\0': result.add("\\0")
+    of '\x07': result.add("\\a")
+    of '\x08': result.add("\\b")
+    of '\x0B': result.add("\\v")
+    of '\x0C': result.add("\\f")
+    of '\x1B': result.add("\\e")
     else:
-      res.add(s)
-
-  proc dumpNode(n: JsonNode, indent: int) =
-    ## Best-effort generic handling compatible with std/json-like JsonNode APIs.
-    case n.kind
-    of JNull:
-      res.add("null")
-    of JBool:
-      when compiles(n.getBool):
-        res.add($n.getBool())
+      let o = ord(ch)
+      if o < 0x20 or o == 0x7F:
+        result.add("\\x" & toHex(o, 2))
       else:
-        res.add($n)
-    of JInt, JFloat:
-      # rely on default `$` for numbers
-      res.add($n)
-    of JString:
-      when compiles(n.getStr):
-        emitScalar(n.getStr())
-      else:
-        emitScalar($n)
-    of JArray:
-      # empty inline array
-      var isEmpty = true
-      when compiles(n.len):
-        isEmpty = n.len == 0
-      elif compiles(n.items):
-        isEmpty = n.items.len == 0
-      if isEmpty:
-        res.add("[]")
-        return
+        result.add(ch)
+  result.add("\"")
 
-      # block sequence
-      when compiles(for item in n: discard):
-        for item in n:
-          res.add("\n")
-          emitIndent(indent)
-          res.add("- ")
-          dumpNode(item, indent + 2)
-      else:
-        # fallback: try numeric indexing
-        var i = 0
-        while true:
-          try:
-            let item = n[i]
-            res.add("\n")
-            emitIndent(indent)
-            res.add("- ")
-            dumpNode(item, indent + 2)
-            inc i
-          except:
-            break
+proc yamlPlainSafe(s: string): bool =
+  ## True when `s` can be written as a plain (unquoted) YAML scalar in any
+  ## position: it must not look like another node, must not contain a `: ` or
+  ## ` #` pair, and must not start or end with whitespace (§7.3.3).
+  if s.len == 0: return false
+  if s != s.strip(): return false
+  # Indicators that may not open a plain scalar (§7.3.3).
+  const indicators = {'-', '?', ':', ',', '[', ']', '{', '}', '#', '&', '*',
+                      '!', '|', '>', '\'', '"', '%', '@', '`'}
+  if s[0] in indicators:
+    # `-`, `?` and `:` are only indicators when followed by a space.
+    if s[0] in {'-', '?', ':'} and s.len > 1 and s[1] notin {' ', '\t'}:
+      discard
+    else:
+      return false
+  for i, ch in s:
+    if ch in {'\n', '\r', '\t'}: return false
+    if ch == ':' and i + 1 < s.len and s[i + 1] in {' ', '\t'}: return false
+    if ch == '#' and i > 0 and s[i - 1] in {' ', '\t'}: return false
+  # Would resolve to a non-string type under the Core Schema (§10.3.2).
+  let probe = s.toLowerAscii()
+  if probe in ["true", "false", "null", "~"]:
+    return false
+  if probe in [".inf", "-.inf", "+.inf", ".nan"]:
+    return false
+  # Plain scalars that would be read back as a number.
+  var looksNumeric = true
+  for ch in s:
+    if ch notin {'0'..'9', '+', '-', '.', '_'}:
+      looksNumeric = false
+      break
+  if looksNumeric and (s[0].isDigit or s[0] in {'+', '-', '.'}): return false
+  true
 
-    of JObject:
-      # empty inline object
-      var isEmpty = true
-      when compiles(n.len):
-        isEmpty = n.len == 0
-      elif compiles(n.items):
-        isEmpty = n.items.len == 0
-      if isEmpty:
-        res.add("{}")
-        return
+proc yamlEmitScalar(s: string): string =
+  ## Renders a string as a YAML scalar, quoting only when required.
+  if yamlPlainSafe(s): s else: yamlStringLiteral(s)
 
-      # block mapping
-      when compiles(for k, v in n: discard):
-        for k, v in n:
-          res.add("\n")
-          emitIndent(indent)
-          res.add(k & ": ")
-          dumpNode(v, indent + 2)
-      else:
-        # fallback: try iteration over keys via `items` or `pairs`
-        when compiles(n.items):
-          for kv in n.items:
-            let k = kv[0]
-            let v = kv[1]
-            res.add("\n")
-            emitIndent(indent)
-            res.add(k & ": ")
-            dumpNode(v, indent + 2)
+proc yamlBlockScalarHeader(s: string, folded: bool): string =
+  ## Returns the `|`/`>` header line for a block scalar holding `s`, or ""
+  ## when block style would not round-trip `s`. Keeps generated YAML readable
+  ## for the common case of a value that is mostly prose (§8.1).
+  if s.len == 0: return ""
+  if not s.contains('\n'): return ""
+  # The block body must not be empty once indentation is stripped.
+  if s.strip(chars = {'\n', ' ', '\t'}).len == 0: return ""
+  # Trailing spaces on any line are lost in block style.
+  for line in s.split('\n'):
+    if line.len > 0 and line[^1] in {' ', '\t'}: return ""
+  # Chomping: the value's own trailing break decides strip/clip/keep.
+  var trailing = 0
+  var body = s
+  while body.len > 0 and body[^1] == '\n':
+    body.setLen(body.len - 1)
+    inc trailing
+  body.add('\n')
+  # Leading spaces on the first line are content, and a first line of only
+  # spaces would be read as indentation, so those need an explicit indicator.
+  # An explicit indent indicator is needed only when the first body line
+  # starts with a space, or is empty. Later empty lines are unambiguous
+  # because the first line fixes the detected indent.
+  var indicator = ""
+  if body.len == 0 or body[0] == ' ' or body[0] == '\n':
+    indicator = "2"
+  let chomp =
+    if trailing == 0: "-"
+    elif trailing == 1: ""
+    else: "+"
+  result = (if folded: ">" else: "|") & indicator & chomp
+
+proc yamlBlockIndent(s: string): int =
+  ## The indent a block scalar body must be written at to preserve `s`.
+  for line in s.split('\n'):
+    if line.len > 0: return leadingSpaces(line)
+  0
+
+proc yamlEmitKey(s: string): string =
+  ## Renders a mapping key. Keys are quoted whenever a plain form would be
+  ## ambiguous: whitespace, a `:` that could read as the key/value separator,
+  ## or any character a plain scalar may not contain (§7.3.3).
+  for ch in s:
+    if ch in {' ', '\t', '\n', '\r', ':', '#'}: return yamlStringLiteral(s)
+  yamlEmitScalar(s)
+
+proc yamlFloatText(f: float64): string =
+  ## Formats a float so the Core Schema reads it back unchanged (§10.3.2).
+  if f != f: return ".nan"
+  if f == Inf: return ".inf"
+  if f == -Inf: return "-.inf"
+  var t = $f
+  if t in ["inf", "Inf", "-inf", "-Inf", "nan", "NaN"]:
+    return if f != f: ".nan"
+    elif f > 0: ".inf" else: "-.inf"
+  # YAML 1.2 requires a digit on both sides of the decimal point.
+  if t.startsWith("."): t = "0" & t
+  elif t.startsWith("-."): t = "-0" & t[1..^1]
+  if not t.contains("e") and not t.contains("E") and
+      not t.contains(".") and not t.contains("inf"):
+    t.add(".0")
+  result = t
+
+proc isNonEmptyCollection(n: YamlNode): bool =
+  ## True for a mapping or sequence that needs its own indented block.
+  case n.kind
+  of yamlArray: n.arrValue.len > 0
+  of yamlObject: n.objValue.len > 0
+  else: false
+
+
+proc dumpYamlNode(node: YamlNode, indent: int, buf: var string, sameLine: bool) =
+  ## Writes `node` as a block YAML node.
+  ##
+  ## `indent` is the column block content is written at. `sameLine` is true
+  ## when the caller already wrote the space that separates `node` from a
+  ## preceding `-` or `key:`, which lets the first character of `node`
+  ## continue that line. A non-empty collection always starts a fresh
+  ## indented block; a leaf or an empty collection is written directly.
+  case node.kind
+  of yamlNull:
+    buf.add("null")
+  of yamlBoolean:
+    buf.add($node.boolValue)
+  of yamlInteger:
+    buf.add($node.intValue)
+  of yamlFloat:
+    buf.add(yamlFloatText(node.floatValue))
+  of yamlString:
+    # Prose reads better as a block scalar than as one long quoted line.
+    let header = yamlBlockScalarHeader(node.strValue, folded = false)
+    if header.len > 0:
+      buf.add(header)
+      let bodyIndent = max(indent + 2, yamlBlockIndent(node.strValue) + indent)
+      for line in node.strValue.split('\n'):
+        if line.len == 0:
+          if node.strValue[^1] == '\n': buf.add("\n")
         else:
-          # last resort: dump JSON text inline
-          res.add(nimStringLiteral($n))
+          buf.add("\n")
+          buf.add(repeat(' ', bodyIndent))
+          buf.add(line)
+    else:
+      buf.add(yamlEmitScalar(node.strValue))
+  of yamlArray:
+    if node.arrValue.len == 0:
+      buf.add("[]")
+      return
+    for i, item in node.arrValue:
+      # The first entry may continue a line the caller already opened
+      # (`key: - x`); later entries always start their own line.
+      if not (i == 0 and sameLine):
+        buf.add("\n")
+        buf.add(repeat(' ', indent))
+      buf.add("-")
+      if isNonEmptyCollection(item):
+        dumpYamlNode(item, indent + 2, buf, false)
+      else:
+        buf.add(" ")
+        dumpYamlNode(item, indent + 2, buf, true)
+  of yamlObject:
+    if node.objValue.len == 0:
+      buf.add("{}")
+      return
+    # A mapping entry either continues the caller's line (`key: v`) or starts
+    # its own, depending on `sameLine`.
+    var first = true
+    for k, v in node.objValue.pairs:
+      if not (first and sameLine):
+        buf.add("\n")
+        buf.add(repeat(' ', indent))
+      first = false
+      buf.add(yamlEmitKey(k))
+      buf.add(":")
+      # A non-empty collection goes on its own indented block under the key;
+      # a scalar or an empty collection shares the key's line after a space.
+      if isNonEmptyCollection(v):
+        dumpYamlNode(v, indent + 2, buf, false)
+      else:
+        buf.add(" ")
+        dumpYamlNode(v, indent + 2, buf, true)
 
-  dumpNode(json, 0)
+proc dumpYamlDocument(node: YamlNode): YAML =
+  ## Renders a node as a standalone YAML document.
+  var buf = ""
+  # Nothing precedes the root: the first line has no opening prefix, so a
+  # collection's first entry still needs its own line.
+  dumpYamlNode(node, 0, buf, false)
+  result = buf.strip(chars = {'\n'})
 
-  # strip leading newline if present
-  if res.len > 0 and res[0] == '\n':
-    result = res[1 .. ^1]
-  else:
-    result = res
+proc dump*(json: JsonNode): YAML =
+  ## Serializes a `JsonNode` to a YAML document.
+  result = dumpYamlDocument(toYamlNode(json))
 
-proc `$`*(yamlObject: YAMLObject): string =
-  ## Return a JSON string representation of the YAMLObject
-  toJson(yamlObject)
+proc dump*(node: YamlNode): YAML =
+  ## Serializes a `YamlNode` to a YAML document.
+  result = dumpYamlDocument(node)
+
+proc dump*(obj: YAMLObject): YAML =
+  ## Serializes a `YAMLObject` to a YAML document.
+  if obj == nil: return "{}\n"
+  dump(YamlNode(kind: yamlObject, objValue: obj))
+
+proc dump*(docs: seq[YamlNode]): YAML =
+  ## Serializes a multi-document stream, separating documents with `---`.
+  for i, doc in docs:
+    if i > 0: result.add("---\n")
+    result.add(dump(doc))
+    result.add("\n")
+
+proc `$`*(node: YamlNode): string =
+  ## Canonical flow form of a node; stable and re-parsable.
+  case node.kind
+  of yamlNull: "null"
+  of yamlBoolean: $node.boolValue
+  of yamlInteger: $node.intValue
+  of yamlFloat: $node.floatValue
+  of yamlString: node.strValue
+  of yamlObject: renderKey(node)
+  of yamlArray: renderKey(node)
+
 
 proc initYamlParser*(input: YAML, opts: YamlOptions = nil): YamlParser =
   var lex = newYamlLexer(input)
-  result = YamlParser(lex: lex, options: if opts != nil: opts else: defaultYamlOptions(), anchors: initTable[string,YamlNode]())
+  var options = if opts != nil: opts else: defaultYamlOptions()
+  # `allowTabsAsIndent` is the deprecated spelling of `strictTabs = false`.
+  if options.allowTabsAsIndent: options.strictTabs = false
+  result = YamlParser(lex: lex,
+    options: options,
+    anchors: initTable[string, YamlNode](),
+    building: initHashSet[string](),
+    tagHandles: initTable[string, string]())
   result.curr = result.nextToken()
   result.next = result.nextToken()
   while result.curr.kind == ytkComment:
@@ -1677,6 +2436,106 @@ proc parseYAMLNode*(input: YAML, opts: YamlOptions): YamlNode =
   var p = initYamlParser(input, opts)
   p.parseDocument()
 
+type
+  YamlFrontmatter* = object
+    ## The result of splitting a document into its frontmatter block and body.
+    ##
+    ## A frontmatter block is delimited by a `---` line at the very start of a
+    ## document and closed by a `---` or `...` line, the convention used by
+    ## Jekyll, Hugo, Obsidian and static site generators. It is not part of the
+    ## YAML specification, which is why `parseYAML` ignores it.
+    found*: bool
+      ## True when a well-formed frontmatter block was present.
+    frontmatter*: string
+      ## The raw text between the delimiters, with no leading or trailing
+      ## newline. Empty when `found` is false.
+    body*: string
+      ## Everything after the closing delimiter, with the line break that ended
+      ## the frontmatter removed.
+    bodyOffset*: int
+      ## Byte offset in the original input where `body` starts, so a caller can
+      ## splice the document back together.
+
+const
+  yamlFrontmatterError* = "Unterminated YAML frontmatter block"
+
+proc splitFrontmatter*(input: YAML): YamlFrontmatter =
+  ## Splits `input` into an optional YAML frontmatter block and the body that
+  ## follows it.
+  ##
+  ## A block must open on the very first line with `---` (a BOM is tolerated) and
+  ## is closed by a line containing only `---` or `...`. This is a widespread
+  ## convention rather than part of YAML 1.2, so frontmatter is only recognised
+  ## by this procedure and by `parseYAMLFrontmatter`; `parseYAML` treats a
+  ## leading `---` as an ordinary document start marker.
+  ##
+  ## Raises `OpenParserYamlError` when a block opens but never closes, which
+  ## would otherwise silently swallow the whole document.
+  result.body = input
+  let off = stripBom(input)
+  if off >= input.len: return
+
+  # The opening delimiter is a line consisting of exactly `---` (§9.2 allows
+  # trailing content after it, but a frontmatter opener must be alone).
+  var i = off
+  if input[i] == '-':
+    var eol = i
+    while eol < input.len and input[eol] notin {'\n', '\r'}: inc eol
+    if input[i..<eol] != "---": return
+    i = eol
+    while i < input.len and input[i] in {'\n', '\r'}: inc i
+
+    # Scan for the closing delimiter at the start of a line.
+    var lineStart = i
+    while lineStart < input.len:
+      var eol = lineStart
+      while eol < input.len and input[eol] notin {'\n', '\r'}: inc eol
+      let line = input[lineStart..<eol]
+      if line == "---" or line == "...":
+        result.found = true
+        var fmEnd = lineStart
+        # Drop the line break that ends the frontmatter block, but keep any
+        # blank lines inside it.
+        while fmEnd > i and input[fmEnd - 1] in {'\n', '\r'}: dec fmEnd
+        result.frontmatter = input[i..<fmEnd]
+        var bodyStart = eol
+        if bodyStart < input.len and input[bodyStart] == '\r': inc bodyStart
+        if bodyStart < input.len and input[bodyStart] == '\n': inc bodyStart
+        result.body = input[bodyStart..^1]
+        result.bodyOffset = bodyStart
+        return
+      if eol >= input.len: break
+      # Step past this line's break, honouring CRLF as one break.
+      inc eol
+      if eol < input.len and input[eol] == '\n' and eol > 0 and input[eol - 1] == '\r':
+        inc eol
+      lineStart = eol
+    raise newException(OpenParserYamlError, yamlFrontmatterError)
+
+proc parseYAMLFrontmatter*(input: YAML, opts: YamlOptions = nil): YamlNode =
+  ## Parses the frontmatter block of `input` as YAML, returning the body
+  ## unchanged.
+  ##
+  ## Raises `OpenParserYamlError` when there is no frontmatter block, since
+  ## silently returning a null node would hide a malformed document. Use
+  ## `splitFrontmatter` first to tell the two cases apart.
+  let fm = splitFrontmatter(input)
+  if not fm.found:
+    raise newException(OpenParserYamlError, "No YAML frontmatter block found")
+  var p = initYamlParser(fm.frontmatter, opts)
+  p.parseDocument()
+
+proc parseYAMLFrontmatter*(input: YAML, opts: YamlOptions,
+                           body: var string): YamlNode =
+  ## Parses the frontmatter block of `input` as YAML, assigning the remaining
+  ## body to `body`.
+  let fm = splitFrontmatter(input)
+  if not fm.found:
+    raise newException(OpenParserYamlError, "No YAML frontmatter block found")
+  body = fm.body
+  var p = initYamlParser(fm.frontmatter, opts)
+  p.parseDocument()
+
 proc parseYAMLStreamNodes*(input: YAML, opts: YamlOptions = nil): seq[YamlNode] =
   ## Parse a multi-document stream, preserving sequence and scalar documents.
   var p = initYamlParser(input, opts)
@@ -1693,7 +2552,11 @@ proc parseYAMLStreamNodes*(input: YAML, opts: YamlOptions = nil): seq[YamlNode] 
       if p.curr.kind == ytkEOF: break
     # `parseDocument` consumes a whole document, so there is nothing left to
     # skip afterwards. Advancing here would eat the next document's first token.
+    let before = p.curr
     result.add(p.parseDocument())
+    # A document that consumed nothing would spin this loop forever.
+    if p.curr == before:
+      p.advance()
   if result.len == 0:
     result.add(newYamlNull())
 
@@ -1820,27 +2683,22 @@ template parseYamlMappingPairs*(body: untyped) {.dirty.} =
 #
 # Parse Hooks
 #
-proc collectTypedPlainLine(p: var YamlParser): string =
-  ## Collects all tokens on the current line into a single plain scalar string,
-  ## preserving original spacing via wsno. Mirrors parsePlainUnquoted but always
-  ## returns a string (no bool/int coercion). In flow context (flowDepth > 0)
-  ## stops before ',', ']' and '}' so inline delimiters stay for the caller.
-  let lineNo = p.curr.line
-  var count = 0
-  var buf = ""
-  while p.curr.kind != ytkEOF and p.curr.line == lineNo:
-    if p.curr.kind == ytkComment:
-      break
-    if p.flowDepth > 0 and p.curr.kind in {ytkComma, ytkRB, ytkRC}:
-      break
-    if p.curr.kind in {ytkDocumentStart, ytkDocumentEnd, ytkDirective}:
-      break
-    if count > 0 and p.curr.wsno > 0:
-      buf.add(repeat(' ', p.curr.wsno))
-    let part = if p.curr.value.len > 0: p.curr.value else: tokenText(p.curr)
-    buf.add(part)
-    inc count
-    p.advance()
+proc collectTypedPlainLine(p: var YamlParser, parentIndent = -1): string =
+  ## Collects the tokens of a plain scalar into a single string, preserving
+  ## original spacing via `wsno`. Mirrors `parsePlainUnquoted` but always
+  ## returns a string (no bool/int coercion). In flow context (`flowDepth > 0`)
+  ## it stops before ',', ']' and '}' so inline delimiters stay for the
+  ## caller. Continuation lines that are more indented than `parentIndent` are
+  ## folded in with a single space (§7.3.3).
+  var buf = collectPlainLine(p, p.flowDepth > 0, p.curr)[0]
+  if parentIndent < 0 or p.flowDepth > 0:
+    return buf
+  while p.plainCanContinue(parentIndent):
+    let contTok = p.curr
+    let cont = collectPlainLine(p, false, contTok)[0]
+    if cont.len == 0: break
+    buf.add(" ")
+    buf.add(cont)
   return buf
 
 proc parseHook*[T](p: var YamlParser, v: var Option[T]) =
@@ -1898,9 +2756,8 @@ proc parseHook*(p: var YamlParser, v: var string) =
       else: v = n.getValue()
       return
   case p.curr.kind
-  of ytkPipe, ytkGT:
-    let node = p.parseBlockString(parentIndent = p.curr.indent,
-                                 folded = (p.curr.kind == ytkGT))
+  of ytkBlockScalar:
+    let node = p.parseBlockString(parentIndent = p.curr.indent, folded = false)
     v = node.strValue
     if hasAnchor:
       p.anchors[anchorName] = YamlNode(kind: yamlString, strValue: v)
@@ -1929,13 +2786,22 @@ proc parseHook*(p: var YamlParser, v: var string) =
       if p.curr.kind in {ytkLB, ytkLC}:
         p.error(unexpectedTokenExpected % [$p.curr.kind, "string scalar"])
       # Otherwise fall through and collect the indented plain line(s).
-    v = p.collectTypedPlainLine()
+    v = p.collectTypedPlainLine(p.prev.indent)
     if hasAnchor:
       p.anchors[anchorName] = YamlNode(kind: yamlString, strValue: v)
     return
 
 proc parseHook*(p: var YamlParser, v: var bool) =
-  ## A hook to parse boolean fields (anchor aware)
+  ## A hook to parse boolean fields (anchor aware).
+  ## A `null` scalar yields `false`; an empty value leaves the default.
+  if p.curr.kind == ytkEOF:
+    v = false
+    return
+  if p.curr.kind == ytkIdentifier and
+      (p.curr.value == "null" or p.curr.value == "~"):
+    v = false
+    p.advance()
+    return
   if p.curr.kind == ytkAlias:
     let n = p.anchors.getOrDefault(p.curr.value)
     if n == nil: p.error(errorUndefinedAlias % p.curr.value)
@@ -1955,7 +2821,16 @@ proc parseHook*(p: var YamlParser, v: var bool) =
   p.advance()
 
 proc parseHook*[T: float|float32|float64](p: var YamlParser, v: var T) =
-  ## A hook to parse float fields (supports .inf/.nan/_ , alias)
+  ## A hook to parse float fields (supports .inf/.nan/_ , alias).
+  ## A `null` scalar yields 0.0; an empty value leaves the default.
+  if p.curr.kind == ytkEOF:
+    v = T(0)
+    return
+  if p.curr.kind == ytkIdentifier and
+      (p.curr.value == "null" or p.curr.value == "~"):
+    v = T(0)
+    p.advance()
+    return
   if p.curr.kind == ytkAlias:
     let n = p.anchors.getOrDefault(p.curr.value)
     if n == nil: p.error(errorUndefinedAlias % p.curr.value)
@@ -1976,7 +2851,16 @@ proc parseHook*[T: float|float32|float64](p: var YamlParser, v: var T) =
   p.advance()
 
 proc parseHook*[T: Integers](p: var YamlParser, v: var T) =
-  ## A hook to parse integer fields (supports 0o/0x/_ , alias)
+  ## A hook to parse integer fields (supports 0o/0x/_ , alias).
+  ## A `null` scalar yields 0; an empty value leaves the default.
+  if p.curr.kind == ytkEOF:
+    v = 0
+    return
+  if p.curr.kind == ytkIdentifier and
+      (p.curr.value == "null" or p.curr.value == "~"):
+    v = 0
+    p.advance()
+    return
   if p.curr.kind == ytkAlias:
     let n = p.anchors.getOrDefault(p.curr.value)
     if n == nil: p.error(errorUndefinedAlias % p.curr.value)
@@ -2372,3 +3256,18 @@ macro parseYamlMacro(x: typed, str: typed): untyped =
 proc parseYAML*[T](input: YAML, t: typedesc[T]): T =
   ## Parse YAML string into a Nim object or sequence of type `T`
   parseYamlMacro(T, input)
+
+proc parseYAMLFrontmatter*[T: object|ref object](input: YAML,
+                                                 body: var string,
+                                                 opts: YamlOptions = nil): T =
+  ## Parses the frontmatter block of `input` into `T`, assigning the remaining
+  ## body to `body`.
+  ##
+  ## To read only the metadata, use `parseYAML[T](splitFrontmatter(src).frontmatter)`
+  ## or ignore `body` here.
+  let fm = splitFrontmatter(input)
+  if not fm.found:
+    raise newException(OpenParserYamlError, "No YAML frontmatter block found")
+  body = fm.body
+  var p = initYamlParser(fm.frontmatter, opts)
+  p.parseYAML(result)

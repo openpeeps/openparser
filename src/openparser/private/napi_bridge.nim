@@ -46,7 +46,12 @@ init proc(module: Module) =
     ## Serialize a JSON document (as string) to YAML.
     return %*dump(parseJson(args.get("doc").getStr()))
 
-  module.register("yaml", [("parse", yamlParse), ("dump", yamlDump)])
+  proc yamlFrontmatter(src: string) {.export_napi: false.} =
+    ## Split a document into its YAML frontmatter block and body.
+    return jsParse(yamlFrontmatterJson(args.get("src").getStr()))
+
+  module.register("yaml", [("parse", yamlParse), ("dump", yamlDump),
+    ("frontmatter", yamlFrontmatter)])
 
   # ------------------------------------------------------------- toml
   proc tomlParse(src: string) {.export_napi: false.} =
