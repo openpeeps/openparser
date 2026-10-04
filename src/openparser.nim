@@ -12,6 +12,29 @@ when defined(napibuild):
   include ./openparser/private/napi_convert
   include ./openparser/private/napi_bridge
 
+elif defined(nimbase_extension):
+  import std/[strutils, macros, os]
+  
+  macro readNimbleFile() =
+    let pkgNimble = staticRead(getProjectPath().parentDir / "openparser.nimble")
+    result = newStmtList()
+    for ln in pkgNimble.split:
+      if ln.startsWith("version"):
+        echo ln
+        break
+
+    echo result.repr
+
+  when defined(php_build):
+    import nimbase/kits/phpkit
+
+    phpModule do:
+      name = "openparser"
+      version = "0.1.0"
+
+      proc helloWorld(name: string) =
+        ecoh "👋 Hey there", name, " 👑 Nim is Awesome!"
+
 elif defined(builddocs):
   # For documentation purposes, we re-export all parsers here
   import ./openparser/[json, csv, rss, feed, yaml, dotenv,

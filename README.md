@@ -202,7 +202,7 @@ let doc = fromXmlFile("large.xml")
 
 ## TOML
 
-TOML config file parser with datetime support, inline tables, arrays, and the same hook-based direct-to-object API.
+TOML v1.0.0 parser and serializer, validated against the official [toml-test](https://github.com/toml-lang/toml-test) fixture corpus, with the same hook-based direct-to-object API.
 
 ```nim
 import openparser/toml
@@ -226,9 +226,21 @@ let config: ServerConfig = parseTOML(toml, ServerConfig)
 echo config.port  # 8080
 ```
 
-**Features:** Sections, inline tables, arrays, datetime types, `parseHook`/`dumpHook`, direct-to-object parsing.
+**Features:** Sections, inline tables, arrays of tables, all four date/time types, radix integers, `inf`/`nan`, full escape and unicode-escape support, lossless `dumpTOML` round-trips, `parseHook`/`dumpHook`, direct-to-object parsing.
+
+TOML has four distinct date/time types and only the offset form names an absolute
+instant, so a parsed node keeps the literal it came from:
+
+```nim
+let doc = parseTOML("at = 1979-05-27T00:32:00.999999-07:00")
+let at = doc.get("at")
+echo at.dateKind      # tdkOffsetDateTime
+echo at.dateRaw       # 1979-05-27T00:32:00.999999-07:00
+echo at.dateTimeVal   # 1979-05-27T00:32:00, wall clock, no zone
+```
 
 - [API Reference](https://openpeeps.github.io/openparser/openparser/toml.html)
+- [Tests](https://github.com/openpeeps/openparser/tree/main/tests/test_toml.nim)
 
 ---
 
@@ -806,9 +818,9 @@ echo styled.root.children[0].common.styleDecls[0].property  # fill
 | Zero-copy / Memfiles | x | | x | | x |  |
 | Direct-to-object | x | x | x | x | | x |
 | `parseHook` / `dumpHook` | x | x | x | x | | x |
-| `renameHook` | x | x | x | x | | x |
-| `currentField` context | x | x | x | x | | x |
-| `skipValue` | x | x | x | x | |  |
+| `renameHook` | x | x | x | | | x |
+| `currentField` context | x | x | x | | | x |
+| `skipValue` | x | x | x | | |  |
 | `XmlNode` / `JsonNode` tree | x | x | x | x | | x |
 | SIMD acceleration | x | | x | | |  |
 | Context-aware errors | x | x | x | x | x | x |

@@ -102,7 +102,12 @@ proc tomlToJson(n: TomlNode): JsonNode =
   of tvkInteger: %n.intVal
   of tvkFloat: %n.floatVal
   of tvkBoolean: %n.boolVal
-  of tvkDateTime: %n.dateTimeVal.format("yyyy-MM-dd'T'HH:mm:ss")
+  of tvkDateTime:
+    # `dateRaw` keeps the UTC offset and fractional seconds that
+    # `std/times` cannot hold. TOML allows a space where ISO 8601 wants `T`,
+    # and a lowercase `t`/`z`, so normalise those on the way out.
+    let iso = n.dateRaw.replace(" ", "T").replace("t", "T").replace("z", "Z")
+    %iso
   of tvkArray:
     var arr = newJArray()
     for it in n.arrayVal: arr.add(tomlToJson(it))
