@@ -28,15 +28,24 @@ type
     codeSize*: int
     firstByte*: int   ## byte the match must start with, -1 = unknown
     anchored*: bool   ## program starts with ^: only startPos 0 can match
+    classBitmaps*: ptr UncheckedArray[uint8]  ## owned copy of class bitmaps
+    numClasses*: int                          ## number of 32-byte bitmaps
 
 proc freeJit*(cj: var CompiledJit) =
   ## Release generated code, backtrack stack and context.
+  if cj.fn != nil and cj.codeSize > 0:
+    freeJitCode(cast[pointer](cj.fn), cj.codeSize)
   if cj.ctx != nil:
     if cj.ctx.stackBase != nil:
       deallocShared(cast[pointer](cj.ctx.stackBase))
     deallocShared(cast[pointer](cj.ctx))
     cj.ctx = nil
+  if cj.classBitmaps != nil:
+    deallocShared(cast[pointer](cj.classBitmaps))
+    cj.classBitmaps = nil
   cj.fn = nil
+  cj.codeSize = 0
+  cj.numClasses = 0
 
 proc compileRegex*(prog: Program, fullMatch = false): CompiledJit =
   ## Compile `prog` to native code. With `fullMatch`, opMatch only
@@ -74,6 +83,9 @@ proc compileRegex*(prog: Program, fullMatch = false): CompiledJit =
     of opSplit, opSplitLazy:
       addTarget(ins.arg1)
       addTarget(ins.arg2)
+    of opCharClass:
+      if ins.arg1 < 0 or ins.arg1 >= prog.classes.len:
+        supported = false
     of opWordBoundary:
       wbLabels[i] = (nextLabel, nextLabel + 1)
       inc nextLabel, 2
@@ -114,6 +126,22 @@ proc compileRegex*(prog: Program, fullMatch = false): CompiledJit =
   if not supported:
     return
 
+  # Own a stable copy of the class bitmaps. The generated code embeds raw
+  # pointers to these bytes, so they must outlive `prog` (which the caller
+  # may free while the JIT is still alive) and must not move. GC-managed
+  # seq storage does not qualify: `prog` is passed by value and its buffer
+  # is freed on return, leaving embedded pointers dangling (observed as
+  # findAll dropping matches past the third once the freed block is reused).
+  let numClasses = prog.classes.len
+  var bitmapStore: ptr UncheckedArray[uint8] = nil
+  if numClasses > 0:
+    bitmapStore = cast[ptr UncheckedArray[uint8]](allocShared0(numClasses * 32))
+    if bitmapStore == nil:
+      return
+    for ci in 0 ..< numClasses:
+      copyMem(addr bitmapStore[ci * 32],
+              unsafeAddr prog.classes[ci].bitmap[0], 32)
+
   var d: ptr dasm_State = nil
   dasm_init(addr d, DASM_MAXSECTION)
   var globals: array[64, pointer]
@@ -141,8 +169,15 @@ proc compileRegex*(prog: Program, fullMatch = false): CompiledJit =
       regex_emit_any_char(addr d, lblFailEntry.cint)
 
     of opCharClass:
+      # Bounds were validated in Pass 1, but re-check defensively: an
+      # invalid index must reject compilation, never read OOB.
+      if ins.arg1 < 0 or ins.arg1 >= numClasses:
+        if bitmapStore != nil:
+          deallocShared(cast[pointer](bitmapStore))
+        dasm_free(addr d)
+        return
       regex_emit_char_class(addr d,
-        cast[uint](unsafeAddr prog.classes[ins.arg1].bitmap[0]),
+        cast[uint](addr bitmapStore[ins.arg1 * 32]),
         cint(ord(ins.neg)), lblFailEntry.cint)
 
     of opEscapeClass:
@@ -195,20 +230,37 @@ proc compileRegex*(prog: Program, fullMatch = false): CompiledJit =
   var codeSize: csize_t
   if dasm_link(addr d, addr codeSize) != 0:
     dasm_free(addr d)
+    if bitmapStore != nil:
+      deallocShared(cast[pointer](bitmapStore))
     return
   let codeBuf = allocJitCode(codeSize.int)
   if codeBuf == nil:
     dasm_free(addr d)
+    if bitmapStore != nil:
+      deallocShared(cast[pointer](bitmapStore))
     return
   if dasm_encode(addr d, codeBuf) != 0:
     freeJitCode(codeBuf, codeSize.int)
     dasm_free(addr d)
+    if bitmapStore != nil:
+      deallocShared(cast[pointer](bitmapStore))
     return
   dasm_free(addr d)
 
   let stackBytes = BacktrackMaxEntries * 16
   let stack = cast[ptr UncheckedArray[byte]](allocShared0(stackBytes))
+  if stack == nil:
+    freeJitCode(codeBuf, codeSize.int)
+    if bitmapStore != nil:
+      deallocShared(cast[pointer](bitmapStore))
+    return
   let ctx = cast[ptr JitCtx](allocShared0(sizeof(JitCtx)))
+  if ctx == nil:
+    deallocShared(cast[pointer](stack))
+    freeJitCode(codeBuf, codeSize.int)
+    if bitmapStore != nil:
+      deallocShared(cast[pointer](bitmapStore))
+    return
   ctx.stackBase  = stack
   ctx.stackLimit = cast[pointer](addr stack[stackBytes])
 
@@ -226,7 +278,8 @@ proc compileRegex*(prog: Program, fullMatch = false): CompiledJit =
 
   result = CompiledJit(fn: cast[RegexJitFn](codeBuf),
                        ctx: ctx, codeSize: codeSize.int,
-                       firstByte: firstByte, anchored: anchored)
+                       firstByte: firstByte, anchored: anchored,
+                       classBitmaps: bitmapStore, numClasses: numClasses)
 
 proc jitExec*(cj: CompiledJit, input: string, startPos = 0): int {.inline.} =
   ## Run the JIT'd matcher anchored at `startPos`.
