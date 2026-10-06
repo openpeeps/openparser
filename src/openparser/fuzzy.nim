@@ -8,12 +8,22 @@
 ##
 ## Every query character must appear in the candidate in order, but not
 ## necessarily contiguously. Matches are ranked by consecutive runs,
-## word-boundary hits and gap penalties. The hot loop — forward character
-## search — runs over SSE2 (x86 baseline), AVX2 (opt-in via `-d:avx2`),
-## NEON (arm64, always available) or scalar lanes, selected per target at
-## compile time with a runtime AVX2 guard. The matcher itself never
-## allocates per candidate: case is folded on the fly and positions are
-## collected only for reported matches.
+## word-boundary hits and gap penalties, and scored against the width of
+## the match rather than the length of the candidate.
+##
+## The alignment is the best one available, not the first: a candidate is
+## scored by a dynamic program over query byte by candidate byte, because
+## a leftmost walk commits to the earliest byte a character can match and
+## then highlights noise when the query also appears verbatim further along.
+## Cells that cannot hold an alignment are skipped rather than visited, and
+## the bytes that can are located with the same character search as before —
+## SSE2 (x86 baseline), AVX2 (opt-in via `-d:avx2`), NEON (arm64, always
+## available) or scalar lanes, selected per target at compile time with a
+## runtime AVX2 guard.
+##
+## Scoring allocates its working set once per search rather than once per
+## candidate, so ranking thousands of candidates allocates once. `fuzzyScore`
+## on its own allocates, being a single call by definition.
 ##
 ## No unconditional C flags are set here on purpose: x86-only flags such
 ## as `-msse2` break clang on arm64 targets. AVX2 flags travel with
@@ -44,7 +54,7 @@ else:
 type
   FuzzyMatch* = object
     text*: string       ## candidate that matched
-    score*: float32     ## higher ranks first; normalized by candidate length
+    score*: float32     ## higher ranks first; normalized by match span
     positions*: seq[int] ## byte offsets of the matched chars (highlighting)
 
   FuzzyOptions* = object
@@ -202,47 +212,174 @@ proc findCharNext(text: string, start: int, a, b: char,
 # Scoring core (shared by every lane)
 # ---------------------------------------------------------------------------
 
-proc fuzzyScoreImpl(query, candidate: string,
-                    caseSensitive: bool): tuple[matched: bool, score: float32,
-                    positions: seq[int]] =
+const
+  FuzzyUnreachable* = low(float32) / 2'f32
+    ## Sentinel for "no alignment ends here". Far enough below any real score
+    ## that adding a bonus to it can never look like a match.
+
+type
+  ScoreScratch = object
+    ## Per-thread working set for the alignment below.
+    ##
+    ## Two score rows and two index grids, kept between calls because scoring a
+    ## few thousand candidates is the whole point of the SIMD kernels and
+    ## reallocating four buffers per candidate would undo that. Grown on demand,
+    ## never shrunk: a candidate set has a longest row and every candidate pays
+    ## for it once.
+
+    prev: seq[float32]  ## scores for query[0 .. j-1]
+    cur: seq[float32]   ## scores for query[0 .. j]
+    parent: seq[int16]  ## where query[j-1] sat, for the chosen alignment
+    first: seq[int16]   ## where query[0] sat, so the span is known before the walk
+
+proc reserve(scratch: var ScoreScratch, rows, width: int) =
+  ## Grown on demand and never shrunk, so a search pays for its widest candidate
+  ## once and reuses the buffers for every row after it.
+  if scratch.prev.len < width:
+    scratch.prev = newSeq[float32](width)
+    scratch.cur = newSeq[float32](width)
+  if scratch.parent.len < rows * width:
+    scratch.parent = newSeq[int16](rows * width)
+    scratch.first = newSeq[int16](rows * width)
+
+proc charOf(query: string, i: int, caseSensitive: bool): tuple[a, b: char, alt: bool] =
+  ## The two bytes a query byte can match, and whether they differ. They differ
+  ## for ASCII letters only, which is what makes `alt` the flag for searching
+  ## both: a non-letter has one byte and one candidate position.
+  let q = query[i]
+  let a = if caseSensitive: q else: lowerByte(q)
+  let b = if caseSensitive: q else: upperByte(q)
+  (a: a, b: b, alt: a != b)
+
+proc fuzzyScoreImpl(query, candidate: string, caseSensitive: bool,
+                    scratch: var ScoreScratch): tuple[matched: bool,
+                    score: float32, positions: seq[int]] =
+  ## Best alignment of `query` in `candidate`, not the first one.
+  ##
+  ## This used to walk the query left to right taking the earliest byte each
+  ## character could match, which is the cheapest possible alignment and the
+  ## wrong one often enough to be visible: `the heart` in `Reddit - The heart of
+  ## the internet` locked its `t` onto the `t` in `Reddit` and highlighted nine
+  ## scattered bytes, when the query sits there verbatim nine bytes along. A
+  ## greedy walk cannot recover from that, because the first `t` it took is
+  ## never reconsidered.
+  ##
+  ## So the alignment is chosen instead of stumbled into. For each query byte and
+  ## each candidate byte, the best score of any alignment that ends there, built
+  ## from two cases: the previous query byte sat immediately left, which earns
+  ## `FuzzyBonusConsecutive`, or it sat somewhere earlier, which costs
+  ## `FuzzyPenaltyGap` per byte skipped. The second case is what needs care —
+  ## `prev[k] - Gap * (i - 1 - k)` is not a running maximum in `k` because every
+  ## term is weighted by its own distance. Factoring the distance out gives
+  ## `(prev[k] + Gap * k) - Gap * (i - 1)`, and the bracketed part does not depend
+  ## on `i`, so one running maximum over `k` answers it in constant time.
+  ##
+  ## Rows are swept in increasing `i` and only bytes that can match the query
+  ## byte are visited, found with the same SIMD kernels as before, so the cells
+  ## that could never hold an alignment are never touched.
   if query.len == 0 or candidate.len == 0 or query.len > candidate.len:
     return (false, 0.0'f32, @[])
-  var positions = newSeqOfCap[int](query.len)
-  var score = 0.0'f32
-  var searchPos = 0
-  var lastPos = -1
-  for i in 0 ..< query.len:
-    let q = query[i]
-    let a = if caseSensitive: q else: lowerByte(q)
-    let b = if caseSensitive: q else: upperByte(q)
-    let p = findCharNext(candidate, searchPos, a, b, a != b)
-    if p < 0:
-      return (false, 0.0'f32, @[])
-    positions.add(p)
-    score += (if candidate[p] == q: FuzzyScoreExact else: FuzzyScoreFold)
-    if lastPos < 0:
-      score -= FuzzyPenaltyLeading * float32(p)
-    else:
-      let gap = p - lastPos - 1
-      if gap == 0:
-        score += FuzzyBonusConsecutive
-      else:
-        score -= FuzzyPenaltyGap * float32(gap)
-    if isWordStart(candidate, p):
-      score += FuzzyBonusWordStart
-    lastPos = p
-    searchPos = p + 1
-  score /= float32(candidate.len)
-  (true, score, positions)
+  let rows = query.len
+  let width = candidate.len
+  reserve(scratch, rows, width)
+
+  # Row 0: a single byte standing alone, so only the leading penalty applies.
+  for i in 0 ..< width:
+    scratch.prev[i] = FuzzyUnreachable
+  var ch = charOf(query, 0, caseSensitive)
+  var i = findCharNext(candidate, 0, ch.a, ch.b, ch.alt)
+  if i < 0:
+    return (false, 0.0'f32, @[])
+  while i >= 0:
+    scratch.prev[i] =
+      (if candidate[i] == query[0]: FuzzyScoreExact else: FuzzyScoreFold) +
+      (if isWordStart(candidate, i): FuzzyBonusWordStart else: 0.0'f32) -
+      FuzzyPenaltyLeading * float32(i)
+    scratch.parent[i] = -1
+    scratch.first[i] = int16(i)
+    i = findCharNext(candidate, i + 1, ch.a, ch.b, ch.alt)
+
+  for j in 1 ..< rows:
+    for k in 0 ..< width:
+      scratch.cur[k] = FuzzyUnreachable
+    let here = charOf(query, j, caseSensitive)
+    let prevCh = charOf(query, j - 1, caseSensitive)
+    # Running maximum of `prev[k] + Gap * k` over every k at or before `i - 2`,
+    # which is the set of predecessors separated from `i` by at least one byte.
+    var runBest = FuzzyUnreachable
+    var runAt = -1
+    var k = findCharNext(candidate, 0, prevCh.a, prevCh.b, prevCh.alt)
+    i = findCharNext(candidate, 0, here.a, here.b, here.alt)
+    while i >= 0:
+      while k >= 0 and k <= i - 2:
+        let carried = scratch.prev[k] + FuzzyPenaltyGap * float32(k)
+        if carried > runBest:
+          runBest = carried
+          runAt = k
+        k = findCharNext(candidate, k + 1, prevCh.a, prevCh.b, prevCh.alt)
+      var best = FuzzyUnreachable
+      var arg = -1
+      if i > 0 and scratch.prev[i - 1] > FuzzyUnreachable:
+        best = scratch.prev[i - 1] + FuzzyBonusConsecutive
+        arg = i - 1
+      if runAt >= 0:
+        let carried = runBest - FuzzyPenaltyGap * float32(i - 1)
+        if carried > best:
+          best = carried
+          arg = runAt
+      if arg >= 0:
+        scratch.cur[i] =
+          (if candidate[i] == query[j]: FuzzyScoreExact else: FuzzyScoreFold) +
+          (if isWordStart(candidate, i): FuzzyBonusWordStart else: 0.0'f32) + best
+        scratch.parent[j * width + i] = int16(arg)
+        scratch.first[j * width + i] = scratch.first[(j - 1) * width + arg]
+      i = findCharNext(candidate, i + 1, here.a, here.b, here.alt)
+    swap(scratch.prev, scratch.cur)
+
+  # The last row holds every way the query can end. Which one wins is decided on
+  # the reported score rather than the raw one, because the divisor is the span
+  # and the span is a property of the path: a run four bytes wide scores higher
+  # than a better-formed match ten bytes wide, and picking the raw maximum first
+  # would miss that.
+  var bestScore = FuzzyUnreachable
+  var endAt = -1
+  var span = 0
+  let lastRow = (rows - 1) * width
+  for k in 0 ..< width:
+    if scratch.prev[k] <= FuzzyUnreachable:
+      continue
+    let reach = k - int(scratch.first[lastRow + k]) + 1
+    let normalized = scratch.prev[k] / float32(reach)
+    if normalized > bestScore:
+      bestScore = normalized
+      endAt = k
+      span = reach
+  if endAt < 0:
+    return (false, 0.0'f32, @[])
+
+  var positions = newSeqOfCap[int](rows)
+  var walk = endAt
+  for j in countdown(rows - 1, 0):
+    positions.add(walk)
+    if j > 0:
+      walk = int(scratch.parent[j * width + walk])
+  # The walk runs backwards from the last query byte, so what it collected is
+  # descending. Callers index `positions` as though it were ascending, and the
+  # span at either end is the same either way, which is exactly why this is easy
+  # to miss: the score was already right before this line.
+  positions.reverse()
+  (true, bestScore, positions)
 
 proc fuzzyScore*(query, candidate: string,
                  opts: FuzzyOptions = FuzzyOptions()
                 ): tuple[matched: bool, score: float32,
                          positions: seq[int]] =
   ## Score one candidate. `matched` reports the subsequence hit;
-  ## `score` is length-normalized (higher ranks first) and may be
-  ## negative for gappy matches — filter with `minScore` in `fuzzySearch`.
-  fuzzyScoreImpl(query, candidate, opts.caseSensitive)
+  ## `score` is normalized by the width of the match (higher ranks
+  ## first) and may be negative for very gappy matches — filter with
+  ## `minScore` in `fuzzySearch`.
+  var scratch: ScoreScratch
+  fuzzyScoreImpl(query, candidate, opts.caseSensitive, scratch)
 
 # ---------------------------------------------------------------------------
 # Ranked search with bounded top-N
@@ -267,10 +404,11 @@ proc fuzzySearch*(query: string, candidates: openArray[string],
   ## are kept via a bounded heap instead of a full sort.
   if query.len == 0 or candidates.len == 0:
     return @[]
+  var scratch: ScoreScratch
   if opts.limit > 0:
     var heap = initHeapQueue[HeapItem]()
     for c in candidates:
-      let r = fuzzyScoreImpl(query, c, opts.caseSensitive)
+      let r = fuzzyScoreImpl(query, c, opts.caseSensitive, scratch)
       if r.matched and r.score >= opts.minScore:
         heap.push(HeapItem(score: r.score, text: c, positions: r.positions))
         if heap.len > opts.limit:
@@ -284,7 +422,7 @@ proc fuzzySearch*(query: string, candidates: openArray[string],
   else:
     result = @[]
     for c in candidates:
-      let r = fuzzyScoreImpl(query, c, opts.caseSensitive)
+      let r = fuzzyScoreImpl(query, c, opts.caseSensitive, scratch)
       if r.matched and r.score >= opts.minScore:
         result.add(FuzzyMatch(text: c, score: r.score, positions: r.positions))
     result.sort(cmpMatch)
