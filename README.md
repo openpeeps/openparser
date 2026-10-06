@@ -42,6 +42,7 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 - SQL parser supporting PostgreSQL, MySQL, and SQLite dialects
 - SIMD-accelerated regex engine with capture groups and quantifiers
 - SIMD-accelerated fuzzy search with fzf-style scoring and top-N ranking
+- Diff engine with Myers/patience/histogram algorithms and a UI-oriented structured result
 - GNU Gettext PO/MO translation file parsing and compilation
 - Fast Binary Encoding (FBE) with zero-copy buffer-based encoding
 - QR code generation and decoding for Model 2, Micro QR, rMQR, and SQRC
@@ -576,6 +577,47 @@ let strict = fuzzySearch("app", words, FuzzyOptions(minScore: 20.0))
 **Features:** SSE2/AVX2/NEON lanes with scalar fallback and kernel parity tests, ASCII case folding without copying, word-start and camelCase bonuses, gap and leading penalties, length-normalized scores, top-N bounded heap ranking, `minScore` filtering, byte-offset match positions.
 
 - [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_fuzzy.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/fuzzy.html)
+
+---
+
+## Diff
+
+Line-based diffing with a structured result and git-compatible unified output. The result describes *what* changed (added, removed, replaced, with line numbers, byte offsets and the byte range inside a changed line that moved), so a review UI, merge tool or language server can consume it directly; `renderUnified` is one formatter over that model.
+
+```nim
+import openparser/diff
+
+let d = diff(before, after)
+
+# Unified text, byte-compatible with `git diff --no-index`
+echo renderUnified(d)
+
+# Totals for a summary bar, without walking hunks
+echo d.stats            # +12 -3 ~2, 4 hunks
+echo d.stats.added      # 12
+echo d.isIdentical      # false
+
+# Per-line detail, the way a UI reads it
+for hunk in d.hunks:
+  for line in hunk.lines:
+    case line.kind
+    of dlEqual:  discard
+    of dlDelete: echo "removed line ", line.aLine, " at byte ", line.aByte
+    of dlInsert:
+      # `spans` underlines the word that changed, not the whole line
+      for sp in line.spans:
+        echo "  line ", line.bLine, " bytes ", sp.start, "..", sp.stop
+
+# Three algorithms, one engine. Myers is the default.
+let p = diff(before, after, DiffOptions(algorithm: daPatience))
+
+# Memory-mapped file input: no read, no copy
+let f = diffFile("old.txt", "new.txt")
+```
+
+**Features:** Myers, patience and histogram algorithms selectable at runtime, O((N+M)·D) time in the *edit distance* rather than file size, borrowed `ByteView` so lines are offsets instead of allocated strings, `memfiles`-backed file input, intra-line byte spans on changed lines, git-compatible rendering (hunk coalescing, `\ No newline at end of file`, `-0,0` empty sides, CRLF byte-exactness, binary detection), bounded search that reports `truncated` rather than grinding, precomputed stats.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_diff.nim) | [Parity against `git`](https://github.com/openpeeps/openparser/blob/main/tests/test_diff_parity.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/diff.html)
 
 ---
 

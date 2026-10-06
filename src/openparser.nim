@@ -38,9 +38,10 @@ elif defined(nimbase_extension):
 elif defined(builddocs):
   # For documentation purposes, we re-export all parsers here
   import ./openparser/[json, csv, rss, feed, yaml, dotenv,
-                    fbe, toml, bson, xml, nif, ical, vcard, plist, css, svg]
+                    fbe, toml, bson, xml, nif, ical, vcard, plist, css, svg,
+                    diff]
   export json, csv, rss, feed, yaml, dotenv,
-      fbe, toml, bson, xml, nif, ical, vcard, plist, css, svg
+      fbe, toml, bson, xml, nif, ical, vcard, plist, css, svg, diff
 
   import ./openparser/gettext/[po, mo]
   export po, mo
