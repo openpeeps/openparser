@@ -1,0 +1,43 @@
+nimTitle	types	openparser/diff/types.html	module openparser/diff/types		0
+nim	ByteView	openparser/diff/types.html#ByteView	object ByteView		16
+nim	daMyers	openparser/diff/types.html#daMyers	DiffAlgorithm.daMyers		33
+nim	daPatience	openparser/diff/types.html#daPatience	DiffAlgorithm.daPatience		33
+nim	daHistogram	openparser/diff/types.html#daHistogram	DiffAlgorithm.daHistogram		33
+nim	DiffAlgorithm	openparser/diff/types.html#DiffAlgorithm	enum DiffAlgorithm		33
+nim	dlEqual	openparser/diff/types.html#dlEqual	DiffLineKind.dlEqual		40
+nim	dlInsert	openparser/diff/types.html#dlInsert	DiffLineKind.dlInsert		40
+nim	dlDelete	openparser/diff/types.html#dlDelete	DiffLineKind.dlDelete		40
+nim	DiffLineKind	openparser/diff/types.html#DiffLineKind	enum DiffLineKind		40
+nim	diAuto	openparser/diff/types.html#diAuto	DiffIntra.diAuto		45
+nim	diOn	openparser/diff/types.html#diOn	DiffIntra.diOn		45
+nim	diOff	openparser/diff/types.html#diOff	DiffIntra.diOff		45
+nim	DiffIntra	openparser/diff/types.html#DiffIntra	enum DiffIntra		45
+nim	eolNone	openparser/diff/types.html#eolNone	DiffEol.eolNone		50
+nim	eolLf	openparser/diff/types.html#eolLf	DiffEol.eolLf		50
+nim	eolCrlf	openparser/diff/types.html#eolCrlf	DiffEol.eolCrlf		50
+nim	DiffEol	openparser/diff/types.html#DiffEol	enum DiffEol		50
+nim	DiffSpan	openparser/diff/types.html#DiffSpan	object DiffSpan		55
+nim	DiffLine	openparser/diff/types.html#DiffLine	object DiffLine		65
+nim	DiffHunk	openparser/diff/types.html#DiffHunk	object DiffHunk		77
+nim	DiffSide	openparser/diff/types.html#DiffSide	object DiffSide		91
+nim	DiffStats	openparser/diff/types.html#DiffStats	object DiffStats		105
+nim	Diff	openparser/diff/types.html#Diff	object Diff		115
+nim	DiffOptions	openparser/diff/types.html#DiffOptions	object DiffOptions		132
+nim	DiffError	openparser/diff/types.html#DiffError	object DiffError		140
+nim	DiffContext	openparser/diff/types.html#DiffContext	const DiffContext		143
+nim	DiffMaxEditDistance	openparser/diff/types.html#DiffMaxEditDistance	const DiffMaxEditDistance		144
+nim	DiffMaxSpanBytes	openparser/diff/types.html#DiffMaxSpanBytes	const DiffMaxSpanBytes		145
+nim	DiffBinarySniff	openparser/diff/types.html#DiffBinarySniff	const DiffBinarySniff		146
+nim	DiffNoContext	openparser/diff/types.html#DiffNoContext	const DiffNoContext		148
+nim	`[]`	openparser/diff/types.html#[],ByteView,int	proc `[]`(v: ByteView; i: int): byte		155
+nim	at	openparser/diff/types.html#at,ByteView,int	proc at(v: ByteView; i: int): ptr UncheckedArray[byte]		160
+nim	size	openparser/diff/types.html#size,ByteView	proc size(v: ByteView): int		174
+nim	isEmpty	openparser/diff/types.html#isEmpty,ByteView	proc isEmpty(v: ByteView): bool		176
+nim	`==`	openparser/diff/types.html#==,DiffSpan,DiffSpan	proc `==`(a, b: DiffSpan): bool		178
+nim	spanLen	openparser/diff/types.html#spanLen,DiffSpan	proc spanLen(s: DiffSpan): int		180
+nim	contains	openparser/diff/types.html#contains,DiffSpan,int	proc contains(s: DiffSpan; index: int): bool		182
+nim	slice	openparser/diff/types.html#slice,DiffSpan,string	proc slice(s: DiffSpan; content: string): string		186
+nim	`$`	openparser/diff/types.html#$,DiffLineKind	proc `$`(k: DiffLineKind): string		191
+nim	`$`	openparser/diff/types.html#$,DiffAlgorithm	proc `$`(a: DiffAlgorithm): string		198
+nim	`$`	openparser/diff/types.html#$,DiffStats	proc `$`(d: DiffStats): string		205
+nimgrp	$	openparser/diff/types.html#$-procs-all	proc		191

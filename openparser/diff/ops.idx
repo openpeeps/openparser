@@ -1,0 +1,7 @@
+nimTitle	ops	openparser/diff/ops.html	module openparser/diff/ops		0
+nim	lineOf	openparser/diff/ops.html#lineOf,DiffLineKind	proc lineOf(kind: DiffLineKind): char		20
+nim	fillLine	openparser/diff/ops.html#fillLine,LineIndex,LineIndex,LineOp,DiffLine	proc fillLine(a, b: LineIndex; op: LineOp; line: var DiffLine)		27
+nim	makeHunk	openparser/diff/ops.html#makeHunk,LineIndex,LineIndex,seq[LineOp],int,int,DiffOptions	proc makeHunk(a, b: LineIndex; ops: seq[LineOp]; startPos, endPos: int;\n         opts: DiffOptions): DiffHunk		52
+nim	buildHunks	openparser/diff/ops.html#buildHunks,LineIndex,LineIndex,seq[LineOp],DiffOptions	proc buildHunks(a, b: LineIndex; ops: seq[LineOp]; opts: DiffOptions): seq[DiffHunk]		163
+nim	computeStats	openparser/diff/ops.html#computeStats,seq[DiffHunk]	proc computeStats(hunks: seq[DiffHunk]): DiffStats		209
+nim	isIdentical	openparser/diff/ops.html#isIdentical,Diff	proc isIdentical(d: Diff): bool		246

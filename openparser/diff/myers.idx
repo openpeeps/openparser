@@ -1,0 +1,4 @@
+nimTitle	myers	openparser/diff/myers.html	module openparser/diff/myers		0
+nim	myersWalk	openparser/diff/myers.html#myersWalk,LineIndex,LineIndex,int,int,int,int,int,seq[LineOp]	proc myersWalk(a, b: LineIndex; aLo, aHi, bLo, bHi, maxD: int; ops: var seq[LineOp]): bool		37
+nim	myersRange	openparser/diff/myers.html#myersRange,LineIndex,LineIndex,int,int,int,int,int,seq[LineOp],bool	proc myersRange(a, b: LineIndex; a0, a1, b0, b1, maxD: int; ops: var seq[LineOp];\n           truncated: var bool)		134
+nim	myersDiff	openparser/diff/myers.html#myersDiff,LineIndex,LineIndex,DiffOptions	proc myersDiff(a, b: LineIndex; opts: DiffOptions): (seq[LineOp], bool)		191

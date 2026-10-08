@@ -1,0 +1,8 @@
+nimTitle	source	openparser/diff/source.html	module openparser/diff/source		0
+nim	FileView	openparser/diff/source.html#FileView	object FileView		29
+nim	view	openparser/diff/source.html#view,string	proc view(s: string): ByteView		40
+nim	view	openparser/diff/source.html#view,seq[byte]	proc view(s: seq[byte]): ByteView		50
+nim	openFile	openparser/diff/source.html#openFile,string	proc openFile(path: string): FileView		58
+nim	deinit	openparser/diff/source.html#deinit,FileView	proc deinit(f: var FileView)		68
+nim	view	openparser/diff/source.html#view,FileView	proc view(f: FileView): ByteView		76
+nimgrp	view	openparser/diff/source.html#view-procs-all	proc		40

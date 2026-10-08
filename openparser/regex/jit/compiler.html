@@ -66,7 +66,9 @@
   ctx*: ptr JitCtx
   codeSize*: int
   firstByte*: int            ## byte the match must start with, -1 = unknown
-  anchored*: bool            ## program starts with ^: only startPos 0 can match">CompiledJit</a></li>
+  anchored*: bool            ## program starts with ^: only startPos 0 can match
+  classBitmaps*: ptr UncheckedArray[uint8] ## owned copy of class bitmaps
+  numClasses*: int           ## number of 32-byte bitmaps">CompiledJit</a></li>
 <li><a class="reference" href="#JitCtx" title="JitCtx = object
   stackBase*: ptr UncheckedArray[byte]
   stackLimit*: pointer">JitCtx</a></li>
@@ -135,7 +137,9 @@
   <span class="Identifier">ctx</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="#JitCtx"><span class="Identifier">JitCtx</span></a>
   <span class="Identifier">codeSize</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
   <span class="Identifier">firstByte</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>            <span class="Comment">## byte the match must start with, -1 = unknown</span>
-  <span class="Identifier">anchored</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>            <span class="Comment">## program starts with ^: only startPos 0 can match</span></pre></dt>
+  <span class="Identifier">anchored</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>            <span class="Comment">## program starts with ^: only startPos 0 can match</span>
+  <span class="Identifier">classBitmaps</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">UncheckedArray</span><span class="Other">[</span><span class="Identifier">uint8</span><span class="Other">]</span> <span class="Comment">## owned copy of class bitmaps</span>
+  <span class="Identifier">numClasses</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>           <span class="Comment">## number of 32-byte bitmaps</span></pre></dt>
   <dd>
     
     
@@ -254,7 +258,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-30 11:53:55 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-08 10:58:42 UTC</small>
       </div>
     </div>
   </div>

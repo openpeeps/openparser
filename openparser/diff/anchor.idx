@@ -1,0 +1,9 @@
+nimTitle	anchor	openparser/diff/anchor.html	module openparser/diff/anchor		0
+nim	Anchor	openparser/diff/anchor.html#Anchor	object Anchor		41
+nim	monotonic	openparser/diff/anchor.html#monotonic,seq[Anchor]	proc monotonic(anchors: var seq[Anchor])		63
+nim	uniqueAnchors	openparser/diff/anchor.html#uniqueAnchors,LineIndex,LineIndex,int,int,int,int	proc uniqueAnchors(a, b: LineIndex; aLo, aHi, bLo, bHi: int): seq[Anchor]		79
+nim	histogramAnchors	openparser/diff/anchor.html#histogramAnchors,LineIndex,LineIndex,int,int,int,int	proc histogramAnchors(a, b: LineIndex; aLo, aHi, bLo, bHi: int): seq[Anchor]		94
+nim	anchoredDiff	openparser/diff/anchor.html#anchoredDiff,LineIndex,LineIndex,int,int,int,int,int,seq[Anchor],seq[LineOp],bool	proc anchoredDiff(a, b: LineIndex; aLo, aHi, bLo, bHi, maxD: int;\n             anchors: seq[Anchor]; ops: var seq[LineOp]; truncated: var bool)		131
+nim	anchoredWhole	openparser/diff/anchor.html#anchoredWhole,LineIndex,LineIndex,DiffOptions,seq[Anchor]	proc anchoredWhole(a, b: LineIndex; opts: DiffOptions; anchors: seq[Anchor]): (\n    seq[LineOp], bool)		147
+nim	patienceDiff	openparser/diff/anchor.html#patienceDiff,LineIndex,LineIndex,DiffOptions	proc patienceDiff(a, b: LineIndex; opts: DiffOptions): (seq[LineOp], bool)		162
+nim	histogramDiff	openparser/diff/anchor.html#histogramDiff,LineIndex,LineIndex,DiffOptions	proc histogramDiff(a, b: LineIndex; opts: DiffOptions): (seq[LineOp], bool)		167

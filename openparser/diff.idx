@@ -1,0 +1,10 @@
+nimTitle	diff	openparser/diff.html	module openparser/diff		0
+nim	diffVersion	openparser/diff.html#diffVersion	const diffVersion		119
+nim	resolved	openparser/diff.html#resolved,DiffOptions	proc resolved(opts: DiffOptions): DiffOptions		125
+nim	diff	openparser/diff.html#diff,ByteView,ByteView,DiffOptions	proc diff(aView, bView: ByteView; opts: DiffOptions = DiffOptions()): Diff		142
+nim	diff	openparser/diff.html#diff,string,string,DiffOptions	proc diff(a, b: string; opts: DiffOptions = DiffOptions()): Diff		187
+nim	diff	openparser/diff.html#diff,seq[byte],seq[byte],DiffOptions	proc diff(a, b: seq[byte]; opts: DiffOptions = DiffOptions()): Diff		200
+nim	diffFile	openparser/diff.html#diffFile,string,string,DiffOptions	proc diffFile(pathA, pathB: string; opts: DiffOptions = DiffOptions()): Diff		204
+nim	sameText	openparser/diff.html#sameText,string,string	proc sameText(a, b: string): bool		226
+nim	diffStats	openparser/diff.html#diffStats,string,string,DiffOptions	proc diffStats(a, b: string; opts: DiffOptions = DiffOptions()): DiffStats		234
+nimgrp	diff	openparser/diff.html#diff-procs-all	proc		142

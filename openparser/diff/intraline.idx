@@ -1,0 +1,2 @@
+nimTitle	intraline	openparser/diff/intraline.html	module openparser/diff/intraline		0
+nim	spansForPair	openparser/diff/intraline.html#spansForPair,ByteView,ByteView,int,int,int,int,int	proc spansForPair(aView, bView: ByteView; aStart, aLen, bStart, bLen, maxBytes: int): (\n    seq[DiffSpan], seq[DiffSpan])		31

@@ -1,0 +1,11 @@
+nimTitle	lines	openparser/diff/lines.html	module openparser/diff/lines		0
+nim	LineSpan	openparser/diff/lines.html#LineSpan	object LineSpan		28
+nim	LineIndex	openparser/diff/lines.html#LineIndex	object LineIndex		39
+nim	LineTables	openparser/diff/lines.html#LineTables	object LineTables		53
+nim	indexLines	openparser/diff/lines.html#indexLines,ByteView	proc indexLines(v: ByteView; sniff = DiffBinarySniff): LineIndex		58
+nim	lineCount	openparser/diff/lines.html#lineCount,LineIndex	proc lineCount(ix: LineIndex): int		105
+nim	isLastUnterminated	openparser/diff/lines.html#isLastUnterminated,LineIndex	proc isLastUnterminated(ix: LineIndex): bool		107
+nim	eolOf	openparser/diff/lines.html#eolOf,LineIndex,int	proc eolOf(ix: LineIndex; idx: int): DiffEol		112
+nim	linesEqual	openparser/diff/lines.html#linesEqual,LineIndex,int,LineIndex,int	proc linesEqual(a: LineIndex; aIdx: int; b: LineIndex; bIdx: int): bool		116
+nim	contentOf	openparser/diff/lines.html#contentOf,LineIndex,int	proc contentOf(ix: LineIndex; idx: int): string		137
+nim	keyOf	openparser/diff/lines.html#keyOf,LineIndex,int	proc keyOf(ix: LineIndex; idx: int): string		146

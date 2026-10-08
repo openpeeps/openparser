@@ -63,6 +63,13 @@
     <ul class="simple simple-toc-section">
       <li><a class="reference" href="#OpenParserTomlError" title="OpenParserTomlError = object of CatchableError">OpenParserTomlError</a></li>
 <li><a class="reference" href="#TOML" title="TOML = string">TOML</a></li>
+<li><a class="reference" href="#TomlCtx" title="TomlCtx = enum
+  tcKey, tcValue">TomlCtx</a></li>
+<li><a class="reference" href="#TomlDateKind" title="TomlDateKind = enum
+  tdkOffsetDateTime,        ## full-date + full-time, e.g. `1979-05-27T07:32:00Z`
+  tdkLocalDateTime,         ## full-date + partial-time, e.g. `1979-05-27T07:32:00`
+  tdkLocalDate,             ## full-date, e.g. `1979-05-27`
+  tdkLocalTime               ## partial-time, e.g. `07:32:00`">TomlDateKind</a></li>
 <li><a class="reference" href="#TomlDocument" title="TomlDocument = TomlNode">TomlDocument</a></li>
 <li><a class="reference" href="#TomlLexer" title="TomlLexer = object of OpenLexer">TomlLexer</a></li>
 <li><a class="reference" href="#TomlNode" title="TomlNode {.acyclic.} = ref object
@@ -76,20 +83,39 @@
   of tvkBoolean:
     boolVal*: bool
   of tvkDateTime:
-    dateTimeVal*: DateTime
+    dateTimeVal*: DateTime ## The wall-clock value, with no zone attached. `std/times` cannot hold a
+                           ## UTC offset, so read `dateKind` and `dateRaw` to tell the four TOML
+                           ## date/time types apart and to recover the offset.
+    dateKind*: TomlDateKind ## The literal exactly as written in the source, which makes dumping
+                            ## lossless.
+    dateRaw*: string
   of tvkArray:
     arrayVal*: seq[TomlNode]
+    tableArray*: bool ## True when the array came from a `[[array of tables]]` header rather
+                      ## than from an inline array literal. The two serialize differently.
   of tvkTable:
     tableVal*: OrderedTableRef[string, TomlNode]">TomlNode</a></li>
 <li><a class="reference" href="#TomlParser" title="TomlParser = object
   lex*: TomlLexer
-  prev*, curr*, next*: TomlToken">TomlParser</a></li>
+  curr*: TomlToken
+  strictLines*: bool ## Set while reading an inline table, where TOML v1.0.0 forbids any newline
+                     ## between the braces.
+  pathStack*: seq[string] ## Dotted paths of the tables currently being filled, outermost first.
+                          ## TOML's redefinition rules need to know how each table came to exist:
+                          ## a super-table created implicitly by another header may still be defined
+                          ## later with `[x]`, but one created by a dotted key may not.
+  byHeader*: HashSet[string] ## Dotted paths defined by a `[table]` or `[[array of tables]]` header.
+  byDotted*: HashSet[string] ## Dotted paths created as an intermediate step of a dotted key.
+  sealed*: HashSet[string] ## Dotted paths that belong to an inline table. Inline tables are closed
+                           ## the moment they are written, so nothing may be added to them afterwards.
+  arraysOfTables*: HashSet[string] ## Dotted paths that are arrays of tables created by a `[[header]]`, as
+                                   ## opposed to inline arrays. Only the former may be appended to.">TomlParser</a></li>
 <li><a class="reference" href="#TomlToken" title="TomlToken = ref object of OpenToken
   kind*: TomlTokenKind
   indent*: int">TomlToken</a></li>
 <li><a class="reference" href="#TomlTokenKind" title="TomlTokenKind = enum
-  ttkEOF = &quot;EOF&quot;, ttkError = &quot;Error&quot;, ttkString, ttkInteger, ttkFloat,
-  ttkBoolean, ttkDateTime, ttkIdentifier, ttkEquals = &quot;=&quot;, ttkDot = &quot;.&quot;,
+  ttkEOF = &quot;EOF&quot;, ttkError = &quot;Error&quot;, ttkString, ttkBareKey, ttkInteger,
+  ttkFloat, ttkBoolean, ttkDateTime, ttkEquals = &quot;=&quot;, ttkDot = &quot;.&quot;,
   ttkComma = &quot;,&quot;, ttkLB = &quot;[&quot;, ttkRB = &quot;]&quot;, ttkLC = &quot;{&quot;, ttkRC = &quot;}&quot;, ttkComment">TomlTokenKind</a></li>
 <li><a class="reference" href="#TomlValueKind" title="TomlValueKind = enum
   tvkString, tvkInteger, tvkFloat, tvkBoolean, tvkDateTime, tvkArray, tvkTable">TomlValueKind</a></li>
@@ -151,7 +177,9 @@
 
 </ul>
 <ul class="simple nested-toc-section">newTomlDateTime
-  <li><a class="reference" href="#newTomlDateTime%2CDateTime" title="newTomlDateTime(dt: DateTime): TomlNode">newTomlDateTime(dt: DateTime): TomlNode</a></li>
+  <li><a class="reference" href="#newTomlDateTime%2CDateTime%2CTomlDateKind%2Cstring" title="newTomlDateTime(dt: DateTime; dateKind: TomlDateKind = tdkLocalDateTime;
+                dateRaw: string = &quot;&quot;): TomlNode">newTomlDateTime(dt: DateTime; dateKind: TomlDateKind = tdkLocalDateTime;
+                dateRaw: string = &quot;&quot;): TomlNode</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">newTomlFloat
@@ -174,8 +202,12 @@
   <li><a class="reference" href="#newTomlTable" title="newTomlTable(): TomlNode">newTomlTable(): TomlNode</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">newTomlTableArray
+  <li><a class="reference" href="#newTomlTableArray" title="newTomlTableArray(): TomlNode">newTomlTableArray(): TomlNode</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">nextToken
-  <li><a class="reference" href="#nextToken%2CTomlParser" title="nextToken(p: var TomlParser): TomlToken">nextToken(p: var TomlParser): TomlToken</a></li>
+  <li><a class="reference" href="#nextToken%2CTomlParser%2CTomlCtx%2Cbool" title="nextToken(p: var TomlParser; ctx: TomlCtx = tcValue; allowNewline: bool = true): TomlToken">nextToken(p: var TomlParser; ctx: TomlCtx = tcValue; allowNewline: bool = true): TomlToken</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">parseHook
@@ -194,6 +226,10 @@
   <li><a class="reference" href="#parseTOML%2CTOML" title="parseTOML(input: TOML): TomlDocument">parseTOML(input: TOML): TomlDocument</a></li>
 <li><a class="reference" href="#parseTOML%2CTomlParser%2CT" title="parseTOML[T: object | ref object](p: var TomlParser; v: var T)">parseTOML[T: object | ref object](p: var TomlParser; v: var T)</a></li>
 <li><a class="reference" href="#parseTOML%2CTOML%2Ctypedesc%5BT%5D" title="parseTOML[T](input: TOML; t: typedesc[T]): T">parseTOML[T](input: TOML; t: typedesc[T]): T</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">parseTOMLFile
+  <li><a class="reference" href="#parseTOMLFile%2Cstring" title="parseTOMLFile(filename: string): TomlDocument">parseTOMLFile(filename: string): TomlDocument</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">peekChar
@@ -217,7 +253,7 @@
     <div id="tocRoot"></div>
     
     <p class="module-desc"><p>This module implements a TOML parser and serializer for Nim, allowing you to read and write TOML configuration files with ease.</p>
-<p>It can parse TOML format into Nim data structures, like tables, sequences, and basic types, and serialize data structures back into TOML format.</p>
+<p>The parser targets <strong>TOML v1.0.0</strong> and is validated against the official <a class="reference external" href="https://github.com/toml-lang/toml-test">toml-test</a> fixture corpus. It parses TOML format into Nim data structures, like tables, sequences, and basic types, and serializes data structures back into TOML format.</p>
 <p>Parsing to pre-defined Toml AST nodes is supported as well, so you can work with a structured representation of the TOML document if you need more control or want to implement custom validation rules beyond what the direct-to-struct parsing provides</p>
 </p>
     <div class="section" id="6">
@@ -245,6 +281,27 @@
     
   </dd>
 </div>
+<div id="TomlCtx">
+  <dt><pre><a href="#TomlCtx"><span class="Identifier">TomlCtx</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <span class="Identifier">tcKey</span><span class="Other">,</span> <span class="Identifier">tcValue</span></pre></dt>
+  <dd>
+    
+    What the parser expects at the cursor. A bare word lexes differently depending on whether it sits in key position (<tt class="docutils literal"><span class="pre"><span class="DecNumber">1</span> <span class="Operator">=</span> <span class="DecNumber">2</span></span></tt> keys <tt class="docutils literal"><span class="pre"><span class="DecNumber">1</span></span></tt>) or in value position (<tt class="docutils literal"><span class="pre"><span class="DecNumber">1</span></span></tt> is an integer), so the lexer is told which to expect.
+    
+  </dd>
+</div>
+<div id="TomlDateKind">
+  <dt><pre><a href="#TomlDateKind"><span class="Identifier">TomlDateKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <span class="Identifier">tdkOffsetDateTime</span><span class="Other">,</span>        <span class="Comment">## full-date + full-time, e.g. `1979-05-27T07:32:00Z`</span>
+  <span class="Identifier">tdkLocalDateTime</span><span class="Other">,</span>         <span class="Comment">## full-date + partial-time, e.g. `1979-05-27T07:32:00`</span>
+  <span class="Identifier">tdkLocalDate</span><span class="Other">,</span>             <span class="Comment">## full-date, e.g. `1979-05-27`</span>
+  <span class="Identifier">tdkLocalTime</span>               <span class="Comment">## partial-time, e.g. `07:32:00`</span></pre></dt>
+  <dd>
+    
+    TOML has four distinct date/time types and the difference is significant: only the offset date-time names an absolute point in time.
+    
+  </dd>
+</div>
 <div id="TomlDocument">
   <dt><pre><a href="#TomlDocument"><span class="Identifier">TomlDocument</span></a> <span class="Other">=</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a></pre></dt>
   <dd>
@@ -257,7 +314,7 @@
   <dt><pre><a href="#TomlLexer"><span class="Identifier">TomlLexer</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <a href="private/types.html#OpenLexer"><span class="Identifier">OpenLexer</span></a></pre></dt>
   <dd>
     
-    The TomlLexer is responsible for tokenizing a TOML input string. It produces a stream of TomlTokens that can be consumed by a parser
+    The TomlLexer is responsible for tokenizing a TOML input string. It produces a stream of TomlTokens that can be consumed by a parser. The <tt class="docutils literal"><span class="pre"><span class="Identifier">date</span><span class="Operator">*</span></span></tt> fields carry the components of the date/time token that is currently being scanned.
     
   </dd>
 </div>
@@ -273,9 +330,16 @@
   <span class="Keyword">of</span> <span class="Identifier">tvkBoolean</span><span class="Other">:</span>
     <span class="Identifier">boolVal</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
   <span class="Keyword">of</span> <span class="Identifier">tvkDateTime</span><span class="Other">:</span>
-    <span class="Identifier">dateTimeVal</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">DateTime</span>
+    <span class="Identifier">dateTimeVal</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">DateTime</span> <span class="Comment">## The wall-clock value, with no zone attached. `std/times` cannot hold a</span>
+                           <span class="Comment">## UTC offset, so read `dateKind` and `dateRaw` to tell the four TOML</span>
+                           <span class="Comment">## date/time types apart and to recover the offset.</span>
+    <span class="Identifier">dateKind</span><span class="Operator">*</span><span class="Other">:</span> <a href="#TomlDateKind"><span class="Identifier">TomlDateKind</span></a> <span class="Comment">## The literal exactly as written in the source, which makes dumping</span>
+                            <span class="Comment">## lossless.</span>
+    <span class="Identifier">dateRaw</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Keyword">of</span> <span class="Identifier">tvkArray</span><span class="Other">:</span>
     <span class="Identifier">arrayVal</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#TomlNode"><span class="Identifier">TomlNode</span></a><span class="Other">]</span>
+    <span class="Identifier">tableArray</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Comment">## True when the array came from a `[[array of tables]]` header rather</span>
+                      <span class="Comment">## than from an inline array literal. The two serialize differently.</span>
   <span class="Keyword">of</span> <span class="Identifier">tvkTable</span><span class="Other">:</span>
     <span class="Identifier">tableVal</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">OrderedTableRef</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a><span class="Other">]</span></pre></dt>
   <dd>
@@ -287,7 +351,19 @@
 <div id="TomlParser">
   <dt><pre><a href="#TomlParser"><span class="Identifier">TomlParser</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">lex</span><span class="Operator">*</span><span class="Other">:</span> <a href="#TomlLexer"><span class="Identifier">TomlLexer</span></a>
-  <span class="Identifier">prev</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">curr</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">next</span><span class="Operator">*</span><span class="Other">:</span> <a href="#TomlToken"><span class="Identifier">TomlToken</span></a></pre></dt>
+  <span class="Identifier">curr</span><span class="Operator">*</span><span class="Other">:</span> <a href="#TomlToken"><span class="Identifier">TomlToken</span></a>
+  <span class="Identifier">strictLines</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Comment">## Set while reading an inline table, where TOML v1.0.0 forbids any newline</span>
+                     <span class="Comment">## between the braces.</span>
+  <span class="Identifier">pathStack</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Comment">## Dotted paths of the tables currently being filled, outermost first.</span>
+                          <span class="Comment">## TOML's redefinition rules need to know how each table came to exist:</span>
+                          <span class="Comment">## a super-table created implicitly by another header may still be defined</span>
+                          <span class="Comment">## later with `[x]`, but one created by a dotted key may not.</span>
+  <span class="Identifier">byHeader</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">HashSet</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Comment">## Dotted paths defined by a `[table]` or `[[array of tables]]` header.</span>
+  <span class="Identifier">byDotted</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">HashSet</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Comment">## Dotted paths created as an intermediate step of a dotted key.</span>
+  <span class="Identifier">sealed</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">HashSet</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Comment">## Dotted paths that belong to an inline table. Inline tables are closed</span>
+                           <span class="Comment">## the moment they are written, so nothing may be added to them afterwards.</span>
+  <span class="Identifier">arraysOfTables</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">HashSet</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Comment">## Dotted paths that are arrays of tables created by a `[[header]]`, as</span>
+                                   <span class="Comment">## opposed to inline arrays. Only the former may be appended to.</span></pre></dt>
   <dd>
     
     The TomlParser takes a TomlLexer and produces a Nim data structure representing the TOML content
@@ -300,14 +376,14 @@
   <span class="Identifier">indent</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
   <dd>
     
-    The kind of token, which can be a string, number, boolean, identifier, or punctuation
+    The kind of token, which can be a string, number, boolean, bare key or punctuation
     
   </dd>
 </div>
 <div id="TomlTokenKind">
   <dt><pre><a href="#TomlTokenKind"><span class="Identifier">TomlTokenKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
-  <span class="Identifier">ttkEOF</span> <span class="Other">=</span> <span class="StringLit">&quot;EOF&quot;</span><span class="Other">,</span> <span class="Identifier">ttkError</span> <span class="Other">=</span> <span class="StringLit">&quot;Error&quot;</span><span class="Other">,</span> <span class="Identifier">ttkString</span><span class="Other">,</span> <span class="Identifier">ttkInteger</span><span class="Other">,</span> <span class="Identifier">ttkFloat</span><span class="Other">,</span>
-  <span class="Identifier">ttkBoolean</span><span class="Other">,</span> <span class="Identifier">ttkDateTime</span><span class="Other">,</span> <span class="Identifier">ttkIdentifier</span><span class="Other">,</span> <span class="Identifier">ttkEquals</span> <span class="Other">=</span> <span class="StringLit">&quot;=&quot;</span><span class="Other">,</span> <span class="Identifier">ttkDot</span> <span class="Other">=</span> <span class="StringLit">&quot;.&quot;</span><span class="Other">,</span>
+  <span class="Identifier">ttkEOF</span> <span class="Other">=</span> <span class="StringLit">&quot;EOF&quot;</span><span class="Other">,</span> <span class="Identifier">ttkError</span> <span class="Other">=</span> <span class="StringLit">&quot;Error&quot;</span><span class="Other">,</span> <span class="Identifier">ttkString</span><span class="Other">,</span> <span class="Identifier">ttkBareKey</span><span class="Other">,</span> <span class="Identifier">ttkInteger</span><span class="Other">,</span>
+  <span class="Identifier">ttkFloat</span><span class="Other">,</span> <span class="Identifier">ttkBoolean</span><span class="Other">,</span> <span class="Identifier">ttkDateTime</span><span class="Other">,</span> <span class="Identifier">ttkEquals</span> <span class="Other">=</span> <span class="StringLit">&quot;=&quot;</span><span class="Other">,</span> <span class="Identifier">ttkDot</span> <span class="Other">=</span> <span class="StringLit">&quot;.&quot;</span><span class="Other">,</span>
   <span class="Identifier">ttkComma</span> <span class="Other">=</span> <span class="StringLit">&quot;,&quot;</span><span class="Other">,</span> <span class="Identifier">ttkLB</span> <span class="Other">=</span> <span class="StringLit">&quot;[&quot;</span><span class="Other">,</span> <span class="Identifier">ttkRB</span> <span class="Other">=</span> <span class="StringLit">&quot;]&quot;</span><span class="Other">,</span> <span class="Identifier">ttkLC</span> <span class="Other">=</span> <span class="StringLit">&quot;{&quot;</span><span class="Other">,</span> <span class="Identifier">ttkRC</span> <span class="Other">=</span> <span class="StringLit">&quot;}&quot;</span><span class="Other">,</span> <span class="Identifier">ttkComment</span></pre></dt>
   <dd>
     
@@ -475,11 +551,13 @@
 
 </div>
 <div id="newTomlDateTime-procs-all">
-  <div id="newTomlDateTime,DateTime">
-  <dt><pre><span class="Keyword">proc</span> <a href="#newTomlDateTime%2CDateTime"><span class="Identifier">newTomlDateTime</span></a><span class="Other">(</span><span class="Identifier">dt</span><span class="Other">:</span> <span class="Identifier">DateTime</span><span class="Other">)</span><span class="Other">:</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <div id="newTomlDateTime,DateTime,TomlDateKind,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#newTomlDateTime%2CDateTime%2CTomlDateKind%2Cstring"><span class="Identifier">newTomlDateTime</span></a><span class="Other">(</span><span class="Identifier">dt</span><span class="Other">:</span> <span class="Identifier">DateTime</span><span class="Other">;</span> <span class="Identifier">dateKind</span><span class="Other">:</span> <a href="#TomlDateKind"><span class="Identifier">TomlDateKind</span></a> <span class="Other">=</span> <span class="Identifier">tdkLocalDateTime</span><span class="Other">;</span>
+                     <span class="Identifier">dateRaw</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Helper to create a TomlNode of kind datetime
+    Helper to create a TomlNode of kind datetime. <tt class="docutils literal"><span class="pre"><span class="Identifier">dateKind</span></span></tt> and <tt class="docutils literal"><span class="pre"><span class="Identifier">dateRaw</span></span></tt> preserve the TOML type and the original spelling; when <tt class="docutils literal"><span class="pre"><span class="Identifier">dateRaw</span></span></tt> is empty it is derived from <tt class="docutils literal"><span class="pre"><span class="Identifier">dateKind</span></span></tt> and <tt class="docutils literal"><span class="pre"><span class="Identifier">dt</span></span></tt>.
     
   </dd>
 </div>
@@ -540,13 +618,26 @@
 </div>
 
 </div>
-<div id="nextToken-procs-all">
-  <div id="nextToken,TomlParser">
-  <dt><pre><span class="Keyword">proc</span> <a href="#nextToken%2CTomlParser"><span class="Identifier">nextToken</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlParser"><span class="Identifier">TomlParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#TomlToken"><span class="Identifier">TomlToken</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+<div id="newTomlTableArray-procs-all">
+  <div id="newTomlTableArray">
+  <dt><pre><span class="Keyword">proc</span> <a href="#newTomlTableArray"><span class="Identifier">newTomlTableArray</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Lexical analysis to produce the next token from the input
+    Helper to create an array of tables, as a <tt class="docutils literal"><span class="pre"><span class="Punctuation">[</span><span class="Punctuation">[</span><span class="Identifier">header</span><span class="Punctuation">]</span><span class="Punctuation">]</span></span></tt> does
+    
+  </dd>
+</div>
+
+</div>
+<div id="nextToken-procs-all">
+  <div id="nextToken,TomlParser,TomlCtx,bool">
+  <dt><pre><span class="Keyword">proc</span> <a href="#nextToken%2CTomlParser%2CTomlCtx%2Cbool"><span class="Identifier">nextToken</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlParser"><span class="Identifier">TomlParser</span></a><span class="Other">;</span> <span class="Identifier">ctx</span><span class="Other">:</span> <a href="#TomlCtx"><span class="Identifier">TomlCtx</span></a> <span class="Other">=</span> <span class="Identifier">tcValue</span><span class="Other">;</span>
+               <span class="Identifier">allowNewline</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">)</span><span class="Other">:</span> <a href="#TomlToken"><span class="Identifier">TomlToken</span></a> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Lexical analysis to produce the next token from the input. <tt class="docutils literal"><span class="pre"><span class="Identifier">ctx</span></span></tt> says whether a bare word should be read as a key or as a value, and <tt class="docutils literal"><span class="pre"><span class="Identifier">allowNewline</span></span></tt> is cleared where TOML forbids a line break, such as inside a table header or an inline table.
     
   </dd>
 </div>
@@ -555,8 +646,8 @@
 <div id="parseHook-procs-all">
   <div id="parseHook,TomlParser,TomlNode">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseHook%2CTomlParser%2CTomlNode"><span class="Identifier">parseHook</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlParser"><span class="Identifier">TomlParser</span></a><span class="Other">;</span> <span class="Identifier">v</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a><span class="Other">)</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -569,10 +660,10 @@
   <div id="parseObject,TomlParser,int">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseObject%2CTomlParser%2Cint"><span class="Identifier">parseObject</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlParser"><span class="Identifier">TomlParser</span></a><span class="Other">;</span> <span class="Identifier">ln</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    
+    Parse a sequence of key = value entries into a table and return it.
     
   </dd>
 </div>
@@ -582,7 +673,7 @@
   <div id="parseRoot,TomlParser">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseRoot%2CTomlParser"><span class="Identifier">parseRoot</span></a><span class="Other">(</span><span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="#TomlParser"><span class="Identifier">TomlParser</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#TomlNode"><span class="Identifier">TomlNode</span></a> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Parses the entire TOML document and returns a TomlDocument
@@ -595,7 +686,7 @@
   <div id="parseTOML,TOML">
   <dt><pre><span class="Keyword">proc</span> <a href="#parseTOML%2CTOML"><span class="Identifier">parseTOML</span></a><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <a href="#TOML"><span class="Identifier">TOML</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#TomlDocument"><span class="Identifier">TomlDocument</span></a> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">]</span><span class="Other">,</span>
-    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     <p>Parses a TOML string into a <tt class="docutils literal"><span class="pre"><span class="Identifier">TomlDocument</span></span></tt>, which is a table mapping keys to <tt class="docutils literal"><span class="pre"><span class="Identifier">TomlNode</span></span></tt> nodes</p>
@@ -617,6 +708,19 @@
   <dd>
     
     Parses a TOML string into a Nim data structure of type T
+    
+  </dd>
+</div>
+
+</div>
+<div id="parseTOMLFile-procs-all">
+  <div id="parseTOMLFile,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseTOMLFile%2Cstring"><span class="Identifier">parseTOMLFile</span></a><span class="Other">(</span><span class="Identifier">filename</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#TomlDocument"><span class="Identifier">TomlDocument</span></a> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">OpenParserTomlError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Parses the TOML file at <tt class="docutils literal"><span class="pre"><span class="Identifier">filename</span></span></tt> into a <tt class="docutils literal"><span class="pre"><span class="Identifier">TomlDocument</span></span></tt>
     
   </dd>
 </div>
@@ -656,7 +760,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-09-30 11:53:54 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-08 10:58:41 UTC</small>
       </div>
     </div>
   </div>

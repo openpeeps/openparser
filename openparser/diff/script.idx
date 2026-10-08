@@ -1,0 +1,11 @@
+nimTitle	script	openparser/diff/script.html	module openparser/diff/script		0
+nim	opEqual	openparser/diff/script.html#opEqual	LineOpKind.opEqual		16
+nim	opDelete	openparser/diff/script.html#opDelete	LineOpKind.opDelete		16
+nim	opInsert	openparser/diff/script.html#opInsert	LineOpKind.opInsert		16
+nim	LineOpKind	openparser/diff/script.html#LineOpKind	enum LineOpKind		16
+nim	LineOp	openparser/diff/script.html#LineOp	object LineOp		21
+nim	equalOp	openparser/diff/script.html#equalOp,int,int	proc equalOp(aIdx, bIdx: int): LineOp		31
+nim	deleteOp	openparser/diff/script.html#deleteOp,int	proc deleteOp(aIdx: int): LineOp		34
+nim	insertOp	openparser/diff/script.html#insertOp,int	proc insertOp(bIdx: int): LineOp		37
+nim	isEqual	openparser/diff/script.html#isEqual,LineOp	proc isEqual(op: LineOp): bool		40
+nim	kindOf	openparser/diff/script.html#kindOf,LineOp	proc kindOf(op: LineOp): DiffLineKind		42

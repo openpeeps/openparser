@@ -1,0 +1,13 @@
+nimTitle	kernel	openparser/diff/kernel.html	module openparser/diff/kernel		0
+nim	nlByte	openparser/diff/kernel.html#nlByte	const nlByte		33
+nim	crByte	openparser/diff/kernel.html#crByte	const crByte		34
+nim	nulByte	openparser/diff/kernel.html#nulByte	const nulByte		35
+nim	findNewlineScalar	openparser/diff/kernel.html#findNewlineScalar,ByteView,int,int	proc findNewlineScalar(v: ByteView; start, stop: int): int		37
+nim	findByteScalar	openparser/diff/kernel.html#findByteScalar,ByteView,int,int,byte	proc findByteScalar(v: ByteView; start, stop: int; needle: byte): int		59
+nim	findNewline	openparser/diff/kernel.html#findNewline,ByteView,int,int	proc findNewline(v: ByteView; start, stop: int): int		71
+nim	findByte	openparser/diff/kernel.html#findByte,ByteView,int,int,byte	proc findByte(v: ByteView; start, stop: int; needle: byte): int		90
+nim	equalPrefixScalar	openparser/diff/kernel.html#equalPrefixScalar,ByteView,ByteView,int,int,int	proc equalPrefixScalar(a, b: ByteView; aStart, bStart, limit: int): int		103
+nim	equalSuffixScalar	openparser/diff/kernel.html#equalSuffixScalar,ByteView,ByteView,int,int,int	proc equalSuffixScalar(a, b: ByteView; aStart, bStart, limit: int): int		114
+nim	equalRange	openparser/diff/kernel.html#equalRange,ByteView,int,ByteView,int,int	proc equalRange(a: ByteView; aStart: int; b: ByteView; bStart: int; length: int): bool		126
+nim	endsWithNewline	openparser/diff/kernel.html#endsWithNewline,ByteView	proc endsWithNewline(v: ByteView): bool		139
+nim	lineContent	openparser/diff/kernel.html#lineContent,ByteView,int,int	proc lineContent(v: ByteView; byteStart, contentLen: int): string		144

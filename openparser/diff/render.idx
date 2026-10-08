@@ -1,0 +1,8 @@
+nimTitle	render	openparser/diff/render.html	module openparser/diff/render		0
+nim	renderHeaders	openparser/diff/render.html#renderHeaders,Diff	proc renderHeaders(d: Diff): string		41
+nim	contentText	openparser/diff/render.html#contentText,ByteView,DiffLine,bool	proc contentText(view: ByteView; line: DiffLine; isA: bool): string		57
+nim	renderHunkHeader	openparser/diff/render.html#renderHunkHeader,DiffHunk	proc renderHunkHeader(h: DiffHunk): string		69
+nim	appendLine	openparser/diff/render.html#appendLine,string,ByteView,DiffLine,bool	proc appendLine(dst: var string; view: ByteView; line: DiffLine; isA: bool)		78
+nim	renderUnified	openparser/diff/render.html#renderUnified,Diff,DiffOptions	proc renderUnified(d: Diff; opts: DiffOptions = DiffOptions()): string		97
+nim	renderUnifiedTo	openparser/diff/render.html#renderUnifiedTo,Diff,string,DiffOptions	proc renderUnifiedTo(d: Diff; dst: var string; opts: DiffOptions = DiffOptions())		130
+nim	renderSummary	openparser/diff/render.html#renderSummary,Diff	proc renderSummary(d: Diff): string		138
