@@ -59,6 +59,12 @@ type
     kind*: CssTokenKind
     value*: string
     line*, col*, pos*: int
+    spaceBefore*: bool
+      ## Whether whitespace was skipped immediately before this token.
+      ## The lexer swallows whitespace, so without this the selector parser
+      ## cannot tell `#tabs.tab` apart from `#tabs .tab`: the descendant
+      ## combinator would be lost. Value parsing is unaffected (it never saw
+      ## whitespace either way).
 
   CssLexer* = object
     ## A simple CSS lexer that tokenizes CSS input according to the
@@ -261,13 +267,16 @@ proc lexString(l: var CssLexer, quote: char): CssToken =
 #
 
 proc nextToken*(l: var CssLexer): CssToken =
+  let wsStart = l.pos
   l.skipWhitespace()
+  let spaceBefore = l.pos != wsStart
   let startPos = l.pos
   let startLine = l.line
   let startCol = l.col
 
   template tok(k: CssTokenKind, v = ""): CssToken =
-    CssToken(kind: k, value: v, line: startLine, col: startCol, pos: startPos)
+    CssToken(kind: k, value: v, line: startLine, col: startCol, pos: startPos,
+      spaceBefore: spaceBefore)
 
   if l.current == '\0':
     return tok(tkEOF)
@@ -662,21 +671,34 @@ proc parseSelectors(p: var CssParser): seq[CssNode] =
       parts = @[]
       kinds = @[]
 
+  template maybeDescendant() =
+    ## Records the descendant combinator when whitespace separated the
+    ## previous part from the compound starting now. Only compounds ask:
+    ## combinators, commas and the opening brace handle their own spacing.
+    ## A template because a nested proc cannot capture the parser.
+    if p.next.spaceBefore and parts.len > 0 and parts[^1] notin [">", "+", "~", "||", " "]:
+      parts.add(" ")
+      kinds.add(selectorCombinator)
+
   while p.next.kind notin {tkBraceOpen, tkEOF}:
     case p.next.kind
     of tkIdent:
+      maybeDescendant()
       parts.add(p.next.value)
       kinds.add(selectorType)
       p.advance()
     of tkHash:
+      maybeDescendant()
       parts.add("#" & p.next.value)
       kinds.add(selectorId)
       p.advance()
     of tkClass:
+      maybeDescendant()
       parts.add("." & p.next.value)
       kinds.add(selectorClass)
       p.advance()
     of tkColon:
+      maybeDescendant()
       p.advance()
       if p.next.kind == tkColon:
         p.advance()
@@ -704,6 +726,7 @@ proc parseSelectors(p: var CssParser): seq[CssNode] =
           kinds.add(selectorPseudo)
           p.advance()
     of tkBracketOpen:
+      maybeDescendant()
       var attr = "["
       kinds.add(selectorAttribute)
       p.advance()
@@ -744,6 +767,7 @@ proc parseSelectors(p: var CssParser): seq[CssNode] =
     of tkDelim:
       case p.next.value
       of "*":
+        maybeDescendant()
         parts.add("*")
         kinds.add(selectorUniversal)
         p.advance()
@@ -752,6 +776,7 @@ proc parseSelectors(p: var CssParser): seq[CssNode] =
         kinds.add(selectorCombinator)
         p.advance()
       of "|":
+        maybeDescendant()
         p.advance()
         if p.next.kind == tkIdent:
           parts.add("|" & p.next.value)

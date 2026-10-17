@@ -228,12 +228,18 @@ proc toString*(node: CssNode, pos: int = 0, opts = defaultOpts()): string =
         else:
           result.add(part)
       else:
-        if part == ">" or part == "+" or part == "~" or part == "||":
+        if part == " ":
+          result.add(" ")
+        elif part == ">" or part == "+" or part == "~" or part == "||":
           result.add(" " & part & " ")
         elif part.startsWith(".") or part.startsWith("#") or part.startsWith("[") or part.startsWith(":"):
           result.add(part)
         else:
-          result.add(" " & part)
+          # A descendant " " part already emitted the separator, so a type
+          # selector following one must not add a second space.
+          if node.parts[i - 1] notin [">", "+", "~", "||", " "]:
+            result.add(" ")
+          result.add(part)
   of cssDeclaration:
     if not opts.minify: result.add(indent)
     result.add(node.property & ":")
