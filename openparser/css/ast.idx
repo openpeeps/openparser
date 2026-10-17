@@ -38,5 +38,5 @@ nim	CSSOpts	openparser/css/ast.html#CSSOpts	object CSSOpts		168
 nim	defaultOpts	openparser/css/ast.html#defaultOpts	proc defaultOpts(): CSSOpts		181
 nim	toString	openparser/css/ast.html#toString,CssValue	proc toString(val: CssValue): string		187
 nim	toString	openparser/css/ast.html#toString,CssNode,int	proc toString(node: CssNode; pos: int = 0; opts = defaultOpts()): string		191
-nim	`$`	openparser/css/ast.html#$,CssStyleSheet	proc `$`(style: CssStyleSheet): string		279
+nim	`$`	openparser/css/ast.html#$,CssStyleSheet	proc `$`(style: CssStyleSheet): string		285
 nimgrp	tostring	openparser/css/ast.html#toString-procs-all	proc		187

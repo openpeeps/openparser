@@ -87,7 +87,12 @@
 <li><a class="reference" href="#CssToken" title="CssToken = object
   kind*: CssTokenKind
   value*: string
-  line*, col*, pos*: int">CssToken</a></li>
+  line*, col*, pos*: int
+  spaceBefore*: bool ## Whether whitespace was skipped immediately before this token.
+                     ## The lexer swallows whitespace, so without this the selector parser
+                     ## cannot tell `#tabs.tab` apart from `#tabs .tab`: the descendant
+                     ## combinator would be lost. Value parsing is unaffected (it never saw
+                     ## whitespace either way).">CssToken</a></li>
 <li><a class="reference" href="#CssTokenKind" title="CssTokenKind = enum
   tkIdent, tkAtKeyword, tkHash, tkClass, tkString, tkBadString, tkUrl, tkBadUrl,
   tkNumber, tkPercentage, tkDimension, tkFunction, tkColon, tkSemicolon,
@@ -219,7 +224,12 @@
   <dt><pre><a href="#CssToken"><span class="Identifier">CssToken</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="#CssTokenKind"><span class="Identifier">CssTokenKind</span></a>
   <span class="Identifier">value</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">line</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">col</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">pos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
+  <span class="Identifier">line</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">col</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">pos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
+  <span class="Identifier">spaceBefore</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Comment">## Whether whitespace was skipped immediately before this token.</span>
+                     <span class="Comment">## The lexer swallows whitespace, so without this the selector parser</span>
+                     <span class="Comment">## cannot tell `#tabs.tab` apart from `#tabs .tab`: the descendant</span>
+                     <span class="Comment">## combinator would be lost. Value parsing is unaffected (it never saw</span>
+                     <span class="Comment">## whitespace either way).</span></pre></dt>
   <dd>
     
     
@@ -366,7 +376,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-13 18:09:39 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-17 14:03:21 UTC</small>
       </div>
     </div>
   </div>
