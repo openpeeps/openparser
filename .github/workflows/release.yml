@@ -15,7 +15,7 @@ jobs:
     name: napi addons
     uses: nimbase/setup-nim-action/.github/workflows/release_clue.yml@main
     with:
-      app-name: openparser
+      app-name: node_addon
       nim-version: '2.2.x'
       package-manager: nimble
       test: true
@@ -50,12 +50,12 @@ jobs:
           pkg=addons/openparser_napi
           # Map each release archive to its npm package slot.
           # Archive names come from release_clue as <app>_<runner-os>-<arch>
-          # (lowercased), e.g. openparser_macos-arm64.tar.gz.
+          # (lowercased), e.g. node_addon_macos-arm64.tar.gz.
           declare -A slots=(
-            [openparser_macos-arm64.tar.gz]=darwin-arm64
-            [openparser_macos-x86_64.tar.gz]=darwin-x64
-            [openparser_linux-x86_64.tar.gz]=linux-x64
-            [openparser_linux-arm64.tar.gz]=linux-arm64
+            [node_addon_macos-arm64.tar.gz]=darwin-arm64
+            [node_addon_macos-x86_64.tar.gz]=darwin-x64
+            [node_addon_linux-x86_64.tar.gz]=linux-x64
+            [node_addon_linux-arm64.tar.gz]=linux-arm64
           )
           for archive in "${!slots[@]}"; do
             [[ -f "dist/${archive}" ]] || { echo "ERROR: missing ${archive}"; exit 1; }
