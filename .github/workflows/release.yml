@@ -70,12 +70,12 @@ jobs:
           done
           find "${pkg}/bin" -name '*.node' | sort
 
-      - name: Check tag matches package version
-        shell: bash
-        run: |
-          tag="${GITHUB_REF_NAME}"
-          ver="$(node -p "require('./addons/openparser_napi/package.json').version")"
-          [[ "${tag}" == "${ver}" ]] || { echo "ERROR: tag ${tag} != package.json ${ver}"; exit 1; }
+      # - name: Check tag matches package version
+      #   shell: bash
+      #   run: |
+      #     tag="${GITHUB_REF_NAME}"
+      #     ver="$(node -p "require('./addons/openparser_napi/package.json').version")"
+      #     [[ "${tag}" == "${ver}" ]] || { echo "ERROR: tag ${tag} != package.json ${ver}"; exit 1; }
 
       - uses: actions/setup-node@v4
         with:

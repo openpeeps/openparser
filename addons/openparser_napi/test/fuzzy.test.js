@@ -42,10 +42,16 @@ describe('fuzzy', () => {
   });
 
   it('applies minScore filtering', () => {
-    const words = ['app', 'apple', 'application', 'banana'];
+    const words = ['application', 'apple', 'pineapple', 'app', 'append', 'banana', 'grape'];
     const all = fuzzy.search('app', JSON.stringify(words), false, 0, '0');
-    const strict = fuzzy.search('app', JSON.stringify(words), false, 0, '20');
+    assert.ok(all.length > 1);
+    // Threshold between the weakest and the strongest match rather than a
+    // literal: this is about minScore being honoured, not about where the
+    // scoring formula happens to put its scores.
+    const midpoint = (all[0].score + all[all.length - 1].score) / 2;
+    const strict = fuzzy.search('app', JSON.stringify(words), false, 0, String(midpoint));
+    assert.ok(strict.length > 0);
     assert.ok(strict.length < all.length);
-    for (const m of strict) assert.ok(m.score >= 20);
+    for (const m of strict) assert.ok(m.score >= midpoint);
   });
 });

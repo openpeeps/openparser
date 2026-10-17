@@ -7,8 +7,7 @@
 ## This module implements a TOML parser and serializer for Nim,
 ## allowing you to read and write TOML configuration files with ease.
 ##
-## The parser targets **TOML v1.0.0** and is validated against the official
-## [toml-test](https://github.com/toml-lang/toml-test) fixture corpus. It
+## The parser targets **TOML v1.0.0**. It
 ## parses TOML format into Nim data structures, like tables, sequences,
 ## and basic types, and serializes data structures back into TOML format.
 ##

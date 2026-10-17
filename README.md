@@ -203,7 +203,7 @@ let doc = fromXmlFile("large.xml")
 
 ## TOML
 
-TOML v1.0.0 parser and serializer, validated against the official [toml-test](https://github.com/toml-lang/toml-test) fixture corpus, with the same hook-based direct-to-object API.
+TOML v1.0.0 parser and serializer with the same hook-based direct-to-object API.
 
 ```nim
 import openparser/toml
