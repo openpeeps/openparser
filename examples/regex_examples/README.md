@@ -18,28 +18,28 @@ The benchmark compares openparser against
 `re` module (PCRE). Input is `example.h`, a ~15 MB C header file.
 
 ```
-Pattern                                  openparser                  nitely                 stdlib(PCRE)
----------------------------------------------------------------------------------------------------------------------
-[a-zA-Z_]\w*                           80.5   ms 191.2  MB/s     1367.4 ms 11.3   MB/s    *54.7   ms 281.4  MB/s
-[A-Z_][A-Z0-9_]{2,}                    55.5   ms 277.3  MB/s     614.1  ms 25.1   MB/s    *24.8   ms 620.6  MB/s
-typedef\s+\w+\s+\w+                    7.6    ms 2016.4 MB/s     26.3   ms 585.9  MB/s    *5.8    ms 2633.2 MB/s
-struct\s+[a-zA-Z_]\w*                 *5.9    ms 2591.5 MB/s     45.8   ms 335.6  MB/s     7.6    ms 2034.3 MB/s
-enum\s+[a-zA-Z_]\w*                    11.1   ms 1380.3 MB/s     26.5   ms 580.8  MB/s    *9.1    ms 1687.7 MB/s
-(unsigned|signed)\s+\w+               *5.1    ms 3013.4 MB/s     612.8  ms 25.1   MB/s     8.4    ms 1833.1 MB/s
-[a-zA-Z_]\w*\s*\([^)]*\)               186.7  ms 82.4   MB/s     1109.2 ms 13.9   MB/s    *55.6   ms 276.9  MB/s
-\w+\s+\w+\s*\([^)]*\);                 402.6  ms 38.2   MB/s     432.2  ms 35.6   MB/s    *20.7   ms 744.8  MB/s
-#define\s+\w+                         *5.8    ms 2634.6 MB/s     190.4  ms 80.8   MB/s     9.6    ms 1600.4 MB/s
-"#include\s*[<\"][^>\"]+[>\"]"        *1.5    ms 10242.0MB/s     12.8   ms 1206.4 MB/s     5.0    ms 3049.2 MB/s
-#ifdef\s+\w+|#ifndef\s+\w+             54.0   ms 284.9  MB/s     450.7  ms 34.1   MB/s    *8.0    ms 1921.2 MB/s
-0[xX][0-9a-fA-F]+                     *1.9    ms 8058.4 MB/s     24.8   ms 619.7  MB/s     2.7    ms 5735.8 MB/s
-\d+[uUlL]*                             45.2   ms 340.5  MB/s     726.1  ms 21.2   MB/s    *13.6   ms 1131.9 MB/s
-"[^"]*"                               *1.1    ms 14581.4MB/s     9.0    ms 1704.9 MB/s     1.2    ms 12346.2MB/s
-//[^\n]*                              *1.1    ms 13458.8MB/s     11.5   ms 1333.1 MB/s     1.4    ms 10690.4MB/s
-/\*[^*]*\*+([^/*][^*]*\*+)*/           2.6    ms 5903.1 MB/s     56.7   ms 271.5  MB/s    *2.4    ms 6281.5 MB/s
-\w+\s*\*+\s*\w+                        416.9  ms 36.9   MB/s     833.9  ms 18.4   MB/s    *18.4   ms 835.2  MB/s
-const\s+\w+\s*\*                      *3.3    ms 4674.4 MB/s     15.4   ms 998.5  MB/s     8.6    ms 1797.3 MB/s
-^#                                     0.0    ms 7691712.0MB/s   5.1    ms 3009.9 MB/s    *0.0    ms 15383424.0MB/s
-;\s*$                                  2.5    ms 6243.3 MB/s     45.8   ms 335.7  MB/s    *2.3    ms 6744.2 MB/s
+  Pattern                                  openparser        nitely       stdlib(PCRE)
+  --------------------------------------------------------------------------------------
+  [a-zA-Z_]\w*                          *52.0   ms 296.0  MB/s     1262.8 ms 12.2   MB/s     60.2   ms 255.6  MB/s
+  [A-Z_][A-Z0-9_]{2,}                    28.8   ms 533.4  MB/s     535.3  ms 28.7   MB/s    *24.4   ms 631.1  MB/s
+  typedef\s+\w+\s+\w+                    6.2    ms 2490.4 MB/s     22.7   ms 678.8  MB/s    *6.0    ms 2544.4 MB/s
+  struct\s+[a-zA-Z_]\w*                 *4.8    ms 3216.9 MB/s     39.6   ms 388.1  MB/s     7.5    ms 2045.7 MB/s
+  enum\s+[a-zA-Z_]\w*                   *8.2    ms 1875.1 MB/s     22.2   ms 692.1  MB/s     9.2    ms 1668.8 MB/s
+  (unsigned|signed)\s+\w+               *4.7    ms 3299.7 MB/s     554.1  ms 27.8   MB/s     8.2    ms 1874.4 MB/s
+  [a-zA-Z_]\w*\s*\([^)]*\)              *17.1   ms 901.0  MB/s     991.3  ms 15.5   MB/s     52.3   ms 294.2  MB/s
+  \w+\s+\w+\s*\([^)]*\);                *14.4   ms 1065.9 MB/s     411.5  ms 37.4   MB/s     16.7   ms 918.7  MB/s
+  #define\s+\w+                         *2.9    ms 5363.8 MB/s     167.7  ms 91.7   MB/s     9.5    ms 1625.8 MB/s
+  "#include\s*[<\"][^>\"]+[>\"]"        *0.9    ms 17992.3MB/s     7.6    ms 2024.1 MB/s     5.0    ms 3058.9 MB/s
+  #ifdef\s+\w+|#ifndef\s+\w+            *1.7    ms 8959.5 MB/s     420.3  ms 36.6   MB/s     8.1    ms 1910.0 MB/s
+  0[xX][0-9a-fA-F]+                     *2.0    ms 7511.4 MB/s     22.7   ms 677.0  MB/s     2.6    ms 5995.1 MB/s
+  \d+[uUlL]*                            *6.4    ms 2413.5 MB/s     348.3  ms 44.2   MB/s     13.8   ms 1116.1 MB/s
+  "[^"]*"                               *1.0    ms 15201.0MB/s     8.3    ms 1860.1 MB/s     1.0    ms 15201.0MB/s
+  //[^\n]*                               1.3    ms 11480.2MB/s     7.6    ms 2020.9 MB/s    *1.0    ms 14650.9MB/s
+  /\*[^*]*\*+([^/*][^*]*\*+)*/           2.6    ms 5842.5 MB/s     49.4   ms 311.4  MB/s    *2.1    ms 7364.0 MB/s
+  \w+\s*\*+\s*\w+                       *9.8    ms 1570.7 MB/s     766.4  ms 20.1   MB/s     18.5   ms 831.1  MB/s
+  const\s+\w+\s*\*                      *2.7    ms 5596.0 MB/s     11.2   ms 1378.6 MB/s     8.7    ms 1773.3 MB/s
+  ^#                                     0.0    ms 3845856.0MB/s   5.1    ms 3033.6 MB/s    *0.0    ms 7691712.0MB/s
+  ;\s*$                                 *2.2    ms 6976.6 MB/s     43.6   ms 352.9  MB/s     2.2    ms 6889.1 MB/s
 
-* = fastest engine for this pattern
+  * = fastest engine for this pattern
 ```
