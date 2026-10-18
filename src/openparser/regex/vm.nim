@@ -56,8 +56,8 @@ type
     pcNxt:     PcSet
 
     # JIT compiled matcher; fn == nil when unsupported or disabled.
-    # When active, match/find/findAll take the PCRE-style backtracking
-    # path instead of the Pike VM.
+    # When active, find/findAll verify SIMD-prefilter candidates with it
+    # and match() uses the full-match variant instead of the Pike VM.
     jit:       jitcore.CompiledJit
     jitFull:   jitcore.CompiledJit  ## lazy: full-match variant for match()
     jitFullTried: bool
@@ -208,9 +208,9 @@ proc initRegexVM*(prog: Program): RegexVM =
   result.pcCur     = initPcSet(n)
   result.pcNxt     = initPcSet(n)
   when not defined(noRegexJit) and not defined(windows):
-    # Programs with captures or epsilon cycles get fn == nil here and
-    # keep using the interpreter below. JIT is disabled on Windows due to
-    # System-V vs Win64 calling convention mismatch and missing sys/mman.h.
+    # Programs with epsilon cycles get fn == nil here and keep using the
+    # interpreter below. JIT is disabled on Windows due to System-V vs
+    # Win64 calling convention mismatch and missing sys/mman.h.
     result.jit = jitcore.compileRegex(prog)
 
 proc closeRegexVM*(vm: var RegexVM) =
@@ -394,7 +394,8 @@ proc addRThread(vm: var RegexVM, queue: var seq[RThread],
   else:
     queue.add(t)
 
-proc execFull(vm: var RegexVM, input: string, startPos: int): MatchResult =
+proc execFull(vm: var RegexVM, input: string, startPos: int,
+               startPc = 0): MatchResult =
   let inputLen = input.len
   var cur, nxt: seq[RThread]
   # Initialize all slots to -1 so unmatched optional groups are detectable.
@@ -403,7 +404,7 @@ proc execFull(vm: var RegexVM, input: string, startPos: int): MatchResult =
   let initCaps = newSeqWith(vm.prog.numCaptures * 2, -1)
 
   inc vm.gen
-  addRThread(vm, cur, RThread(pc: 0, caps: initCaps),
+  addRThread(vm, cur, RThread(pc: startPc, caps: initCaps),
              startPos, inputLen, input)
 
   result = noMatch()
@@ -411,6 +412,44 @@ proc execFull(vm: var RegexVM, input: string, startPos: int): MatchResult =
 
   while true:
     inc vm.gen
+
+    # Fast-path: the only live thread is parked in a simple greedy loop
+    # whose exit successor is safe — SIMD-jump straight to the stop
+    # position instead of stepping char by char. Recognized loop bodies
+    # ([^X]*, \w+/\d+/\s+ and their *-forms) contain no opSave, so the
+    # capture vector passes through untouched.
+    block skipFastPath:
+      if cur.len == 1:
+        let pc0 = cur[0].pc
+        if pc0 >= 0 and pc0 < vm.prog.instrs.len:
+          let loop = skipLoopInfo(vm.prog, pc0)
+          if loop.ok and skipLoopIsSafe(vm.prog, loop):
+            var hit = -1
+            case loop.kind
+            of slkByte:
+              hit = scanByte(input, sp, inputLen, loop.stopCh)
+            of slkNonWord:
+              hit = scanNonWordChar(input, sp, inputLen)
+            of slkNonDigit:
+              hit = scanNonDigit(input, sp, inputLen)
+            of slkNonSpace:
+              hit = scanNonSpace(input, sp, inputLen)
+            of slkNonUpperDigitUnder:
+              hit = scanNonUpperDigitUnder(input, sp, inputLen)
+            of slkNone:
+              discard
+            if hit >= 0:
+              sp = hit
+            else:
+              # No stop char — loop consumes the entire rest of input
+              sp = inputLen
+            inc vm.gen
+            nxt.setLen(0)
+            addRThread(vm, nxt, RThread(pc: loop.exit, caps: cur[0].caps),
+                       sp, inputLen, input)
+            swap(cur, nxt)
+            continue
+
     nxt.setLen(0)
 
     let ch    = if sp < inputLen: input[sp] else: '\0'
@@ -525,7 +564,24 @@ proc execFrom(vm: var RegexVM, input: string, startPos, startPc: int): MatchResu
       swap(vm.pcCur, vm.pcNxt)
       inc sp
   else:
-    result = execFull(vm, input, startPos)
+    result = execFull(vm, input, startPos, startPc)
+
+proc verifyAt(vm: var RegexVM, input: string, pos: int): MatchResult {.inline.} =
+  ## Verify a single candidate start position with JIT native code when
+  ## available, else with the NFA interpreter. Both recognize the same
+  ## language (see the JIT parity suite), so candidate generation via the
+  ## SIMD prefilter can be shared: positions are skipped with vector
+  ## scans and only survivors run the verifier. Captures come from the
+  ## JIT working buffer, mirroring interpreter capture slots (with -1
+  ## for groups that did not participate).
+  when not defined(noRegexJit) and not defined(windows):
+    if vm.jit.fn != nil:
+      let stopPos = jitcore.jitExec(vm.jit, input, pos)
+      if stopPos >= 0:
+        return MatchResult(matched: true, start: pos,
+                           stop: stopPos, captures: jitcore.jitCaptures(vm.jit))
+      return noMatch()
+  vm.exec(input, pos)
 
 proc execShape(pf: Prefilter, input: string,
                startPos, inputLen: int): MatchResult {.inline.} =
@@ -711,7 +767,7 @@ proc match*(vm: var RegexVM, input: string): MatchResult =
       let stopPos = jitcore.jitExec(vm.jitFull, input, 0)
       if stopPos >= 0 and stopPos == input.len:
         return MatchResult(matched: true, start: 0, stop: stopPos,
-                           captures: @[])
+                           captures: jitcore.jitCaptures(vm.jitFull))
       return noMatch()
   result = vm.exec(input, 0)
   if result.matched and (result.start != 0 or result.stop != input.len):
@@ -724,8 +780,8 @@ proc backscanStart(input: string, anchorPos, minPos: int,
   var s = anchorPos - 1
   case bs
   of bsAlphaWord:
-    # skip optional whitespace
-    while s >= minPos and input[s] in {' ', '\t'}: dec s
+    # skip optional whitespace (full \s, matching \s* in the pattern)
+    while s >= minPos and input[s] in {' ', '\t', '\n', '\r', '\f', '\v'}: dec s
     # skip word chars
     while s >= minPos and input[s] in {'a'..'z','A'..'Z','0'..'9','_'}: dec s
     inc s
@@ -733,8 +789,8 @@ proc backscanStart(input: string, anchorPos, minPos: int,
     return -1
   of bsWordChar:
     # Optional whitespace may sit between the word run and the anchor
-    # (e.g. \w+\s*= or \s\w+=): skip spaces first, then word chars.
-    while s >= minPos and input[s] in {' ', '\t'}: dec s
+    # (e.g. \w+\s*= or \s\w+=): skip full \s first, then word chars.
+    while s >= minPos and input[s] in {' ', '\t', '\n', '\r', '\f', '\v'}: dec s
     while s >= minPos and input[s] in {'a'..'z', 'A'..'Z', '0'..'9', '_'}: dec s
     inc s
     if s < anchorPos: return s
@@ -743,36 +799,46 @@ proc backscanStart(input: string, anchorPos, minPos: int,
     return max(minPos, anchorPos - 1)
 
 proc find*(vm: var RegexVM, input: string): MatchResult =
-  ## Leftmost match anywhere in input, using SIMD prefilter to skip positions.
-  when not defined(noRegexJit) and not defined(windows):
-    if vm.jit.fn != nil:
-      # PCRE-style backtracking scan: leftmost start, first matching
-      # alternative within that start. The JIT is faster than the
-      # prefilter + NFA combo, so the prefilter is bypassed entirely.
-      let (s, e) = jitcore.jitScan(vm.jit, input, 0)
-      if s >= 0:
-        return MatchResult(matched: true, start: s, stop: e, captures: @[])
-      return noMatch()
+  ## Leftmost match anywhere in input, using SIMD prefilter/shape checks
+  ## to skip positions and JIT native code (when compiled) to verify
+  ## the survivors.
   let inputLen = input.len
   let pf = vm.prefilter
   var pos = 0
 
   if pf.shape != psNone:
     while pos <= inputLen:
-      pos = pf.nextCandidate(input, pos, inputLen)
-      if pos > inputLen: break
-      # For shapes with literal prefixes, execShape expects startPos AFTER the literal
+      # Candidate start for execShape. Inner-literal prefilters yield
+      # anchor positions, so backscan to the match start first.
       var shapeStart = pos
-      if pf.kind == pfLiteral and pf.literalEndPc > 0 and
-         pf.shape in {psLitSpaceWordPlus, psLitWordSpaceWord, psLitWordSpaceWordPlus}:
-        shapeStart = pos + pf.prefix.len
+      var anchorPos = -1
+      if pf.kind == pfInnerLiteral:
+        anchorPos = pf.nextCandidate(input, pos, inputLen)
+        if anchorPos > inputLen: break
+        shapeStart = backscanStart(input, anchorPos,
+                                   max(0, anchorPos - pf.maxLookback),
+                                   pf.backscan)
+        if shapeStart < pos or shapeStart >= anchorPos:
+          pos = anchorPos + 1
+          continue
+      else:
+        pos = pf.nextCandidate(input, pos, inputLen)
+        if pos > inputLen: break
+        # For shapes with literal prefixes, execShape expects startPos AFTER the literal
+        shapeStart = pos
+        if pf.kind == pfLiteral and pf.literalEndPc > 0 and
+           pf.shape in {psLitSpaceWordPlus, psLitWordSpaceWord, psLitWordSpaceWordPlus}:
+          shapeStart = pos + pf.prefix.len
       let r = execShape(pf, input, shapeStart, inputLen)
-      if r.matched:
+      if r.matched and (anchorPos < 0 or r.stop > anchorPos):
         # For literal-prefix shapes, correct the start position
         if pf.kind == pfLiteral and pf.shape in {psLitSpaceWordPlus, psLitWordSpaceWord, psLitWordSpaceWordPlus}:
           return MatchResult(matched: true, start: pos, stop: r.stop, captures: r.captures)
         return r
-      inc pos
+      if anchorPos >= 0:
+        pos = anchorPos + 1
+      else:
+        inc pos
     return noMatch()
   
   # Literal prefix with fixed offset — common for identifiers
@@ -789,11 +855,11 @@ proc find*(vm: var RegexVM, input: string): MatchResult =
       if hit:
         let startA = max(0, r - pf.offset)
         if startA >= pos:
-          let ra = vm.exec(input, startA)
+          let ra = vm.verifyAt(input, startA)
           if ra.matched: return ra
         let startB = max(0, r - pf.offset2)
         if startB >= pos and startB != max(0, r - pf.offset):
-          let rb = vm.exec(input, startB)
+          let rb = vm.verifyAt(input, startB)
           if rb.matched: return rb
       i = r + 1
     return noMatch()
@@ -806,7 +872,7 @@ proc find*(vm: var RegexVM, input: string): MatchResult =
       if r < 0: break
       let s = backscanStart(input, r, max(0, r - pf.maxLookback), pf.backscan)
       if s >= pos and s < r:
-        let ra = vm.exec(input, s)
+        let ra = vm.verifyAt(input, s)
         if ra.matched and ra.stop > r:
           return ra
       i = r + 1
@@ -815,44 +881,52 @@ proc find*(vm: var RegexVM, input: string): MatchResult =
   while pos <= inputLen:
     pos = pf.nextCandidate(input, pos, inputLen)
     if pos > inputLen: break
-    let r = vm.exec(input, pos)
+    let r = vm.verifyAt(input, pos)
     if r.matched: return r
     inc pos
   result = noMatch()
 
 proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
-  ## Find all non-overlapping matches in input, using SIMD prefilter to skip positions.
-  when not defined(noRegexJit) and not defined(windows):
-    if vm.jit.fn != nil:
-      var pos = 0
-      while pos <= input.len:
-        let (s, e) = jitcore.jitScan(vm.jit, input, pos)
-        if s < 0: break
-        result.add MatchResult(matched: true, start: s, stop: e, captures: @[])
-        # advance past the match; empty matches move forward by one
-        pos = if e > s: e else: s + 1
-      return
+  ## Find all non-overlapping matches in input, using SIMD prefilter/shape
+  ## checks to skip positions and JIT native code (when compiled) to
+  ## verify the survivors.
   let inputLen = input.len
   let pf = vm.prefilter
   var pos = 0
 
   if pf.shape != psNone:
     while pos <= inputLen:
-      pos = pf.nextCandidate(input, pos, inputLen)
-      if pos > inputLen: break
-      # For shapes with literal prefixes, execShape expects startPos AFTER the literal
+      # Candidate start for execShape. Inner-literal prefilters yield
+      # anchor positions, so backscan to the match start first.
       var shapeStart = pos
-      if pf.kind == pfLiteral and pf.literalEndPc > 0 and
-         pf.shape in {psLitSpaceWordPlus, psLitWordSpaceWord, psLitWordSpaceWordPlus}:
-        shapeStart = pos + pf.prefix.len
+      var anchorPos = -1
+      if pf.kind == pfInnerLiteral:
+        anchorPos = pf.nextCandidate(input, pos, inputLen)
+        if anchorPos > inputLen: break
+        shapeStart = backscanStart(input, anchorPos,
+                                   max(0, anchorPos - pf.maxLookback),
+                                   pf.backscan)
+        if shapeStart < pos or shapeStart >= anchorPos:
+          pos = anchorPos + 1
+          continue
+      else:
+        pos = pf.nextCandidate(input, pos, inputLen)
+        if pos > inputLen: break
+        # For shapes with literal prefixes, execShape expects startPos AFTER the literal
+        shapeStart = pos
+        if pf.kind == pfLiteral and pf.literalEndPc > 0 and
+           pf.shape in {psLitSpaceWordPlus, psLitWordSpaceWord, psLitWordSpaceWordPlus}:
+          shapeStart = pos + pf.prefix.len
       let r = execShape(pf, input, shapeStart, inputLen)
-      if r.matched:
+      if r.matched and (anchorPos < 0 or r.stop > anchorPos):
         # For literal-prefix shapes, correct the start position
         if pf.kind == pfLiteral and pf.shape in {psLitSpaceWordPlus, psLitWordSpaceWord, psLitWordSpaceWordPlus}:
           result.add MatchResult(matched: true, start: pos, stop: r.stop, captures: r.captures)
         else:
           result.add r
         pos = r.stop
+      elif anchorPos >= 0:
+        pos = anchorPos + 1
       else:
         inc pos
     return
@@ -871,7 +945,7 @@ proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
       if hit:
         let startA = max(0, r - pf.offset)
         if startA >= pos:
-          let ra = vm.exec(input, startA)
+          let ra = vm.verifyAt(input, startA)
           if ra.matched:
             result.add ra
             pos = ra.stop
@@ -879,7 +953,7 @@ proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
             continue
         let startB = max(0, r - pf.offset2)
         if startB >= pos and startB != max(0, r - pf.offset):
-          let rb = vm.exec(input, startB)
+          let rb = vm.verifyAt(input, startB)
           if rb.matched:
             result.add rb
             pos = rb.stop
@@ -896,7 +970,7 @@ proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
       if r < 0: break
       let s = backscanStart(input, r, max(0, r - pf.maxLookback), pf.backscan)
       if s >= pos and s < r:
-        let ra = vm.exec(input, s)
+        let ra = vm.verifyAt(input, s)
         if ra.matched and ra.stop > r:
           result.add ra
           pos = ra.stop
@@ -909,13 +983,27 @@ proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
     pos = pf.nextCandidate(input, pos, inputLen)
     if pos > inputLen: break
     if pf.kind == pfLiteral and pf.literalEndPc > 0:
-      # Literal advance: verify prefix, then start NFA from after the literal
+      # Literal advance: verify prefix, then run the verifier after it.
+      # The NFA can start mid-program (execFrom); JIT native code always
+      # starts at pc 0, so it re-verifies the (cheap, SIMD-prefetched)
+      # literal as part of the match.
       let plen = pf.prefix.len
       if pos + plen <= inputLen:
         var hit = true
         for j in 0 ..< plen:
           if input[pos + j] != pf.prefix[j]: hit = false; break
         if hit:
+          when not defined(noRegexJit) and not defined(windows):
+            if vm.jit.fn != nil:
+              let r = vm.verifyAt(input, pos)
+              if r.matched:
+                # Correct the start position to include the literal prefix
+                result.add MatchResult(matched: true, start: pos,
+                                       stop: r.stop, captures: r.captures)
+                pos = r.stop
+              else:
+                inc pos
+              continue
           let r = vm.execFrom(input, pos + plen, pf.literalEndPc)
           if r.matched:
             # Correct the start position to include the literal prefix
@@ -925,7 +1013,7 @@ proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
             continue
       inc pos
     else:
-      let r = vm.exec(input, pos)
+      let r = vm.verifyAt(input, pos)
       if r.matched:
         result.add r
         pos = r.stop

@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.3.11"
+version       = "0.4.0"
 author        = "George Lemon"
 description   = "Tiny parsers and serializers for JSON, YAML, XML, TOML, CSV, BSON, Plist (XML+Binary), RSS, QR codes and more"
 license       = "MIT"
@@ -11,3 +11,4 @@ srcDir        = "src"
 requires "nim >= 2.2.10"
 requires "nimsimd >= 1.3.2"
 requires "nimcypher >= 0.2.0"
+requires "dynasm >= 0.1.0"

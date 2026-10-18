@@ -562,6 +562,20 @@ suite "VM – C-header pattern smoke tests":
     var vm = initRegexVM(compile(r"\w+\s*\*+\s*\w+"))
     check vm.find("int* ptr = NULL;").matched
 
+  test "pointer pattern across newline":
+    # star-anchored scan must backscan through \n in \s*
+    var vm = initRegexVM(compile(r"\w+\s*\*+\s*\w+"))
+    let m = vm.find("foo\n* bar")
+    check m.matched
+    check groupStr(m, "foo\n* bar", 0) == "foo\n* bar"
+
+  test "pointer pattern findAll count":
+    var vm = initRegexVM(compile(r"\w+\s*\*+\s*\w+"))
+    let ms = vm.findAll("int* ptr; char* q; x=1;")
+    check ms.len == 2
+    check groupStr(ms[0], "int* ptr; char* q; x=1;", 0) == "int* ptr"
+    check groupStr(ms[1], "int* ptr; char* q; x=1;", 0) == "char* q"
+
   test "const pointer pattern":
     var vm = initRegexVM(compile(r"const\s+\w+\s*\*"))
     check vm.find("const char* name = NULL;").matched

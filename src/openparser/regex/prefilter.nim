@@ -126,9 +126,13 @@ proc longestCommonSubstring(a, b: string): tuple[s: string, offA, offB: int] =
         bestOA = i; bestOB = j
   (best, bestOA, bestOB)
 
-proc extractAlternationPrefilter(branches: seq[string], shape: PatternShape): Prefilter =
-  # Given literal prefixes of each alternation branch, find the best anchor.
-  if branches.len == 0: return Prefilter(kind: pfNone, shape: shape)
+proc extractAlternationPrefilter(branches: seq[string], total: int,
+                                 shape: PatternShape): Prefilter =
+  # Every alternation branch must carry a literal prefix for byte
+  # filtering to be sound: otherwise a non-literal branch could match
+  # where no literal occurs (e.g. `cat|dog` must not filter on 'c').
+  if branches.len == 0 or branches.len != total:
+    return Prefilter(kind: pfNone, shape: shape)
 
   # All branches share full prefix → standard pfLiteral
   var common = branches[0]
@@ -139,26 +143,24 @@ proc extractAlternationPrefilter(branches: seq[string], shape: PatternShape): Pr
   if common.len >= 2:
     return Prefilter(kind: pfLiteral, prefix: common, offset: 0, shape: shape)
 
-  # Two branches share a common substring pfLiteralAnchored with lookaround
   if branches.len == 2:
+    # Two branches share a common substring pfLiteralAnchored with lookaround
     let (sub, offA, offB) = longestCommonSubstring(branches[0], branches[1])
     if sub.len >= 3:
       let maxOff = max(offA, offB)
       let minOff = min(offA, offB)
       return Prefilter(kind: pfLiteralAnchored, prefix: sub,
                        offset: maxOff, offset2: minOff, shape: shape)
-
-  # Fallback: first byte of shortest branch
-  var shortest = branches[0]
-  for b in branches[1..^1]:
-    if b.len < shortest.len: shortest = b
-  if shortest.len >= 1:
-    return Prefilter(kind: pfByte, byte1: shortest[0], shape: shape)
+    # No shared literal: a match must start with one of the two bytes.
+    return Prefilter(kind: pfAnyOf2, alt1: branches[0][0],
+                     alt2: branches[1][0], shape: shape)
   Prefilter(kind: pfNone, shape: shape)
 
 proc extractLiteralPrefix(prog: Program): string =
   ## Walk instructions from pc=0, collecting consecutive opChar bytes,
-  ## skipping pure epsilon ops (opJmp/opSave/opProgress).
+  ## skipping pure epsilon ops (opJmp/opSave/opProgress). Bails with ""
+  ## on any split: a fork means the collected bytes only prefix one
+  ## branch (e.g. `ab` in `ab|\d+`), never the whole program.
   var pc = 0
   while pc < prog.instrs.len:
     let ins = prog.instrs[pc]
@@ -168,8 +170,11 @@ proc extractLiteralPrefix(prog: Program): string =
       inc pc
     of opJmp, opSave, opProgress:
       inc pc   # transparent epsilon — keep looking
+    of opSplit, opSplitLazy:
+      result = ""  # fork: collected bytes are not a global prefix
+      break
     else:
-      break    # first non-literal consuming op
+      break    # first non-literal consuming op ends a global prefix
 
 proc extractPrefilter*(prog: Program): Prefilter =
   ## Walk the first instruction(s) of the program and derive the cheapest
@@ -178,10 +183,12 @@ proc extractPrefilter*(prog: Program): Prefilter =
     return Prefilter(kind: pfNone, shape: psNone)
 
   let shape = prog.shape   # set by compiler — always correct
-  # Alternation: collect per-branch literal prefixes
-  proc branchLiterals(prog: Program): seq[string] =
+  # Alternation: collect per-branch literal prefixes plus branch count.
+  proc branchLiterals(prog: Program): tuple[strs: seq[string], total: int] =
     ## Walk a top-level Split chain and extract the literal prefix of each branch.
-    ## Returns empty if structure isn't a simple alternation of literal-prefixed branches.
+    ## `total` counts every branch; filtering is only sound when each one
+    ## contributed a literal (`strs.len == total`). Single-char prefixes
+    ## are kept: they feed AnyOf2 when longer anchors are absent.
     var pc = 0
     # skip leading epsilon ops before the Split
     while pc < prog.instrs.len:
@@ -194,6 +201,7 @@ proc extractPrefilter*(prog: Program): Prefilter =
     while pc < prog.instrs.len:
       let ins = prog.instrs[pc]
       if ins.op == opSplit:
+        inc result.total
         var s = ""
         var p = ins.arg1
         # also skip epsilons inside each branch
@@ -201,19 +209,23 @@ proc extractPrefilter*(prog: Program): Prefilter =
           inc p
         while p < prog.instrs.len and prog.instrs[p].op == opChar:
           s.add char(prog.instrs[p].arg1); inc p
-        if s.len >= 2: result.add s
+        if s.len >= 1: result.strs.add s
         pc = ins.arg2
         # skip epsilons on second branch too
         while pc < prog.instrs.len and prog.instrs[pc].op in {opSave, opProgress, opJmp}:
           inc pc
       elif ins.op == opChar:
+        inc result.total
         var s = ""
         var p = pc
         while p < prog.instrs.len and prog.instrs[p].op == opChar:
           s.add char(prog.instrs[p].arg1); inc p
-        if s.len >= 2: result.add s
+        if s.len >= 1: result.strs.add s
         break
-      else: break
+      else:
+        # final branch without a literal prefix (e.g. \d+ in `ab|\d+`)
+        inc result.total
+        break
 
   # 1. Multi-byte literal prefix — most selective
   let lit = extractLiteralPrefix(prog)
@@ -229,10 +241,10 @@ proc extractPrefilter*(prog: Program): Prefilter =
     return Prefilter(kind: pfLiteral, prefix: lit, offset: 0, shape: shape, literalEndPc: lpc)
 
   # 2. Alternation with shared/anchored literal
-  let branches = branchLiterals(prog)
-  if branches.len >= 2:
-    let pf = extractAlternationPrefilter(branches, shape)
-    if pf.kind notin {pfNone, pfByte}: return pf
+  let (altStrs, altTotal) = branchLiterals(prog)
+  if altTotal >= 2:
+    let pf = extractAlternationPrefilter(altStrs, altTotal, shape)
+    if pf.kind != pfNone: return pf
 
   # 3. Inner mandatory literal — check BEFORE falling back to class prefilters.
   #    A selective char like '(' is far cheaper than pfAlpha/pfWordChar.
@@ -249,9 +261,13 @@ proc extractPrefilter*(prog: Program): Prefilter =
   if shape != psNone:
     # derive first-byte prefilter from shape
     case shape
-    of psAlphaWordStar, psUpperDigitUnderPlus,
-       psUpperDigitUnder2Plus, psUpperDigitUnderStar:
+    of psAlphaWordStar:
       return Prefilter(kind: pfAlpha, shape: shape)
+    of psUpperDigitUnderPlus,
+       psUpperDigitUnder2Plus, psUpperDigitUnderStar:
+      # Head must be [A-Z_]: scan the [A-Z0-9_] superset (fewer
+      # candidates than pfAlpha); execShape rejects digit heads.
+      return Prefilter(kind: pfUpperAlpha, shape: shape)
     of psWordCharPlus, psWordCharStar:
       return Prefilter(kind: pfWordChar, shape: shape)
     of psEndAnchorByte:
@@ -260,8 +276,12 @@ proc extractPrefilter*(prog: Program): Prefilter =
         return Prefilter(kind: pfByte, byte1: char(prog.instrs[0].arg1), shape: shape)
       return Prefilter(kind: pfNone, shape: shape)
     of psWordSpaceStarWord:
-      # \w+\s*\*+\s*\w+ — scan for first word char
-      return Prefilter(kind: pfWordChar, shape: shape)
+      # \w+\s*\*+\s*\w+ — the '*' run is mandatory and sparse: anchor
+      # candidates on it and backscan to the \w+ start instead of
+      # trying every (dense) word char.
+      return Prefilter(kind: pfInnerLiteral, anchor: '*',
+                       maxLookback: 1024, backscan: bsWordChar,
+                       shape: shape)
     of psLitSpaceWordPlus, psLitWordSpaceWord, psLitWordSpaceWordPlus:
       # <literal>... — use pfLiteral to scan for literal prefix, shape fast-path handles rest
       let lit = extractLiteralPrefix(prog)
@@ -284,6 +304,9 @@ proc extractPrefilter*(prog: Program): Prefilter =
       return Prefilter(kind: pfByteRange, lo: '0', hi: '9', shape: shape)
     else: discard
 
+  # First consuming op along a single path. Stops at splits: a fork
+  # means the opener depends on the branch taken, so only the
+  # alternation-aware step above may filter on it.
   proc firstConsuming(prog: Program, pc: int,
                       depth = 0): tuple[op: OpCode, arg1: int] =
     if depth > 64 or pc < 0 or pc >= prog.instrs.len:
@@ -291,7 +314,7 @@ proc extractPrefilter*(prog: Program): Prefilter =
     let ins = prog.instrs[pc]
     case ins.op
     of opJmp:                return firstConsuming(prog, ins.arg1, depth+1)
-    of opSplit, opSplitLazy: return firstConsuming(prog, ins.arg1, depth+1)
+    of opSplit, opSplitLazy: return (opSplit, 0)
     of opSave, opProgress:   return firstConsuming(prog, pc+1,    depth+1)
     of opAnchorStart:        return (opAnchorStart, 0)
     else:                    return (ins.op, ins.arg1)
@@ -304,13 +327,11 @@ proc extractPrefilter*(prog: Program): Prefilter =
   case op
   of opAnchorStart:
     return make(pfAnchorStart)
+  of opSplit, opSplitLazy:
+    # Fork on the path: branches are covered at step 2 when every one
+    # opens with a literal, otherwise no sound filter exists.
+    return make(pfNone)
   of opChar:
-    let ins0 = prog.instrs[0]
-    if ins0.op in {opSplit, opSplitLazy} and ins0.arg2 >= 0:
-      let (op2, arg2) = firstConsuming(prog, ins0.arg2)
-      if op2 == opChar:
-        return Prefilter(kind: pfAnyOf2, alt1: char(arg1), alt2: char(arg2),
-                         shape: shape)
     return Prefilter(kind: pfByte, byte1: char(arg1), shape: shape)
   of opCharClass:
     let cls = prog.classes[arg1]

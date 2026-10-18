@@ -1,6 +1,6 @@
 {
   "name": "@openpeeps/openparser",
-  "version": "0.3.11",
+  "version": "0.4.0",
   "description": "Node.js native bindings for openparser (YAML, TOML, XML, CSV, BSON, Plist, RSS/Atom, iCal, vCard, SQL, QR, SVG, Colors, CSS, UUID and more)",
   "main": "index.js",
   "types": "index.d.ts",

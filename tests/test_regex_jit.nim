@@ -32,6 +32,14 @@ proc vmFindStop(pattern, input: string): tuple[start, stop: int] =
   let m = vm.find(input)
   if m.matched: (m.start, m.stop) else: (-1, -1)
 
+proc jitFindGroups(pattern, input: string): seq[string] =
+  ## Groups via the JIT-backed vm.find (empty when unsupported/no match).
+  var vm = initRegexVM(compile(pattern))
+  defer: vm.closeRegexVM()
+  let m = vm.find(input)
+  if not m.matched: return @[]
+  result = m.groups(input)
+
 # The DynASM backend emits x86-64 machine code: on other targets
 # compileRegex returns fn == nil and the interpreter handles everything.
 when defined(amd64):
@@ -150,6 +158,62 @@ when defined(amd64):
       check jitScanAt("a|ab", "zab") == (1, 2)
       check vmFindStop("a|ab", "zab") == (1, 2)
       check jitScanAt("ab|a", "zab") == (1, 3)
+
+  suite "Regex JIT: captures":
+    test "groups are compiled now":
+      check jitSupported("(a)")
+      check jitSupported("(a+)(b*)")
+      check jitSupported("^(red|green|blue)$")
+
+    test "single group extraction":
+      check jitFindGroups(r"(\d+)", "abc 123") == @["123"]
+
+    test "multiple groups":
+      check jitFindGroups(r"(\w+)@(\w+)\.(\w+)", "mail bob@mail.com now") ==
+        @["bob", "mail", "com"]
+
+    test "optional group unmatched":
+      var vm = initRegexVM(compile(r"(a)(b)?"))
+      defer: vm.closeRegexVM()
+      let m = vm.find("xa")
+      check m.matched
+      check m.groupStr("xa", 1) == "a"
+      check not m.group(2).matched
+
+    test "backtracking restores captures":
+      # (a+)(b) on "aaab": greedy a+ must give back one char.
+      check jitFindGroups("(a+)(b)", "aaab") == @["aaa", "b"]
+
+    test "alternation branch captures":
+      check jitFindGroups("(cat|dog)", "hotdog") == @["dog"]
+      check jitFindGroups("(cat|dog)", "cat dog") == @["cat"]
+
+    test "nested groups":
+      var vm = initRegexVM(compile("((a)(b))"))
+      defer: vm.closeRegexVM()
+      let m = vm.find("xxab")
+      check m.matched
+      check m.groupStr("xxab", 1) == "ab"
+      check m.groupStr("xxab", 2) == "a"
+      check m.groupStr("xxab", 3) == "b"
+
+    test "match() returns captures":
+      var vm = initRegexVM(compile(r"^(\d+)-(\d+)$"))
+      defer: vm.closeRegexVM()
+      let m = vm.match("2024-01")
+      check m.matched
+      check m.groupStr("2024-01", 1) == "2024"
+      check m.groupStr("2024-01", 2) == "01"
+
+    test "findAll with groups":
+      var vm = initRegexVM(compile(r"(\w+)=(\d+)"))
+      defer: vm.closeRegexVM()
+      let ms = vm.findAll("a=1 b=22")
+      check ms.len == 2
+      check ms[0].groupStr("a=1 b=22", 1) == "a"
+      check ms[0].groupStr("a=1 b=22", 2) == "1"
+      check ms[1].groupStr("a=1 b=22", 1) == "b"
+      check ms[1].groupStr("a=1 b=22", 2) == "22"
 else:
   suite "Regex JIT: unavailable on non-x86_64 (interpreter fallback)":
     test "compileRegex returns nil fn":
