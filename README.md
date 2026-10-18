@@ -7,7 +7,8 @@
 </p>
 
 <p align="center">
-  <code>nimble install openparser</code>
+  <code>nimble install openparser</code> / <code>clue install openparser</code><br>
+  <code>npm install @openpeeps/openparser</code>
 </p>
 
 <p align="center">
