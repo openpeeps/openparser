@@ -2771,7 +2771,11 @@ proc parseHook*(p: var YamlParser, v: var string) =
     # Empty value: `key:` with nothing on the same line. prev is the ':' (or
     # anchor/tag following it). If curr is on a later line at same/shallower
     # indent it is a sibling key, treat as empty without consuming.
-    if p.prev != nil and p.curr.line != p.prev.line:
+    # Block-only rule: inside flow collections line breaks are insignificant
+    # whitespace, and a continuation line's indent is unrelated to the
+    # previous token's indent (e.g. multi-line `["a",\n "b"]`), so the
+    # sibling check must not run there.
+    if p.flowDepth == 0 and p.prev != nil and p.curr.line != p.prev.line:
       if p.curr.indent <= p.prev.indent:
         v = ""
         if hasAnchor:
