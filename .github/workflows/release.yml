@@ -34,6 +34,9 @@ jobs:
     name: npm publish
     runs-on: ubuntu-latest
     needs: napi
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -70,12 +73,15 @@ jobs:
           done
           find "${pkg}/bin" -name '*.node' | sort
 
-      # - name: Check tag matches package version
-      #   shell: bash
-      #   run: |
-      #     tag="${GITHUB_REF_NAME}"
-      #     ver="$(node -p "require('./addons/openparser_napi/package.json').version")"
-      #     [[ "${tag}" == "${ver}" ]] || { echo "ERROR: tag ${tag} != package.json ${ver}"; exit 1; }
+      - name: Sync version from tag
+        working-directory: addons/openparser_napi
+        shell: bash
+        run: |
+          set -eu
+          tag="${GITHUB_REF_NAME#v}"
+          echo "Syncing npm version to tag ${tag}"
+          npm pkg set version="${tag}"
+          node -p "require('./package.json').version"
 
       - uses: actions/setup-node@v4
         with:

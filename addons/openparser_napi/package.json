@@ -1,6 +1,6 @@
 {
   "name": "@openpeeps/openparser",
-  "version": "0.1.0",
+  "version": "0.3.11",
   "description": "Node.js native bindings for openparser (YAML, TOML, XML, CSV, BSON, Plist, RSS/Atom, iCal, vCard, SQL, QR, SVG, Colors, CSS, UUID and more)",
   "main": "index.js",
   "types": "index.d.ts",
@@ -17,7 +17,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/openpeeps/openparser"
+    "url": "git+https://github.com/openpeeps/openparser.git"
   },
   "engines": {
     "node": ">=18"
