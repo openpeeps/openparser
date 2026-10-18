@@ -99,14 +99,14 @@ nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_5	proc parseHook[T: di
 nim	parseHook	openparser/yaml.html#parseHook,YamlParser,CritBitTree[T]	proc parseHook[T](p: var YamlParser; v: var CritBitTree[T])		2602
 nim	parseHook	openparser/yaml.html#parseHook,YamlParser,Option[T]	proc parseHook[T](p: var YamlParser; v: var Option[T])		2603
 nim	parseYamlMappingPairs	openparser/yaml.html#parseYamlMappingPairs.t,untyped	template parseYamlMappingPairs(body: untyped)		2608
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_6	proc parseHook[T: Integers](p: var YamlParser; v: var T)		2853
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,array[N,T]	proc parseHook[N: static[int]; T](p: var YamlParser; v: var array[N, T])		3003
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_7	proc parseHook[T: object](p: var YamlParser; v: var T)		3136
-nim	parseHook	openparser/yaml.html#parseHook,YamlParser,JsonNode	proc parseHook(p: var YamlParser; v: var JsonNode)		3188
-nim	parseYAML	openparser/yaml.html#parseYAML,YamlParser,T	proc parseYAML[T: object | ref object](p: var YamlParser; v: var T)		3203
-nim	parseYAML	openparser/yaml.html#parseYAML,YamlParser,seq[T]	proc parseYAML[T](p: var YamlParser; v: var seq[T])		3213
-nim	parseYAML	openparser/yaml.html#parseYAML,YAML,typedesc[T]	proc parseYAML[T](input: YAML; t: typedesc[T]): T		3256
-nim	parseYAMLFrontmatter	openparser/yaml.html#parseYAMLFrontmatter,YAML,string,YamlOptions	proc parseYAMLFrontmatter[T: object | ref object](input: YAML; body: var string;\n    opts: YamlOptions = nil): T		3260
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_6	proc parseHook[T: Integers](p: var YamlParser; v: var T)		2857
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,array[N,T]	proc parseHook[N: static[int]; T](p: var YamlParser; v: var array[N, T])		3007
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,T_7	proc parseHook[T: object](p: var YamlParser; v: var T)		3140
+nim	parseHook	openparser/yaml.html#parseHook,YamlParser,JsonNode	proc parseHook(p: var YamlParser; v: var JsonNode)		3192
+nim	parseYAML	openparser/yaml.html#parseYAML,YamlParser,T	proc parseYAML[T: object | ref object](p: var YamlParser; v: var T)		3207
+nim	parseYAML	openparser/yaml.html#parseYAML,YamlParser,seq[T]	proc parseYAML[T](p: var YamlParser; v: var seq[T])		3217
+nim	parseYAML	openparser/yaml.html#parseYAML,YAML,typedesc[T]	proc parseYAML[T](input: YAML; t: typedesc[T]): T		3260
+nim	parseYAMLFrontmatter	openparser/yaml.html#parseYAMLFrontmatter,YAML,string,YamlOptions	proc parseYAMLFrontmatter[T: object | ref object](input: YAML; body: var string;\n    opts: YamlOptions = nil): T		3264
 nimgrp	dump	openparser/yaml.html#dump-procs-all	proc		2369
 nimgrp	parseyaml	openparser/yaml.html#parseYAML-procs-all	proc		2417
 nimgrp	parseyamlfrontmatter	openparser/yaml.html#parseYAMLFrontmatter-procs-all	proc		2515

@@ -6,19 +6,19 @@ nim	RegexVM	openparser/regex/vm.html#RegexVM	object RegexVM		48
 nim	noMatch	openparser/regex/vm.html#noMatch	proc noMatch(): MatchResult		85
 nim	initRegexVM	openparser/regex/vm.html#initRegexVM,Program	proc initRegexVM(prog: Program): RegexVM		202
 nim	closeRegexVM	openparser/regex/vm.html#closeRegexVM,RegexVM	proc closeRegexVM(vm: var RegexVM)		216
-nim	match	openparser/regex/vm.html#match,RegexVM,string	proc match(vm: var RegexVM; input: string): MatchResult		707
-nim	find	openparser/regex/vm.html#find,RegexVM,string	proc find(vm: var RegexVM; input: string): MatchResult		745
-nim	findAll	openparser/regex/vm.html#findAll,RegexVM,string	proc findAll(vm: var RegexVM; input: string): seq[MatchResult]		823
-nim	groupCount	openparser/regex/vm.html#groupCount,MatchResult	proc groupCount(m: MatchResult): int		935
-nim	group	openparser/regex/vm.html#group,MatchResult,int	proc group(m: MatchResult; idx: int): CaptureGroup		939
-nim	str	openparser/regex/vm.html#str,CaptureGroup,string	proc str(g: CaptureGroup; input: string): string		958
-nim	groupStr	openparser/regex/vm.html#groupStr,MatchResult,string,int	proc groupStr(m: MatchResult; input: string; idx: int): string		963
-nim	groups	openparser/regex/vm.html#groups,MatchResult,string	proc groups(m: MatchResult; input: string): seq[string]		968
-nim	allGroups	openparser/regex/vm.html#allGroups,MatchResult,string	proc allGroups(m: MatchResult; input: string): seq[CaptureGroup]		976
-nim	eachGroup	openparser/regex/vm.html#eachGroup.i,MatchResult,string	iterator eachGroup(m: MatchResult; input: string): (int, string)		983
-nim	match	openparser/regex/vm.html#match,string,string	proc match(pattern, input: string): MatchResult		992
-nim	find	openparser/regex/vm.html#find,string,string	proc find(pattern, input: string): MatchResult		997
-nim	findAll	openparser/regex/vm.html#findAll,string,string	proc findAll(pattern, input: string): seq[MatchResult]		1002
-nimgrp	findall	openparser/regex/vm.html#findAll-procs-all	proc		823
-nimgrp	match	openparser/regex/vm.html#match-procs-all	proc		707
-nimgrp	find	openparser/regex/vm.html#find-procs-all	proc		745
+nim	match	openparser/regex/vm.html#match,RegexVM,string	proc match(vm: var RegexVM; input: string): MatchResult		763
+nim	find	openparser/regex/vm.html#find,RegexVM,string	proc find(vm: var RegexVM; input: string): MatchResult		801
+nim	findAll	openparser/regex/vm.html#findAll,RegexVM,string	proc findAll(vm: var RegexVM; input: string): seq[MatchResult]		889
+nim	groupCount	openparser/regex/vm.html#groupCount,MatchResult	proc groupCount(m: MatchResult): int		1023
+nim	group	openparser/regex/vm.html#group,MatchResult,int	proc group(m: MatchResult; idx: int): CaptureGroup		1027
+nim	str	openparser/regex/vm.html#str,CaptureGroup,string	proc str(g: CaptureGroup; input: string): string		1046
+nim	groupStr	openparser/regex/vm.html#groupStr,MatchResult,string,int	proc groupStr(m: MatchResult; input: string; idx: int): string		1051
+nim	groups	openparser/regex/vm.html#groups,MatchResult,string	proc groups(m: MatchResult; input: string): seq[string]		1056
+nim	allGroups	openparser/regex/vm.html#allGroups,MatchResult,string	proc allGroups(m: MatchResult; input: string): seq[CaptureGroup]		1064
+nim	eachGroup	openparser/regex/vm.html#eachGroup.i,MatchResult,string	iterator eachGroup(m: MatchResult; input: string): (int, string)		1071
+nim	match	openparser/regex/vm.html#match,string,string	proc match(pattern, input: string): MatchResult		1080
+nim	find	openparser/regex/vm.html#find,string,string	proc find(pattern, input: string): MatchResult		1085
+nim	findAll	openparser/regex/vm.html#findAll,string,string	proc findAll(pattern, input: string): seq[MatchResult]		1090
+nimgrp	findall	openparser/regex/vm.html#findAll-procs-all	proc		889
+nimgrp	match	openparser/regex/vm.html#match-procs-all	proc		763
+nimgrp	find	openparser/regex/vm.html#find-procs-all	proc		801
