@@ -131,7 +131,12 @@
   expandGlobalSymbols*: bool ## When true, parser expands trailing-dot symbols lazily
   maxDepth*: int             ## 0 = unlimited; else max compound nesting
   preserveComments*: bool
-  skipUnknownDirectives*: bool">NifOptions</a></li>
+  skipUnknownDirectives*: bool
+  allowLineBased*: bool ## When true, enable the optional line-based top-level syntax:
+                        ## a top-level line not starting with `(` is read as `(tag args...)`,
+                        ## and bare `a/b`, `2024-08-12`, `key:` words become string literals.
+                        ## Auto-detected per module (needs &gt;= 1 non-`(` top-level line);
+                        ## pure-core input parses unchanged. Default false.">NifOptions</a></li>
 <li><a class="reference" href="#NifSuffix" title="NifSuffix = object
   lineInfo*: Option[NifLineInfo]
   comment*: Option[string]
@@ -323,7 +328,12 @@
   <span class="Identifier">expandGlobalSymbols</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Comment">## When true, parser expands trailing-dot symbols lazily</span>
   <span class="Identifier">maxDepth</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>             <span class="Comment">## 0 = unlimited; else max compound nesting</span>
   <span class="Identifier">preserveComments</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
-  <span class="Identifier">skipUnknownDirectives</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
+  <span class="Identifier">skipUnknownDirectives</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
+  <span class="Identifier">allowLineBased</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Comment">## When true, enable the optional line-based top-level syntax:</span>
+                        <span class="Comment">## a top-level line not starting with `(` is read as `(tag args...)`,</span>
+                        <span class="Comment">## and bare `a/b`, `2024-08-12`, `key:` words become string literals.</span>
+                        <span class="Comment">## Auto-detected per module (needs &gt;= 1 non-`(` top-level line);</span>
+                        <span class="Comment">## pure-core input parses unchanged. Default false.</span></pre></dt>
   <dd>
     
     Parser options
@@ -505,7 +515,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-18 14:52:34 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-21 14:08:50 UTC</small>
       </div>
     </div>
   </div>
