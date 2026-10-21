@@ -1,15 +1,23 @@
 name: release
-# Tag pushes (e.g. `0.3.2`) build the NAPI addons for macOS (arm64/x64) and
-# Linux (x64/arm64), attach them to the GitHub Release, and publish
+# Manual releases only: the NAPI addon does not include every module
+# available at Nim level, so publishing to npm must be a deliberate
+# manual step — never automatic on tag push. Dispatch this workflow by
+# hand and enter the version to publish (e.g. `0.4.2`).
+#
+# The run builds the NAPI addons for macOS (arm64/x64) and Linux
+# (x64/arm64), attaches them to the GitHub Release, and publishes
 # `@openpeeps/openparser` to npm with all binaries included.
 #
 # NB: never compile `src/openparser.nim` directly (`nim c` / `nimble build`
 # hit the `{.error.}` guard). The build always goes through the custom denim
 # command below, which defines `-d:napibuild`.
 on:
-  push:
-    tags:
-      - '*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release and publish to npm (e.g. 0.4.2)'
+        required: true
+        type: string
 jobs:
   napi:
     name: napi addons
@@ -73,15 +81,17 @@ jobs:
           done
           find "${pkg}/bin" -name '*.node' | sort
 
-      - name: Sync version from tag
+      - name: Sync version from input
         working-directory: addons/openparser_napi
         shell: bash
         run: |
           set -eu
-          tag="${GITHUB_REF_NAME#v}"
-          echo "Syncing npm version to tag ${tag}"
-          npm pkg set version="${tag}"
+          version="${VERSION#v}"
+          echo "Syncing npm version to ${version}"
+          npm pkg set version="${version}"
           node -p "require('./package.json').version"
+        env:
+          VERSION: ${{ inputs.version }}
 
       - uses: actions/setup-node@v4
         with:
