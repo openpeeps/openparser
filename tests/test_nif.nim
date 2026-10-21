@@ -576,3 +576,157 @@ suite "NIF 2027 Spec Additions - numeric bases and quoted punctuation":
     let m = fromNif("(stmts \"a\\28b\" \"x\\40y\")")
     check m[0].children[0].strVal == "a(b"
     check m[0].children[1].strVal == "x@y"
+
+proc lbOpts(): NifOptions =
+  var o = defaultNifOptions()
+  o.allowLineBased = true
+  o
+
+suite "NIF line-based syntax (optional extension)":
+  test "spec examples: copy, warn, directives mixed":
+    let m = fromNif("copy a/b.txt dest/b.txt\n", lbOpts())
+    check m.len == 1
+    check m[0].tag == "copy"
+    check m[0].children.len == 2
+    check m[0].children[0].kind == nkStrLit
+    check m[0].children[0].strVal == "a/b.txt"
+    check m[0].children[1].strVal == "dest/b.txt"
+    let m2 = fromNif("warn 2024-08-12 \"permission denied\"\n", lbOpts())
+    check m2[0].tag == "warn"
+    check m2[0].children[0].strVal == "2024-08-12"
+    check m2[0].children[1].strVal == "permission denied"
+    let m3 = fromNif("(.nif27)\ninfo 2024-08-12T09:14:03Z \"server started\" (port 8080)\n", lbOpts())
+    check m3.len == 2
+    check m3[0].tag == ".nif27"
+    check m3[1].tag == "info"
+    check m3[1].children[0].strVal == "2024-08-12T09:14:03Z"
+    check m3[1].children[1].strVal == "server started"
+    check m3[1].children[2].tag == "port"
+
+  test "single tag line, (a) b c split, empty lines ignored":
+    let m = fromNif("ls\n", lbOpts())
+    check m.len == 1
+    check m[0].tag == "ls"
+    check m[0].children.len == 0
+    let m2 = fromNif("(a) b c\n", lbOpts())
+    check m2.len == 2
+    check m2[0].tag == "a"
+    check m2[1].tag == "b"
+    check m2[1].children.len == 1
+    check m2[1].children[0].ident == "c"
+    let m3 = fromNif("\n  \nls\n\nwarn x\n  \n", lbOpts())
+    check m3.len == 2
+    check m3[0].tag == "ls"
+    check m3[1].tag == "warn"
+
+  test "tag suffix and multi-line paren continuation":
+    let m = fromNif("warn@0,1#disk# 2024-08-12 \"disk full\"\n", lbOpts())
+    check m[0].tag == "warn"
+    check isSome(m[0].tagLineInfo)
+    check m[0].tagLineInfo.get.colDiff == 0
+    check m[0].tagComment.get == "disk"
+    check m[0].children[0].strVal == "2024-08-12"
+    let m2 = fromNif("cmd (opt a\nb) c\n", lbOpts())
+    check m2[0].tag == "cmd"
+    check m2[0].children[0].tag == "opt"
+    check m2[0].children[0].children.len == 2
+    check m2[0].children[1].ident == "c"
+
+  test "auto-string table rows":
+    let m = fromNif("t 2024-08-12 2024-08-12T14:05:09.25+02:00 14:05 12:00Z https://nim-lang.org C:/tmp 1/2 key: --color x-y\n", lbOpts())
+    let ch = m[0].children
+    check ch[0].strVal == "2024-08-12"
+    check ch[1].strVal == "2024-08-12T14:05:09.25+02:00"
+    check ch[2].strVal == "14:05"
+    check ch[3].strVal == "12:00Z"
+    check ch[4].strVal == "https://nim-lang.org"
+    check ch[5].strVal == "C:/tmp"
+    check ch[6].kind == nkStrLit and ch[6].strVal == "1/2"
+    check ch[7].strVal == "key:"
+    check ch[8].strVal == "--color"
+    # dialect deviation: hyphenated words stay identifiers (core `-` leniency),
+    # spec would read `x-y` as the string "x-y" — quote it when a string is needed
+    check ch[9].kind == nkIdent and ch[9].ident == "x-y"
+    # numbers and symbols keep their meaning
+    let m2 = fromNif("t -3 1.5E-3 x.1 /usr/bin\n", lbOpts())
+    check m2[0].children[0].kind == nkInt
+    check m2[0].children[0].intVal == -3
+    check m2[0].children[1].kind == nkFloat
+    check m2[0].children[2].kind == nkSymbol
+    check m2[0].children[2].symbol == "x.1"
+    check m2[0].children[3].strVal == "/usr/bin"
+    # numbers and symbols keep their meaning (no x-y re-check here)
+
+  test "adjacent atoms become strings; separated atoms unchanged":
+    let m = fromNif("t 1-2 a:b\n", lbOpts())
+    check m[0].children[0].kind == nkStrLit
+    check m[0].children[0].strVal == "1-2"
+    check m[0].children[1].strVal == "a:b"
+    let m2 = fromNif("t 1 -2 a :b\n", lbOpts())
+    check m2[0].children[0].kind == nkInt
+    check m2[0].children[1].intVal == -2
+    check m2[0].children[2].kind == nkIdent
+    check m2[0].children[3].kind == nkSymbolDef
+    # no LineNode -> core module -> no auto strings even with flag on
+    let m3 = fromNif("(stmts 1-2 a:b)\n", lbOpts())
+    check m3[0].children[0].kind == nkInt
+    check m3[0].children[1].intVal == -2
+    check m3[0].children[3].kind == nkSymbolDef
+
+  test "auto strings inside parens of a line-based module":
+    let m = fromNif("(copy a/b.txt)\ninfo x\n", lbOpts())
+    check m.len == 2
+    check m[0].children[0].kind == nkStrLit
+    check m[0].children[0].strVal == "a/b.txt"
+    check m[1].tag == "info"
+
+  test "auto-string suffix, escapes, empty args":
+    let m = fromNif("copy src/main.nim@0,3#entry# dest\n", lbOpts())
+    check m[0].children[0].strVal == "src/main.nim"
+    check isSome(m[0].children[0].lineInfo)
+    check m[0].children[0].comment.get == "entry"
+    let m2 = fromNif("copy my\\20dir/a.txt user\\40host/x\n", lbOpts())
+    check m2[0].children[0].strVal == "my dir/a.txt"
+    check m2[0].children[1].strVal == "user@host/x"
+    let m3 = fromNif("t ..\n", lbOpts())
+    check m3[0].children.len == 2
+    check m3[0].children[0].kind == nkEmpty
+    let m4 = fromNif("t .@5#empty with suffix#\n", lbOpts())
+    check m4[0].children[0].kind == nkEmpty
+    check isSome(m4[0].children[0].lineInfo)
+
+  test "line-based errors and flag-off behavior":
+    # empty input: valid empty module with flag, error without
+    check fromNif("", lbOpts()).len == 0
+    check fromNif("  \n \n", lbOpts()).len == 0
+    expect OpenParserNifError:
+      discard fromNif("")
+    # flag off: line-based input is a syntax error (`/` unexpected)
+    expect OpenParserNifError:
+      discard fromNif("copy a/b.txt dest/b.txt\n")
+    # `-la` and `./run.sh` must be quoted
+    expect OpenParserNifError:
+      discard fromNif("-la x\n", lbOpts())
+    expect OpenParserNifError:
+      discard fromNif("./run.sh x\n", lbOpts())
+    # tag must be an identifier
+    expect OpenParserNifError:
+      discard fromNif("123 abc\n", lbOpts())
+    expect OpenParserNifError:
+      discard fromNif("foo.1 abc\n", lbOpts())
+    # unbalanced paren on a line
+    expect OpenParserNifError:
+      discard fromNif("cmd a)\n", lbOpts())
+
+  test "line-based via file and round-trip dump":
+    let path = "/tmp/nif_linebased.nif"
+    writeFile(path, "(.nif27)\ncopy a/b.txt dest/b.txt\nwarn 2024-08-12 \"disk full\"\n")
+    let m = fromNifFile(path, lbOpts())
+    check m.len == 3
+    check m[1].tag == "copy"
+    check m[2].children[0].strVal == "2024-08-12"
+    # dump quotes auto strings; reparse (core) keeps the same values
+    let dumped = dumpNif(m[1..^1])
+    let m2 = fromNif(dumped)
+    check m2[0].children[0].strVal == "a/b.txt"
+    check m2[1].children[0].strVal == "2024-08-12"

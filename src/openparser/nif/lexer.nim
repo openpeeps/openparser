@@ -35,6 +35,7 @@ type
     raw*: string        # raw lexeme including escapes as in source
     value*: string      # decoded
     line*, col*, pos*, wsno*: int
+    nlBefore*: int      # newlines in the skipped whitespace prefix (line-based mode)
     suffix*: NifSuffix
     # for numbers keep raw separate; for symbol/ident value == decoded name
 
@@ -46,6 +47,7 @@ type
     line*, col*: int
     current*: char
     strbuf*: string
+    autoStrings*: bool  # line-based module: `a/b`, `2024-08-12`, `key:` lex as strings
 
 const
   invalidToken* = "Invalid token `$1`"
@@ -316,6 +318,113 @@ proc parseSuffix(l: var NifLexer): NifSuffix =
 # Forward
 proc nextNifToken*(l: var NifLexer): NifToken
 
+proc finishAutoString(l: var NifLexer, decoded, raw: var string,
+                      startLine, startCol, startPos, wsno: int): NifToken =
+  ## Continues an auto string from l.current (which is '-', '/' or ':')
+  ## up to whitespace, '(', ')', '@', '~', '#' or EOF, with escapes decoded.
+  ## StrEnd ::= Whitespace | '(' | ')' | '@' | '~' | '#'
+  while true:
+    if l.current == '\0' or l.current in {' ', '\t', '\r', '\n', '(', ')', '@', '~', '#'}:
+      break
+    elif l.current == '\\':
+      discard l.readEscape(decoded, raw)
+    else:
+      decoded.add(l.current)
+      raw.add(l.current)
+      l.advance()
+  result = NifToken(kind: ntkStrLit, raw: "\"" & raw & "\"", value: decoded,
+                    line: startLine, col: startCol, pos: startPos, wsno: wsno)
+  result.suffix = parseSuffix(l)
+
+proc readAutoStringEmpty(l: var NifLexer, wsno: int): NifToken =
+  ## Auto string with empty Number/Ident/Symbol prefix: starts with '/' or
+  ## with '-' not followed by a digit (e.g. `/usr/bin`, `--color`).
+  let sl = l.line; let sc = l.col; let sp = l.pos
+  var decoded = ""
+  var raw = ""
+  result = l.finishAutoString(decoded, raw, sl, sc, sp, wsno)
+
+proc reset*(l: var NifLexer) =
+  ## Rewind to byte 0 (used to re-lex after line-based module detection).
+  l.pos = 0
+  l.line = 1
+  l.col = 1
+  l.current = l.charAt(0)
+
+proc detectLineBased*(l: NifLexer): bool =
+  ## Pre-scan: true if any top-level line starts with a byte other than '('.
+  ## Tracks paren depth plus string/char/comment spans so nested content
+  ## and multi-line literals don't count. Directives `(.nif27)` start with '('.
+  var i = 0
+  var depth = 0
+  var lineStart = true
+  while i < l.len:
+    let c = l.charAt(i)
+    if lineStart:
+      if c in {' ', '\t', '\r'}:
+        inc i
+        continue
+      if c == '\n':
+        inc i
+        continue
+      if c == '\0':
+        break
+      if depth == 0 and c != '(':
+        return true
+      lineStart = false
+      continue # reprocess c below without consuming
+    case c
+    of '\n':
+      lineStart = true
+      inc i
+    of '"', '\'':
+      let q = c
+      inc i
+      while i < l.len:
+        let d = l.charAt(i)
+        if d == '\0' or d == '\n' and q == '\'':
+          break # unterminated; real parse will error
+        if d == '\\':
+          inc i # the backslash
+          if i < l.len and l.charAt(i) != '\n':
+            inc i # escaped char (covers \" and \xx's first digit; rest harmless)
+          continue
+        inc i
+        if d == q:
+          break
+    of '#':
+      inc i
+      while i < l.len:
+        let d = l.charAt(i)
+        if d == '\\':
+          inc i
+          if i < l.len:
+            inc i
+          continue
+        if d == '#':
+          inc i
+          break
+        inc i
+    of '(':
+      inc depth
+      inc i
+    of ')':
+      if depth > 0:
+        dec depth
+      inc i
+      if depth == 0:
+        # `(a) b c` reads as `(a)` and `(b c)`: content after a top-level
+        # node on the same line (other than another `(` node) is a LineNode.
+        var j = i
+        while j < l.len and l.charAt(j) in {' ', '\t', '\r'}:
+          inc j
+        let n = l.charAt(j)
+        if n != '\n' and n != '\0' and n != '(':
+          return true
+    else:
+      inc i
+  result = false
+
 proc readStringLit(l: var NifLexer): NifToken =
   ## assumes l.current == '"' on entry
   let startLine = l.line
@@ -504,6 +613,10 @@ proc readNumber(l: var NifLexer): NifToken =
       kind = ntkUInt
       raw.add('u')
       l.advance()
+    if l.autoStrings and l.current in {'-', '/', ':'}:
+      # `2024-08-12`, `1/2`, `12:00Z`: atom continues into an auto string.
+      var dec = raw
+      return l.finishAutoString(dec, raw, sl, sc, sp, 0)
     result = NifToken(kind: kind, raw: raw, value: raw, line: sl, col: sc, pos: sp, wsno: 0)
     result.suffix = parseSuffix(l)
     return result
@@ -533,6 +646,10 @@ proc readNumber(l: var NifLexer): NifToken =
     kind = ntkUInt
     raw.add('u')
     l.advance()
+  if l.autoStrings and l.current in {'-', '/', ':'}:
+    # `2024-08-12`, `1/2`, `12:00Z`: atom continues into an auto string.
+    var dec = raw
+    return l.finishAutoString(dec, raw, sl, sc, sp, 0)
   result = NifToken(kind: kind, raw: raw, value: raw, line: sl, col: sc, pos: sp, wsno: 0)
   result.suffix = parseSuffix(l)
 
@@ -587,6 +704,12 @@ proc readIdentSymbol(l: var NifLexer, isSymbolDef: bool): NifToken =
       else: break
     # continue outer while to cover multiple segments? inner already consumes all remaining dots/identchars so break
     break
+  if not isSymbolDef and l.autoStrings and l.current in {'/', ':'}:
+    # `a/b.txt`, `key:`: atom continues into an auto string.
+    # ('-' can't occur here — it lexes as an IdentChar.)
+    var mDec = if isSymbol: symbolDec else: decoded
+    var mRaw = if isSymbol: symbolRaw else: raw
+    return l.finishAutoString(mDec, mRaw, sl, sc, sp, 0)
   if isSymbol:
     let k = if isSymbolDef: ntkSymbolDef else: ntkSymbol
     result = NifToken(kind: k, raw: (if isSymbolDef: ":" else: "") & symbolRaw,
@@ -601,7 +724,7 @@ proc readIdentSymbol(l: var NifLexer, isSymbolDef: bool): NifToken =
       result = NifToken(kind: ntkIdent, raw: raw, value: decoded, line: sl, col: sc, pos: sp, wsno: 0)
   result.suffix = parseSuffix(l)
 
-proc nextNifToken*(l: var NifLexer): NifToken =
+proc nextNifTokenRaw(l: var NifLexer): NifToken =
   ## Produce next token, skipping whitespace. Attaches suffix with no ws.
   let wsno = skipWhitespaceCount(l)
   let sl = l.line; let sc = l.col; let sp = l.pos
@@ -653,6 +776,17 @@ proc nextNifToken*(l: var NifLexer): NifToken =
       let t = readNumber(l)
       t.wsno = wsno
       return t
+    elif l.autoStrings and l.peekAt(1) in {'-', '/', ':'}:
+      # empty Number/Ident/Symbol prefix: `--color`, `-/x` start an auto string.
+      # (`-la` stays an error: `-` followed by a letter must be quoted.)
+      let t = l.readAutoStringEmpty(wsno)
+      return t
+    else:
+      l.error(unexpectedChar % $l.current)
+  of '/':
+    if l.autoStrings:
+      let t = l.readAutoStringEmpty(wsno)
+      return t
     else:
       l.error(unexpectedChar % $l.current)
   of '+':
@@ -674,6 +808,13 @@ proc nextNifToken*(l: var NifLexer): NifToken =
       return t
     else:
       l.error(unexpectedChar % $l.current)
+
+proc nextNifToken*(l: var NifLexer): NifToken =
+  ## Produce next token, skipping whitespace. Attaches suffix with no ws.
+  ## Records `nlBefore`: newlines in the skipped prefix (used by line-based mode).
+  let lineBefore = l.line
+  result = l.nextNifTokenRaw()
+  result.nlBefore = result.line - lineBefore
 
 proc tokenize*(input: string): seq[NifToken] =
   ## Tokenize whole input to seq (including EOF)

@@ -59,6 +59,14 @@ proc initParser*(lex: NifLexer, opts: NifOptions = nil): NifParser =
   result = NifParser(lexer: lex, options: o, moduleSuffix: o.moduleSuffix)
   result.curr = result.nextTok()
   result.next = result.nextTok()
+  if o.allowLineBased and result.curr.kind != ntkEof and lex.detectLineBased():
+    # Line-based module: re-lex with auto strings enabled (`a/b`, `2024-08-12`).
+    var mlex = lex
+    mlex.autoStrings = true
+    mlex.reset()
+    result.prev = nil
+    result.curr = result.nextTok()
+    result.next = result.nextTok()
 
 # symbol expansion
 proc expandSymValue(val: string, suffixMod: string): string =
@@ -278,14 +286,37 @@ proc parseNode(p: var NifParser): NifNode =
   else:
     p.error(unexpectedToken % $p.curr.kind)
 
+proc parseLineNode(p: var NifParser): NifNode =
+  ## LineNode ::= TagHead LineArg* (Newline | EOF). p.curr is the tag token.
+  ## A LineNode reads as `(tag arg1 arg2 ...)`; only the top level is line-based.
+  if p.curr.kind != ntkIdent:
+    p.error("Expected tag identifier for line node, got " & $p.curr.kind)
+  let tagTok = p.curr
+  p.advance()
+  var children: seq[NifNode] = @[]
+  while p.curr.kind != ntkEof and p.curr.nlBefore == 0:
+    if p.curr.kind == ntkRParen:
+      p.error("Unexpected `)` in line node — balance parentheses")
+    children.add(p.parseNode())
+  result = newNifCompound(tagTok.value, tagTok.raw, children,
+                          tagTok.suffix.lineInfo, tagTok.suffix.comment)
+
 proc parseModule*(p: var NifParser): NifModule =
   result = @[]
+  let lineBased = p.lexer.autoStrings
+  if p.curr.kind == ntkEof:
+    if p.options.allowLineBased:
+      return @[] # empty input is a valid empty line-based module
+    p.error("Empty NIF module — expected at least one Node")
   # spec: version directive must be at byte 0 with no ws before
   let firstPos = if p.curr != nil: p.curr.pos else: 0
   var idx = 0
   while p.curr.kind != ntkEof:
-    # skip any stray handling? Module is Node+ ; allow parsing
-    let n = p.parseNode()
+    # Line-based: a top-level line not starting with `(` is a LineNode.
+    # Both forms mix freely; directives keep their usual `(...)` form.
+    let n =
+      if lineBased and p.curr.kind != ntkLParen: p.parseLineNode()
+      else: p.parseNode()
     # directive check for first node being .nif27 at pos 0
     if idx == 0 and n.kind == nkDirective and n.tag == ".nif27":
       if firstPos != 0:

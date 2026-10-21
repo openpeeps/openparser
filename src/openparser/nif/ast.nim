@@ -22,6 +22,12 @@ type
       ## 0 = unlimited; else max compound nesting
     preserveComments*: bool
     skipUnknownDirectives*: bool
+    allowLineBased*: bool
+      ## When true, enable the optional line-based top-level syntax:
+      ## a top-level line not starting with `(` is read as `(tag args...)`,
+      ## and bare `a/b`, `2024-08-12`, `key:` words become string literals.
+      ## Auto-detected per module (needs >= 1 non-`(` top-level line);
+      ## pure-core input parses unchanged. Default false.
 
   NifLineInfo* = object
     ## Absolute or diff-based? Spec stores diffs relative to parent.
@@ -113,7 +119,8 @@ proc defaultNifOptions*(): NifOptions =
     expandGlobalSymbols: true,
     maxDepth: 0,
     preserveComments: true,
-    skipUnknownDirectives: true
+    skipUnknownDirectives: true,
+    allowLineBased: false
   )
 
 proc isDirectiveTag*(tag: string): bool =
