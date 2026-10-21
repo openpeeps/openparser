@@ -214,7 +214,7 @@ suite "NIF File IO":
 
 (.lang "sql"
   (create-table users
-    (column (id) (i +64))
+    (column (id) (i 64))
     (column (name) string)))
 """
     let m = fromNif(sample)
@@ -225,8 +225,8 @@ suite "NIF File IO":
     check m[1].children[0].strVal == "json"
     check m[2].children[1].children[1].tag == "column"
 
-  test "hyphenated identifiers and +64 number":
-    let m = fromNif("(stmts background-color create-table +64)")
+  test "hyphenated identifiers and bare number":
+    let m = fromNif("(stmts background-color create-table 64)")
     check m[0].children[0].ident == "background-color"
     check m[0].children[1].ident == "create-table"
     check m[0].children[2].kind == nkInt
@@ -273,7 +273,7 @@ suite "NIF Complex Strings":
           (kv (content) "a\5Cb"))))))
 (.lang "sql"
   (create-table users
-    (column (id) (i +64))
+    (column (id) (i 64))
     (column (name) string)
     (column (data) (array (i 8)))))
 (.lang "json"
@@ -403,9 +403,9 @@ literal"
   test "numeric extremes and type constructors":
     let src = """
 (stmts
-  0 42 -7 +64 12u 0u
-  3.14 -0.5 1E10 1.2E-3 1E+10 2.5e-5
-  (type (i 8) (i 16) (i +32) (u 64) (f 32) (f 64) (array (i 8)) (ptr string))
+  0 42 -7 64 12u 0u
+  3.14 -0.5 1E10 1.2E-3 1E+10 2.5E-5
+  (type (i 8) (i 16) (i 32) (u 64) (f 32) (f 64) (array (i 8)) (ptr string))
 )
 """
     let m = fromNif(src)
@@ -500,3 +500,79 @@ literal"
     check m[2].children[0].strVal == "x86_64"
     check m[4].tag == ".unusedname"
     check m[4].children[0].symbol == "tmp.14"
+
+suite "NIF 2027 Spec Additions - numeric bases and quoted punctuation":
+  test "PR12 equivalence table":
+    let m = fromNif("(stmts 0xFF 0xff 0o377 0b1111_1111 -0xFF 0xDEAD_BEEFu 1_000_000 1_234.5_6E+0_2)")
+    let ch = m[0].children
+    check ch.len == 8
+    check ch[0].kind == nkInt and ch[0].intVal == 255
+    check ch[1].intVal == 255
+    check ch[2].intVal == 255
+    check ch[3].intVal == 255
+    check ch[4].intVal == -255
+    check ch[5].kind == nkUInt and ch[5].uintVal == 3735928559u64
+    check ch[6].intVal == 1000000
+    check ch[7].kind == nkFloat
+    check ch[7].floatVal == 1234.56E+02
+    # raw spellings preserved for round-trip
+    check ch[0].rawInt == "0xFF"
+    check ch[5].rawUInt == "0xDEAD_BEEFu"
+    check ch[6].rawInt == "1_000_000"
+
+  test "PR12 decimal forms incl separators and unsigned":
+    let m = fromNif("(stmts 255 3735928559u 1000000 1234.56E+02 12u -12 0u -0xC 0x1E3)")
+    let ch = m[0].children
+    check ch[0].intVal == 255
+    check ch[1].uintVal == 3735928559u64
+    check ch[2].intVal == 1000000
+    check ch[3].kind == nkFloat
+    check ch[4].kind == nkUInt and ch[4].uintVal == 12
+    check ch[5].intVal == -12
+    check ch[7].intVal == -12
+    # 0x1E3 is hex int 483, not float (E is a hex digit)
+    check ch[8].kind == nkInt and ch[8].intVal == 483
+
+  test "PR12 malformed spellings rejected":
+    for bad in ["0x", "0o8", "0b102", "0x_FF", "1_", "1__2",
+                "1_.0", "1._0", "1E_2", "1E+_2", "1_u",
+                "0o178", "1E", "1E+"]:
+      expect OpenParserNifError:
+        discard fromNif("(stmts " & bad & ")")
+
+  test "PR12 strictness: no leading +, uppercase E only, lowercase prefixes":
+    # leading + rejected
+    expect OpenParserNifError:
+      discard fromNif("(stmts +64)")
+    expect OpenParserNifError:
+      discard fromNif("(stmts 0XFF)")
+    # lowercase e is not an exponent: float splits, not a single float
+    let m = fromNif("(stmts 2.5e-5)")
+    check m[0].children.len == 2
+    check m[0].children[0].kind == nkFloat
+    # uppercase E is the exponent
+    let m2 = fromNif("(stmts 2.5E-5)")
+    check m2[0].children.len == 1
+    check m2[0].children[0].kind == nkFloat
+
+  test "PR13 timestamp and punctuation in quoted strings":
+    let m = fromNif("(tag 0 \"2026-10-11T12:00:00Z\")")
+    check m[0].children[1].strVal == "2026-10-11T12:00:00Z"
+    let m2 = fromNif("(stmts \"key: value; # text\"#comment#)")
+    check m2[0].children[0].strVal == "key: value; # text"
+    check m2[0].children[0].comment.get == "comment"
+    # '#' inside quotes is content; suffix starts after closing quote
+    let m3 = fromNif("(stmts \"a:b\" \"x#y\" \"p;q\")")
+    check m3[0].children[0].strVal == "a:b"
+    check m3[0].children[1].strVal == "x#y"
+    check m3[0].children[2].strVal == "p;q"
+
+  test "PR13 other controls still escaped in strings":
+    expect OpenParserNifError:
+      discard fromNif("(stmts \"has (paren\")")
+    expect OpenParserNifError:
+      discard fromNif("(stmts \"has @at\")")
+    # escaped forms still work
+    let m = fromNif("(stmts \"a\\28b\" \"x\\40y\")")
+    check m[0].children[0].strVal == "a(b"
+    check m[0].children[1].strVal == "x@y"

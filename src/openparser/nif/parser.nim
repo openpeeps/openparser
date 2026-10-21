@@ -73,6 +73,71 @@ proc expandSymValue(val: string, suffixMod: string): string =
   # val is "foo.0." -> we want "foo.0.modname" i.e. val + suffixMod
   result = val & suffixMod
 
+proc nifDigitVal(c: char): int {.inline.} =
+  case c
+  of '0'..'9': ord(c) - ord('0')
+  of 'a'..'f': ord(c) - ord('a') + 10
+  of 'A'..'F': ord(c) - ord('A') + 10
+  else: -1
+
+proc parseNifInt(raw: string): int64 =
+  ## Parses strict 2027 integers: optional '-', 0x/0o/0b or decimal, '_' ignored.
+  var s = raw
+  var neg = false
+  if s.len > 0 and s[0] == '-':
+    neg = true
+    s = s[1..^1]
+  var base = 10
+  if s.len >= 2 and s[0] == '0' and s[1] in {'x', 'o', 'b'}:
+    case s[1]
+    of 'x': base = 16
+    of 'o': base = 8
+    of 'b': base = 2
+    else: discard
+    s = s[2..^1]
+  var v: int64 = 0
+  for c in s:
+    if c == '_': continue
+    let d = nifDigitVal(c)
+    if d < 0 or d >= base: continue # lexer already validated; stay total
+    v = v * int64(base) + int64(d)
+  if neg: -v else: v
+
+proc parseNifUInt(raw: string): uint64 =
+  ## Parses strict 2027 unsigned: optional '-', base prefix, digits, trailing 'u'.
+  var s = raw
+  if s.endsWith("u"): s = s[0..^2]
+  var neg = false
+  if s.len > 0 and s[0] == '-':
+    neg = true
+    s = s[1..^1]
+  var base = 10
+  if s.len >= 2 and s[0] == '0' and s[1] in {'x', 'o', 'b'}:
+    case s[1]
+    of 'x': base = 16
+    of 'o': base = 8
+    of 'b': base = 2
+    else: discard
+    s = s[2..^1]
+  var v: uint64 = 0
+  for c in s:
+    if c == '_': continue
+    let d = nifDigitVal(c)
+    if d < 0 or d >= base: continue
+    v = v * uint64(base) + uint64(d)
+  if neg:
+    # wrap like two's complement (e.g. -12u)
+    result = uint64(-int64(v))
+  else:
+    result = v
+
+proc parseNifFloat(raw: string): float64 =
+  var s = newStringOfCap(raw.len)
+  for c in raw:
+    if c != '_': s.add(c)
+  try: result = parseFloat(s)
+  except: result = 0.0
+
 proc makeAtomNode(p: var NifParser, t: NifToken): NifNode =
   let suf = t.suffix
   let liOpt = suf.lineInfo
@@ -116,24 +181,22 @@ proc makeAtomNode(p: var NifParser, t: NifToken): NifNode =
     result.lineInfo = liOpt
     result.comment = cmtOpt
   of ntkInt:
-    var iv:int64 = 0
-    try: iv = parseBiggestInt(t.raw)
+    var iv: int64 = 0
+    try: iv = parseNifInt(t.raw)
     except: iv = 0
     result = NifNode(kind: nkInt, intVal: iv, rawInt: t.raw)
     result.lineInfo = liOpt
     result.comment = cmtOpt
   of ntkUInt:
-    var uv:uint64 = 0
-    var s = t.raw
-    if s.endsWith("u"): s = s[0..^2]
-    try: uv = uint64(parseBiggestUInt(s))
+    var uv: uint64 = 0
+    try: uv = parseNifUInt(t.raw)
     except: uv = 0
     result = NifNode(kind: nkUInt, uintVal: uv, rawUInt: t.raw)
     result.lineInfo = liOpt
     result.comment = cmtOpt
   of ntkFloat:
-    var fv:float64 = 0.0
-    try: fv = parseFloat(t.raw)
+    var fv: float64 = 0.0
+    try: fv = parseNifFloat(t.raw)
     except: fv = 0.0
     result = NifNode(kind: nkFloat, floatVal: fv, rawFloat: t.raw)
     result.lineInfo = liOpt

@@ -110,9 +110,12 @@ proc decodeB62(s: string): int =
     v = v*62 + b62Val(c)
   if neg: -v else: v
 
+proc isHexDigit(c: char): bool {.inline.} = c in {'0'..'9','A'..'F','a'..'f'}
 proc isHexUpper(c: char): bool {.inline.} = c in {'0'..'9','A'..'F'}
 proc hexVal(c: char): int {.inline.} =
   if c in '0'..'9': ord(c)-ord('0') else: ord(c)-ord('A')+10
+proc isOctalDigit(c: char): bool {.inline.} = c in {'0'..'7'}
+proc isBinaryDigit(c: char): bool {.inline.} = c in {'0'..'1'}
 
 proc isAsciiLetter(c: char): bool {.inline.} = c in {'a'..'z','A'..'Z'}
 proc isNonAscii(b: char): bool {.inline.} = ord(b) >= 128
@@ -340,12 +343,22 @@ proc readStringLit(l: var NifLexer): NifToken =
         rawInner.add('\r')
         l.advance()
     else:
-      # per nifspec VisibleChar excludes controls, but practical NIF strings contain
-      # ':' '~' '#' '@' etc. Allow any byte except unescaped '"' and '\' inside strings;
-      # closing '"' is handled above, '\' handled as escape, so everything else is literal.
-      dec.add(l.current)
-      rawInner.add(l.current)
-      l.advance()
+      # StringData ::= (VisibleChar | '#' | ':' | Escape | Whitespace)*
+      # '#' and ':' may appear directly; all other ASCII controls must be escaped.
+      # Whitespace (incl. newlines) may appear literally.
+      if isControl(l.current):
+        if l.current in {'#', ':'}:
+          dec.add(l.current)
+          rawInner.add(l.current)
+          l.advance()
+        else:
+          l.error("Unescaped control `" & $l.current & "` inside string literal — use \\xx")
+      elif ord(l.current) < 32 and l.current notin {' ', '\t', '\n', '\r'}:
+        l.error("Control byte in string literal — must be escaped")
+      else:
+        dec.add(l.current)
+        rawInner.add(l.current)
+        l.advance()
   result = NifToken(kind: ntkStrLit, raw: "\"" & rawInner & "\"", value: dec,
                     line: startLine, col: startCol, pos: startPos, wsno: 0)
   result.suffix = parseSuffix(l)
@@ -376,62 +389,146 @@ proc readCharLit(l: var NifLexer): NifToken =
                     line: sl, col: sc, pos: sp, wsno: 0)
   result.suffix = parseSuffix(l)
 
+proc consumeDecimalDigits(l: var NifLexer, raw: var string) =
+  ## Consumes DecimalDigits ::= Digit ('_'? Digit)* ; l.current must be '0'..'9'.
+  ## Errors on misplaced '_' (must be between two digits).
+  raw.add(l.current)
+  l.advance()
+  while true:
+    if l.current in {'0'..'9'}:
+      raw.add(l.current)
+      l.advance()
+    elif l.current == '_':
+      if l.peekAt(1) notin {'0'..'9'}:
+        l.error("Invalid digit separator `_` — must appear between two digits")
+      raw.add('_')
+      l.advance()
+    else: break
+
+proc consumeHexDigits(l: var NifLexer, raw: var string) =
+  raw.add(l.current)
+  l.advance()
+  while true:
+    if isHexDigit(l.current):
+      raw.add(l.current)
+      l.advance()
+    elif l.current == '_':
+      if not isHexDigit(l.peekAt(1)):
+        l.error("Invalid digit separator `_` — must appear between two hex digits")
+      raw.add('_')
+      l.advance()
+    else: break
+
+proc consumeOctalDigits(l: var NifLexer, raw: var string) =
+  raw.add(l.current)
+  l.advance()
+  while true:
+    if isOctalDigit(l.current):
+      raw.add(l.current)
+      l.advance()
+    elif l.current == '_':
+      if not isOctalDigit(l.peekAt(1)):
+        l.error("Invalid digit separator `_` — must appear between two octal digits")
+      raw.add('_')
+      l.advance()
+    else: break
+
+proc consumeBinaryDigits(l: var NifLexer, raw: var string) =
+  raw.add(l.current)
+  l.advance()
+  while true:
+    if isBinaryDigit(l.current):
+      raw.add(l.current)
+      l.advance()
+    elif l.current == '_':
+      if not isBinaryDigit(l.peekAt(1)):
+        l.error("Invalid digit separator `_` — must appear between two binary digits")
+      raw.add('_')
+      l.advance()
+    else: break
+
+proc readExponent(l: var NifLexer, raw: var string) =
+  ## Consumes Exponent ::= 'E' ('+'|'-')? DecimalDigits ; l.current must be 'E'.
+  raw.add('E')
+  l.advance()
+  if l.current in {'+', '-'}:
+    raw.add(l.current)
+    l.advance()
+  if l.current notin {'0'..'9'}:
+    l.error("Expected digit in exponent")
+  consumeDecimalDigits(l, raw)
+
 proc readNumber(l: var NifLexer): NifToken =
+  ## Strict 2027 numbers: '-'? (IntegerPart 'u'? | DecimalDigits FloatingPointPart)
+  ## IntegerPart ::= DecimalDigits | '0' 'x'HexDigits | '0' 'o'OctalDigits | '0' 'b'BinaryDigits
+  ## Float needs '.' DecimalDigits or uppercase 'E'. No leading '+', no lowercase 'e'.
   let sl = l.line; let sc = l.col; let sp = l.pos
   var raw = ""
-  if l.current in {'-', '+'}:
-    raw.add(l.current)
+  if l.current == '-':
+    raw.add('-')
     l.advance()
     if l.current notin {'0'..'9'}:
       l.error("Expected digit after sign in number")
-  # digits
-  var digitCount = 0
-  while l.current in {'0'..'9'}:
-    raw.add(l.current)
-    l.advance()
-    inc digitCount
-  if digitCount == 0:
+  if l.current notin {'0'..'9'}:
     l.error("Invalid number — expected digit")
+  # Reject uppercase base prefixes with a helpful message (spec uses lowercase only)
+  if l.current == '0' and l.peekAt(1) in {'X', 'O', 'B'}:
+    l.error("Invalid base prefix `" & $l.peekAt(1) & "` — use lowercase 0x/0o/0b")
+  # Based integers: 0x / 0o / 0b (integers only, optional 'u')
+  if l.current == '0' and l.peekAt(1) in {'x', 'o', 'b'}:
+    let baseChar = l.peekAt(1)
+    raw.add('0')
+    raw.add(baseChar)
+    l.advance()
+    l.advance()
+    case baseChar
+    of 'x':
+      if not isHexDigit(l.current):
+        l.error("Malformed hex integer — expected hex digit after 0x")
+      consumeHexDigits(l, raw)
+    of 'o':
+      if not isOctalDigit(l.current):
+        l.error("Malformed octal integer — expected octal digit 0-7 after 0o")
+      consumeOctalDigits(l, raw)
+    of 'b':
+      if not isBinaryDigit(l.current):
+        l.error("Malformed binary integer — expected binary digit 0/1 after 0b")
+      consumeBinaryDigits(l, raw)
+    else: discard
+    # A decimal digit immediately after base digits means out-of-range digit
+    # (e.g. 0b102, 0o178) — spec lists these as malformed, not two tokens.
+    if l.current in {'0'..'9'}:
+      l.error("Malformed integer — digit out of range for base 0" & $baseChar)
+    var kind = ntkInt
+    if l.current == 'u':
+      kind = ntkUInt
+      raw.add('u')
+      l.advance()
+    result = NifToken(kind: kind, raw: raw, value: raw, line: sl, col: sc, pos: sp, wsno: 0)
+    result.suffix = parseSuffix(l)
+    return result
+  # Decimal: integer part first
+  consumeDecimalDigits(l, raw)
   var kind = ntkInt
   var isFloat = false
   if l.current == '.':
-    # need Digit after '.' to be float; otherwise '.' is delimiter (empty) not part of number
+    if l.peekAt(1) == '_':
+      l.error("Invalid digit separator `_` — must not appear next to `.`")
     if l.peekAt(1) in {'0'..'9'}:
       isFloat = true
       kind = ntkFloat
       raw.add('.')
       l.advance()
-      while l.current in {'0'..'9'}:
-        raw.add(l.current)
-        l.advance()
-      if l.current in {'E','e'}:
-        raw.add(l.current)
-        l.advance()
-        if l.current in {'+','-'}:
-          raw.add(l.current)
-          l.advance()
-        var eCnt=0
-        while l.current in {'0'..'9'}:
-          raw.add(l.current)
-          l.advance()
-          inc eCnt
-        if eCnt==0: l.error("Expected digit in exponent")
+      consumeDecimalDigits(l, raw)
+      if l.current == 'E':
+        readExponent(l, raw)
     else:
-      discard # leave '.' for next token (empty)
-  elif l.current in {'E','e'}:
+      discard # leave '.' for next token (empty node); "1." is int 1 + empty
+  elif l.current == 'E':
     isFloat = true
     kind = ntkFloat
-    raw.add(l.current)
-    l.advance()
-    if l.current in {'+','-'}:
-      raw.add(l.current)
-      l.advance()
-    var eCnt=0
-    while l.current in {'0'..'9'}:
-      raw.add(l.current)
-      l.advance()
-      inc eCnt
-    if eCnt==0: l.error("Expected digit in exponent")
+    readExponent(l, raw)
+  # Lowercase 'e' is NOT an exponent (hex digit range); leave for next token.
   if not isFloat and l.current == 'u':
     kind = ntkUInt
     raw.add('u')
@@ -551,16 +648,16 @@ proc nextNifToken*(l: var NifLexer): NifToken =
     l.advance()
     result = NifToken(kind: ntkDot, raw: ".", value:".", line: sl, col: sc, pos: sp, wsno: wsno)
     result.suffix = parseSuffix(l)
-  of '-', '+':
+  of '-':
     if l.peekAt(1) in {'0'..'9'}:
       let t = readNumber(l)
       t.wsno = wsno
       return t
-    elif l.current == '-':
-      l.error(unexpectedChar % $l.current)
     else:
-      # '+' alone is not a number — treat as ident-like? fallthrough to ident error
       l.error(unexpectedChar % $l.current)
+  of '+':
+    # 2027 spec: numbers no longer carry a leading '+'; bare 12 is twelve.
+    l.error("Unexpected `+` — numbers use optional `-` only per 2027 spec (write `64`, not `+64`)")
   of '0'..'9':
     let t = readNumber(l)
     t.wsno = wsno
