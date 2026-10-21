@@ -107,10 +107,20 @@ proc decodeB62(s: string): int =
     neg = true
     t = t[1..^1]
     if t.len == 0: return 0
-  var v = 0
+  var mag: uint64 = 0
   for c in t:
-    v = v*62 + b62Val(c)
-  if neg: -v else: v
+    let d = uint64(b62Val(c))
+    if mag > (high(uint64) - d) div 62u64:
+      raise newException(OpenParserNifError, "Line info diff out of range: " & s)
+    mag = mag*62u64 + d
+  if neg:
+    if mag > uint64(high(int)) + 1:
+      raise newException(OpenParserNifError, "Line info diff out of range: " & s)
+    if mag == uint64(high(int)) + 1: return low(int)
+    return -int(mag)
+  if mag > uint64(high(int)):
+    raise newException(OpenParserNifError, "Line info diff out of range: " & s)
+  int(mag)
 
 proc isHexDigit(c: char): bool {.inline.} = c in {'0'..'9','A'..'F','a'..'f'}
 proc isHexUpper(c: char): bool {.inline.} = c in {'0'..'9','A'..'F'}
@@ -485,7 +495,9 @@ proc readCharLit(l: var NifLexer): NifToken =
     l.error("Unescaped control in char literal")
   elif l.current == '\'':
     l.error("Empty char literal")
-  elif ord(l.current) < 32 and l.current notin {'\n','\t','\r'}:
+  elif ord(l.current) < 32:
+    # VisibleChar requires ASCII >= 32; control bytes (incl. literal
+    # newline/tab/CR) must use escapes like '\n' — same as the spec.
     l.error("Control byte in char literal — must be escaped")
   else:
     dec.add(l.current)

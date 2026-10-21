@@ -90,6 +90,7 @@ proc nifDigitVal(c: char): int {.inline.} =
 
 proc parseNifInt(raw: string): int64 =
   ## Parses strict 2027 integers: optional '-', 0x/0o/0b or decimal, '_' ignored.
+  ## Raises OpenParserNifError when the magnitude exceeds int64 range.
   var s = raw
   var neg = false
   if s.len > 0 and s[0] == '-':
@@ -103,16 +104,26 @@ proc parseNifInt(raw: string): int64 =
     of 'b': base = 2
     else: discard
     s = s[2..^1]
-  var v: int64 = 0
+  var mag: uint64 = 0
   for c in s:
     if c == '_': continue
     let d = nifDigitVal(c)
     if d < 0 or d >= base: continue # lexer already validated; stay total
-    v = v * int64(base) + int64(d)
-  if neg: -v else: v
+    if mag > (high(uint64) - uint64(d)) div uint64(base):
+      raise newException(OpenParserNifError, "Integer literal out of range: " & raw)
+    mag = mag * uint64(base) + uint64(d)
+  if neg:
+    if mag > uint64(high(int64)) + 1:
+      raise newException(OpenParserNifError, "Integer literal out of range: " & raw)
+    if mag == uint64(high(int64)) + 1: return low(int64)
+    return -int64(mag)
+  if mag > uint64(high(int64)):
+    raise newException(OpenParserNifError, "Integer literal out of range: " & raw)
+  int64(mag)
 
 proc parseNifUInt(raw: string): uint64 =
   ## Parses strict 2027 unsigned: optional '-', base prefix, digits, trailing 'u'.
+  ## Raises OpenParserNifError when the magnitude exceeds uint64 range.
   var s = raw
   if s.endsWith("u"): s = s[0..^2]
   var neg = false
@@ -127,17 +138,21 @@ proc parseNifUInt(raw: string): uint64 =
     of 'b': base = 2
     else: discard
     s = s[2..^1]
-  var v: uint64 = 0
+  var mag: uint64 = 0
   for c in s:
     if c == '_': continue
     let d = nifDigitVal(c)
     if d < 0 or d >= base: continue
-    v = v * uint64(base) + uint64(d)
+    if mag > (high(uint64) - uint64(d)) div uint64(base):
+      raise newException(OpenParserNifError, "Integer literal out of range: " & raw)
+    mag = mag * uint64(base) + uint64(d)
   if neg:
-    # wrap like two's complement (e.g. -12u)
-    result = uint64(-int64(v))
+    # wrap like two's complement (e.g. -12u); -mag overflows below -2^63
+    if mag > uint64(high(int64)) + 1:
+      raise newException(OpenParserNifError, "Integer literal out of range: " & raw)
+    result = if mag == 0: 0u64 else: not (mag - 1)
   else:
-    result = v
+    result = mag
 
 proc parseNifFloat(raw: string): float64 =
   var s = newStringOfCap(raw.len)
@@ -191,6 +206,7 @@ proc makeAtomNode(p: var NifParser, t: NifToken): NifNode =
   of ntkInt:
     var iv: int64 = 0
     try: iv = parseNifInt(t.raw)
+    except OpenParserNifError: raise
     except: iv = 0
     result = NifNode(kind: nkInt, intVal: iv, rawInt: t.raw)
     result.lineInfo = liOpt
@@ -198,6 +214,7 @@ proc makeAtomNode(p: var NifParser, t: NifToken): NifNode =
   of ntkUInt:
     var uv: uint64 = 0
     try: uv = parseNifUInt(t.raw)
+    except OpenParserNifError: raise
     except: uv = 0
     result = NifNode(kind: nkUInt, uintVal: uv, rawUInt: t.raw)
     result.lineInfo = liOpt

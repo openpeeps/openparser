@@ -830,3 +830,63 @@ suite "NIF spec conformance extras":
     let m2 = fromNif("(stmts 1.2e-3)")
     check m2[0].children.len == 2
     check m2[0].children[0].kind == nkFloat
+
+  test "hex escapes for # : ; and spec operand example":
+    let m = fromNif("(stmts \"a\\23b\\3Ac\\3Bd\")")
+    check m[0].children[0].strVal == "a#b:c;d"
+    # spec line-info example: operands carry diffs relative to the parent tag
+    let m2 = fromNif("(infix add x~3 y@2)")
+    check m2[0].children[1].lineInfo.get.colDiff == -3
+    check m2[0].children[1].lineInfo.get.hasTildeShorthand
+    check m2[0].children[2].lineInfo.get.colDiff == 2
+    # root tag with full <col,line,filename> annotation
+    let m3 = fromNif("(stmts@1,1,foo.nim x)")
+    check m3[0].tagLineInfo.get.colDiff == 1
+    check m3[0].tagLineInfo.get.lineDiff == 1
+    check m3[0].tagLineInfo.get.filename.get == "foo.nim"
+
+  test "negative unsigned wraps, empty compound rules":
+    let m = fromNif("(stmts -12u)")
+    check m[0].children[0].kind == nkUInt
+    check m[0].children[0].uintVal == 18446744073709551604u64
+    check fromNif("(stmts 18446744073709551615u)")[0].children[0].uintVal == high(uint64)
+    expect OpenParserNifError:
+      discard fromNif("(stmts 18446744073709551616u)")
+    # (a) is a valid empty compound; () is not a node at all
+    check fromNif("(a)")[0].children.len == 0
+    expect OpenParserNifError:
+      discard fromNif("()")
+
+  test "out-of-range literals are proper parse errors":
+    for bad in ["9999999999999999999999", "0xFFFFFFFFFFFFFFFFFF",
+                "0b11111111111111111111111111111111111111111111111111111111111111111",
+                "9223372036854775808", "-9223372036854775809"]:
+      expect OpenParserNifError:
+        discard fromNif("(stmts " & bad & ")")
+    # boundary values still parse
+    check fromNif("(stmts 9223372036854775807)")[0].children[0].intVal == high(int64)
+    check fromNif("(stmts -9223372036854775808)")[0].children[0].intVal == low(int64)
+    # overlong base62 diffs are proper parse errors, not crashes
+    expect OpenParserNifError:
+      discard fromNif("(stmts x@zzzzzzzzzzz)")
+    expect OpenParserNifError:
+      discard fromNif("(stmts x~zzzzzzzzzzz)")
+
+  test "control bytes must be escaped in char literals":
+    # literal newline/tab/CR inside '..' is rejected; escape forms work
+    writeFile("/tmp/nif_litnl.nif", "(stmts '" & '\n' & "')")
+    expect OpenParserNifError:
+      discard fromNifFile("/tmp/nif_litnl.nif")
+    writeFile("/tmp/nif_littab.nif", "(stmts '" & '\t' & "')")
+    expect OpenParserNifError:
+      discard fromNifFile("/tmp/nif_littab.nif")
+    let m = fromNif("(stmts '\\n' '\\t' '\\r')")
+    check m[0].children[0].charVal == "\n"
+    check m[0].children[1].charVal == "\t"
+    check m[0].children[2].charVal == "\r"
+
+  test "crlf line endings in line-based mode":
+    let m = fromNif("copy a/b.txt\r\nwarn x\r\n", lbOpts())
+    check m.len == 2
+    check m[0].tag == "copy"
+    check m[1].tag == "warn"
