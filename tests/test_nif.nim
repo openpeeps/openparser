@@ -730,3 +730,103 @@ suite "NIF line-based syntax (optional extension)":
     let m2 = fromNif(dumped)
     check m2[0].children[0].strVal == "a/b.txt"
     check m2[1].children[0].strVal == "2024-08-12"
+
+suite "NIF unicode and byte tolerance":
+  test "utf-8 string literals with escapes and newlines":
+    let m = fromNif("(stmts \"café\" \"日本語\" \"hello 🌍\" \"caf\\C3\\A9\" \"naïve\\20☃\")")
+    check m[0].children[0].strVal == "café"
+    check m[0].children[1].strVal == "日本語"
+    check m[0].children[2].strVal == "hello 🌍"
+    check m[0].children[3].strVal == "café"
+    check m[0].children[4].strVal == "naïve ☃"
+    # raw preserves the escape form for round-trip
+    check m[0].children[3].rawStr == "caf\\C3\\A9"
+    let m2 = fromNif("(stmts \"日本\\n語\")")
+    check m2[0].children[0].strVal == "日本\n語"
+
+  test "unicode identifiers, symbols and symboldefs":
+    let m = fromNif("(stmts café 日本語 test.0.café :日本語)")
+    check m[0].children[0].kind == nkIdent
+    check m[0].children[0].ident == "café"
+    check m[0].children[1].ident == "日本語"
+    check m[0].children[2].kind == nkSymbol
+    check m[0].children[2].symbol == "test.0.café"
+    check m[0].children[3].kind == nkSymbolDef
+    check m[0].children[3].symDef == "日本語"
+
+  test "unicode comments and filenames":
+    let m = fromNif("(add#café 日本語 🌍# x y)")
+    check m[0].tagComment.get == "café 日本語 🌍"
+    let m2 = fromNif("(stmts x@1,2,日本.nim#注釈#)")
+    check m2[0].children[0].lineInfo.get.filename.get == "日本.nim"
+    check m2[0].children[0].comment.get == "注釈"
+    # escaped space inside filename
+    let m3 = fromNif("(stmts x@0,0,a\\20b.nim)")
+    check m3[0].children[0].lineInfo.get.filename.get == "a b.nim"
+
+  test "tolerate non-utf8 bytes":
+    let ident = "ab" & char(0xFF) & "cd"
+    let m = fromNif("(stmts " & ident & ")")
+    check m[0].children[0].kind == nkIdent
+    check m[0].children[0].ident == ident
+    let s = "\"a" & char(0xFE) & "b\""
+    let m2 = fromNif("(stmts " & s & ")")
+    check m2[0].children[0].strVal == "a" & char(0xFE) & "b"
+    # a char literal is a single byte; a lone high byte is accepted as-is
+    let m3 = fromNif("(stmts '" & char(0x80) & "')")
+    check m3[0].children[0].kind == nkCharLit
+    check m3[0].children[0].charVal == $char(0x80)
+
+  test "escaped identifier start and escaped dot in symbol":
+    let m = fromNif("(stmts \\41bc foo\\2E0.bar)")
+    check m[0].children[0].kind == nkIdent
+    check m[0].children[0].ident == "Abc"
+    check m[0].children[1].kind == nkSymbol
+    check m[0].children[1].symbol == "foo.0.bar"
+
+  test "unicode in line-based auto strings":
+    let m = fromNif("copy café/日本.txt dest/\n", lbOpts())
+    check m[0].children[0].strVal == "café/日本.txt"
+    check m[0].children[1].strVal == "dest/"
+
+suite "NIF spec conformance extras":
+  test "unknown and obsolete directives tolerated":
+    let m = fromNif("(.nif27)\n(.foobar 123 \"x\")\n(.dialect \"nim-parsed\")\n(stmts)")
+    check m.len == 4
+    check m[1].kind == nkDirective and m[1].tag == ".foobar"
+    check m[1].children[0].intVal == 123
+    check m[2].tag == ".dialect"
+
+  test "negative and multi-digit line diffs":
+    let m = fromNif("(stmts x~A y@5,~3 z@ZZ)")
+    check m[0].children[0].lineInfo.get.colDiff == -10
+    check m[0].children[1].lineInfo.get.colDiff == 5
+    check m[0].children[1].lineInfo.get.lineDiff == -3
+    check m[0].children[2].lineInfo.get.colDiff == 35*62+35
+
+  test "more numeric forms":
+    let m = fromNif("(stmts 0b101u -0b1 0o777 1E1_0 0x0 00 0xFF_FFu)")
+    check m[0].children[0].kind == nkUInt and m[0].children[0].uintVal == 5
+    check m[0].children[1].intVal == -1
+    check m[0].children[2].intVal == 511
+    check m[0].children[3].kind == nkFloat and m[0].children[3].floatVal == 1e10
+    check m[0].children[4].intVal == 0
+    check m[0].children[5].intVal == 0
+    check m[0].children[6].kind == nkUInt and m[0].children[6].uintVal == 0xFFFF
+
+  test "empty comment and empty suffix forms":
+    let m = fromNif("(stmts x##)")
+    check m[0].children[0].comment.get == ""
+    let m2 = fromNif("(add## x)")
+    check m2[0].tagComment.get == ""
+
+  test "adjacent versus separated atoms in core":
+    # without whitespace, `.` splits int and empty: `1.` is int 1 + empty
+    let m = fromNif("(stmts 1.)")
+    check m[0].children.len == 2
+    check m[0].children[0].kind == nkInt
+    check m[0].children[1].kind == nkEmpty
+    # lowercase e is not an exponent: float then ident
+    let m2 = fromNif("(stmts 1.2e-3)")
+    check m2[0].children.len == 2
+    check m2[0].children[0].kind == nkFloat

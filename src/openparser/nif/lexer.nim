@@ -799,9 +799,9 @@ proc nextNifTokenRaw(l: var NifLexer): NifToken =
   of '@', '~', '#':
     # suffix introducers should not appear standalone at token start (except ~ maybe number? but numbers already). Treat as error.
     l.error(unexpectedChar % $l.current)
-  of '\\':
-    l.error("Unexpected \\ — escapes only inside literals/identifiers/symbols")
   else:
+    # A leading backslash starts an escaped identifier (IdentStart includes Escape).
+    # A stray backslash elsewhere errors out inside readIdentSymbol/readEscape.
     if isAsciiLetter(l.current) or l.current == '_' or isNonAscii(l.current) or l.current == '\\':
       let t = readIdentSymbol(l, false)
       t.line = sl; t.col = sc; t.pos = sp; t.wsno = wsno
