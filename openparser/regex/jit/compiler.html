@@ -75,7 +75,9 @@
 <li><a class="reference" href="#JitCtx" title="JitCtx = object
   stackBase*: ptr UncheckedArray[byte]
   stackLimit*: pointer
-  capsBase*: ptr UncheckedArray[byte] ## capture working buffer">JitCtx</a></li>
+  capsBase*: ptr UncheckedArray[byte] ## capture working buffer
+  stackBytes*: int           ## owned backtrack stack size (for freeJitCtx)
+  numSlots*: int             ## capture slots in capsBase (for jitCapturesIn)">JitCtx</a></li>
 <li><a class="reference" href="#RegexJitFn" title="RegexJitFn = proc (input: ptr char; inputLen: int; startPos: int;
                    ctx: ptr JitCtx): int {.cdecl.}">RegexJitFn</a></li>
 
@@ -94,16 +96,32 @@
   <li><a class="reference" href="#freeJit%2CCompiledJit" title="freeJit(cj: var CompiledJit)">freeJit(cj: var CompiledJit)</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">freeJitCtx
+  <li><a class="reference" href="#freeJitCtx%2Cptr.JitCtx" title="freeJitCtx(ctx: ptr JitCtx)">freeJitCtx(ctx: ptr JitCtx)</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">jitCaptures
   <li><a class="reference" href="#jitCaptures%2CCompiledJit" title="jitCaptures(cj: CompiledJit): seq[int]">jitCaptures(cj: CompiledJit): seq[int]</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">jitCapturesIn
+  <li><a class="reference" href="#jitCapturesIn%2Cptr.JitCtx" title="jitCapturesIn(ctx: ptr JitCtx): seq[int]">jitCapturesIn(ctx: ptr JitCtx): seq[int]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">jitExec
   <li><a class="reference" href="#jitExec%2CCompiledJit%2Cstring%2Cint" title="jitExec(cj: CompiledJit; input: string; startPos = 0): int">jitExec(cj: CompiledJit; input: string; startPos = 0): int</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">jitExecIn
+  <li><a class="reference" href="#jitExecIn%2CCompiledJit%2Cptr.JitCtx%2Cstring%2Cint" title="jitExecIn(cj: CompiledJit; ctx: ptr JitCtx; input: string; startPos = 0): int">jitExecIn(cj: CompiledJit; ctx: ptr JitCtx; input: string; startPos = 0): int</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">jitScan
   <li><a class="reference" href="#jitScan%2CCompiledJit%2Cstring%2Cint" title="jitScan(cj: CompiledJit; input: string; fromPos = 0): tuple[start, stop: int]">jitScan(cj: CompiledJit; input: string; fromPos = 0): tuple[start, stop: int]</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">newJitCtx
+  <li><a class="reference" href="#newJitCtx%2Cint" title="newJitCtx(numSlots: int): ptr JitCtx">newJitCtx(numSlots: int): ptr JitCtx</a></li>
 
 </ul>
 
@@ -153,7 +171,9 @@
   <dt><pre><a href="#JitCtx"><span class="Identifier">JitCtx</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">stackBase</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">UncheckedArray</span><span class="Other">[</span><span class="Identifier">byte</span><span class="Other">]</span>
   <span class="Identifier">stackLimit</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">pointer</span>
-  <span class="Identifier">capsBase</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">UncheckedArray</span><span class="Other">[</span><span class="Identifier">byte</span><span class="Other">]</span> <span class="Comment">## capture working buffer</span></pre></dt>
+  <span class="Identifier">capsBase</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">UncheckedArray</span><span class="Other">[</span><span class="Identifier">byte</span><span class="Other">]</span> <span class="Comment">## capture working buffer</span>
+  <span class="Identifier">stackBytes</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>           <span class="Comment">## owned backtrack stack size (for freeJitCtx)</span>
+  <span class="Identifier">numSlots</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>             <span class="Comment">## capture slots in capsBase (for jitCapturesIn)</span></pre></dt>
   <dd>
     
     
@@ -198,12 +218,35 @@
 </div>
 
 </div>
+<div id="freeJitCtx-procs-all">
+  <div id="freeJitCtx,ptr.JitCtx">
+  <dt><pre><span class="Keyword">proc</span> <a href="#freeJitCtx%2Cptr.JitCtx"><span class="Identifier">freeJitCtx</span></a><span class="Other">(</span><span class="Identifier">ctx</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="#JitCtx"><span class="Identifier">JitCtx</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Release a context created by <tt class="docutils literal"><span class="pre"><span class="Identifier">newJitCtx</span></span></tt>. Never pass the context owned by a <tt class="docutils literal"><span class="pre"><span class="Identifier">CompiledJit</span></span></tt> — that one is released by <tt class="docutils literal"><span class="pre"><span class="Identifier">freeJit</span></span></tt>.
+    
+  </dd>
+</div>
+
+</div>
 <div id="jitCaptures-procs-all">
   <div id="jitCaptures,CompiledJit">
   <dt><pre><span class="Keyword">proc</span> <a href="#jitCaptures%2CCompiledJit"><span class="Identifier">jitCaptures</span></a><span class="Other">(</span><span class="Identifier">cj</span><span class="Other">:</span> <a href="#CompiledJit"><span class="Identifier">CompiledJit</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">int</span><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Copy the capture slots written by the last successful run. Unmatched optional groups read back as -1 (prologue sentinel).
+    
+  </dd>
+</div>
+
+</div>
+<div id="jitCapturesIn-procs-all">
+  <div id="jitCapturesIn,ptr.JitCtx">
+  <dt><pre><span class="Keyword">proc</span> <a href="#jitCapturesIn%2Cptr.JitCtx"><span class="Identifier">jitCapturesIn</span></a><span class="Other">(</span><span class="Identifier">ctx</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="#JitCtx"><span class="Identifier">JitCtx</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">int</span><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Copy the capture slots written by the last successful <tt class="docutils literal"><span class="pre"><span class="Identifier">jitExecIn</span></span></tt> run on this context. Unmatched optional groups read back as -1.
     
   </dd>
 </div>
@@ -221,6 +264,18 @@
 </div>
 
 </div>
+<div id="jitExecIn-procs-all">
+  <div id="jitExecIn,CompiledJit,ptr.JitCtx,string,int">
+  <dt><pre><span class="Keyword">proc</span> <a href="#jitExecIn%2CCompiledJit%2Cptr.JitCtx%2Cstring%2Cint"><span class="Identifier">jitExecIn</span></a><span class="Other">(</span><span class="Identifier">cj</span><span class="Other">:</span> <a href="#CompiledJit"><span class="Identifier">CompiledJit</span></a><span class="Other">;</span> <span class="Identifier">ctx</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="#JitCtx"><span class="Identifier">JitCtx</span></a><span class="Other">;</span> <span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">startPos</span> <span class="Other">=</span> <span class="DecNumber">0</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.
+    <span class="Identifier">inline</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Run the JIT'd matcher anchored at <tt class="docutils literal"><span class="pre"><span class="Identifier">startPos</span></span></tt> using an explicit execution context. Returns the match end position, or -1 on no match (also when there is no compiled code or the context is nil).
+    
+  </dd>
+</div>
+
+</div>
 <div id="jitScan-procs-all">
   <div id="jitScan,CompiledJit,string,int">
   <dt><pre><span class="Keyword">proc</span> <a href="#jitScan%2CCompiledJit%2Cstring%2Cint"><span class="Identifier">jitScan</span></a><span class="Other">(</span><span class="Identifier">cj</span><span class="Other">:</span> <a href="#CompiledJit"><span class="Identifier">CompiledJit</span></a><span class="Other">;</span> <span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">fromPos</span> <span class="Other">=</span> <span class="DecNumber">0</span><span class="Other">)</span><span class="Other">:</span> <span class="Keyword">tuple</span><span class="Other">[</span>
@@ -228,6 +283,17 @@
   <dd>
     
     Leftmost scan starting at <tt class="docutils literal"><span class="pre"><span class="Identifier">fromPos</span></span></tt>: try every start offset until one matches. Returns (-1, -1) when nothing matches.
+    
+  </dd>
+</div>
+
+</div>
+<div id="newJitCtx-procs-all">
+  <div id="newJitCtx,int">
+  <dt><pre><span class="Keyword">proc</span> <a href="#newJitCtx%2Cint"><span class="Identifier">newJitCtx</span></a><span class="Other">(</span><span class="Identifier">numSlots</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="#JitCtx"><span class="Identifier">JitCtx</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Allocate an independent execution context with <tt class="docutils literal"><span class="pre"><span class="Identifier">numSlots</span></span></tt> capture slots. Contexts are bound to the calling thread: run the same <tt class="docutils literal"><span class="pre"><span class="Identifier">CompiledJit</span></span></tt> concurrently by giving each thread its own context. A context sized for N slots also serves programs with fewer slots. Returns nil on allocation failure.
     
   </dd>
 </div>
@@ -243,7 +309,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-21 14:08:53 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-25 23:38:59 UTC</small>
       </div>
     </div>
   </div>

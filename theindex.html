@@ -1385,6 +1385,10 @@
 <li><a class="reference external"
           data-doc-search-tag="compiler: proc freeJit(cj: var CompiledJit)" href="openparser/regex/jit/compiler.html#freeJit%2CCompiledJit">compiler: proc freeJit(cj: var CompiledJit)</a></li>
           </ul></dd>
+<dt><a name="freeJitCtx" href="#freeJitCtx"><span>freeJitCtx:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc freeJitCtx(ctx: ptr JitCtx)" href="openparser/regex/jit/compiler.html#freeJitCtx%2Cptr.JitCtx">compiler: proc freeJitCtx(ctx: ptr JitCtx)</a></li>
+          </ul></dd>
 <dt><a name="fromBson" href="#fromBson"><span>fromBson:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="bson: proc fromBson(s: BSONDocument): JsonNode" href="openparser/bson.html#fromBson%2CBSONDocument">bson: proc fromBson(s: BSONDocument): JsonNode</a></li>
@@ -1945,6 +1949,10 @@
 <li><a class="reference external"
           data-doc-search-tag="compiler: proc jitCaptures(cj: CompiledJit): seq[int]" href="openparser/regex/jit/compiler.html#jitCaptures%2CCompiledJit">compiler: proc jitCaptures(cj: CompiledJit): seq[int]</a></li>
           </ul></dd>
+<dt><a name="jitCapturesIn" href="#jitCapturesIn"><span>jitCapturesIn:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc jitCapturesIn(ctx: ptr JitCtx): seq[int]" href="openparser/regex/jit/compiler.html#jitCapturesIn%2Cptr.JitCtx">compiler: proc jitCapturesIn(ctx: ptr JitCtx): seq[int]</a></li>
+          </ul></dd>
 <dt><a name="JitCtx" href="#JitCtx"><span>JitCtx:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="compiler: object JitCtx" href="openparser/regex/jit/compiler.html#JitCtx">compiler: object JitCtx</a></li>
@@ -1952,6 +1960,10 @@
 <dt><a name="jitExec" href="#jitExec"><span>jitExec:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="compiler: proc jitExec(cj: CompiledJit; input: string; startPos = 0): int" href="openparser/regex/jit/compiler.html#jitExec%2CCompiledJit%2Cstring%2Cint">compiler: proc jitExec(cj: CompiledJit; input: string; startPos = 0): int</a></li>
+          </ul></dd>
+<dt><a name="jitExecIn" href="#jitExecIn"><span>jitExecIn:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc jitExecIn(cj: CompiledJit; ctx: ptr JitCtx; input: string; startPos = 0): int" href="openparser/regex/jit/compiler.html#jitExecIn%2CCompiledJit%2Cptr.JitCtx%2Cstring%2Cint">compiler: proc jitExecIn(cj: CompiledJit; ctx: ptr JitCtx; input: string; startPos = 0): int</a></li>
           </ul></dd>
 <dt><a name="jitScan" href="#jitScan"><span>jitScan:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -2304,6 +2316,10 @@
 <dt><a name="newBSONDocument" href="#newBSONDocument"><span>newBSONDocument:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="bson: proc newBSONDocument(node: JsonNode; version: int32 = 1'i32): BSONDocument" href="openparser/bson.html#newBSONDocument%2CJsonNode%2Cint32">bson: proc newBSONDocument(node: JsonNode; version: int32 = 1'i32): BSONDocument</a></li>
+          </ul></dd>
+<dt><a name="newJitCtx" href="#newJitCtx"><span>newJitCtx:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="compiler: proc newJitCtx(numSlots: int): ptr JitCtx" href="openparser/regex/jit/compiler.html#newJitCtx%2Cint">compiler: proc newJitCtx(numSlots: int): ptr JitCtx</a></li>
           </ul></dd>
 <dt><a name="newNifCompound" href="#newNifCompound"><span>newNifCompound:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -6113,7 +6129,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-21 14:08:53 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-25 23:38:59 UTC</small>
       </div>
     </div>
   </div>

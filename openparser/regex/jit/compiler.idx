@@ -1,9 +1,13 @@
 nimTitle	compiler	openparser/regex/jit/compiler.html	module openparser/regex/jit/compiler		0
 nim	RegexJitFn	openparser/regex/jit/compiler.html#RegexJitFn	type RegexJitFn		20
 nim	JitCtx	openparser/regex/jit/compiler.html#JitCtx	object JitCtx		23
-nim	CompiledJit	openparser/regex/jit/compiler.html#CompiledJit	object CompiledJit		28
-nim	freeJit	openparser/regex/jit/compiler.html#freeJit,CompiledJit	proc freeJit(cj: var CompiledJit)		40
-nim	jitCaptures	openparser/regex/jit/compiler.html#jitCaptures,CompiledJit	proc jitCaptures(cj: CompiledJit): seq[int]		61
-nim	compileRegex	openparser/regex/jit/compiler.html#compileRegex,Program	proc compileRegex(prog: Program; fullMatch = false): CompiledJit		435
-nim	jitExec	openparser/regex/jit/compiler.html#jitExec,CompiledJit,string,int	proc jitExec(cj: CompiledJit; input: string; startPos = 0): int		668
-nim	jitScan	openparser/regex/jit/compiler.html#jitScan,CompiledJit,string,int	proc jitScan(cj: CompiledJit; input: string; fromPos = 0): tuple[start, stop: int]		675
+nim	CompiledJit	openparser/regex/jit/compiler.html#CompiledJit	object CompiledJit		30
+nim	freeJit	openparser/regex/jit/compiler.html#freeJit,CompiledJit	proc freeJit(cj: var CompiledJit)		42
+nim	jitCaptures	openparser/regex/jit/compiler.html#jitCaptures,CompiledJit	proc jitCaptures(cj: CompiledJit): seq[int]		63
+nim	newJitCtx	openparser/regex/jit/compiler.html#newJitCtx,int	proc newJitCtx(numSlots: int): ptr JitCtx		80
+nim	freeJitCtx	openparser/regex/jit/compiler.html#freeJitCtx,ptr.JitCtx	proc freeJitCtx(ctx: ptr JitCtx)		111
+nim	jitExecIn	openparser/regex/jit/compiler.html#jitExecIn,CompiledJit,ptr.JitCtx,string,int	proc jitExecIn(cj: CompiledJit; ctx: ptr JitCtx; input: string; startPos = 0): int		121
+nim	jitCapturesIn	openparser/regex/jit/compiler.html#jitCapturesIn,ptr.JitCtx	proc jitCapturesIn(ctx: ptr JitCtx): seq[int]		131
+nim	compileRegex	openparser/regex/jit/compiler.html#compileRegex,Program	proc compileRegex(prog: Program; fullMatch = false): CompiledJit		507
+nim	jitExec	openparser/regex/jit/compiler.html#jitExec,CompiledJit,string,int	proc jitExec(cj: CompiledJit; input: string; startPos = 0): int		742
+nim	jitScan	openparser/regex/jit/compiler.html#jitScan,CompiledJit,string,int	proc jitScan(cj: CompiledJit; input: string; fromPos = 0): tuple[start, stop: int]		749
