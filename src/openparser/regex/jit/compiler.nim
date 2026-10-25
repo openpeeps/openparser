@@ -24,6 +24,8 @@ type
     stackBase*:  ptr UncheckedArray[byte]
     stackLimit*: pointer
     capsBase*:   ptr UncheckedArray[byte]  ## capture working buffer
+    stackBytes*: int  ## owned backtrack stack size (for freeJitCtx)
+    numSlots*:   int  ## capture slots in capsBase (for jitCapturesIn)
 
   CompiledJit* = object
     fn*:       RegexJitFn
@@ -64,6 +66,76 @@ proc jitCaptures*(cj: CompiledJit): seq[int] =
   result = newSeq[int](cj.numSlots)
   for i in 0 ..< cj.numSlots:
     result[i] = cj.capsBuf[i]
+
+#
+# Thread-shared execution
+#
+# The generated code is immutable, but every run needs scratch space: a
+# backtrack stack and a capture working buffer. That state lives in
+# `JitCtx`, so a `CompiledJit` shared across threads needs one context
+# per thread — allocate them with `newJitCtx` and run matches with
+# `jitExecIn` / read captures with `jitCapturesIn`.
+#
+
+proc newJitCtx*(numSlots: int): ptr JitCtx =
+  ## Allocate an independent execution context with `numSlots` capture
+  ## slots. Contexts are bound to the calling thread: run the same
+  ## `CompiledJit` concurrently by giving each thread its own context.
+  ## A context sized for N slots also serves programs with fewer slots.
+  ## Returns nil on allocation failure.
+  let slots = max(numSlots, 0)
+  let entryBytes = 16 + slots * 8
+  let stackBytes = BacktrackMaxEntries * entryBytes
+  let stack = cast[ptr UncheckedArray[byte]](allocShared0(stackBytes))
+  if stack == nil:
+    return nil
+  var capsBuf: ptr UncheckedArray[int] = nil
+  if slots > 0:
+    capsBuf = cast[ptr UncheckedArray[int]](allocShared0(slots * 8))
+    if capsBuf == nil:
+      deallocShared(cast[pointer](stack))
+      return nil
+  let ctx = cast[ptr JitCtx](allocShared0(sizeof(JitCtx)))
+  if ctx == nil:
+    deallocShared(cast[pointer](stack))
+    if capsBuf != nil:
+      deallocShared(cast[pointer](capsBuf))
+    return nil
+  ctx.stackBase = stack
+  ctx.stackLimit = cast[pointer](addr stack[stackBytes])
+  ctx.capsBase = cast[ptr UncheckedArray[byte]](capsBuf)
+  ctx.stackBytes = stackBytes
+  ctx.numSlots = slots
+  ctx
+
+proc freeJitCtx*(ctx: ptr JitCtx) =
+  ## Release a context created by `newJitCtx`. Never pass the context
+  ## owned by a `CompiledJit` — that one is released by `freeJit`.
+  if ctx == nil: return
+  if ctx.stackBase != nil:
+    deallocShared(cast[pointer](ctx.stackBase))
+  if ctx.capsBase != nil:
+    deallocShared(cast[pointer](ctx.capsBase))
+  deallocShared(cast[pointer](ctx))
+
+proc jitExecIn*(cj: CompiledJit, ctx: ptr JitCtx, input: string,
+                startPos = 0): int {.inline.} =
+  ## Run the JIT'd matcher anchored at `startPos` using an explicit
+  ## execution context. Returns the match end position, or -1 on no
+  ## match (also when there is no compiled code or the context is nil).
+  if cj.fn == nil or ctx == nil: return -1
+  if startPos < 0 or startPos > input.len: return -1
+  let p = if input.len > 0: unsafeAddr input[0] else: nil
+  cj.fn(cast[ptr char](p), input.len, startPos, ctx)
+
+proc jitCapturesIn*(ctx: ptr JitCtx): seq[int] =
+  ## Copy the capture slots written by the last successful `jitExecIn`
+  ## run on this context. Unmatched optional groups read back as -1.
+  if ctx == nil: return @[]
+  result = newSeq[int](ctx.numSlots)
+  let caps = cast[ptr UncheckedArray[int]](ctx.capsBase)
+  for i in 0 ..< ctx.numSlots:
+    result[i] = caps[i]
 
 when defined(windows) or defined(noRegexJit) or not defined(amd64):
   # No JIT on Windows (System-V vs Win64 calling convention mismatch),
@@ -645,6 +717,8 @@ else:
     ctx.stackBase  = stack
     ctx.stackLimit = cast[pointer](addr stack[stackBytes])
     ctx.capsBase   = cast[ptr UncheckedArray[byte]](capsBuf)
+    ctx.stackBytes = stackBytes
+    ctx.numSlots   = numSlots
 
     # Scan hints: a leading ^ pins matches to position 0; a leading
     # literal byte lets jitScan use SIMD to skip between candidates.
