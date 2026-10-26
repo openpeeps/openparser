@@ -39,9 +39,9 @@ elif defined(builddocs):
   # For documentation purposes, we re-export all parsers here
   import ./openparser/[json, csv, rss, feed, yaml, dotenv,
                     fbe, toml, bson, xml, nif, ical, vcard, plist, css, svg,
-                    diff]
+                    diff, mime]
   export json, csv, rss, feed, yaml, dotenv,
-      fbe, toml, bson, xml, nif, ical, vcard, plist, css, svg, diff
+      fbe, toml, bson, xml, nif, ical, vcard, plist, css, svg, diff, mime
 
   import ./openparser/gettext/[po, mo]
   export po, mo

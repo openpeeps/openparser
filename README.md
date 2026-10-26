@@ -39,6 +39,7 @@ OpenParser is a collection of parsers and dumpers (serializers) for various data
 - DotEnv parser with variable expansion and command substitution
 - iCalendar (RFC 5545) parser and serializer with line unfolding, TEXT codecs and typed components
 - vCard (RFC 6350 + RFC 2426) parser and serializer with typed contact model and multi-card support
+- MIME (RFC 5322 + RFC 2045-2049) parser and creator with multipart, encoded words and attachments
 - NIF (2027 Nim Intermediate Format) parser with MemFile support, Base62 LineInfo and lazy symbol expansion
 - SQL parser supporting PostgreSQL, MySQL, and SQLite dialects
 - SIMD-accelerated regex engine with capture groups and quantifiers
@@ -488,6 +489,40 @@ writeFile("legacy.vcf", toVCard(c, opts))
 **Features:** Line unfolding/folding at 75 octets (UTF-8 safe), TEXT `\, \; \\ \n` codecs, RFC 6868 `^n ^' ^^` param unescaping, groups (`item1.TEL`), structured `N`/`ADR`/`ORG`, `TYPE`/`PREF` for both versions (`TYPE=PREF` normalized), v3 `ENCODING=b` to v4 `data:` URI upgrade (and back on downgrade), `BDAY`/`ANNIVERSARY`/`REV` VALUE validation, `GENDER`/`KIND` typed enums (with `x-` fallback)/`CLIENTPIDMAP`, multi-card `seq[VCard]`, `extraProps` for `X-` and unknown, `OpenParserVCardError` with line context.
 
 - [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_vcard.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/vcard.html)
+
+---
+
+## MIME
+
+RFC 5322 message format plus RFC 2045-2049 MIME parser and creator. Typed Nim objects, multipart bodies, RFC 2047 encoded words, RFC 2183/2231 attachment filenames, base64 and quoted-printable codecs, Lenient-first policy with strict opt-in.
+
+```nim
+import openparser/mime
+
+# Parse a message
+let msg = parseMime(readFile("mail.eml"))
+echo msg.subject.get("")
+echo msg.fromAddrs[0].addrSpecOf()
+
+# Build a multipart message with an attachment
+var outMsg = MimeMessage()
+outMsg.fromAddrs = parseMailboxList("me@example.org")
+outMsg.toAddrs = parseAddressList("you@example.org")
+outMsg.subject = some("Grüße aus München")
+outMsg.body = newMultipart("mixed", @[
+  newTextPart("Hello, world"),
+  newBinaryPart(readFile("doc.pdf").stringToBytes(),
+    "application/pdf", filename = "doc.pdf")
+])
+writeFile("out.eml", toMime(outMsg))
+
+# File convenience (memory-mapped read)
+let fromFile = parseMimeFile("out.eml")
+```
+
+**Features:** Header unfolding, addresses (mailboxes, groups, domain literals, comments), dates with obsolete zones, message IDs, unstructured fields with encoded-word decoding, content types with params, transfer encodings (7bit/8bit/binary/QP/base64), multipart with preamble/epilogue and nesting limits, `message/rfc822` nesting, text charset conversion to UTF-8 via `std/encodings`, attachment filenames via disposition and RFC 2231 continuations, CRLF output with 78-column folding, `MimePolicy` lenient/strict modes, `extraHeaders` for unknown fields, `OpenParserMimeError` throughout.
+
+- [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_mime.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/mime.html)
 
 ---
 
