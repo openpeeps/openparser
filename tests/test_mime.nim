@@ -762,3 +762,52 @@ suite "MIME limits extended":
   test "missing file raises":
     expect OpenParserMimeError:
       discard parseMimeFile("/nonexistent/mime-msg.eml")
+
+suite "MIME simd fast paths":
+  test "base64 with and without whitespace agree":
+    let raw = cast[seq[byte]]("Hello, SIMD world! " & "0123456789ABCDEF".repeat(64))
+    let clean = base64.encode(raw)
+    var folded = ""
+    for i in 0 ..< clean.len:
+      folded.add(clean[i])
+      if i mod 76 == 75:
+        folded.add("\r\n")
+    check bytesToString(decodeBase64Body(clean)) ==
+      bytesToString(decodeBase64Body(folded))
+    check bytesToString(decodeBase64Body(clean)) ==
+      bytesToString(stringToBytes(cast[string](raw)))
+
+  test "qp long run without escapes bulk-copies":
+    let body = "a".repeat(5000) & "=20" & "b".repeat(5000) & "=\r\n" & "c".repeat(100)
+    check bytesToString(decodeQuotedPrintable(body)) ==
+      "a".repeat(5000) & " " & "b".repeat(5000) & "c".repeat(100)
+
+  test "qp encode has no per-byte allocs and round trips":
+    let data = stringToBytes("a=b c\r\nline with ünicode = sign " & "x".repeat(300))
+    check bytesToString(decodeQuotedPrintable(encodeQuotedPrintable(data))) ==
+      bytesToString(data)
+
+  test "line ending normalization without breaks is a copy":
+    let data = cast[seq[byte]]("no breaks here")
+    check normalizeTextLineEndings(data) == data
+    check normalizeTextLineEndings(cast[seq[byte]]("a\r\nb\rc\nd")) ==
+      cast[seq[byte]]("a\r\nb\r\nc\r\nd")
+
+  test "multipart dash lines are not false delimiters":
+    let src = "Content-Type: multipart/mixed; boundary=b\r\n\r\n" &
+      "--b\r\nContent-Type: text/plain\r\n\r\n" &
+      "-\r\n--\r\n--x\r\n--b-nope\r\n--b\tnot-a-delimiter\r\n" &
+      "real body\r\n--b--\r\n"
+    let msg = parseMime(src)
+    check msg.body.body.parts.len == 1
+    check "real body" in msg.body.body.parts[0].body.text
+    check "--x" in msg.body.body.parts[0].body.text
+
+  test "large base64 multipart round trips":
+    let raw = cast[seq[byte]]("ABCD".repeat(50000))
+    var msg = MimeMessage()
+    msg.fromAddrs = parseMailboxList("a@x.com")
+    msg.body = newMultipart("mixed",
+      @[newBinaryPart(raw, "application/octet-stream", filename = "big.bin")])
+    let back = parseMime(toMime(msg))
+    check back.body.body.parts[0].body.data == raw

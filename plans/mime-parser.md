@@ -125,7 +125,20 @@ Use `std/encodings`. Unknown charset: strict raises, lenient preserves bytes wit
 
 ## 10. Tests
 
-`tests/test_mime.nim`: header unfolding, addresses, dates, message IDs, content types, CTE vectors, multipart, RFC 2231 filenames, encoded words, policy matrix, binary fidelity, RFC 2049 examples, round-trips, negative strict tests.
+`tests/test_mime.nim`: header unfolding, addresses, dates, message IDs, content types, CTE vectors, multipart, RFC 2231 filenames, encoded words, policy matrix, binary fidelity, RFC 2049 examples, round-trips, negative strict tests, SIMD fast-path equivalence (base64/QP/line-ending/multipart dash lines, large-binary round trip).
+
+## 12. SIMD acceleration
+
+`src/openparser/private/mime_simd.nim` (SSE2 + AVX2 with scalar fallback,
+`-d:openparserMimeNoSimd` to force scalar): `findEol`, `findEq`,
+`hasNonAscii`, `hasBase64Ws`, `findNonBase64`. Wired into `nextLine`,
+`parseHeaderBlock`, base64 strip + strict validation, QP decode
+(block copies) + encode (no per-byte allocs), `encodeBase64Body`
+(copyMem lines), `latin1ToUtf8`/`normalizeTextLineEndings` ASCII fast
+paths, 7bit strict checks, multipart marker hoisting + `--` fast reject.
+Measured on a 2.4 MB mixed message (`-d:release`, x86_64 SSE2):
+parse 22.1 ms -> 14.5 ms (1.5x), serialize 13.5 ms -> 5.1 ms (2.6x),
+QP decode 6.1x, base64 decode 3.3x.
 
 ---
 

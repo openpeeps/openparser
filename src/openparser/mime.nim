@@ -20,6 +20,7 @@
 ## ```
 
 import std/[strutils, options, base64, encodings, memfiles, os, unicode, times]
+import ./private/mime_simd
 
 type
   OpenParserMimeError* = object of CatchableError
@@ -210,6 +211,11 @@ proc isValidFieldName(name: string): bool =
     if c < '!' or c > '~' or c == ':': return false
   true
 
+# Forward declaration: nextLine lives with the multipart scanner below
+# but parseHeaderBlock (above it) iterates lines through it.
+type MimeLine = tuple[text: string, start, next: int]
+proc nextLine(s: string; pos: int): MimeLine
+
 # ---------------------------------------------------------------------------
 # Header block splitting and unfolding (RFC 5322 section 2.2)
 # ---------------------------------------------------------------------------
@@ -262,7 +268,13 @@ proc parseHeaderBlock*(head: string; opts: MimeOptions = defaultMimeOptions()):
           if opts.policy == mpStrict and cur.len > 998:
             mimeError("header line exceeds 998 characters: " & name)
           result.add(MimeHeader(name: name, value: value))
-  for line in head.splitLines():
+  # Line iteration uses the SIMD-accelerated nextLine instead of
+  # splitLines, avoiding the intermediate sequence allocation.
+  var hpos = 0
+  while hpos < head.len:
+    let ln = nextLine(head, hpos)
+    hpos = ln.next
+    let line = ln.text
     if line.len == 0:
       flushCur()
       continue
@@ -478,10 +490,19 @@ proc decodeBase64Body*(data: string; opts: MimeOptions = defaultMimeOptions()):
   ## Decode base64 body data, ignoring folding whitespace. Invalid input
   ## raises in both policies since the bytes are unrecoverable; strict
   ## mode additionally enforces padding and alphabet rules.
-  var clean = newStringOfCap(data.len)
-  for c in data:
-    if c notin {' ', '\t', '\r', '\n'}:
-      clean.add(c)
+  # SIMD fast path: clean input (the common case for attachments) skips
+  # the whitespace-strip copy entirely and decodes in place.
+  var needsStrip = false
+  if data.len > 0:
+    needsStrip = hasBase64Ws(cast[ptr char](unsafeAddr data[0]), 0, data.len)
+  var clean: string
+  if needsStrip:
+    clean = newStringOfCap(data.len)
+    for c in data:
+      if c notin {' ', '\t', '\r', '\n'}:
+        clean.add(c)
+  else:
+    clean = data
   if opts.policy == mpStrict and clean.len > 0:
     if clean.len mod 4 != 0:
       mimeError("base64 body length is not a multiple of 4")
@@ -490,10 +511,12 @@ proc decodeBase64Body*(data: string; opts: MimeOptions = defaultMimeOptions()):
       inc pads
     if pads > 2:
       mimeError("invalid base64 padding")
-    for c in clean:
-      if c notin {'A' .. 'Z', 'a' .. 'z', '0' .. '9', '+', '/', '='}:
-        mimeError("invalid base64 alphabet character")
-    if '=' in clean[0 ..< clean.len - pads]:
+    let base = cast[ptr char](unsafeAddr clean[0])
+    if findNonBase64(base, 0, clean.len) >= 0:
+      mimeError("invalid base64 alphabet character")
+    # All padding sits at the tail, so the first '=' must be inside it.
+    let firstEq = findEq(base, 0, clean.len)
+    if firstEq >= 0 and firstEq < clean.len - pads:
       mimeError("misplaced base64 padding")
   try:
     result = stringToBytes(base64.decode(clean))
@@ -515,10 +538,26 @@ proc decodeQuotedPrintable*(data: string; opts: MimeOptions = defaultMimeOptions
     seq[byte] =
   ## Decode a quoted-printable body. Soft breaks (`=` at end of line) are
   ## removed; malformed escapes raise in strict mode and pass through
-  ## literally in lenient mode.
+  ## literally in lenient mode. Runs between escapes are bulk-copied,
+  ## with SIMD skipping ahead to the next `=`.
   result = newSeqOfCap[byte](data.len)
+  if data.len == 0: return
+  let base = cast[ptr char](unsafeAddr data[0])
   var i = 0
   while i < data.len:
+    let eq = findEq(base, i, data.len)
+    if eq < 0:
+      let n = data.len - i
+      let oldLen = result.len
+      result.setLen(oldLen + n)
+      copyMem(addr result[oldLen], unsafeAddr data[i], n)
+      break
+    if eq > i:
+      let n = eq - i
+      let oldLen = result.len
+      result.setLen(oldLen + n)
+      copyMem(addr result[oldLen], unsafeAddr data[i], n)
+      i = eq
     let c = data[i]
     if c != '=':
       result.add(byte(ord(c)))
@@ -544,14 +583,23 @@ proc encodeQuotedPrintable*(data: openArray[byte]): string =
   ## Encode bytes as quoted-printable, wrapping at 76 columns with soft
   ## breaks. Existing CRLF breaks are preserved; trailing spaces and
   ## tabs are encoded.
+  const hexd = "0123456789ABCDEF"
   result = newStringOfCap(data.len + data.len div 4 + 16)
   var lineLen = 0
-  proc emitChunk(s: string; lineLen: var int; res: var string) =
-    if lineLen + s.len > 76:
-      res.add("=\r\n")
+  template emitByte(o: char) =
+    if lineLen + 1 > 76:
+      result.add("=\r\n")
       lineLen = 0
-    res.add(s)
-    lineLen += s.len
+    result.add(o)
+    inc lineLen
+  template emitTriple(a, b, c: char) =
+    if lineLen + 3 > 76:
+      result.add("=\r\n")
+      lineLen = 0
+    result.add(a)
+    result.add(b)
+    result.add(c)
+    lineLen += 3
   var i = 0
   while i < data.len:
     let b = data[i]
@@ -565,11 +613,10 @@ proc encodeQuotedPrintable*(data: openArray[byte]): string =
       lineLen = 0
       inc i
       continue
-    var rep: string
     if b == byte(ord('=')):
-      rep = "=3D"
+      emitTriple('=', '3', 'D')
     elif b >= 33 and b <= 60 or b >= 62 and b <= 126:
-      rep = $chr(b)
+      emitByte(chr(b))
     elif b == byte(ord(' ')) or b == byte(ord('\t')):
       # Encode whitespace at end of line or end of input.
       var atEnd = i + 1 >= data.len
@@ -577,25 +624,32 @@ proc encodeQuotedPrintable*(data: openArray[byte]): string =
         let n = data[i + 1]
         atEnd = n == byte(ord('\r')) or n == byte(ord('\n'))
       if atEnd:
-        rep = if b == byte(ord(' ')): "=20" else: "=09"
+        if b == byte(ord(' ')): emitTriple('=', '2', '0')
+        else: emitTriple('=', '0', '9')
       else:
-        rep = $chr(b)
+        emitByte(chr(b))
     else:
-      const hexd = "0123456789ABCDEF"
-      rep = "=" & $hexd[b shr 4] & $hexd[b and 0x0F]
-    emitChunk(rep, lineLen, result)
+      emitTriple('=', hexd[b shr 4], hexd[b and 0x0F])
     inc i
 
 proc encodeBase64Body*(data: openArray[byte]): string =
   ## Encode bytes as base64 wrapped at 76 columns with CRLF breaks.
+  ## Lines are blitted with copyMem instead of per-chunk slices.
   let raw = base64.encode(data)
-  result = newStringOfCap(raw.len + raw.len div 76 * 2 + 2)
+  if raw.len == 0: return ""
+  let lines = (raw.len + 75) div 76
+  result = newString(raw.len + (lines - 1) * 2)
+  var w = 0
   var i = 0
   while i < raw.len:
-    if i > 0:
-      result.add("\r\n")
-    result.add(raw[i ..< min(i + 76, raw.len)])
-    i += 76
+    let n = min(76, raw.len - i)
+    copyMem(addr result[w], unsafeAddr raw[i], n)
+    w += n
+    i += n
+    if i < raw.len:
+      result[w] = '\r'
+      result[w + 1] = '\n'
+      w += 2
 
 # ---------------------------------------------------------------------------
 # Charset conversion (text bodies to UTF-8)
@@ -622,6 +676,12 @@ proc normalizeCharsetLabel*(s: string): string =
 
 proc latin1ToUtf8*(data: openArray[byte]): string =
   ## Lossless single-byte fallback: map bytes 0x00-0xFF to U+0000-U+00FF.
+  ## Pure-ASCII input (the common case) is a single SIMD scan + memcpy.
+  if data.len == 0: return ""
+  if not hasNonAscii(cast[ptr char](unsafeAddr data[0]), 0, data.len):
+    result = newString(data.len)
+    copyMem(addr result[0], unsafeAddr data[0], data.len)
+    return result
   result = newStringOfCap(data.len + 8)
   for b in data:
     if b < 0x80:
@@ -631,9 +691,9 @@ proc latin1ToUtf8*(data: openArray[byte]): string =
       result.add(chr(0x80 or (b and 0x3F)))
 
 proc isAsciiBytes(data: openArray[byte]): bool =
-  for b in data:
-    if b >= 0x80: return false
-  true
+  ## SIMD fast path: a single movemask scan instead of a per-byte branch.
+  if data.len == 0: return true
+  not hasNonAscii(cast[ptr char](unsafeAddr data[0]), 0, data.len)
 
 proc decodeTextBytes*(data: openArray[byte]; charset: string;
     opts: MimeOptions = defaultMimeOptions()): string =
@@ -661,7 +721,13 @@ proc decodeTextBytes*(data: openArray[byte]; charset: string;
 
 proc normalizeTextLineEndings*(data: openArray[byte]): seq[byte] =
   ## Canonicalize text line endings to CRLF (`\n` -> CRLF, lone
-  ## `\r` -> CRLF, existing CRLF untouched).
+  ## `\r` -> CRLF, existing CRLF untouched). Break-free input (common
+  ## for single-line bodies) is a single SIMD scan + memcpy.
+  if data.len == 0: return @[]
+  if findEol(cast[ptr char](unsafeAddr data[0]), 0, data.len) < 0:
+    result = newSeq[byte](data.len)
+    copyMem(addr result[0], unsafeAddr data[0], data.len)
+    return result
   result = newSeqOfCap[byte](data.len + 8)
   var i = 0
   while i < data.len:
@@ -1604,10 +1670,9 @@ proc decodeBodyCte(body: string; enc: MimeTransferEncoding;
   ## Apply Content-Transfer-Encoding decoding to a raw body.
   case enc
   of te7bit:
-    if opts.policy == mpStrict:
-      for c in body:
-        if ord(c) > 127:
-          mimeError("non-ASCII byte in 7bit body")
+    if opts.policy == mpStrict and body.len > 0:
+      if hasNonAscii(cast[ptr char](unsafeAddr body[0]), 0, body.len):
+        mimeError("non-ASCII byte in 7bit body")
     stringToBytes(body)
   of te8bit, teBinary:
     stringToBytes(body)
@@ -1632,14 +1697,14 @@ proc checkCteConstraints(ct: MimeContentType; enc: MimeTransferEncoding;
     mimeError("message/rfc822 entity must not use " & raw &
       " transfer encoding")
 
-type MimeLine = tuple[text: string, start, next: int]
-
 proc nextLine(s: string; pos: int): MimeLine =
   ## Return a line without its break plus byte offsets. Handles CRLF,
-  ## lone LF and lone CR.
-  var i = pos
-  while i < s.len and s[i] != '\r' and s[i] != '\n':
-    inc i
+  ## lone LF and lone CR. The EOL scan is SIMD-accelerated.
+  if pos >= s.len:
+    return ("", pos, pos)
+  let base = cast[ptr char](unsafeAddr s[0])
+  let e = findEol(base, pos, s.len)
+  let i = if e < 0: s.len else: e
   let text = s[pos ..< i]
   var nxt = i
   if nxt < s.len and s[nxt] == '\r':
@@ -1650,11 +1715,14 @@ proc nextLine(s: string; pos: int): MimeLine =
     inc nxt
   (text, pos, nxt)
 
-proc isDelimiterLine(line, boundary: string; closing: var bool): bool =
-  ## Match `--boundary` or `--boundary--` with optional transport
-  ## padding (spaces/tabs) and nothing else.
+proc isDelimiterMarked(line, marker: string; closing: var bool): bool {.inline.} =
+  ## Delimiter match against a precomputed `"--" & boundary` marker, so
+  ## per-line scanning of large bodies allocates nothing.
   closing = false
-  let marker = "--" & boundary
+  if line.len < marker.len or line.len < 2:
+    return false
+  if line[0] != '-' or line[1] != '-':
+    return false # fast reject: body lines rarely start with `--`
   if not line.startsWith(marker):
     return false
   var rest = line[marker.len .. ^1]
@@ -1665,6 +1733,8 @@ proc isDelimiterLine(line, boundary: string; closing: var bool): bool =
     if c != ' ' and c != '\t':
       return false
   true
+
+
 
 proc stripOneBreak(s: string): string =
   ## Remove a single trailing CRLF / LF / CR (the break belonging to a
@@ -1684,6 +1754,7 @@ proc splitMultipartBody*(body, boundary: string;
     if opts.policy == mpStrict:
       mimeError("invalid multipart boundary")
     return result
+  let marker = "--" & boundary # hoisted: was allocated per scanned line
   var pos = 0
   # Find the first delimiter line.
   var firstStart = -1
@@ -1691,7 +1762,7 @@ proc splitMultipartBody*(body, boundary: string;
   while pos <= body.len:
     let ln = nextLine(body, pos)
     var closing = false
-    if isDelimiterLine(ln.text, boundary, closing):
+    if isDelimiterMarked(ln.text, marker, closing):
       firstStart = ln.start
       firstNext = ln.next
       if closing:
@@ -1713,7 +1784,7 @@ proc splitMultipartBody*(body, boundary: string;
   while pos <= body.len:
     let ln = nextLine(body, pos)
     var closing = false
-    if isDelimiterLine(ln.text, boundary, closing):
+    if isDelimiterMarked(ln.text, marker, closing):
       result.parts.add(stripOneBreak(body[partStart ..< ln.start]))
       if closing:
         result.epilogue = body[ln.next .. ^1]
@@ -2094,10 +2165,9 @@ proc emitBodyBytes(part: MimePart; opts: MimeOptions): string =
     of teBase64: encodeBase64Body(stringToBytes(raw))
     of teQuotedPrintable: encodeQuotedPrintable(stringToBytes(raw))
     of te7bit:
-      if opts.policy == mpStrict:
-        for c in raw:
-          if ord(c) > 127:
-            mimeError("non-ASCII byte in 7bit text body")
+      if opts.policy == mpStrict and raw.len > 0:
+        if hasNonAscii(cast[ptr char](unsafeAddr raw[0]), 0, raw.len):
+          mimeError("non-ASCII byte in 7bit text body")
       raw
     else: raw
   of mbData:
