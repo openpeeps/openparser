@@ -987,22 +987,11 @@ proc parseMailboxRest(lx: var MimeLexer; first: MimeToken): MimeMailbox =
       displayName: if displayName.len > 0: some(displayName) else: none(string),
       localPart: local, domain: domain)
   elif t.kind == tkSpecial and t.text == "@":
-    # Bare addr-spec: toks form the local part.
+    # Bare addr-spec: toks form the local part. Atoms and quoted strings
+    # are joined with dots re-inserted; spaces between adjacent atoms
+    # (invalid without dots) are preserved leniently.
     var local = ""
-    for i, tk in toks:
-      if i > 0 and tk.kind == tkAtom and toks[i - 1].kind == tkAtom:
-        local.add(" ")
-      if tk.kind == tkQuoted:
-        local.add("\"" & tk.text.replace("\\", "\\\\").replace("\"", "\\\"") & "\"")
-      else:
-        local.add(tk.text)
-      # Re-insert dots consumed as specials? Dots arrive as tkSpecial "."
-      # only when between atoms, handled below via peek loop instead.
-    # The toks loop above misses separators; rebuild properly:
-    local = ""
     var firstTok = true
-    # Re-scan: local part tokens were atoms/quoted separated by dots or
-    # spaces. Spaces between atoms without dots are invalid; keep lenient.
     for tk in toks:
       if tk.kind == tkSpecial and tk.text == ".":
         local.add(".")
@@ -1138,6 +1127,13 @@ const mimeObsZones = [
   ("mst", -420), ("mdt", -360),
   ("pst", -480), ("pdt", -420)]
 
+proc daysInMonth*(year, month: int): int =
+  ## Calendar days in a month (proleptic Gregorian). Returns 0 for
+  ## out-of-range months.
+  if month < 1 or month > 12:
+    return 0
+  times.getDaysInMonth(times.Month(month), year)
+
 proc parseMimeDate*(s: string; opts: MimeOptions = defaultMimeOptions()):
     MimeDate =
   ## Parse a Date field body. Accepts obsolete day names, 2-digit years
@@ -1164,6 +1160,8 @@ proc parseMimeDate*(s: string; opts: MimeOptions = defaultMimeOptions()):
   var year = try: parseInt(toks[i + 2]) except ValueError: -1
   if day < 1 or day > 31 or month < 1 or year < 0:
     mimeError("invalid date-time: " & raw)
+  if day > daysInMonth(year, month):
+    mimeError("invalid calendar date: " & raw)
   if year < 100:
     # RFC 822 obsolete 2-digit year: 00-49 -> 2000s, 50-99 -> 1900s.
     year += (if year < 50: 2000 else: 1900)
@@ -1237,6 +1235,33 @@ proc formatMimeDate*(d: MimeDate): string =
     align($d.hour, 2, '0') & ":" & align($d.minute, 2, '0') & ":" &
     align($d.second, 2, '0') & " " & zone
 
+proc toTime*(d: MimeDate): times.Time =
+  ## Convert to an absolute point in time. The numeric offset is applied;
+  ## dates with an unknown zone (military zone or missing zone) are read
+  ## as UTC. Out-of-range fields raise `OpenParserMimeError`.
+  if d.month < 1 or d.month > 12:
+    mimeError("invalid month in date: " & d.raw)
+  if d.day < 1 or d.day > daysInMonth(d.year, d.month):
+    mimeError("invalid calendar date: " & d.raw)
+  if d.hour < 0 or d.hour > 23 or d.minute < 0 or d.minute > 59 or
+      d.second < 0 or d.second > 60:
+    mimeError("invalid time in date: " & d.raw)
+  let off = if d.offsetMinutes.isSome: d.offsetMinutes.get else: 0
+  let asUtc = times.dateTime(d.year, times.Month(d.month),
+    times.MonthdayRange(d.day), times.HourRange(d.hour),
+    times.MinuteRange(d.minute), times.SecondRange(d.second), 0, times.utc())
+  asUtc.toTime - times.initDuration(minutes = off)
+
+proc nowMimeDate*(): MimeDate =
+  ## Current local time as an RFC 5322 date, with the local UTC offset.
+  let t = times.now()
+  # times.utcOffset is seconds west of UTC; RFC offsets run east.
+  let offMin = -(t.utcOffset div 60)
+  result = MimeDate(raw: "", year: t.year, month: ord(t.month),
+    day: t.monthday, hour: t.hour, minute: t.minute, second: t.second,
+    offsetMinutes: some(offMin), zone: "")
+  result.raw = formatMimeDate(result)
+
 # ---------------------------------------------------------------------------
 # Message IDs (RFC 5322 section 3.6.4)
 # ---------------------------------------------------------------------------
@@ -1270,6 +1295,16 @@ proc parseMessageIds*(s: string; opts: MimeOptions = defaultMimeOptions()):
 
 proc formatMessageId*(id: string): string {.inline.} =
   "<" & id & ">"
+
+var mimeMessageIdCounter = 0
+
+proc generateMessageId*(domain = "localhost"): string =
+  ## Generate a unique msg-id body (without angle brackets). `domain`
+  ## should be the sender's domain; it falls back to `localhost`.
+  inc mimeMessageIdCounter
+  let dom = domain.strip()
+  $toUnix(getTime()) & "." & $mimeMessageIdCounter & "@" &
+    (if dom.len == 0: "localhost" else: dom)
 
 # ---------------------------------------------------------------------------
 # Encoded words (RFC 2047)
@@ -2357,15 +2392,15 @@ proc newTextPart*(text: string; mediaSubtype = "plain";
   ## transfer encoding is given explicitly.
   var useEnc = transferEncoding
   if transferEncoding == teQuotedPrintable:
-    var ascii = true
-    for c in text:
-      if ord(c) >= 127:
-        ascii = false
-        break
+    let ascii = text.len == 0 or
+      not hasNonAscii(cast[ptr char](unsafeAddr text[0]), 0, text.len)
     if ascii:
       var longLine = false
-      for line in text.splitLines():
-        if line.len > 998:
+      var p = 0
+      while p < text.len:
+        let ln = nextLine(text, p)
+        p = ln.next
+        if ln.text.len > 998:
           longLine = true
           break
       if not longLine:
@@ -2482,3 +2517,51 @@ proc newForwardedMessage*(msg: MimeMessage): MimePart =
     transferEncodingRaw: "7bit",
     transferEncodingPresent: true,
     body: MimeBody(kind: mbMessage, message: msg))
+
+proc isMimeBody*(part: MimePart): bool =
+  ## True when a body entity carries MIME content headers (or is a
+  ## composite/message body), i.e. the message needs `MIME-Version`.
+  if part.isNil:
+    return false
+  if part.contentTypePresent or part.transferEncodingPresent:
+    return true
+  case part.body.kind
+  of mbMultipart, mbMessage:
+    true
+  else:
+    false
+
+proc ensureMimeDefaults*(msg: MimeMessage; idDomain = "") =
+  ## Fill `Date`, `Message-ID` and `MIME-Version` when absent. Fields you
+  ## set explicitly are never overwritten. The ID domain defaults to the
+  ## From address domain, else `localhost`; pass `idDomain` to override.
+  if msg.isNil:
+    mimeError("cannot set defaults on a nil message")
+  if msg.date.isNone:
+    msg.date = some(nowMimeDate())
+  if msg.messageId.isNone:
+    var dom = idDomain.strip()
+    if dom.len == 0:
+      if msg.fromAddrs.len > 0 and msg.fromAddrs[0].domain.len > 0:
+        dom = msg.fromAddrs[0].domain
+      else:
+        dom = "localhost"
+    msg.messageId = some(generateMessageId(dom))
+  if msg.mimeVersion.isNone and isMimeBody(msg.body):
+    msg.mimeVersion = some("1.0")
+
+proc newMessage*(body: MimePart = nil;
+    fromAddrs: seq[MimeMailbox] = @[];
+    toAddrs: seq[MimeAddress] = @[];
+    subject = ""; withDefaults = true): MimeMessage =
+  ## Build a top-level message. With `withDefaults` (default on), fills
+  ## in the current date, a generated Message-ID and `MIME-Version: 1.0`
+  ## for MIME bodies; pass `withDefaults = false` for full manual control.
+  result = MimeMessage()
+  result.body = if body.isNil: emptyPart() else: body
+  result.fromAddrs = fromAddrs
+  result.toAddrs = toAddrs
+  if subject.len > 0:
+    result.subject = some(subject)
+  if withDefaults:
+    ensureMimeDefaults(result)

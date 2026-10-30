@@ -1,4 +1,4 @@
-import std/[unittest, options, strutils, base64, os]
+import std/[unittest, options, strutils, base64, os, times]
 import openparser/mime
 
 suite "MIME headers - splitting and unfolding":
@@ -817,3 +817,114 @@ suite "MIME simd fast paths":
       @[newBinaryPart(raw, "application/octet-stream", filename = "big.bin")])
     let back = parseMime(toMime(msg))
     check back.body.body.parts[0].body.data == raw
+
+suite "MIME message creation defaults":
+  test "newMessage fills date, id and mime version":
+    let msg = newMessage(newMultipart("mixed", @[newTextPart("hi")]),
+      fromAddrs = parseMailboxList("me@example.org"),
+      toAddrs = parseAddressList("you@example.org"),
+      subject = "hello")
+    check msg.date.isSome
+    check msg.messageId.isSome
+    check msg.mimeVersion.get == "1.0"
+    check msg.subject.get == "hello"
+    let back = parseMime(toMime(msg))
+    check back.mimeVersion.get == "1.0"
+    check back.messageId.get == msg.messageId.get
+    check back.date.get.year == msg.date.get.year
+
+  test "newMessage without mime body skips mime version":
+    let msg = newMessage()
+    check msg.date.isSome
+    check msg.messageId.isSome
+    check msg.mimeVersion.isNone
+    check parseMime(toMime(msg)).date.isSome
+
+  test "withDefaults false leaves headers unset":
+    let msg = newMessage(newTextPart("x"), withDefaults = false)
+    check msg.date.isNone
+    check msg.messageId.isNone
+    check msg.mimeVersion.isNone
+
+  test "explicit fields are never overwritten":
+    var msg = newMessage(newTextPart("x"))
+    let fixed = parseMimeDate("Wed, 02 Oct 2024 08:00:00 +0200")
+    msg.date = some(fixed)
+    msg.messageId = some("fixed@example.org")
+    msg.mimeVersion = some("9.9")
+    ensureMimeDefaults(msg)
+    check msg.date.get.year == 2024
+    check msg.messageId.get == "fixed@example.org"
+    check msg.mimeVersion.get == "9.9"
+
+  test "message id domain comes from From":
+    let msg = newMessage(newTextPart("x"),
+      fromAddrs = parseMailboxList("me@example.org"))
+    check msg.messageId.get.endsWith("@example.org")
+
+  test "message id falls back to localhost":
+    let msg = newMessage(newTextPart("x"))
+    check msg.messageId.get.endsWith("@localhost")
+
+  test "ensureMimeDefaults on nil raises":
+    expect OpenParserMimeError:
+      ensureMimeDefaults(nil)
+
+suite "MIME date helpers":
+  test "toTime applies numeric offset":
+    let d = parseMimeDate("Wed, 02 Oct 2024 08:00:00 +0200")
+    check toUnix(toTime(d)) ==
+      toUnix(dateTime(2024, mOct, 2, 6, 0, 0, 0, utc()).toTime)
+
+  test "toTime applies named zone":
+    let d = parseMimeDate("Tue, 01 Oct 2024 12:00:00 EST")
+    check toUnix(toTime(d)) ==
+      toUnix(dateTime(2024, mOct, 1, 17, 0, 0, 0, utc()).toTime)
+
+  test "toTime reads unknown zone as UTC":
+    let d = parseMimeDate("02 Oct 2024 08:00:00 X")
+    check toUnix(toTime(d)) ==
+      toUnix(dateTime(2024, mOct, 2, 8, 0, 0, 0, utc()).toTime)
+
+  test "nowMimeDate round trips through text":
+    let back = parseMimeDate(formatMimeDate(nowMimeDate()))
+    let now = nowMimeDate()
+    check back.year == now.year
+    check back.month == now.month
+    check back.day == now.day
+    check back.offsetMinutes.get == now.offsetMinutes.get
+
+  test "leap day accepted in leap years only":
+    check parseMimeDate("29 Feb 2024 00:00:00 +0000").day == 29
+    expect OpenParserMimeError:
+      discard parseMimeDate("29 Feb 2023 00:00:00 +0000",
+        MimeOptions(policy: mpStrict))
+
+  test "february 30 rejected":
+    expect OpenParserMimeError:
+      discard parseMimeDate("30 Feb 2024 00:00:00 +0000",
+        MimeOptions(policy: mpStrict))
+    let msg = parseMime("From: a@x.com\r\nDate: 30 Feb 2024 00:00:00 +0000\r\n\r\nx")
+    check msg.date.isNone
+
+  test "toTime rejects out-of-range fields":
+    expect OpenParserMimeError:
+      discard toTime(MimeDate(raw: "x", year: 2024, month: 13, day: 1,
+        hour: 0, minute: 0, second: 0,
+        offsetMinutes: some(0), zone: ""))
+
+suite "MIME address reconstruction":
+  test "bare quoted local part with dot preserved":
+    let mbs = parseMailboxList("\"a.b\"@x.com")
+    check mbs.len == 1
+    check mbs[0].localPart == "\"a.b\""
+    check mbs[0].domain == "x.com"
+
+  test "unquoted display name joins and round trips":
+    let addrs = parseAddressList("John Doe <john@example.com>")
+    check addrs.len == 1
+    check addrs[0].mailbox.displayName.get == "John Doe"
+    let back = parseMailboxList($addrs[0].mailbox)
+    check back.len == 1
+    check back[0].addrSpecOf == "john@example.com"
+    check back[0].displayName.get == "John Doe"

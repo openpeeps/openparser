@@ -140,6 +140,18 @@ Measured on a 2.4 MB mixed message (`-d:release`, x86_64 SSE2):
 parse 22.1 ms -> 14.5 ms (1.5x), serialize 13.5 ms -> 5.1 ms (2.6x),
 QP decode 6.1x, base64 decode 3.3x.
 
+## 13. Message creation defaults and date helpers
+
+`newMessage` constructor with `withDefaults` (Date now, generated
+Message-ID with From-domain fallback, `MIME-Version: 1.0` for MIME
+bodies via `ensureMimeDefaults`/`isMimeBody`); `MimeDate.toTime`
+(offset-aware, unknown zones read as UTC), `nowMimeDate`,
+`generateMessageId`, `daysInMonth` with strict calendar validation
+(Feb 30 and non-leap Feb 29 rejected; lenient drops the date).
+Bare addr-spec reconstruction collapsed from a double build to a
+single pass (behavior identical). `newTextPart` ASCII scan and
+long-line check use the SIMD scanners. 135 tests passing.
+
 ---
 
 ## 11. Integration

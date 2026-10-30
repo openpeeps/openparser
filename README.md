@@ -505,22 +505,23 @@ echo msg.subject.get("")
 echo msg.fromAddrs[0].addrSpecOf()
 
 # Build a multipart message with an attachment
-var outMsg = MimeMessage()
-outMsg.fromAddrs = parseMailboxList("me@example.org")
-outMsg.toAddrs = parseAddressList("you@example.org")
-outMsg.subject = some("Grüße aus München")
-outMsg.body = newMultipart("mixed", @[
-  newTextPart("Hello, world"),
-  newBinaryPart(readFile("doc.pdf").stringToBytes(),
-    "application/pdf", filename = "doc.pdf")
-])
+var outMsg = newMessage(
+  newMultipart("mixed", @[
+    newTextPart("Hello, world"),
+    newBinaryPart(readFile("doc.pdf").stringToBytes(),
+      "application/pdf", filename = "doc.pdf")
+  ]),
+  fromAddrs = parseMailboxList("me@example.org"),
+  toAddrs = parseAddressList("you@example.org"),
+  subject = "Grüße aus München")
+# newMessage fills Date, Message-ID (From domain) and MIME-Version 1.0
 writeFile("out.eml", toMime(outMsg))
 
 # File convenience (memory-mapped read)
 let fromFile = parseMimeFile("out.eml")
 ```
 
-**Features:** Header unfolding, addresses (mailboxes, groups, domain literals, comments), dates with obsolete zones, message IDs, unstructured fields with encoded-word decoding, content types with params, transfer encodings (7bit/8bit/binary/QP/base64), multipart with preamble/epilogue and nesting limits, `message/rfc822` nesting, text charset conversion to UTF-8 via `std/encodings`, attachment filenames via disposition and RFC 2231 continuations, CRLF output with 78-column folding, `MimePolicy` lenient/strict modes, `extraHeaders` for unknown fields, `OpenParserMimeError` throughout.
+**Features:** Header unfolding, addresses (mailboxes, groups, domain literals, comments), dates with obsolete zones plus `toTime`/`nowMimeDate`, message creation via `newMessage`/`ensureMimeDefaults` with generated IDs, unstructured fields with encoded-word decoding, content types with params, transfer encodings (7bit/8bit/binary/QP/base64), multipart with preamble/epilogue and nesting limits, `message/rfc822` nesting, text charset conversion to UTF-8 via `std/encodings`, attachment filenames via disposition and RFC 2231 continuations, CRLF output with 78-column folding, `MimePolicy` lenient/strict modes, `extraHeaders` for unknown fields, `OpenParserMimeError` throughout.
 
 - [Tests](https://github.com/openpeeps/openparser/blob/main/tests/test_mime.nim) | [API Reference](https://openpeeps.github.io/openparser/openparser/mime.html)
 
