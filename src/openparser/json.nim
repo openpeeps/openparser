@@ -19,7 +19,11 @@ import std/[macros, macrocache, json, strutils, options,
 import ./private/[types, lexutils]
 when not defined(openparserJsonNoSimd) and (defined(amd64) or defined(i386)):
   import ./private/json_simd
-export json # re-exporting the standard JSON module for JsonNode and related types
+export json except JsonParser
+## Re-exporting the standard JSON module for JsonNode and related types.
+## `JsonParser` is deliberately excluded: this module defines its own
+## `JsonParser` (with `curr`/`prev`/`next` tokens), and re-exporting
+## std's type of the same name would shadow it in every importer.
 
 type
   JsonOptions* = ref object
