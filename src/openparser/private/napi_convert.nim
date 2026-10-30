@@ -33,6 +33,12 @@ from ../ical import IcalCalendar, IcalComponent, IcalEvent, IcalTodo,
   IcalGenericSub, IcalDateTime, formatIcalDateTime, formatIcalDuration,
   cckEvent, cckTodo, cckJournal, cckTimezone, cckOther, trkRelative
 from ../vcard import VCard, vv40, vcardKindStr, VCardProp, VCardParam
+from ../mime import MimeMessage, MimePart, MimeBody, MimeAddress, MimeMailbox,
+  MimeDate, MimeContentType, MimeDisposition, MimeParam, MimeHeader,
+  MimeTransferEncoding, MimeBodyKind, MimeAddressKind,
+  maMailbox, maGroup, mbEmpty, mbText, mbData, mbMultipart, mbMessage,
+  te7bit, te8bit, teBinary, teQuotedPrintable, teBase64, teUnknown,
+  addrSpecOf, mediaType, filenameOf, toTime
 from ../sql import SqlNode, SqlDriver, nkIdent, nkQuotedIdent, nkStringLit,
   nkBitStringLit, nkHexStringLit, nkIntegerLit, nkNumericLit, nkPlaceholder,
   nkRaw
@@ -780,6 +786,170 @@ proc vcardToJson(c: VCard): JsonNode =
 proc vcardsToJson(cards: seq[VCard]): JsonNode =
   result = newJArray()
   for c in cards: result.add(vcardToJson(c))
+
+# -------------------------------------------------------------------- mime
+
+proc mimePartToJson(p: MimePart): JsonNode
+proc mimeMessageToJson(m: MimeMessage): JsonNode
+
+proc mimeEncodingToStr(e: MimeTransferEncoding): string =
+  case e
+  of te7bit: "7bit"
+  of te8bit: "8bit"
+  of teBinary: "binary"
+  of teQuotedPrintable: "quoted-printable"
+  of teBase64: "base64"
+  of teUnknown: "unknown"
+
+proc mimeParamToJson(p: MimeParam): JsonNode =
+  result = newJObject()
+  result["name"] = %p.name
+  result["value"] = %p.value
+  result["charset"] = optStr(p.charset)
+  result["language"] = optStr(p.language)
+
+proc mimeParamsToJson(ps: seq[MimeParam]): JsonNode =
+  result = newJArray()
+  for p in ps: result.add(mimeParamToJson(p))
+
+proc mimeContentTypeToJson(c: MimeContentType): JsonNode =
+  result = newJObject()
+  result["type"] = %c.mainType
+  result["subtype"] = %c.subType
+  result["mediaType"] = %c.mediaType()
+  result["params"] = mimeParamsToJson(c.params)
+
+proc mimeMailboxToJson(m: MimeMailbox): JsonNode =
+  result = newJObject()
+  result["displayName"] = optStr(m.displayName)
+  result["localPart"] = %m.localPart
+  result["domain"] = %m.domain
+  result["addrSpec"] = %m.addrSpecOf()
+
+proc mimeAddressToJson(a: MimeAddress): JsonNode =
+  result = newJObject()
+  case a.kind
+  of maMailbox:
+    result["kind"] = %"mailbox"
+    result["mailbox"] = mimeMailboxToJson(a.mailbox)
+  of maGroup:
+    result["kind"] = %"group"
+    result["groupName"] = %a.groupName
+    var ms = newJArray()
+    for m in a.members: ms.add(mimeMailboxToJson(m))
+    result["members"] = ms
+
+proc mimeAddressesToJson(addrs: seq[MimeAddress]): JsonNode =
+  result = newJArray()
+  for a in addrs: result.add(mimeAddressToJson(a))
+
+proc mimeMailboxesToJson(mbs: seq[MimeMailbox]): JsonNode =
+  result = newJArray()
+  for m in mbs: result.add(mimeMailboxToJson(m))
+
+proc mimeDateToJson(d: MimeDate): JsonNode =
+  result = newJObject()
+  result["raw"] = %d.raw
+  result["year"] = %d.year
+  result["month"] = %d.month
+  result["day"] = %d.day
+  result["hour"] = %d.hour
+  result["minute"] = %d.minute
+  result["second"] = %d.second
+  result["offsetMinutes"] = optInt(d.offsetMinutes)
+  result["zone"] = %d.zone
+  result["unixTime"] = %toUnix(toTime(d))
+
+proc mimeHeaderToJson(h: MimeHeader): JsonNode =
+  result = newJObject()
+  result["name"] = %h.name
+  result["value"] = %h.value
+
+proc mimeHeadersToJson(hs: seq[MimeHeader]): JsonNode =
+  result = newJArray()
+  for h in hs: result.add(mimeHeaderToJson(h))
+
+proc mimeBodyToJson(b: MimeBody): JsonNode =
+  result = newJObject()
+  case b.kind
+  of mbEmpty:
+    result["kind"] = %"empty"
+  of mbText:
+    result["kind"] = %"text"
+    result["text"] = %b.text
+    result["charset"] = %b.charset
+    result["rawBase64"] = %base64.encode(b.raw)
+  of mbData:
+    result["kind"] = %"data"
+    result["dataBase64"] = %base64.encode(b.data)
+  of mbMultipart:
+    result["kind"] = %"multipart"
+    result["subtype"] = %b.subtype
+    result["boundary"] = %b.boundary
+    result["preamble"] = %b.preamble
+    var parts = newJArray()
+    for p in b.parts: parts.add(mimePartToJson(p))
+    result["parts"] = parts
+    result["epilogue"] = %b.epilogue
+  of mbMessage:
+    result["kind"] = %"message"
+    result["message"] = mimeMessageToJson(b.message)
+
+proc mimePartToJson(p: MimePart): JsonNode =
+  result = newJObject()
+  result["contentType"] = mimeContentTypeToJson(p.contentType)
+  result["contentTypePresent"] = %p.contentTypePresent
+  result["transferEncoding"] = %mimeEncodingToStr(p.transferEncoding)
+  result["transferEncodingRaw"] = %p.transferEncodingRaw
+  result["transferEncodingPresent"] = %p.transferEncodingPresent
+  result["contentId"] = optStr(p.contentId)
+  result["contentDescription"] = optStr(p.contentDescription)
+  if p.disposition.isSome:
+    let dd = p.disposition.get
+    var o = newJObject()
+    o["kind"] = %dd.kind
+    o["params"] = mimeParamsToJson(dd.params)
+    result["disposition"] = o
+  else:
+    result["disposition"] = newJNull()
+  var langs = newJArray()
+  for l in p.contentLanguage: langs.add(%l)
+  result["contentLanguage"] = langs
+  result["contentLocation"] = optStr(p.contentLocation)
+  result["filename"] = optStr(p.filenameOf())
+  result["body"] = mimeBodyToJson(p.body)
+  result["extraHeaders"] = mimeHeadersToJson(p.extraHeaders)
+
+proc mimeMessageToJson(m: MimeMessage): JsonNode =
+  result = newJObject()
+  if m.date.isSome: result["date"] = mimeDateToJson(m.date.get)
+  else: result["date"] = newJNull()
+  result["from"] = mimeMailboxesToJson(m.fromAddrs)
+  if m.sender.isSome: result["sender"] = mimeMailboxToJson(m.sender.get)
+  else: result["sender"] = newJNull()
+  result["replyTo"] = mimeMailboxesToJson(m.replyTo)
+  result["to"] = mimeAddressesToJson(m.toAddrs)
+  result["cc"] = mimeAddressesToJson(m.cc)
+  result["bcc"] = mimeAddressesToJson(m.bcc)
+  result["subject"] = optStr(m.subject)
+  result["messageId"] = optStr(m.messageId)
+  var irt = newJArray()
+  for id in m.inReplyTo: irt.add(%id)
+  result["inReplyTo"] = irt
+  var refs = newJArray()
+  for id in m.references: refs.add(%id)
+  result["references"] = refs
+  result["comments"] = optStr(m.comments)
+  var kw = newJArray()
+  for s in m.keywords: kw.add(%s)
+  result["keywords"] = kw
+  var recv = newJArray()
+  for s in m.received: recv.add(%s)
+  result["received"] = recv
+  result["returnPath"] = optStr(m.returnPath)
+  result["mimeVersion"] = optStr(m.mimeVersion)
+  result["body"] = mimePartToJson(m.body)
+  result["extraHeaders"] = mimeHeadersToJson(m.extraHeaders)
 
 # --------------------------------------------------------------------- sql
 

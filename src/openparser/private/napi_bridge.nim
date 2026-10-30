@@ -20,6 +20,7 @@ from ../feed import parseAtom, toAtomXml
 from ../dotenv import parseEnv
 from ../ical import parseIcal, toIcal
 from ../vcard import parseVCards, toVCards, toQrPayload
+from ../mime import parseMime, toMime, MimeOptions, mpStrict
 from ../sql import parseSql, renderSql
 from ../gettext/po import openPoCatalog, compilePo, translate, close
 from ../gettext/mo import openMoCatalog, translate, close
@@ -188,6 +189,24 @@ init proc(module: Module) =
   module.register("vcard", [("parse", vcardParse),
                             ("normalize", vcardNormalize),
                             ("qrPayload", vcardQrPayload)])
+
+  # --------------------------------------------------------------- mime
+  proc mimeParse(src: string) {.export_napi: false.} =
+    ## Parse an RFC 5322 / MIME message to a JS object (lenient).
+    return jsParse(mimeMessageToJson(parseMime(args.get("src").getStr())))
+
+  proc mimeParseStrict(src: string) {.export_napi: false.} =
+    ## Parse with strict RFC enforcement; violations throw.
+    return jsParse(mimeMessageToJson(parseMime(args.get("src").getStr(),
+      MimeOptions(policy: mpStrict))))
+
+  proc mimeNormalize(src: string) {.export_napi: false.} =
+    ## Canonicalize a message via parse/serialize round-trip.
+    return %*toMime(parseMime(args.get("src").getStr()))
+
+  module.register("mime", [("parse", mimeParse),
+                           ("parseStrict", mimeParseStrict),
+                           ("normalize", mimeNormalize)])
 
   # -------------------------------------------------------------- sql
   proc sqlParse(src: string, driver: string) {.export_napi: false.} =

@@ -1,7 +1,7 @@
 <p align="center">
   A tiny collection of high-performance parsers and dumpers 👇<br><br>
-  YAML &bullet; XML &bullet; TOML &bullet; CSV BSON &bullet; Plist &bullet; HTML &bullet; CSS &bullet; RSS &bullet; Atom<br>
-  DotEnv &bullet; iCal &bullet; vCard &bullet; NIF &bullet; SQL &bullet; Regex &bullet; Gettext &bullet; FBE &bullet; QR &bullet; SVG &bullet; Colors<br><br>
+  YAML, XML, TOML, CSV, BSON, Plist, CSS, RSS, Atom<br>
+  DotEnv, iCal, vCard, MIME, SQL, Gettext, QR, SVG, Colors, UUID, Path, Fuzzy<br><br>
   👑 Written in Nim language
 </p>
 
@@ -59,6 +59,7 @@ Each parser lives in its own namespace (`yaml`, `toml`, `xml`, and so on).
 * [DotEnv](#dotenv)
 * [vCard](#vcard)
 * [iCal](#ical)
+* [MIME](#mime)
 * [SQL](#sql)
 * [Gettext](#gettext)
 * [CSS](#css)
@@ -223,6 +224,22 @@ cal.components[0];
 //      attendees: [{ uri, cn }], alarms: [{ action, trigger }], ... }
 
 ical.normalize(ics); // canonical iCalendar string
+```
+
+### MIME
+
+Parse RFC 5322 / MIME messages to structured objects with headers, addresses, dates, multipart bodies and attachments. Binary payloads come back as base64; `parseStrict` enforces RFC rules.
+
+```js
+const { mime } = require('@openpeeps/openparser');
+
+const msg = mime.parse(emlString);
+msg.subject; // decoded string
+msg.body.body; // { kind: 'text' | 'data' | 'multipart' | 'message' | 'empty', ... }
+msg.body.filename; // attachment filename, if any
+
+mime.normalize(emlString); // canonical message string
+mime.parseStrict(emlString); // throws on RFC violations
 ```
 
 ### SQL

@@ -519,6 +519,117 @@ export namespace vcard {
   function qrPayload(src: string, index: number): string;
 }
 
+// ---------------------------------------------------------------- mime
+export interface MimeHeader {
+  name: string;
+  value: string;
+}
+
+export interface MimeParam {
+  name: string;
+  value: string;
+  charset: string | null;
+  language: string | null;
+}
+
+export interface MimeContentType {
+  type: string;
+  subtype: string;
+  mediaType: string;
+  params: MimeParam[];
+}
+
+export interface MimeDisposition {
+  kind: string;
+  params: MimeParam[];
+}
+
+export interface MimeMailbox {
+  displayName: string | null;
+  localPart: string;
+  domain: string;
+  addrSpec: string;
+}
+
+export type MimeAddress =
+  | { kind: 'mailbox'; mailbox: MimeMailbox }
+  | { kind: 'group'; groupName: string; members: MimeMailbox[] };
+
+export interface MimeDate {
+  raw: string;
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+  offsetMinutes: number | null;
+  zone: string;
+  /** Seconds since the Unix epoch (unknown zones read as UTC). */
+  unixTime: number;
+}
+
+export type MimeBody =
+  | { kind: 'empty' }
+  | { kind: 'text'; text: string; charset: string; rawBase64: string }
+  | { kind: 'data'; dataBase64: string }
+  | {
+      kind: 'multipart';
+      subtype: string;
+      boundary: string;
+      preamble: string;
+      parts: MimePart[];
+      epilogue: string;
+    }
+  | { kind: 'message'; message: MimeMessage };
+
+export interface MimePart {
+  contentType: MimeContentType;
+  contentTypePresent: boolean;
+  transferEncoding: string;
+  transferEncodingRaw: string;
+  transferEncodingPresent: boolean;
+  contentId: string | null;
+  contentDescription: string | null;
+  disposition: MimeDisposition | null;
+  contentLanguage: string[];
+  contentLocation: string | null;
+  /** Attachment filename from disposition or content-type, if any. */
+  filename: string | null;
+  body: MimeBody;
+  extraHeaders: MimeHeader[];
+}
+
+export interface MimeMessage {
+  date: MimeDate | null;
+  from: MimeMailbox[];
+  sender: MimeMailbox | null;
+  replyTo: MimeMailbox[];
+  to: MimeAddress[];
+  cc: MimeAddress[];
+  bcc: MimeAddress[];
+  subject: string | null;
+  messageId: string | null;
+  inReplyTo: string[];
+  references: string[];
+  comments: string | null;
+  keywords: string[];
+  received: string[];
+  returnPath: string | null;
+  mimeVersion: string | null;
+  body: MimePart;
+  extraHeaders: MimeHeader[];
+}
+
+export namespace mime {
+  /** Parse an RFC 5322 / MIME message (lenient). Binary bodies are base64. */
+  function parse(src: string): MimeMessage;
+  /** Parse with strict RFC enforcement; violations throw. */
+  function parseStrict(src: string): MimeMessage;
+  /** Canonicalize a message via parse/serialize round-trip. */
+  function normalize(src: string): string;
+}
+
 // ----------------------------------------------------------------- sql
 export interface SqlNode {
   kind: string;
