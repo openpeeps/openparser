@@ -352,6 +352,25 @@ suite "MIME limits and policy":
       except OSError:
         discard
 
+  test "multipart with base64 text part decodes":
+    # Shape of real-world mail: multipart/mixed wrapping a base64
+    # text/html part. The top body is multipart, so text lives in
+    # the nested part, not on the top-level body.
+    let html = "<p>Hello, base64 world</p>"
+    let src = "From: a@x.com\r\n" &
+      "Content-Type: multipart/mixed; boundary=outer\r\n\r\n" &
+      "--outer\r\n" &
+      "Content-Type: text/html; charset=utf-8\r\n" &
+      "Content-Transfer-Encoding: base64\r\n\r\n" &
+      base64.encode(html) & "\r\n" &
+      "--outer--\r\n"
+    let msg = parseMime(src)
+    check msg.body.body.kind == mbMultipart
+    let part = msg.body.body.parts[0]
+    check part.contentType.mediaType == "text/html"
+    check part.body.kind == mbText
+    check part.body.text == html
+
   test "strict requires Date and From":
     expect OpenParserMimeError:
       discard parseMime("Subject: no origination\r\n\r\nx",
