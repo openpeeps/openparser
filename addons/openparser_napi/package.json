@@ -11,7 +11,7 @@
     "bin/"
   ],
   "scripts": {
-    "build": "cd ../.. && denim build src/openparser.nim --cmake -y && node addons/openparser_napi/scripts/place-binary.js",
+    "build": "cd ../.. && denim build src/openparser.nim --cmake -y -r && node addons/openparser_napi/scripts/place-binary.js",
     "test": "node --test test/*.test.js"
   },
   "license": "MIT",

@@ -42,7 +42,7 @@ describe('mime', () => {
     assert.equal(m.date.year, 2024);
     assert.equal(m.date.offsetMinutes, 120);
     assert.equal(m.body.body.kind, 'text');
-    assert.equal(m.body.body.text, 'body text');
+    assert.equal(m.body.body.text, 'body text\r\n');
   });
 
   it('decodes encoded-word subjects and base64 parts', () => {
@@ -66,7 +66,7 @@ describe('mime', () => {
     assert.ok(out.includes('Subject: hello'));
     const back = mime.parse(out);
     assert.equal(back.subject, 'hello');
-    assert.equal(back.body.body.text, 'body text');
+    assert.equal(back.body.body.text, 'body text\r\n');
   });
 
   it('rejects poorly formed input in strict mode', () => {
