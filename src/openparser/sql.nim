@@ -1340,7 +1340,7 @@ proc parseColumnConstraints(p: var SqlParser): seq[SqlNode] =
               p.error(unexpectedTokenExpected % [$p.curr.value, "NULL or DEFAULT"])
           else:
             p.error(unexpectedToken % $p.curr.value)
-          refNode.add(newNode(nkOnDelete, action))
+          refNode.add(newNode(nkOnDelete, @[newNode(nkIdent, action)]))
           continue
         elif p.isKeyw("update"):
           p.advance()
@@ -1362,7 +1362,7 @@ proc parseColumnConstraints(p: var SqlParser): seq[SqlNode] =
               p.error(unexpectedTokenExpected % [$p.curr.value, "NULL or DEFAULT"])
           else:
             p.error(unexpectedToken % $p.curr.value)
-          refNode.add(newNode(nkOnUpdate, action))
+          refNode.add(newNode(nkOnUpdate, @[newNode(nkIdent, action)]))
           continue
         else:
           # "ON" followed by something else — rewind error
@@ -1372,7 +1372,7 @@ proc parseColumnConstraints(p: var SqlParser): seq[SqlNode] =
       if p.isKeyw("not") and p.next.kind == tkKeyword and cmpIgnoreCase(p.next.value, "deferrable") == 0:
         p.advance() # not
         p.advance() # deferrable
-        var defNode = newNode(nkDeferrable, "not deferrable")
+        var defNode = newNode(nkDeferrable, @[newNode(nkIdent, "not deferrable")])
         # optional initially
         if p.isKeyw("initially"):
           p.advance()
@@ -1383,7 +1383,7 @@ proc parseColumnConstraints(p: var SqlParser): seq[SqlNode] =
         refNode.add(defNode)
       elif p.isKeyw("deferrable"):
         p.advance()
-        var defNode = newNode(nkDeferrable, "deferrable")
+        var defNode = newNode(nkDeferrable, @[newNode(nkIdent, "deferrable")])
         if p.isKeyw("initially"):
           p.advance()
           if p.isKeyw("deferred"):
