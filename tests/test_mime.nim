@@ -1,4 +1,4 @@
-import std/[unittest, options, strutils, base64]
+import std/[unittest, options, strutils, base64, os]
 import openparser/mime
 
 suite "MIME headers - splitting and unfolding":
@@ -340,11 +340,17 @@ suite "MIME limits and policy":
     msg.fromAddrs = parseMailboxList("a@x.com")
     msg.subject = some("file test")
     msg.body = newTextPart("file body")
-    let path = "/private/var/folders/2k/8b2pmhg15lq6853zbt_v_1mw0000gn/T/opencode/mime_test.eml"
-    writeMimeFile(path, msg)
-    let back = parseMimeFile(path)
-    check back.subject.get == "file test"
-    check back.body.body.text == "file body"
+    let path = getTempDir() / "openparser_mime_test.eml"
+    try:
+      writeMimeFile(path, msg)
+      let back = parseMimeFile(path)
+      check back.subject.get == "file test"
+      check back.body.body.text == "file body"
+    finally:
+      try:
+        removeFile(path)
+      except OSError:
+        discard
 
   test "strict requires Date and From":
     expect OpenParserMimeError:
