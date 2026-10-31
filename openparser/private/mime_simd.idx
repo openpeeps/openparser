@@ -1,0 +1,18 @@
+nimTitle	mime_simd	openparser/private/mime_simd.html	module openparser/private/mime_simd		0
+nim	hasAvx2	openparser/private/mime_simd.html#hasAvx2	const hasAvx2		20
+nim	hasSse2	openparser/private/mime_simd.html#hasSse2	const hasSse2		21
+nim	findEolScalar	openparser/private/mime_simd.html#findEolScalar,ptr.char,int,int	proc findEolScalar(p: ptr char; start, stop: int): int		30
+nim	findEqScalar	openparser/private/mime_simd.html#findEqScalar,ptr.char,int,int	proc findEqScalar(p: ptr char; start, stop: int): int		36
+nim	hasNonAsciiScalar	openparser/private/mime_simd.html#hasNonAsciiScalar,ptr.char,int,int	proc hasNonAsciiScalar(p: ptr char; start, stop: int): bool		42
+nim	hasBase64WsScalar	openparser/private/mime_simd.html#hasBase64WsScalar,ptr.char,int,int	proc hasBase64WsScalar(p: ptr char; start, stop: int): bool		48
+nim	findNonBase64Scalar	openparser/private/mime_simd.html#findNonBase64Scalar,ptr.char,int,int	proc findNonBase64Scalar(p: ptr char; start, stop: int): int		55
+nim	findEolSse2	openparser/private/mime_simd.html#findEolSse2,ptr.char,int,int	proc findEolSse2(p: ptr char; start, stop: int): int		72
+nim	findEqSse2	openparser/private/mime_simd.html#findEqSse2,ptr.char,int,int	proc findEqSse2(p: ptr char; start, stop: int): int		88
+nim	hasNonAsciiSse2	openparser/private/mime_simd.html#hasNonAsciiSse2,ptr.char,int,int	proc hasNonAsciiSse2(p: ptr char; start, stop: int): bool		102
+nim	hasBase64WsSse2	openparser/private/mime_simd.html#hasBase64WsSse2,ptr.char,int,int	proc hasBase64WsSse2(p: ptr char; start, stop: int): bool		114
+nim	findNonBase64Sse2	openparser/private/mime_simd.html#findNonBase64Sse2,ptr.char,int,int	proc findNonBase64Sse2(p: ptr char; start, stop: int): int		139
+nim	findEol	openparser/private/mime_simd.html#findEol,ptr.char,int,int	proc findEol(p: ptr char; start, stop: int): int		315
+nim	findEq	openparser/private/mime_simd.html#findEq,ptr.char,int,int	proc findEq(p: ptr char; start, stop: int): int		320
+nim	hasNonAscii	openparser/private/mime_simd.html#hasNonAscii,ptr.char,int,int	proc hasNonAscii(p: ptr char; start, stop: int): bool		325
+nim	hasBase64Ws	openparser/private/mime_simd.html#hasBase64Ws,ptr.char,int,int	proc hasBase64Ws(p: ptr char; start, stop: int): bool		330
+nim	findNonBase64	openparser/private/mime_simd.html#findNonBase64,ptr.char,int,int	proc findNonBase64(p: ptr char; start, stop: int): int		335

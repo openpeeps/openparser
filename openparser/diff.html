@@ -16,10 +16,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4QQQEwksSS9ZWwAAAk1JREFUWMPtll2ITVEUx39nn/O7Y5qR8f05wtCUUr6ZIS++8pEnkZInPImneaCQ5METNdOkeFBKUhMPRIkHKfEuUZSUlGlKPN2TrgfncpvmnntnmlEyq1Z7t89/rf9a6+y99oZxGZf/XeIq61EdtgKXgdXA0xrYAvBjOIF1AI9zvjcC74BSpndrJPkBWDScTF8Aa4E3wDlgHbASaANmVqlcCnwHvgDvgVfAJ+AikAAvgfVZwLnSVZHZaOuKoQi3ZOMi4NkYkpe1p4J7A8BpYAD49hfIy/oqG0+hLomiKP2L5L+1ubn5115S+3OAn4EnwBlgMzCjyt6ZAnQCJ4A7wOs88iRJHvw50HoujuPBoCKwHWiosy8MdfZnAdcHk8dxXFJ3VQbQlCTJvRBCGdRbD4M6uc5glpY3eAihpN5S5w12diSEcCCEcKUO4ljdr15T76ur1FDDLIQQ3qv71EdDOe3Kxj3leRXyk+pxdWnFWod6Wt2bY3de3aSuUHcPBVimHs7mK9WrmeOF6lR1o9qnzskh2ar2qm1qizpfXaPeVGdlmGN5pb09qMxz1Xb1kLqgzn1RyH7JUXW52lr5e/Kqi9qpto7V1atuUzfnARrV7jEib1T76gG2qxdGmXyiekkt1GswPTtek0aBfJp6YySGBfWg2tPQ0FAYgf1stUfdmdcjarbYJEniKIq6gY/Aw+zWHAC+p2labGpqiorFYgGYCEzN7oQdQClN07O1/EfDyGgC0ALMBdYAi4FyK+4H3gLPsxfR1zRNi+NP7nH5J+QntnXe5B5mpfQAAAAASUVORK5CYII=">
 
 <!-- CSS -->
-<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.12">
+<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.4.0">
 
 <!-- JS -->
-<script type="text/javascript" src="../dochack.js?v=2.2.12"></script>
+<script type="text/javascript" src="../dochack.js?v=2.4.0"></script>
 </head>
 <body>
   <div class="document" id="documentId">
@@ -31,28 +31,34 @@
       <div class="row">
   <div class="three columns">
     <div class="theme-select-wrapper">
-      <label for="theme-select">Theme:&nbsp;</label>
-      <select id="theme-select" onchange="setTheme(this.value)">
-        <option value="auto">🌗 Match OS</option>
-        <option value="dark">🌑 Dark</option>
-        <option value="light">🌕 Light</option>
-      </select>
-    </div>
+  <label for="theme-select">Theme:&nbsp;</label>
+  <select id="theme-select" onchange="setTheme(this.value)">
+    <option value="auto">🌗 Match OS</option>
+    <option value="dark">🌑 Dark</option>
+    <option value="light">🌕 Light</option>
+  </select>
+</div>
+
     <div id="global-links">
-      <ul class="simple">
-        <li><a id="indexLink" href="../theindex.html">Index</a></li>
-      </ul>
-    </div>
-    <div id="searchInputDiv">
-      Search: <input type="search" id="searchInput" oninput="search()"/>
-    </div>
-    <div>
-      Group by:
-      <select onchange="groupBy(this.value)">
-        <option value="section">Section</option>
-        <option value="type">Type</option>
-      </select>
-    </div>
+  
+  <ul class="simple">
+  <li><a id="indexLink" href="../theindex.html">Index</a></li>
+</ul>
+
+</div>
+
+      <div id="searchInputDiv">
+  Search: <input type="search" id="searchInput" oninput="search()"/>
+</div>
+
+    <div class="search-groupby">
+  Group by:
+  <select onchange="groupBy(this.value)">
+    <option value="section">Section</option>
+    <option value="type">Type</option>
+  </select>
+</div>
+
     <ul class="simple simple-toc" id="toc-list">
   <li>
   <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
@@ -260,7 +266,7 @@
 <div class="section" id="19">
   <h1><a class="toc-backref" href="#19">Exports</a></h1>
   <dl class="item">
-    <a href="diff/types.html#DiffSpan"><span class="Identifier">DiffSpan</span></a>, <a href="diff/types.html#DiffIntra"><span class="Identifier">DiffIntra</span></a>, <a href="diff/types.html#DiffLineKind"><span class="Identifier">DiffLineKind</span></a>, <a href="diff/types.html#isEmpty,ByteView"><span class="Identifier">isEmpty</span></a>, <a href="diff/types.html#DiffEol"><span class="Identifier">DiffEol</span></a>, <a href="diff/types.html#DiffNoContext"><span class="Identifier">DiffNoContext</span></a>, <a href="diff/types.html#DiffSide"><span class="Identifier">DiffSide</span></a>, <a href="diff/types.html#DiffLine"><span class="Identifier">DiffLine</span></a>, <a href="diff/types.html#DiffBinarySniff"><span class="Identifier">DiffBinarySniff</span></a>, <a href="diff/types.html#==,DiffSpan,DiffSpan"><span class="Identifier">==</span></a>, <a href="diff/types.html#contains,DiffSpan,int"><span class="Identifier">contains</span></a>, <a href="diff/types.html#DiffHunk"><span class="Identifier">DiffHunk</span></a>, <a href="diff/types.html#DiffStats"><span class="Identifier">DiffStats</span></a>, <a href="diff/types.html#spanLen,DiffSpan"><span class="Identifier">spanLen</span></a>, <a href="diff/types.html#size,ByteView"><span class="Identifier">size</span></a>, <a href="diff/types.html#$,DiffLineKind"><span class="Identifier">$</span></a>, <a href="diff/types.html#$,DiffStats"><span class="Identifier">$</span></a>, <a href="diff/types.html#DiffMaxEditDistance"><span class="Identifier">DiffMaxEditDistance</span></a>, <a href="diff/types.html#DiffOptions"><span class="Identifier">DiffOptions</span></a>, <a href="diff/types.html#slice,DiffSpan,string"><span class="Identifier">slice</span></a>, <a href="diff/types.html#DiffAlgorithm"><span class="Identifier">DiffAlgorithm</span></a>, <a href="diff/types.html#DiffError"><span class="Identifier">DiffError</span></a>, <a href="diff/types.html#at,ByteView,int"><span class="Identifier">at</span></a>, <a href="diff/types.html#ByteView"><span class="Identifier">ByteView</span></a>, <a href="diff/types.html#DiffContext"><span class="Identifier">DiffContext</span></a>, <a href="diff/types.html#Diff"><span class="Identifier">Diff</span></a>, <a href="diff/types.html#$,DiffAlgorithm"><span class="Identifier">$</span></a>, <a href="diff/types.html#DiffMaxSpanBytes"><span class="Identifier">DiffMaxSpanBytes</span></a>, <a href="diff/types.html#[],ByteView,int"><span class="Identifier">[]</span></a>, <a href="diff/source.html#FileView"><span class="Identifier">FileView</span></a>, <a href="diff/source.html#deinit,FileView"><span class="Identifier">deinit</span></a>, <a href="diff/source.html#view,string"><span class="Identifier">view</span></a>, <a href="diff/source.html#view,FileView"><span class="Identifier">view</span></a>, <a href="diff/source.html#view,seq[byte]"><span class="Identifier">view</span></a>, <a href="diff/source.html#openFile,string"><span class="Identifier">openFile</span></a>, <a href="diff/script.html#LineOp"><span class="Identifier">LineOp</span></a>, <a href="diff/script.html#LineOpKind"><span class="Identifier">LineOpKind</span></a>, <a href="diff/script.html#kindOf,LineOp"><span class="Identifier">kindOf</span></a>, <a href="diff/script.html#isEqual,LineOp"><span class="Identifier">isEqual</span></a>, <a href="diff/script.html#deleteOp,int"><span class="Identifier">deleteOp</span></a>, <a href="diff/script.html#equalOp,int,int"><span class="Identifier">equalOp</span></a>, <a href="diff/script.html#insertOp,int"><span class="Identifier">insertOp</span></a>, <a href="diff/lines.html#indexLines,ByteView"><span class="Identifier">indexLines</span></a>, <a href="diff/lines.html#eolOf,LineIndex,int"><span class="Identifier">eolOf</span></a>, <a href="diff/lines.html#isLastUnterminated,LineIndex"><span class="Identifier">isLastUnterminated</span></a>, <a href="diff/lines.html#LineTables"><span class="Identifier">LineTables</span></a>, <a href="diff/lines.html#LineSpan"><span class="Identifier">LineSpan</span></a>, <a href="diff/lines.html#contentOf,LineIndex,int"><span class="Identifier">contentOf</span></a>, <a href="diff/lines.html#lineCount,LineIndex"><span class="Identifier">lineCount</span></a>, <a href="diff/lines.html#LineIndex"><span class="Identifier">LineIndex</span></a>, <a href="diff/lines.html#keyOf,LineIndex,int"><span class="Identifier">keyOf</span></a>, <a href="diff/lines.html#linesEqual,LineIndex,int,LineIndex,int"><span class="Identifier">linesEqual</span></a>, <a href="diff/ops.html#fillLine,LineIndex,LineIndex,LineOp,DiffLine"><span class="Identifier">fillLine</span></a>, <a href="diff/ops.html#isIdentical,Diff"><span class="Identifier">isIdentical</span></a>, <a href="diff/ops.html#buildHunks,LineIndex,LineIndex,seq[LineOp],DiffOptions"><span class="Identifier">buildHunks</span></a>, <a href="diff/ops.html#makeHunk,LineIndex,LineIndex,seq[LineOp],int,int,DiffOptions"><span class="Identifier">makeHunk</span></a>, <a href="diff/ops.html#computeStats,seq[DiffHunk]"><span class="Identifier">computeStats</span></a>, <a href="diff/ops.html#lineOf,DiffLineKind"><span class="Identifier">lineOf</span></a>, <a href="diff/render.html#renderHeaders,Diff"><span class="Identifier">renderHeaders</span></a>, <a href="diff/render.html#renderUnified,Diff,DiffOptions"><span class="Identifier">renderUnified</span></a>, <a href="diff/render.html#renderHunkHeader,DiffHunk"><span class="Identifier">renderHunkHeader</span></a>, <a href="diff/render.html#renderSummary,Diff"><span class="Identifier">renderSummary</span></a>, <a href="diff/render.html#contentText,ByteView,DiffLine,bool"><span class="Identifier">contentText</span></a>, <a href="diff/render.html#appendLine,string,ByteView,DiffLine,bool"><span class="Identifier">appendLine</span></a>, <a href="diff/render.html#renderUnifiedTo,Diff,string,DiffOptions"><span class="Identifier">renderUnifiedTo</span></a>, <a href="diff/intraline.html#spansForPair,ByteView,ByteView,int,int,int,int,int"><span class="Identifier">spansForPair</span></a>
+    <a href="diff/types.html#$,DiffLineKind"><span class="Identifier">$</span></a>, <a href="diff/types.html#$,DiffAlgorithm"><span class="Identifier">$</span></a>, <a href="diff/types.html#$,DiffStats"><span class="Identifier">$</span></a>, <a href="diff/types.html#==,DiffSpan,DiffSpan"><span class="Identifier">==</span></a>, <a href="diff/types.html#ByteView"><span class="Identifier">ByteView</span></a>, <a href="diff/types.html#Diff"><span class="Identifier">Diff</span></a>, <a href="diff/types.html#DiffAlgorithm"><span class="Identifier">DiffAlgorithm</span></a>, <a href="diff/types.html#DiffBinarySniff"><span class="Identifier">DiffBinarySniff</span></a>, <a href="diff/types.html#DiffContext"><span class="Identifier">DiffContext</span></a>, <a href="diff/types.html#DiffEol"><span class="Identifier">DiffEol</span></a>, <a href="diff/types.html#DiffError"><span class="Identifier">DiffError</span></a>, <a href="diff/types.html#DiffHunk"><span class="Identifier">DiffHunk</span></a>, <a href="diff/types.html#DiffIntra"><span class="Identifier">DiffIntra</span></a>, <a href="diff/types.html#DiffLine"><span class="Identifier">DiffLine</span></a>, <a href="diff/types.html#DiffLineKind"><span class="Identifier">DiffLineKind</span></a>, <a href="diff/types.html#DiffMaxEditDistance"><span class="Identifier">DiffMaxEditDistance</span></a>, <a href="diff/types.html#DiffMaxSpanBytes"><span class="Identifier">DiffMaxSpanBytes</span></a>, <a href="diff/types.html#DiffNoContext"><span class="Identifier">DiffNoContext</span></a>, <a href="diff/types.html#DiffOptions"><span class="Identifier">DiffOptions</span></a>, <a href="diff/types.html#DiffSide"><span class="Identifier">DiffSide</span></a>, <a href="diff/types.html#DiffSpan"><span class="Identifier">DiffSpan</span></a>, <a href="diff/types.html#DiffStats"><span class="Identifier">DiffStats</span></a>, <a href="diff/types.html#[],ByteView,int"><span class="Identifier">[]</span></a>, <a href="diff/types.html#at,ByteView,int"><span class="Identifier">at</span></a>, <a href="diff/types.html#contains,DiffSpan,int"><span class="Identifier">contains</span></a>, <a href="diff/types.html#isEmpty,ByteView"><span class="Identifier">isEmpty</span></a>, <a href="diff/types.html#size,ByteView"><span class="Identifier">size</span></a>, <a href="diff/types.html#slice,DiffSpan,string"><span class="Identifier">slice</span></a>, <a href="diff/types.html#spanLen,DiffSpan"><span class="Identifier">spanLen</span></a>, <a href="diff/source.html#FileView"><span class="Identifier">FileView</span></a>, <a href="diff/source.html#deinit,FileView"><span class="Identifier">deinit</span></a>, <a href="diff/source.html#openFile,string"><span class="Identifier">openFile</span></a>, <a href="diff/source.html#view,string"><span class="Identifier">view</span></a>, <a href="diff/source.html#view,seq[byte]"><span class="Identifier">view</span></a>, <a href="diff/source.html#view,FileView"><span class="Identifier">view</span></a>, <a href="diff/script.html#LineOp"><span class="Identifier">LineOp</span></a>, <a href="diff/script.html#LineOpKind"><span class="Identifier">LineOpKind</span></a>, <a href="diff/script.html#deleteOp,int"><span class="Identifier">deleteOp</span></a>, <a href="diff/script.html#equalOp,int,int"><span class="Identifier">equalOp</span></a>, <a href="diff/script.html#insertOp,int"><span class="Identifier">insertOp</span></a>, <a href="diff/script.html#isEqual,LineOp"><span class="Identifier">isEqual</span></a>, <a href="diff/script.html#kindOf,LineOp"><span class="Identifier">kindOf</span></a>, <a href="diff/lines.html#LineIndex"><span class="Identifier">LineIndex</span></a>, <a href="diff/lines.html#LineSpan"><span class="Identifier">LineSpan</span></a>, <a href="diff/lines.html#LineTables"><span class="Identifier">LineTables</span></a>, <a href="diff/lines.html#contentOf,LineIndex,int"><span class="Identifier">contentOf</span></a>, <a href="diff/lines.html#eolOf,LineIndex,int"><span class="Identifier">eolOf</span></a>, <a href="diff/lines.html#indexLines,ByteView"><span class="Identifier">indexLines</span></a>, <a href="diff/lines.html#isLastUnterminated,LineIndex"><span class="Identifier">isLastUnterminated</span></a>, <a href="diff/lines.html#keyOf,LineIndex,int"><span class="Identifier">keyOf</span></a>, <a href="diff/lines.html#lineCount,LineIndex"><span class="Identifier">lineCount</span></a>, <a href="diff/lines.html#linesEqual,LineIndex,int,LineIndex,int"><span class="Identifier">linesEqual</span></a>, <a href="diff/ops.html#buildHunks,LineIndex,LineIndex,seq[LineOp],DiffOptions"><span class="Identifier">buildHunks</span></a>, <a href="diff/ops.html#computeStats,seq[DiffHunk]"><span class="Identifier">computeStats</span></a>, <a href="diff/ops.html#fillLine,LineIndex,LineIndex,LineOp,DiffLine"><span class="Identifier">fillLine</span></a>, <a href="diff/ops.html#isIdentical,Diff"><span class="Identifier">isIdentical</span></a>, <a href="diff/ops.html#lineOf,DiffLineKind"><span class="Identifier">lineOf</span></a>, <a href="diff/ops.html#makeHunk,LineIndex,LineIndex,seq[LineOp],int,int,DiffOptions"><span class="Identifier">makeHunk</span></a>, <a href="diff/render.html#appendLine,string,ByteView,DiffLine,bool"><span class="Identifier">appendLine</span></a>, <a href="diff/render.html#contentText,ByteView,DiffLine,bool"><span class="Identifier">contentText</span></a>, <a href="diff/render.html#renderHeaders,Diff"><span class="Identifier">renderHeaders</span></a>, <a href="diff/render.html#renderHunkHeader,DiffHunk"><span class="Identifier">renderHunkHeader</span></a>, <a href="diff/render.html#renderSummary,Diff"><span class="Identifier">renderSummary</span></a>, <a href="diff/render.html#renderUnified,Diff,DiffOptions"><span class="Identifier">renderUnified</span></a>, <a href="diff/render.html#renderUnifiedTo,Diff,string,DiffOptions"><span class="Identifier">renderUnifiedTo</span></a>, <a href="diff/intraline.html#spansForPair,ByteView,ByteView,int,int,int,int,int"><span class="Identifier">spansForPair</span></a>
   </dl>
 </div>
 
@@ -270,7 +276,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-25 23:38:57 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-31 22:24:02 UTC</small>
       </div>
     </div>
   </div>

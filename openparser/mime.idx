@@ -1,0 +1,110 @@
+nimTitle	mime	openparser/mime.html	module openparser/mime		0
+nim	OpenParserMimeError	openparser/mime.html#OpenParserMimeError	object OpenParserMimeError		26
+nim	mpLenient	openparser/mime.html#mpLenient	MimePolicy.mpLenient		28
+nim	mpStrict	openparser/mime.html#mpStrict	MimePolicy.mpStrict		28
+nim	MimePolicy	openparser/mime.html#MimePolicy	enum MimePolicy		28
+nim	MimeOptions	openparser/mime.html#MimeOptions	object MimeOptions		34
+nim	MimeHeader	openparser/mime.html#MimeHeader	object MimeHeader		54
+nim	MimeParam	openparser/mime.html#MimeParam	object MimeParam		59
+nim	MimeContentType	openparser/mime.html#MimeContentType	object MimeContentType		68
+nim	MimeDisposition	openparser/mime.html#MimeDisposition	object MimeDisposition		73
+nim	te7bit	openparser/mime.html#te7bit	MimeTransferEncoding.te7bit		78
+nim	te8bit	openparser/mime.html#te8bit	MimeTransferEncoding.te8bit		78
+nim	teBinary	openparser/mime.html#teBinary	MimeTransferEncoding.teBinary		78
+nim	teQuotedPrintable	openparser/mime.html#teQuotedPrintable	MimeTransferEncoding.teQuotedPrintable		78
+nim	teBase64	openparser/mime.html#teBase64	MimeTransferEncoding.teBase64		78
+nim	teUnknown	openparser/mime.html#teUnknown	MimeTransferEncoding.teUnknown		78
+nim	MimeTransferEncoding	openparser/mime.html#MimeTransferEncoding	enum MimeTransferEncoding		78
+nim	maMailbox	openparser/mime.html#maMailbox	MimeAddressKind.maMailbox		86
+nim	maGroup	openparser/mime.html#maGroup	MimeAddressKind.maGroup		86
+nim	MimeAddressKind	openparser/mime.html#MimeAddressKind	enum MimeAddressKind		86
+nim	MimeMailbox	openparser/mime.html#MimeMailbox	object MimeMailbox		90
+nim	MimeAddress	openparser/mime.html#MimeAddress	object MimeAddress		95
+nim	MimeDate	openparser/mime.html#MimeDate	object MimeDate		103
+nim	mbEmpty	openparser/mime.html#mbEmpty	MimeBodyKind.mbEmpty		113
+nim	mbText	openparser/mime.html#mbText	MimeBodyKind.mbText		113
+nim	mbData	openparser/mime.html#mbData	MimeBodyKind.mbData		113
+nim	mbMultipart	openparser/mime.html#mbMultipart	MimeBodyKind.mbMultipart		113
+nim	mbMessage	openparser/mime.html#mbMessage	MimeBodyKind.mbMessage		113
+nim	MimeBodyKind	openparser/mime.html#MimeBodyKind	enum MimeBodyKind		113
+nim	MimeBody	openparser/mime.html#MimeBody	object MimeBody		120
+nim	MimePart	openparser/mime.html#MimePart	type MimePart		139
+nim	MimeMessage	openparser/mime.html#MimeMessage	type MimeMessage		154
+nim	defaultMimeOptions	openparser/mime.html#defaultMimeOptions	proc defaultMimeOptions(): MimeOptions		176
+nim	mimeError	openparser/mime.html#mimeError,string	proc mimeError(msg: string)		180
+nim	bytesToString	openparser/mime.html#bytesToString,openArray[byte]	proc bytesToString(data: openArray[byte]): string		187
+nim	stringToBytes	openparser/mime.html#stringToBytes,string	proc stringToBytes(s: string): seq[byte]		193
+nim	splitHeadersBody	openparser/mime.html#splitHeadersBody,string,MimeOptions	proc splitHeadersBody(s: string; opts: MimeOptions = defaultMimeOptions()): tuple[\n    head, body: string]		223
+nim	parseHeaderBlock	openparser/mime.html#parseHeaderBlock,string,MimeOptions	proc parseHeaderBlock(head: string; opts: MimeOptions = defaultMimeOptions()): seq[\n    MimeHeader]		244
+nim	removeComments	openparser/mime.html#removeComments,string,MimeOptions	proc removeComments(s: string; opts: MimeOptions = defaultMimeOptions()): string		299
+nim	splitOutsideQuotes	openparser/mime.html#splitOutsideQuotes,string,char	proc splitOutsideQuotes(s: string; sep: char): seq[string]		344
+nim	unquoteParamValue	openparser/mime.html#unquoteParamValue,string	proc unquoteParamValue(s: string): string		368
+nim	parseParams	openparser/mime.html#parseParams,string,MimeOptions	proc parseParams(s: string; opts: MimeOptions = defaultMimeOptions()): seq[MimeParam]		388
+nim	parseContentType	openparser/mime.html#parseContentType,string,MimeOptions	proc parseContentType(s: string; opts: MimeOptions = defaultMimeOptions()): MimeContentType		412
+nim	defaultContentType	openparser/mime.html#defaultContentType	proc defaultContentType(): MimeContentType		438
+nim	mediaType	openparser/mime.html#mediaType,MimeContentType	proc mediaType(ct: MimeContentType): string		444
+nim	contentTypeParam	openparser/mime.html#contentTypeParam,MimeContentType,string	proc contentTypeParam(ct: MimeContentType; name: string): Option[string]		447
+nim	charsetOf	openparser/mime.html#charsetOf,MimeContentType	proc charsetOf(ct: MimeContentType): string		455
+nim	boundaryOf	openparser/mime.html#boundaryOf,MimeContentType	proc boundaryOf(ct: MimeContentType): Option[string]		461
+nim	isMultipart	openparser/mime.html#isMultipart,MimeContentType	proc isMultipart(ct: MimeContentType): bool		464
+nim	isText	openparser/mime.html#isText,MimeContentType	proc isText(ct: MimeContentType): bool		467
+nim	isMessage	openparser/mime.html#isMessage,MimeContentType	proc isMessage(ct: MimeContentType): bool		470
+nim	parseTransferEncoding	openparser/mime.html#parseTransferEncoding,string	proc parseTransferEncoding(s: string): tuple[enc: MimeTransferEncoding, raw: string]		473
+nim	decodeBase64Body	openparser/mime.html#decodeBase64Body,string,MimeOptions	proc decodeBase64Body(data: string; opts: MimeOptions = defaultMimeOptions()): seq[\n    byte]		488
+nim	decodeQuotedPrintable	openparser/mime.html#decodeQuotedPrintable,string,MimeOptions	proc decodeQuotedPrintable(data: string; opts: MimeOptions = defaultMimeOptions()): seq[\n    byte]		537
+nim	encodeQuotedPrintable	openparser/mime.html#encodeQuotedPrintable,openArray[byte]	proc encodeQuotedPrintable(data: openArray[byte]): string		582
+nim	encodeBase64Body	openparser/mime.html#encodeBase64Body,openArray[byte]	proc encodeBase64Body(data: openArray[byte]): string		635
+nim	normalizeCharsetLabel	openparser/mime.html#normalizeCharsetLabel,string	proc normalizeCharsetLabel(s: string): string		658
+nim	latin1ToUtf8	openparser/mime.html#latin1ToUtf8,openArray[byte]	proc latin1ToUtf8(data: openArray[byte]): string		677
+nim	decodeTextBytes	openparser/mime.html#decodeTextBytes,openArray[byte],string,MimeOptions	proc decodeTextBytes(data: openArray[byte]; charset: string;\n                opts: MimeOptions = defaultMimeOptions()): string		698
+nim	normalizeTextLineEndings	openparser/mime.html#normalizeTextLineEndings,openArray[byte]	proc normalizeTextLineEndings(data: openArray[byte]): seq[byte]		722
+nim	decodeEncodedWords	openparser/mime.html#decodeEncodedWords,string,MimeOptions	proc decodeEncodedWords(s: string; opts: MimeOptions = defaultMimeOptions()): string		754
+nim	addrSpecOf	openparser/mime.html#addrSpecOf,MimeMailbox	proc addrSpecOf(m: MimeMailbox): string		877
+nim	`$`	openparser/mime.html#$,MimeMailbox	proc `$`(m: MimeMailbox): string		880
+nim	parseAddressList	openparser/mime.html#parseAddressList,string,MimeOptions	proc parseAddressList(s: string; opts: MimeOptions = defaultMimeOptions()): seq[\n    MimeAddress]		1041
+nim	parseMailboxList	openparser/mime.html#parseMailboxList,string,MimeOptions	proc parseMailboxList(s: string; opts: MimeOptions = defaultMimeOptions()): seq[\n    MimeMailbox]		1094
+nim	formatAddress	openparser/mime.html#formatAddress,MimeAddress	proc formatAddress(a: MimeAddress): string		1106
+nim	daysInMonth	openparser/mime.html#daysInMonth,int,int	proc daysInMonth(year, month: int): int		1130
+nim	parseMimeDate	openparser/mime.html#parseMimeDate,string,MimeOptions	proc parseMimeDate(s: string; opts: MimeOptions = defaultMimeOptions()): MimeDate		1137
+nim	formatMimeDate	openparser/mime.html#formatMimeDate,MimeDate	proc formatMimeDate(d: MimeDate): string		1222
+nim	toTime	openparser/mime.html#toTime,MimeDate	proc toTime(d: MimeDate): times.Time		1238
+nim	nowMimeDate	openparser/mime.html#nowMimeDate	proc nowMimeDate(): MimeDate		1255
+nim	parseMessageIds	openparser/mime.html#parseMessageIds,string,MimeOptions	proc parseMessageIds(s: string; opts: MimeOptions = defaultMimeOptions()): seq[string]		1269
+nim	formatMessageId	openparser/mime.html#formatMessageId,string	proc formatMessageId(id: string): string		1296
+nim	generateMessageId	openparser/mime.html#generateMessageId,string	proc generateMessageId(domain = "localhost"): string		1301
+nim	decodeBWord	openparser/mime.html#decodeBWord,string,string,MimeOptions	proc decodeBWord(text, charset: string; opts: MimeOptions): string		1313
+nim	decodeQWord	openparser/mime.html#decodeQWord,string,string,MimeOptions	proc decodeQWord(text, charset: string; opts: MimeOptions): string		1327
+nim	needsEncoding	openparser/mime.html#needsEncoding,string	proc needsEncoding(s: string): bool		1416
+nim	encodeWord	openparser/mime.html#encodeWord,string,string	proc encodeWord(s: string; charset = "UTF-8"): string		1424
+nim	foldHeaderValue	openparser/mime.html#foldHeaderValue,string,int	proc foldHeaderValue(value: string; foldAt = 78): string		1428
+nim	emptyPart	openparser/mime.html#emptyPart	proc emptyPart(): MimePart		1430
+nim	chunkEncodedWords	openparser/mime.html#chunkEncodedWords,string,string	proc chunkEncodedWords(s: string; charset = "UTF-8"): seq[string]		1436
+nim	encodeUnstructured	openparser/mime.html#encodeUnstructured,string,MimeOptions	proc encodeUnstructured(s: string; opts: MimeOptions = defaultMimeOptions()): string		1462
+nim	percentDecodeRfc2231	openparser/mime.html#percentDecodeRfc2231,string,MimeOptions	proc percentDecodeRfc2231(s: string; opts: MimeOptions = defaultMimeOptions()): seq[\n    byte]		1548
+nim	decodeRfc2231Params	openparser/mime.html#decodeRfc2231Params,seq[MimeParam],MimeOptions	proc decodeRfc2231Params(params: seq[MimeParam];\n                    opts: MimeOptions = defaultMimeOptions()): seq[MimeParam]		1567
+nim	parseDisposition	openparser/mime.html#parseDisposition,string,MimeOptions	proc parseDisposition(s: string; opts: MimeOptions = defaultMimeOptions()): MimeDisposition		1666
+nim	filenameOf	openparser/mime.html#filenameOf,MimePart	proc filenameOf(part: MimePart): Option[string]		1677
+nim	splitMultipartBody	openparser/mime.html#splitMultipartBody,string,string,MimeOptions	proc splitMultipartBody(body, boundary: string;\n                   opts: MimeOptions = defaultMimeOptions()): tuple[\n    preamble: string, parts: seq[string], epilogue: string, closed: bool]		1781
+nim	parseEntity	openparser/mime.html#parseEntity,seq[MimeHeader],string,MimeOptions,int,int	proc parseEntity(headers: seq[MimeHeader]; body: string;\n            opts: MimeOptions = defaultMimeOptions(); depth = 0;\n            partCount: var int): MimePart		1838
+nim	buildMessage	openparser/mime.html#buildMessage,seq[MimeHeader],string,MimeOptions,int,int	proc buildMessage(headers: seq[MimeHeader]; body: string;\n             opts: MimeOptions = defaultMimeOptions(); depth = 0;\n             partCount: var int): MimeMessage		1842
+nim	parseMime	openparser/mime.html#parseMime,string,MimeOptions	proc parseMime(s: string; opts: MimeOptions = defaultMimeOptions()): MimeMessage		2084
+nim	parseMimeFile	openparser/mime.html#parseMimeFile,string,MimeOptions	proc parseMimeFile(path: string; opts: MimeOptions = defaultMimeOptions()): MimeMessage		2091
+nim	quoteParamValue	openparser/mime.html#quoteParamValue,string	proc quoteParamValue(s: string): string		2133
+nim	formatParams	openparser/mime.html#formatParams,seq[MimeParam]	proc formatParams(params: seq[MimeParam]): string		2150
+nim	formatContentType	openparser/mime.html#formatContentType,MimeContentType	proc formatContentType(ct: MimeContentType): string		2169
+nim	formatDisposition	openparser/mime.html#formatDisposition,MimeDisposition	proc formatDisposition(d: MimeDisposition): string		2172
+nim	generateBoundary	openparser/mime.html#generateBoundary	proc generateBoundary(): string		2177
+nim	writePart	openparser/mime.html#writePart,MimePart,MimeOptions,int	proc writePart(part: MimePart; opts: MimeOptions = defaultMimeOptions(); depth = 0): string		2183
+nim	writeMessage	openparser/mime.html#writeMessage,MimeMessage,MimeOptions,int	proc writeMessage(msg: MimeMessage; opts: MimeOptions = defaultMimeOptions();\n             depth = 0): string		2185
+nim	writePartHeadersOnly	openparser/mime.html#writePartHeadersOnly,MimePart,MimeOptions	proc writePartHeadersOnly(part: MimePart; opts: MimeOptions = defaultMimeOptions()): string		2187
+nim	writePartBodyOnly	openparser/mime.html#writePartBodyOnly,MimePart,MimeOptions,int	proc writePartBodyOnly(part: MimePart; opts: MimeOptions = defaultMimeOptions();\n                  depth = 0): string		2189
+nim	toMime	openparser/mime.html#toMime,MimeMessage,MimeOptions	proc toMime(msg: MimeMessage; opts: MimeOptions = defaultMimeOptions()): string		2375
+nim	writeMimeFile	openparser/mime.html#writeMimeFile,string,MimeMessage,MimeOptions	proc writeMimeFile(path: string; msg: MimeMessage;\n              opts: MimeOptions = defaultMimeOptions())		2380
+nim	newTextPart	openparser/mime.html#newTextPart,string,string,string	proc newTextPart(text: string; mediaSubtype = "plain"; charset = "utf-8";\n            transferEncoding = teQuotedPrintable): MimePart		2389
+nim	toParamValue	openparser/mime.html#toParamValue,string,string	proc toParamValue(name, value: string): MimeParam		2427
+nim	newBinaryPart	openparser/mime.html#newBinaryPart,seq[byte],string,string	proc newBinaryPart(data: seq[byte]; mediaType = "application/octet-stream";\n              filename = ""): MimePart		2436
+nim	newMultipart	openparser/mime.html#newMultipart,string,seq[MimePart],MimeOptions	proc newMultipart(subtype = "mixed"; parts: seq[MimePart] = @[];\n             opts: MimeOptions = defaultMimeOptions()): MimePart		2494
+nim	newForwardedMessage	openparser/mime.html#newForwardedMessage,MimeMessage	proc newForwardedMessage(msg: MimeMessage): MimePart		2510
+nim	isMimeBody	openparser/mime.html#isMimeBody,MimePart	proc isMimeBody(part: MimePart): bool		2521
+nim	ensureMimeDefaults	openparser/mime.html#ensureMimeDefaults,MimeMessage,string	proc ensureMimeDefaults(msg: MimeMessage; idDomain = "")		2534
+nim	newMessage	openparser/mime.html#newMessage,MimePart,seq[MimeMailbox],seq[MimeAddress],string	proc newMessage(body: MimePart = nil; fromAddrs: seq[MimeMailbox] = @[];\n           toAddrs: seq[MimeAddress] = @[]; subject = ""; withDefaults = true): MimeMessage		2553
