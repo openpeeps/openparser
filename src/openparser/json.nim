@@ -1461,6 +1461,20 @@ macro fromJsonMacro(x: typed, str: typed): untyped =
       ensureMove(tmp)
     return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockStmtList))
 
+  # Inherited objects only list their own fields in recList; fall back to
+  # generic parseJson so parent fields are preserved.
+  for child in tObj:
+    if child.kind == nnkOfInherit:
+      var inheritStmtList = newStmtList()
+      inheritStmtList.add quote do:
+        var tmp: `t`
+        var parser = JsonParser(lexer: newJsonLexer(`str`))
+        parser.curr = parser.nextToken()
+        parser.next = parser.nextToken()
+        parser.parseJson(tmp)
+        ensureMove(tmp)
+      return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), inheritStmtList))
+
   # Extract fields from the object type
   let recList = tObj[2]
   var fields: seq[(string, string, int)] # (fieldName, wireName, hash)
@@ -1687,6 +1701,20 @@ macro fromJsonMacroOpts(x: typed, str: typed, opts: JsonOptions): untyped =
       parser.parseJson(tmp)
       ensureMove(tmp)
     return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), blockStmtList))
+
+  # Inherited objects only list their own fields in recList; fall back to
+  # generic parseJson so parent fields are preserved.
+  for child in tObj:
+    if child.kind == nnkOfInherit:
+      var inheritStmtList = newStmtList()
+      inheritStmtList.add quote do:
+        var tmp: `t`
+        var parser = JsonParser(lexer: newJsonLexer(`str`), options: `opts`)
+        parser.curr = parser.nextToken()
+        parser.next = parser.nextToken()
+        parser.parseJson(tmp)
+        ensureMove(tmp)
+      return newStmtList().add(newBlockStmt(genSym(nskLabel, "voodoo"), inheritStmtList))
 
   let recList = tObj[2]
   var fields: seq[(string, string, int)]
@@ -1916,6 +1944,14 @@ macro toJsonNodeMacro(v: typed): JsonNode =
   if tObj == nil or tObj.kind != nnkObjectTy:
     return quote do:
       fromJson(toJson(`v`))
+
+  # Inherited objects only list their own fields in recList; fall back to
+  # the string round-trip so parent fields are preserved (x86 `-mavx2`
+  # builds hit this via ActivityPub `object of ...` types returning `{}`).
+  for child in tObj:
+    if child.kind == nnkOfInherit:
+      return quote do:
+        fromJson(toJson(`v`))
 
   let recList = tObj[2]
   # Check for variant objects - fall back for now

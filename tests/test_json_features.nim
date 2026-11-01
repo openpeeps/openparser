@@ -150,3 +150,28 @@ suite "Combined maxDepth and pragma":
     let opts = JsonOptions(maxDepth: 2)
     expect(OpenParserJsonError):
       discard fromJson(deepJson, opts)
+
+# ── Inherited objects round-trip ─────────────────────────────────────────────
+# `toJsonNode`/`fromJson` macros must include parent fields for
+# `object of Parent` types (previously produced/parsed `{}`).
+
+type
+  BaseDoc = object of RootObj
+    id*: string
+    kind*: string
+  ArticleDoc = object of BaseDoc
+    title*: string
+
+suite "Inherited objects":
+  test "toJsonNode includes parent fields":
+    let a = ArticleDoc(id: "1", kind: "Article", title: "Hello")
+    let node = toJsonNode(a)
+    check node["id"].getStr == "1"
+    check node["kind"].getStr == "Article"
+    check node["title"].getStr == "Hello"
+
+  test "fromJson parses parent fields":
+    let a = fromJson("""{"id":"1","kind":"Article","title":"Hello"}""", ArticleDoc)
+    check a.id == "1"
+    check a.kind == "Article"
+    check a.title == "Hello"
