@@ -229,7 +229,7 @@ let config: ServerConfig = parseTOML(toml, ServerConfig)
 echo config.port  # 8080
 ```
 
-**Features:** Sections, inline tables, arrays of tables, all four date/time types, radix integers, `inf`/`nan`, full escape and unicode-escape support, lossless `dumpTOML` round-trips, `parseHook`/`dumpHook`, direct-to-object parsing.
+**Features:** Sections, inline tables, arrays of tables, all four date/time types, radix integers, `inf`/`nan`, full escape and unicode-escape support, lossless `dumpTOML` round-trips, `parseHook`/`dumpHook` for custom types, `renameHook` field mapping with `{.toml.}` pragma, `currentField` context, `skipValue`, `TomlOptions` (`maxDepth`, `skipUnknownFields`), direct-to-object parsing for `Option`, `enum`, `seq`/`array`/`set`, `tuple`, `Table`/`OrderedTable`/`CritBitTree`, `distinct`, `DateTime`, `JsonNode`/`TomlNode`, typed `toToml`/`dumpTOML`/`toStaticToml` and file helpers.
 
 TOML has four distinct date/time types and only the offset form names an absolute
 instant, so a parsed node keeps the literal it came from:
@@ -897,9 +897,9 @@ echo styled.root.children[0].common.styleDecls[0].property  # fill
 | Zero-copy / Memfiles | x | | x | | x |  |
 | Direct-to-object | x | x | x | x | | x |
 | `parseHook` / `dumpHook` | x | x | x | x | | x |
-| `renameHook` | x | x | x | | | x |
-| `currentField` context | x | x | x | | | x |
-| `skipValue` | x | x | x | | |  |
+| `renameHook` | x | x | x | x | | x |
+| `currentField` context | x | x | x | x | | x |
+| `skipValue` | x | x | x | x | |  |
 | `XmlNode` / `JsonNode` tree | x | x | x | x | | x |
 | SIMD acceleration | x | | x | | |  |
 | Context-aware errors | x | x | x | x | x | x |

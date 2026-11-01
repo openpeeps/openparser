@@ -14,7 +14,7 @@
 ## Parsing to pre-defined Toml AST nodes is supported as well, so you can work with
 ## a structured representation of the TOML document if you need more control or want to
 ## implement custom validation rules beyond what the direct-to-struct parsing provides
-import std/[strutils, tables, sets, unicode, times]
+import std/[strutils, tables, sets, unicode, times, options, critbits, typetraits, macros]
 import ./private/types
 import ./json
 
@@ -753,11 +753,26 @@ type
   TomlDocument* = TomlNode
     ## The root of a TOML document is a table mapping keys to values
 
+  TomlOptions* = ref object
+    ## Options controlling typed TOML mapping.
+    maxDepth*: int = 0
+      ## Maximum nesting depth for objects/arrays. 0 means no limit.
+    skipUnknownFields*: bool = true
+      ## When true (default) unknown table keys are ignored, mirroring
+      ## `json.JsonOptions.skipUnknownFields`. When false they raise.
+
   TomlParser* = object
     ## The TomlParser takes a TomlLexer and produces a Nim data structure
     ## representing the TOML content
     lex*: TomlLexer
     curr*: TomlToken
+    currentField*: Option[string]
+      ## Name of the field currently being parsed, for context-aware
+      ## `parseHook`s. Set before each field/element value is parsed.
+    options*: TomlOptions
+      ## Runtime options (max depth, unknown-field handling).
+    depth*: int
+      ## Current nesting depth, enforced against `options.maxDepth`.
     strictLines*: bool
     ## Set while reading an inline table, where TOML v1.0.0 forbids any newline
     ## between the braces.
@@ -776,6 +791,22 @@ type
     arraysOfTables*: HashSet[string]
     ## Dotted paths that are arrays of tables created by a `[[header]]`, as
     ## opposed to inline arrays. Only the former may be appended to.
+
+template toml*(name: static[string]) {.pragma.}
+  ## Field mapping pragma. `name {.toml: "wireName".}: string`.
+  ## `renameHook` supersedes this pragma. `{.json.}` is accepted as fallback.
+
+template skippable*() {.pragma.}
+  ## Marks a field skippable (API parity with `json`).
+
+const
+  tomlErrorMaxDepth* = "Maximum nesting depth exceeded"
+  tomlErrorUnexpected* = "Unexpected token `$1`"
+
+proc checkMaxDepth(p: var TomlParser) =
+  if p.options != nil and p.options.maxDepth > 0:
+    if p.depth > p.options.maxDepth:
+      raise newException(OpenParserTomlError, tomlErrorMaxDepth)
 
 proc newTomlString*(s: string): TomlNode =
   ## Helper to create a TomlNode of kind string
@@ -1277,6 +1308,232 @@ proc parseHook*(p: var TomlParser, v: var TomlNode) =
   else:
     p.error("Expected a value, got " & $p.curr.kind)
 
+#
+# Streaming typed hooks (value position) + context helpers
+#
+
+proc skipValue*(p: var TomlParser) =
+  ## Skip a single TOML value, leaving `curr` at the following delimiter.
+  var tmp: TomlNode
+  p.parseHook(tmp)
+
+proc parseHook*(p: var TomlParser, v: var string) =
+  if p.curr.kind != ttkString:
+    p.error("Expected a TOML string, got " & $p.curr.kind)
+  v = p.curr.value
+  p.advance(tcKey)
+
+proc parseHook*(p: var TomlParser, v: var bool) =
+  if p.curr.kind != ttkBoolean:
+    p.error("Expected a TOML boolean, got " & $p.curr.kind)
+  v = p.curr.value == "true"
+  p.advance(tcKey)
+
+proc parseHook*[T: Integers](p: var TomlParser, v: var T) =
+  if p.curr.kind != ttkInteger:
+    p.error("Expected a TOML integer, got " & $p.curr.kind)
+  let raw = p.curr.value
+  p.advance(tcKey)
+  try:
+    v = T(parseIntValue(raw))
+  except RangeDefect:
+    raise newException(OpenParserTomlError, "Integer out of range")
+  except OpenParserTomlError as e:
+    raise e
+
+proc parseHook*[T: float|float32|float64](p: var TomlParser, v: var T) =
+  case p.curr.kind
+  of ttkFloat:
+    let raw = p.curr.value
+    p.advance(tcKey)
+    v = T(parseFloatValue(raw))
+  of ttkInteger:
+    let raw = p.curr.value
+    p.advance(tcKey)
+    v = T(parseIntValue(raw))
+  else:
+    p.error("Expected a TOML float, got " & $p.curr.kind)
+
+proc parseHook*(p: var TomlParser, v: var DateTime) =
+  if p.curr.kind != ttkDateTime:
+    p.error("Expected a TOML date/time, got " & $p.curr.kind)
+  let raw = p.curr.value
+  let lexCopy = p.lex
+  v = parseDateTimeToken(lexCopy, raw).dateTimeVal
+  p.advance(tcKey)
+
+proc parseHook*[T: enum](p: var TomlParser, v: var T) =
+  case p.curr.kind
+  of ttkString:
+    let s = p.curr.value
+    p.advance(tcKey)
+    try:
+      v = strutils.parseEnum[T](s)
+    except ValueError:
+      p.error("Cannot parse `" & s & "` as " & $T)
+  of ttkInteger:
+    let raw = p.curr.value
+    p.advance(tcKey)
+    v = T(parseIntValue(raw))
+  else:
+    p.error("Expected a string or integer for enum, got " & $p.curr.kind)
+
+proc parseHook*[T: distinct](p: var TomlParser, v: var T) =
+  var tmp: T.distinctBase
+  p.parseHook(tmp)
+  v = T(tmp)
+
+proc parseHook*(p: var TomlParser, v: var char) =
+  if p.curr.kind == ttkString and p.curr.value.len == 1:
+    v = p.curr.value[0]
+    p.advance(tcKey)
+  elif p.curr.kind == ttkInteger:
+    let raw = p.curr.value
+    p.advance(tcKey)
+    v = char(parseIntValue(raw))
+  else:
+    p.error("Expected a single-character string, got " & $p.curr.kind)
+
+proc parseHook*[T](p: var TomlParser, v: var seq[T]) =
+  inc p.depth
+  checkMaxDepth(p)
+  defer: dec p.depth
+  if p.curr.kind != ttkLB:
+    p.error("Expected a TOML array, got " & $p.curr.kind)
+  let outerStrict = p.strictLines
+  p.strictLines = false
+  p.advance(tcValue)
+  v.setLen(0)
+  if p.curr.kind != ttkRB:
+    while true:
+      var item: T
+      p.parseHook(item)
+      v.add(item)
+      if p.curr.kind == ttkComma:
+        p.advance(tcValue)
+        if p.curr.kind == ttkRB:
+          break
+      elif p.curr.kind == ttkRB:
+        break
+      else:
+        p.error("Expected `,` or `]` in an array, got " & $p.curr.kind)
+  p.advance(tcKey)
+  p.strictLines = outerStrict
+
+proc parseHook*[N: static[int]; T](p: var TomlParser, v: var array[N, T]) =
+  inc p.depth
+  checkMaxDepth(p)
+  defer: dec p.depth
+  if p.curr.kind != ttkLB:
+    p.error("Expected a TOML array, got " & $p.curr.kind)
+  let outerStrict = p.strictLines
+  p.strictLines = false
+  p.advance(tcValue)
+  var idx = 0
+  if p.curr.kind != ttkRB:
+    while true:
+      if idx >= N:
+        p.error("Sequence has more items than array size (" & $N & ")")
+      var item: T
+      p.parseHook(item)
+      v[idx] = item
+      inc idx
+      if p.curr.kind == ttkComma:
+        p.advance(tcValue)
+        if p.curr.kind == ttkRB:
+          break
+      elif p.curr.kind == ttkRB:
+        break
+      else:
+        p.error("Expected `,` or `]` in an array, got " & $p.curr.kind)
+  p.advance(tcKey)
+  p.strictLines = outerStrict
+  if idx < N:
+    p.error("Sequence has fewer items (" & $idx & ") than array size (" & $N & ")")
+
+proc parseHook*[T](p: var TomlParser, v: var set[T]) =
+  inc p.depth
+  checkMaxDepth(p)
+  defer: dec p.depth
+  v = {}
+  if p.curr.kind != ttkLB:
+    p.error("Expected a TOML array, got " & $p.curr.kind)
+  let outerStrict = p.strictLines
+  p.strictLines = false
+  p.advance(tcValue)
+  if p.curr.kind != ttkRB:
+    while true:
+      var item: T
+      p.parseHook(item)
+      v.incl(item)
+      if p.curr.kind == ttkComma:
+        p.advance(tcValue)
+        if p.curr.kind == ttkRB:
+          break
+      elif p.curr.kind == ttkRB:
+        break
+      else:
+        p.error("Expected `,` or `]` in an array, got " & $p.curr.kind)
+  p.advance(tcKey)
+  p.strictLines = outerStrict
+
+proc parseHook*[T](p: var TomlParser, v: var Option[T]) =
+  var tmp: T
+  p.parseHook(tmp)
+  v = some(tmp)
+
+proc tomlNodeToJson(n: TomlNode): JsonNode =
+  case n.kind
+  of tvkString: result = newJString(n.strVal)
+  of tvkInteger: result = newJInt(n.intVal)
+  of tvkFloat: result = newJFloat(n.floatVal)
+  of tvkBoolean: result = newJBool(n.boolVal)
+  of tvkDateTime: result = newJString(n.dateRaw)
+  of tvkArray:
+    result = newJArray()
+    for item in n.arrayVal:
+      result.add(tomlNodeToJson(item))
+  of tvkTable:
+    result = newJObject()
+    for k, val in n.tableVal:
+      result[k] = tomlNodeToJson(val)
+
+proc jsonNodeToToml(j: JsonNode): TomlNode =
+  case j.kind
+  of JNull: result = newTomlString("")
+  of JBool: result = newTomlBoolean(j.getBool())
+  of JInt: result = newTomlInteger(j.getInt().int64)
+  of JFloat: result = newTomlFloat(j.getFloat())
+  of JString:
+    # Try datetime round-trip when the string looks like a TOML datetime,
+    # otherwise keep it a plain string.
+    try:
+      var lp = TomlParser(lex: newTomlLexer("v = " & j.getStr()))
+      lp.curr = lp.nextToken(tcKey)
+      discard lp.keyPath()
+      lp.expectEquals()
+      var tmp: TomlNode
+      lp.parseHook(tmp)
+      if tmp != nil and tmp.kind == tvkDateTime:
+        result = tmp
+      else:
+        result = newTomlString(j.getStr())
+    except CatchableError:
+      result = newTomlString(j.getStr())
+  of JArray:
+    result = newTomlArray()
+    for item in j.elems:
+      result.arrayVal.add(jsonNodeToToml(item))
+  of JObject:
+    result = newTomlTable()
+    for k, val in j.fields:
+      result.tableVal[k] = jsonNodeToToml(val)
+
+proc parseHook*(p: var TomlParser, v: var JsonNode) =
+  var node: TomlNode
+  p.parseHook(node)
+  v = tomlNodeToJson(node)
+
 proc parseObjectInto(p: var TomlParser, target: TomlNode) =
   ## Parse key = value entries into `target`, stopping at a table header or EOF.
   while p.curr.kind != ttkEOF and p.curr.kind != ttkLB:
@@ -1440,10 +1697,228 @@ proc parseTOMLFile*(filename: string): TomlDocument =
 # Typed mapping API
 #
 
+proc fromTomlNode[T](n: TomlNode, v: var T, path: string,
+    p: var TomlParser, hasParser: bool)
+proc fromTomlNodeTable[T](n: TomlNode, v: var T, path: string,
+    p: var TomlParser, hasParser: bool)
+
+macro copyTomlFieldsBeforeRecCase(dst, src: typed): untyped =
+  var typ = dst.getTypeImpl()
+  while typ.kind != nnkObjectTy:
+    typ = typ[0].getTypeImpl()
+  let recList = typ[nnkRecList]
+  result = newStmtList()
+  for n in recList:
+    if n.kind == nnkRecCase:
+      break
+    case n.kind
+    of nnkIdentDefs:
+      for i in 0 ..< n.len - 2:
+        let field = n[i]
+        result.add quote do:
+          `dst`.`field` = `src`.`field`
+    of nnkSym:
+      let field = n
+      result.add quote do:
+        `dst`.`field` = `src`.`field`
+    else:
+      discard
+
+proc tomlSkipUnknown(p: TomlParser): bool =
+  if p.options == nil: true else: p.options.skipUnknownFields
+
+proc dumpTomlValue*(n: TomlNode): string
+
+proc fromTomlNode[T](n: TomlNode, v: var Option[T], path: string,
+    p: var TomlParser, hasParser: bool)
+proc fromTomlNode[T](n: TomlNode, v: var set[T], path: string,
+    p: var TomlParser, hasParser: bool)
+proc fromTomlNode[K: string, V](n: TomlNode, v: var Table[K, V], path: string,
+    p: var TomlParser, hasParser: bool)
+proc fromTomlNode[K: string, V](n: TomlNode, v: var OrderedTable[K, V],
+    path: string, p: var TomlParser, hasParser: bool)
+proc fromTomlNode[K: string, V](n: TomlNode, v: var TableRef[K, V],
+    path: string, p: var TomlParser, hasParser: bool)
+proc fromTomlNode[K: string, V](n: TomlNode, v: var OrderedTableRef[K, V],
+    path: string, p: var TomlParser, hasParser: bool)
+proc fromTomlNode[T](n: TomlNode, v: var CritBitTree[T], path: string,
+    p: var TomlParser, hasParser: bool)
+
+proc fromTomlNode[T](n: TomlNode, v: var Option[T], path: string,
+    p: var TomlParser, hasParser: bool) =
+  if n == nil:
+    return
+  var inner: T
+  fromTomlNode(n, inner, path, p, hasParser)
+  v = some(inner)
+
+proc fromTomlNode[T](n: TomlNode, v: var set[T], path: string,
+    p: var TomlParser, hasParser: bool) =
+  if n == nil or n.kind != tvkArray:
+    raise newException(OpenParserTomlError,
+      "Expected a TOML array at `" & path & "`")
+  v = {}
+  for i, item in n.arrayVal:
+    var e: T
+    fromTomlNode(item, e, path & "[" & $i & "]", p, hasParser)
+    v.incl(e)
+
+proc fromTomlNode[K: string, V](n: TomlNode, v: var Table[K, V], path: string,
+    p: var TomlParser, hasParser: bool) =
+  if n == nil or n.kind != tvkTable:
+    raise newException(OpenParserTomlError,
+      "Expected a TOML table at `" & path & "`")
+  v = initTable[K, V]()
+  for k, val in n.tableVal:
+    var tmp: V
+    let child = if path.len == 0: k else: path & "." & k
+    if hasParser:
+      p.currentField = some(k)
+    fromTomlNode(val, tmp, child, p, hasParser)
+    v[k] = tmp
+
+proc fromTomlNode[K: string, V](n: TomlNode, v: var OrderedTable[K, V],
+    path: string, p: var TomlParser, hasParser: bool) =
+  if n == nil or n.kind != tvkTable:
+    raise newException(OpenParserTomlError,
+      "Expected a TOML table at `" & path & "`")
+  v = initOrderedTable[K, V]()
+  for k, val in n.tableVal:
+    var tmp: V
+    let child = if path.len == 0: k else: path & "." & k
+    if hasParser:
+      p.currentField = some(k)
+    fromTomlNode(val, tmp, child, p, hasParser)
+    v[k] = tmp
+
+proc fromTomlNode[K: string, V](n: TomlNode, v: var TableRef[K, V],
+    path: string, p: var TomlParser, hasParser: bool) =
+  if n == nil or n.kind != tvkTable:
+    raise newException(OpenParserTomlError,
+      "Expected a TOML table at `" & path & "`")
+  if v.isNil:
+    v = newTable[K, V]()
+  else:
+    v[].clear()
+  for k, val in n.tableVal:
+    var tmp: V
+    let child = if path.len == 0: k else: path & "." & k
+    if hasParser:
+      p.currentField = some(k)
+    fromTomlNode(val, tmp, child, p, hasParser)
+    v[k] = tmp
+
+proc fromTomlNode[K: string, V](n: TomlNode, v: var OrderedTableRef[K, V],
+    path: string, p: var TomlParser, hasParser: bool) =
+  if n == nil or n.kind != tvkTable:
+    raise newException(OpenParserTomlError,
+      "Expected a TOML table at `" & path & "`")
+  if v.isNil:
+    v = newOrderedTable[K, V]()
+  else:
+    v[].clear()
+  for k, val in n.tableVal:
+    var tmp: V
+    let child = if path.len == 0: k else: path & "." & k
+    if hasParser:
+      p.currentField = some(k)
+    fromTomlNode(val, tmp, child, p, hasParser)
+    v[k] = tmp
+
+proc fromTomlNode[T](n: TomlNode, v: var CritBitTree[T], path: string,
+    p: var TomlParser, hasParser: bool) =
+  if n == nil or n.kind != tvkTable:
+    raise newException(OpenParserTomlError,
+      "Expected a TOML table at `" & path & "`")
+  when compiles(v.clear()):
+    v.clear()
+  for k, val in n.tableVal:
+    var tmp: T
+    let child = if path.len == 0: k else: path & "." & k
+    if hasParser:
+      p.currentField = some(k)
+    fromTomlNode(val, tmp, child, p, hasParser)
+    v[k] = tmp
+
+proc fromTomlNodeTable[T](n: TomlNode, v: var T, path: string, p: var TomlParser,
+    hasParser: bool) =
+  ## Shared object mapping with renameHook/currentField/skipUnknown support.
+  ## Iterates document keys (like json's parseObjectHook) so variant
+  ## discriminators are handled before field matching and never passed as `var`.
+  if n == nil or n.kind != tvkTable:
+    raise newException(OpenParserTomlError,
+      "Expected a TOML table at `" & path & "`")
+  when isObjectVariant(v):
+    const discName = discriminatorFieldName(v)
+    var discNode: TomlNode = nil
+    for k, val in n.tableVal:
+      var wk = k
+      when compiles(renameHook(v, wk)):
+        renameHook(v, wk)
+      if wk == discName:
+        discNode = val
+        break
+    if discNode != nil:
+      var d: typeof(discriminatorField(v))
+      if hasParser:
+        p.currentField = some(discName)
+      fromTomlNode(discNode, d, if path.len == 0: discName else: path & "." & discName, p, hasParser)
+      let prev = v
+      new(v, d)
+      copyTomlFieldsBeforeRecCase(v, prev)
+  for k, val in n.tableVal:
+    var wk = k
+    when compiles(renameHook(v, wk)):
+      renameHook(v, wk)
+    when isObjectVariant(v):
+      if wk == discriminatorFieldName(v):
+        continue
+    var matched = false
+    for fieldName, fieldVal in v.fieldPairs:
+      if wk == fieldName:
+        let child = if path.len == 0: fieldName else: path & "." & fieldName
+        if hasParser:
+          p.currentField = some(fieldName)
+          inc p.depth
+          checkMaxDepth(p)
+        try:
+          when compiles(fromTomlNode(val, fieldVal, child, p, hasParser)):
+            fromTomlNode(val, fieldVal, child, p, hasParser)
+          else:
+            var tmp: typeof(fieldVal)
+            fromTomlNode(val, tmp, child, p, hasParser)
+            when compiles(fieldVal = tmp):
+              fieldVal = tmp
+        finally:
+          if hasParser:
+            dec p.depth
+        matched = true
+        break
+    if not matched:
+      if hasParser and not tomlSkipUnknown(p):
+        raise newException(OpenParserTomlError,
+          "Unknown field `" & k & "` at `" & path & "`")
+      # Unknown keys ignored by default; missing keys keep defaults.
+
 proc fromTomlNode[T](n: TomlNode, v: var T, path: string) =
   ## Map a single `TomlNode` into `v`. `path` is the dotted key path used
   ## in error messages.
-  when T is string:
+  var dummy = TomlParser()
+  fromTomlNode(n, v, path, dummy, false)
+
+proc fromTomlNode[T](n: TomlNode, v: var T, path: string, p: var TomlParser) =
+  fromTomlNode(n, v, path, p, true)
+
+proc fromTomlNode[T](n: TomlNode, v: var T, path: string, p: var TomlParser,
+    hasParser: bool) =
+  when T is TomlNode:
+    v = n
+  elif T is JsonNode:
+    if n == nil:
+      v = newJNull()
+    else:
+      v = tomlNodeToJson(n)
+  elif T is string:
     if n == nil or n.kind != tvkString:
       raise newException(OpenParserTomlError,
         "Expected a TOML string at `" & path & "`")
@@ -1453,11 +1928,42 @@ proc fromTomlNode[T](n: TomlNode, v: var T, path: string) =
       raise newException(OpenParserTomlError,
         "Expected a TOML boolean at `" & path & "`")
     v = n.boolVal
+  elif T is char:
+    if n == nil:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML string at `" & path & "`")
+    case n.kind
+    of tvkString:
+      if n.strVal.len != 1:
+        raise newException(OpenParserTomlError,
+          "Expected a single character at `" & path & "`")
+      v = n.strVal[0]
+    of tvkInteger:
+      v = char(n.intVal)
+    else:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML string at `" & path & "`")
   elif T is DateTime:
     if n == nil or n.kind != tvkDateTime:
       raise newException(OpenParserTomlError,
         "Expected a TOML date/time at `" & path & "`")
     v = n.dateTimeVal
+  elif T is enum:
+    if n == nil:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML string or integer at `" & path & "`")
+    case n.kind
+    of tvkString:
+      try:
+        v = strutils.parseEnum[T](n.strVal)
+      except ValueError:
+        raise newException(OpenParserTomlError,
+          "Cannot parse `" & n.strVal & "` as " & $T & " at `" & path & "`")
+    of tvkInteger:
+      v = T(n.intVal)
+    else:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML string or integer at `" & path & "`")
   elif T is SomeInteger:
     if n == nil or n.kind != tvkInteger:
       raise newException(OpenParserTomlError,
@@ -1484,30 +1990,171 @@ proc fromTomlNode[T](n: TomlNode, v: var T, path: string) =
       raise newException(OpenParserTomlError,
         "Expected a TOML array at `" & path & "`")
     v.setLen(0)
+    if hasParser:
+      inc p.depth
+      checkMaxDepth(p)
+    try:
+      for i, item in n.arrayVal:
+        var e: typeof(v[0])
+        if hasParser:
+          p.currentField = some("[" & $i & "]")
+        fromTomlNode(item, e, path & "[" & $i & "]", p, hasParser)
+        v.add(e)
+    finally:
+      if hasParser:
+        dec p.depth
+  elif T is array:
+    if n == nil or n.kind != tvkArray:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML array at `" & path & "`")
+    if n.arrayVal.len != len(v):
+      raise newException(OpenParserTomlError,
+        "Sequence has " & $n.arrayVal.len & " items, expected " & $len(v) &
+        " at `" & path & "`")
     for i, item in n.arrayVal:
-      var e: typeof(v[0])  # unevaluated; safe on the empty seq
-      fromTomlNode(item, e, path & "[" & $i & "]")
-      v.add(e)
+      fromTomlNode(item, v[i], path & "[" & $i & "]", p, hasParser)
+  elif T is tuple:
+    if n == nil or n.kind != tvkTable:
+      raise newException(OpenParserTomlError,
+        "Expected a TOML table at `" & path & "`")
+    for fieldName, fieldVal in v.fieldPairs:
+      for k, val in n.tableVal:
+        var wk = k
+        when compiles(renameHook(v, wk)):
+          renameHook(v, wk)
+        if wk == fieldName:
+          let child = if path.len == 0: fieldName else: path & "." & fieldName
+          if hasParser:
+            p.currentField = some(fieldName)
+          fromTomlNode(val, fieldVal, child, p, hasParser)
+          break
+    if hasParser and not tomlSkipUnknown(p):
+      for k in n.tableVal.keys:
+        var wk = k
+        when compiles(renameHook(v, wk)):
+          renameHook(v, wk)
+        var found = false
+        for fName, fVal in v.fieldPairs:
+          if wk == fName:
+            found = true
+            break
+        if not found:
+          raise newException(OpenParserTomlError,
+            "Unknown field `" & k & "` at `" & path & "`")
   elif T is (ref object):
     if n == nil or n.kind != tvkTable:
       raise newException(OpenParserTomlError,
         "Expected a TOML table at `" & path & "`")
     if v.isNil:
       new(v)
-    for fieldName, fieldVal in v[].fieldPairs:
-      if n.tableVal.hasKey(fieldName):
-        let child = if path.len == 0: fieldName else: path & "." & fieldName
-        fromTomlNode(n.tableVal[fieldName], fieldVal, child)
+    fromTomlNodeTable(n, v[], path, p, hasParser)
   elif T is object:
-    if n == nil or n.kind != tvkTable:
-      raise newException(OpenParserTomlError,
-        "Expected a TOML table at `" & path & "`")
-    for fieldName, fieldVal in v.fieldPairs:
-      if n.tableVal.hasKey(fieldName):
-        let child = if path.len == 0: fieldName else: path & "." & fieldName
-        fromTomlNode(n.tableVal[fieldName], fieldVal, child)
+    fromTomlNodeTable(n, v, path, p, hasParser)
   else:
-    {.error: "fromToml: unsupported field type".}
+    # Custom-type bridge: try streaming parseHook via a temp document.
+    when compiles((var tmpP = TomlParser(); parseHook(tmpP, v))):
+      if n == nil:
+        raise newException(OpenParserTomlError,
+          "Expected a value at `" & path & "`")
+      var snippet = "tmp = " & dumpTomlValue(n)
+      var tmpP = TomlParser(lex: newTomlLexer(snippet), options: p.options)
+      tmpP.curr = tmpP.nextToken(tcKey)
+      discard tmpP.keyPath()
+      tmpP.expectEquals()
+      if hasParser:
+        tmpP.currentField = p.currentField
+        tmpP.depth = p.depth
+      tmpP.parseHook(v)
+    else:
+      {.error: "fromToml: unsupported field type".}
+
+proc fromTomlNode[T](n: TomlNode, v: var Option[T], path: string) =
+  if n == nil:
+    return
+  var dummy = TomlParser()
+  var inner: T
+  fromTomlNode(n, inner, path, dummy, false)
+  v = some(inner)
+
+proc fromTomlNode[T](n: TomlNode, v: var set[T], path: string) =
+  var dummy = TomlParser()
+  fromTomlNode(n, v, path, dummy, false)
+
+proc fromTomlNode[K: string, V](n: TomlNode, v: var Table[K, V], path: string) =
+  var dummy = TomlParser()
+  fromTomlNode(n, v, path, dummy, false)
+
+proc fromTomlNode[K: string, V](n: TomlNode, v: var OrderedTable[K, V],
+    path: string) =
+  var dummy = TomlParser()
+  fromTomlNode(n, v, path, dummy, false)
+
+proc fromTomlNode[K: string, V](n: TomlNode, v: var TableRef[K, V],
+    path: string) =
+  var dummy = TomlParser()
+  fromTomlNode(n, v, path, dummy, false)
+
+proc fromTomlNode[K: string, V](n: TomlNode, v: var OrderedTableRef[K, V],
+    path: string) =
+  var dummy = TomlParser()
+  fromTomlNode(n, v, path, dummy, false)
+
+proc fromTomlNode[T](n: TomlNode, v: var CritBitTree[T], path: string) =
+  var dummy = TomlParser()
+  fromTomlNode(n, v, path, dummy, false)
+
+proc parseHook*[T: tuple](p: var TomlParser, v: var T) =
+  inc p.depth
+  checkMaxDepth(p)
+  defer: dec p.depth
+  if p.curr.kind != ttkLC:
+    p.error("Expected an inline table for tuple, got " & $p.curr.kind)
+  let node = p.parseInlineTable()
+  fromTomlNode(node, v, "", p, true)
+
+proc parseHook*[K: string, V](p: var TomlParser, v: var AnyTable[K, V]) =
+  inc p.depth
+  checkMaxDepth(p)
+  defer: dec p.depth
+  if p.curr.kind != ttkLC:
+    p.error("Expected an inline table, got " & $p.curr.kind)
+  let node = p.parseInlineTable()
+  fromTomlNode(node, v, "", p, true)
+
+proc parseHook*[T](p: var TomlParser, v: var CritBitTree[T]) =
+  inc p.depth
+  checkMaxDepth(p)
+  defer: dec p.depth
+  if p.curr.kind != ttkLC:
+    p.error("Expected an inline table, got " & $p.curr.kind)
+  let node = p.parseInlineTable()
+  fromTomlNode(node, v, "", p, true)
+
+proc parseHook*[T: object](p: var TomlParser, v: var T) =
+  inc p.depth
+  checkMaxDepth(p)
+  defer: dec p.depth
+  if p.curr.kind == ttkLC:
+    let node = p.parseInlineTable()
+    fromTomlNode(node, v, "", p, true)
+  else:
+    let doc = p.parseRoot()
+    fromTomlNode(doc, v, "", p, true)
+
+proc parseHook*[T: ref object](p: var TomlParser, v: var T) =
+  inc p.depth
+  checkMaxDepth(p)
+  defer: dec p.depth
+  if p.curr.kind == ttkLC:
+    if v.isNil:
+      new(v)
+    let node = p.parseInlineTable()
+    fromTomlNode(node, v[], "", p, true)
+  else:
+    let doc = p.parseRoot()
+    if v.isNil:
+      new(v)
+    fromTomlNode(doc, v[], "", p, true)
 
 proc fromToml*[T](doc: TomlDocument, v: var T) =
   ## Map a parsed TOML document into an existing `v`.
@@ -1518,19 +2165,62 @@ proc fromToml*[T](doc: TomlDocument, v: var T) =
     raise newException(OpenParserTomlError, "Expected a TOML table document")
   fromTomlNode(doc, v, "")
 
+proc fromToml*[T](doc: TomlDocument, v: var T, opts: TomlOptions) =
+  var p = TomlParser(options: opts)
+  if doc == nil or doc.kind != tvkTable:
+    raise newException(OpenParserTomlError, "Expected a TOML table document")
+  fromTomlNode(doc, v, "", p, true)
+
 proc parseTOML*[T: object|ref object](p: var TomlParser, v: var T) =
   ## Consume the remaining document from `p` and map it into `v`.
   ## Keys absent from the document keep their current values in `v`.
   let doc = p.parseRoot()
-  fromToml(doc, v)
+  fromTomlNode(doc, v, "", p, true)
 
 proc parseTOML*[T](input: TOML, t: typedesc[T]): T =
-  ## Parses a TOML string into a Nim data structure of type T
-  var parser = TomlParser(lex: newTomlLexer(input))
-  parser.curr = parser.nextToken(tcKey)
-  var tmp: T
-  parser.parseTOML(tmp)
-  result = ensureMove(tmp)
+  ## Parses a TOML string into a Nim data structure of type T.
+  ## Supports objects, seqs, tables and all scalar types, not just objects.
+  when T is TomlNode:
+    return parseTOML(input)
+  elif T is object or T is ref object:
+    var parser = TomlParser(lex: newTomlLexer(input))
+    parser.curr = parser.nextToken(tcKey)
+    var tmp: T
+    parser.parseTOML(tmp)
+    result = ensureMove(tmp)
+  else:
+    # Scalar/seq/table roots: TOML documents must be tables, so wrap
+    # bare values as `value = ...` for uniform handling, except when the
+    # input already looks like a document.
+    let doc = parseTOML(input)
+    fromToml(doc, result)
+
+proc parseTOML*[T](input: TOML, t: typedesc[T], opts: TomlOptions): T =
+  when T is TomlNode:
+    return parseTOML(input)
+  elif T is object or T is ref object:
+    var parser = TomlParser(lex: newTomlLexer(input), options: opts)
+    parser.curr = parser.nextToken(tcKey)
+    var tmp: T
+    let doc = parser.parseRoot()
+    fromToml(doc, tmp, opts)
+    result = ensureMove(tmp)
+  else:
+    let doc = parseTOML(input)
+    fromToml(doc, result, opts)
+
+proc parseTOMLFile*[T](filename: string, t: typedesc[T]): T =
+  parseTOML(readFile(filename), t)
+
+proc parseTOMLFile*[T](filename: string, t: typedesc[T],
+    opts: TomlOptions): T =
+  parseTOML(readFile(filename), t, opts)
+
+proc fromTomlFile*[T](filename: string, v: var T) =
+  fromToml(parseTOMLFile(filename), v)
+
+proc fromTomlFile*[T](filename: string, v: var T, opts: TomlOptions) =
+  fromToml(parseTOMLFile(filename), v, opts)
 
 #
 # Serialization
@@ -1625,3 +2315,332 @@ proc dumpTOML*(doc: TomlDocument): string =
       s.add("}")
   result = ""
   dumpTable(doc, result, @[], false)
+
+proc dumpTomlValue*(n: TomlNode): string =
+  ## Dump a single TOML value (not a full document) to its literal form.
+  ## Used by custom `parseHook` bridging and `dumpHook`.
+  if n == nil:
+    return ""
+  proc esc(s: string): string =
+    result = newStringOfCap(s.len + 2)
+    for c in s:
+      if c in {'\0'..'\x1F', '\x7F'}:
+        case c
+        of '\b': result.add("\\b")
+        of '\t': result.add("\\t")
+        of '\n': result.add("\\n")
+        of '\f': result.add("\\f")
+        of '\r': result.add("\\r")
+        else: result.add("\\u" & $c.ord.toHex(4).toUpperAscii())
+      elif c == '"': result.add("\\\"")
+      elif c == '\\': result.add("\\\\")
+      else: result.add(c)
+  proc bare(k: string): bool =
+    if k.len == 0: return false
+    for c in k:
+      if c notin bareKeyChars: return false
+    true
+  proc qk(k: string): string =
+    if bare(k): k else: "\"" & esc(k) & "\""
+  proc val(v: TomlNode, s: var string) =
+    case v.kind
+    of tvkString: s.add("\"" & esc(v.strVal) & "\"")
+    of tvkInteger: s.add($v.intVal)
+    of tvkFloat: s.add($v.floatVal)
+    of tvkBoolean: s.add($v.boolVal)
+    of tvkDateTime: s.add(v.dateRaw)
+    of tvkArray:
+      s.add("[")
+      for i, item in v.arrayVal:
+        if i > 0: s.add(", ")
+        val(item, s)
+      s.add("]")
+    of tvkTable:
+      s.add("{")
+      var first = true
+      for kk, vv in v.tableVal:
+        if not first: s.add(", ")
+        first = false
+        s.add(qk(kk) & " = ")
+        val(vv, s)
+      s.add("}")
+  val(n, result)
+
+proc toTomlNode*[T](v: T): TomlNode
+proc toTomlNodeTable[T](v: T): TomlNode
+
+proc toTomlNode*[T](v: Option[T]): TomlNode =
+  if v.isNone:
+    result = nil
+  else:
+    result = toTomlNode(v.get())
+
+proc toTomlNode*[T](v: set[T]): TomlNode =
+  result = newTomlArray()
+  for item in v:
+    let node = toTomlNode(item)
+    if node != nil:
+      result.arrayVal.add(node)
+
+proc toTomlNode*[K: string, V](v: Table[K, V]): TomlNode =
+  result = newTomlTable()
+  for k, item in v:
+    let node = toTomlNode(item)
+    if node != nil:
+      result.tableVal[k] = node
+
+proc toTomlNode*[K: string, V](v: OrderedTable[K, V]): TomlNode =
+  result = newTomlTable()
+  for k, item in v:
+    let node = toTomlNode(item)
+    if node != nil:
+      result.tableVal[k] = node
+
+proc toTomlNode*[K: string, V](v: TableRef[K, V]): TomlNode =
+  result = newTomlTable()
+  if not v.isNil:
+    for k, item in v[]:
+      let node = toTomlNode(item)
+      if node != nil:
+        result.tableVal[k] = node
+
+proc toTomlNode*[K: string, V](v: OrderedTableRef[K, V]): TomlNode =
+  result = newTomlTable()
+  if not v.isNil:
+    for k, item in v[]:
+      let node = toTomlNode(item)
+      if node != nil:
+        result.tableVal[k] = node
+
+proc toTomlNode*[T](v: CritBitTree[T]): TomlNode =
+  result = newTomlTable()
+  for k, item in v:
+    let node = toTomlNode(item)
+    if node != nil:
+      result.tableVal[k] = node
+
+proc toTomlNode*[T](v: T): TomlNode =
+  when T is TomlNode:
+    result = v
+  elif T is JsonNode:
+    result = jsonNodeToToml(v)
+  elif T is string:
+    result = newTomlString(v)
+  elif T is bool:
+    result = newTomlBoolean(v)
+  elif T is char:
+    result = newTomlString($v)
+  elif T is DateTime:
+    result = newTomlDateTime(v)
+  elif T is enum:
+    result = newTomlString($v)
+  elif T is SomeInteger:
+    result = newTomlInteger(int64(v))
+  elif T is SomeFloat:
+    result = newTomlFloat(float64(v))
+  elif T is seq:
+    result = newTomlArray()
+    # Idiomatic TOML: sequences of tables become `[[array-of-tables]]`.
+    when T is seq:
+      when compiles((var e: typeof(v[0]); discard)):
+        discard
+    var allTables = true
+    if v.len == 0:
+      allTables = false
+    else:
+      for item in v:
+        let node = toTomlNode(item)
+        if node == nil or node.kind != tvkTable:
+          allTables = false
+          break
+    if allTables:
+      result.tableArray = true
+    for item in v:
+      let node = toTomlNode(item)
+      if node != nil:
+        result.arrayVal.add(node)
+  elif T is array:
+    result = newTomlArray()
+    for item in v:
+      let node = toTomlNode(item)
+      if node != nil:
+        result.arrayVal.add(node)
+  elif T is tuple:
+    result = newTomlTable()
+    for fieldName, fieldVal in v.fieldPairs:
+      var wire = fieldName
+      when compiles(renameHook(v, wire)):
+        renameHook(v, wire)
+      let child = toTomlNode(fieldVal)
+      if child != nil:
+        result.tableVal[wire] = child
+  elif T is (ref object):
+    if v.isNil:
+      result = newTomlTable()
+    else:
+      result = toTomlNodeTable(v[])
+  elif T is object:
+    result = toTomlNodeTable(v)
+  else:
+    when compiles((var ss: string; dumpHook(ss, v))):
+      var ss2 = ""
+      dumpHook(ss2, v)
+      if ss2.len == 0:
+        raise newException(OpenParserTomlError, "toToml: unsupported type")
+      else:
+        try:
+          result = parseTOML("tmp = " & ss2).get("tmp")
+        except CatchableError:
+          raise newException(OpenParserTomlError, "toToml: unsupported type")
+    else:
+      {.error: "toToml: unsupported field type".}
+
+proc toTomlNodeTable[T](v: T): TomlNode =
+  result = newTomlTable()
+  for fieldName, fieldVal in v.fieldPairs:
+    var skip = false
+    when compiles(fieldVal.isNone):
+      when compiles(fieldVal.isSome):
+        if fieldVal.isNone:
+          skip = true
+    if not skip:
+      var wire = fieldName
+      when compiles(renameHook(v, wire)):
+        renameHook(v, wire)
+      let child = toTomlNode(fieldVal)
+      if child != nil:
+        result.tableVal[wire] = child
+
+proc dumpHook*(s: var string, v: TomlNode) =
+  s.add(dumpTomlValue(v))
+
+proc dumpHook*[T](s: var string, v: T) =
+  when T is distinct:
+    var base: T.distinctBase = v.distinctBase
+    dumpHook(s, base)
+    return
+  let node = toTomlNode(v)
+  if node == nil:
+    return
+  if node.kind == tvkTable:
+    # Value context: inline table.
+    s.add(dumpTomlValue(node))
+  else:
+    s.add(dumpTomlValue(node))
+
+proc toToml*[T](v: T): string =
+  ## Serialize a Nim value to a TOML document.
+  let node = toTomlNode(v)
+  if node == nil:
+    return ""
+  if node.kind == tvkTable:
+    result = dumpTOML(node)
+  else:
+    result = dumpTomlValue(node)
+
+proc dumpTOML*[T: object|ref object](v: T): string =
+  ## Typed overload alongside `dumpTOML(doc)`.
+  toToml(v)
+
+proc toTomlFile*[T](v: T, filename: string) =
+  writeFile(filename, toToml(v))
+
+macro toStaticToml*(v: typed): untyped =
+  ## Compile-time TOML dump honouring `{.toml: "wire".}` (fallback `{.json.}`)
+  ## plus runtime `renameHook`, mirroring `json.toStaticJson`.
+  let tInst = v.getTypeInst()
+  if tInst.kind == nnkSym and tInst.strVal == "TomlNode":
+    return quote do:
+      dumpTomlValue(`v`)
+  var valImpl = tInst.getImpl()
+  var objBody: NimNode = nil
+  var isRef = false
+  case valImpl.kind
+  of nnkTypeDef:
+    let body = valImpl[2]
+    if body.kind == nnkRefTy:
+      isRef = true
+      var inner = body[0]
+      if inner.kind == nnkSym:
+        inner = inner.getTypeImpl()
+      objBody = inner
+    elif body.kind == nnkObjectTy:
+      objBody = body
+  of nnkObjectTy:
+    objBody = valImpl
+  else:
+    return quote do:
+      toToml(`v`)
+  if objBody == nil or objBody.kind != nnkObjectTy:
+    return quote do:
+      toToml(`v`)
+  for field in objBody[2]:
+    if field.kind == nnkRecCase:
+      return quote do:
+        toToml(`v`)
+  # Build table via toTomlNodeTable logic but with pragma wire names.
+  let res = genSym(nskVar, "tomlRes")
+  let wireSym = genSym(nskVar, "wire")
+  let nodeSym = genSym(nskLet, "node")
+  var stmts = newStmtList()
+  stmts.add quote do:
+    var `res` = newTomlTable()
+  for field in objBody[2]:
+    case field.kind
+    of nnkSym:
+      let fname = field.strVal
+      stmts.add quote do:
+        block:
+          var `wireSym` = `fname`
+          when compiles(renameHook(`v`, `wireSym`)):
+            renameHook(`v`, `wireSym`)
+          let `nodeSym` = toTomlNode(`v`.`field`)
+          if `nodeSym` != nil:
+            `res`.tableVal[`wireSym`] = `nodeSym`
+    of nnkIdentDefs:
+      for idx in 0 ..< field.len - 2:
+        let nameNode = field[idx]
+        var actual: NimNode = nil
+        var pragmaNode: NimNode = nil
+        case nameNode.kind
+        of nnkPostfix:
+          actual = nameNode[1]
+        of nnkPragmaExpr:
+          let inner = nameNode[0]
+          case inner.kind
+          of nnkPostfix: actual = inner[1]
+          else: actual = inner
+          pragmaNode = nameNode[1]
+        of nnkIdent, nnkSym:
+          actual = nameNode
+        else:
+          continue
+        if actual == nil or actual.kind notin {nnkIdent, nnkSym}:
+          continue
+        let fname = actual.strVal
+        var wireLit = newLit(fname)
+        if pragmaNode != nil and pragmaNode.kind == nnkPragma:
+          for pc in pragmaNode:
+            if pc.kind in {nnkCall, nnkExprColonExpr}:
+              let pn = pc[0]
+              let pName = if pn.kind == nnkSym: pn.strVal else: $pn
+              if pName == "toml" or pName == "json":
+                wireLit = pc[1]
+                break
+        let fIdent = ident(fname)
+        stmts.add quote do:
+          block:
+            var `wireSym` = `wireLit`
+            when compiles(renameHook(`v`, `wireSym`)):
+              renameHook(`v`, `wireSym`)
+            let `nodeSym` = toTomlNode(`v`.`fIdent`)
+            if `nodeSym` != nil:
+              `res`.tableVal[`wireSym`] = `nodeSym`
+    else:
+      discard
+  stmts.add quote do:
+    dumpTOML(`res`)
+  result = newStmtList()
+  result.add quote do:
+    block:
+      `stmts`
