@@ -762,6 +762,16 @@ proc atScalarStart(l: YamlLexer): bool =
   if l.pos == 0: return true
   l.charAt(l.pos - 1) in {' ', '\t', '\n', '\r', ':', ',', '[', '{', '?', '|', '>'}
 
+proc continuesPlain(p: YamlParser): bool =
+  ## True when the lexer is continuing a plain scalar on the same line: the
+  ## previous token is unquoted plain content ending on this line. Special
+  ## indicators (`& * ! ? | >`) only open constructs at the start of a node;
+  ## mid-scalar they stay literal text (PyYAML parity: `a & b`, `a ? b`,
+  ## `a | b` are plain scalars, anchors/keys/blocks only start a node).
+  not p.curr.isNil and
+    p.curr.kind in {ytkIdentifier, ytkInteger, ytkFloat} and
+    p.curr.line == p.lex.line
+
 proc nextToken*(p: var YamlParser): YamlToken =
   ## Lexical analysis to produce the next token from the input
   var wsBefore = 0
@@ -807,7 +817,9 @@ proc nextToken*(p: var YamlParser): YamlToken =
   of '|', '>':
     # Block scalar indicator. In flow context (§7.4) `|`/`>` are not allowed,
     # so they are reported as plain characters and rejected by the parser.
-    if p.lex.atScalarStart():
+    # A block scalar opens only at the start of a node; mid-scalar (`a | b`)
+    # it stays plain literal text.
+    if p.lex.atScalarStart() and not p.continuesPlain():
       p.lex.indentAtMarker = result.indent
       let folded = p.lex.current == '>'
       advance(p.lex)
@@ -840,6 +852,17 @@ proc nextToken*(p: var YamlParser): YamlToken =
       result.value.add(p.lex.readIdentifier())
       return
   of '&':
+    # An `&` opens an anchor only at the start of a node with a name
+    # following it. Anywhere else it stays plain literal text: mid-scalar
+    # (`AT&T`, `a &b`), and `&` followed by blank/EOL (`a & b`, `value &`)
+    # which can never be a valid anchor name.
+    if (not p.lex.atScalarStart()) or p.continuesPlain() or
+        p.lex.charAt(p.lex.pos + 1) in {' ', '\t', '\n', '\r', '\0'}:
+      result.kind = ytkIdentifier
+      result.value = "&"
+      advance(p.lex)
+      result.value.add(p.lex.readIdentifier())
+      return
     result.kind = ytkAnchor
     advance(p.lex)
     var name = ""
@@ -850,6 +873,15 @@ proc nextToken*(p: var YamlParser): YamlToken =
     result.value = name
     return
   of '*':
+    # Same rule as `&`: an alias needs node start plus a following name;
+    # otherwise (`5 * 3`, `a*b`, `a *b`) it stays plain literal text.
+    if (not p.lex.atScalarStart()) or p.continuesPlain() or
+        p.lex.charAt(p.lex.pos + 1) in {' ', '\t', '\n', '\r', '\0'}:
+      result.kind = ytkIdentifier
+      result.value = "*"
+      advance(p.lex)
+      result.value.add(p.lex.readIdentifier())
+      return
     result.kind = ytkAlias
     advance(p.lex)
     var name = ""
@@ -895,9 +927,10 @@ proc nextToken*(p: var YamlParser): YamlToken =
     result.value = tag
     return
   of '?':
-    # explicit key indicator only if followed by space/break
+    # explicit key indicator only if followed by space/break *and* opening a
+    # node; mid-scalar (`what? huh`) it stays plain literal text.
     let after = p.lex.charAt(p.lex.pos+1)
-    if after in {' ','\t','\n','\r','\0'}:
+    if after in {' ','\t','\n','\r','\0'} and not p.continuesPlain():
       result.kind = ytkQuestion
       advance(p.lex)
       return

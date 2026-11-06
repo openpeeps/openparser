@@ -369,6 +369,38 @@ suite "YAML unquoted plain scalars":
     check e.description == ""
     check e.other == "next"
 
+  test "special chars stay literal in plain scalars":
+    let yaml = """
+      amp: Multipart & uploads
+      ampMid: AT&T rocks
+      star: 5 * 3 = 15
+      starGlued: a*b and a &b c
+      quest: what? huh!
+      pipe: a | b
+      gt: a > b
+      at: a@b and ^caret and (parens)
+      trail: value &
+    """
+    let obj = parseYAML(yaml)
+    check obj["amp"].strValue == "Multipart & uploads"
+    check obj["ampMid"].strValue == "AT&T rocks"
+    check obj["star"].strValue == "5 * 3 = 15"
+    check obj["starGlued"].strValue == "a*b and a &b c"
+    check obj["quest"].strValue == "what? huh!"
+    check obj["pipe"].strValue == "a | b"
+    check obj["gt"].strValue == "a > b"
+    check obj["at"].strValue == "a@b and ^caret and (parens)"
+    check obj["trail"].strValue == "value &"
+
+  test "anchors and aliases still work":
+    let obj = parseYAML("title: &anchor value\na: &x 1\nb: *x\n")
+    check obj["title"].strValue == "value"
+    check obj["a"].intValue == 1
+    check obj["b"].intValue == 1
+    let seqObj = parseYAMLNode("- &a anchored\n- *a\n")
+    check seqObj.arrValue[0].strValue == "anchored"
+    check seqObj.arrValue[1].strValue == "anchored"
+
 suite "YAML top-level sequences":
   test "sequence of scalars at document root":
     let yaml = "- apple\n- banana\n- cherry\n"
