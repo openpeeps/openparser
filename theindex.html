@@ -1063,6 +1063,10 @@
           <li><a class="reference external"
           data-doc-search-tag="json: proc dumpHook[T, R](s: var string; val: T; renameVal: R)" href="openparser/json.html#dumpHook%2Cstring%2CT%2CR">json: proc dumpHook[T, R](s: var string; val: T; renameVal: R)</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="toml: proc dumpHook[T](s: var string; v: T)" href="openparser/toml.html#dumpHook%2Cstring%2CT">toml: proc dumpHook[T](s: var string; v: T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc dumpHook(s: var string; v: TomlNode)" href="openparser/toml.html#dumpHook%2Cstring%2CTomlNode">toml: proc dumpHook(s: var string; v: TomlNode)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="xml: proc dumpHook(s: var string; val: float32 | float64)" href="openparser/xml.html#dumpHook%2Cstring%2C">xml: proc dumpHook(s: var string; val: float32 | float64)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xml: proc dumpHook(s: var string; val: tuple)" href="openparser/xml.html#dumpHook%2Cstring%2C_2">xml: proc dumpHook(s: var string; val: tuple)</a></li>
@@ -1109,7 +1113,13 @@
           </ul></dd>
 <dt><a name="dumpTOML" href="#dumpTOML"><span>dumpTOML:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
+          data-doc-search-tag="toml: proc dumpTOML[T: object | ref object](v: T): string" href="openparser/toml.html#dumpTOML%2CT">toml: proc dumpTOML[T: object | ref object](v: T): string</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="toml: proc dumpTOML(doc: TomlDocument): string" href="openparser/toml.html#dumpTOML%2CTomlDocument">toml: proc dumpTOML(doc: TomlDocument): string</a></li>
+          </ul></dd>
+<dt><a name="dumpTomlValue" href="#dumpTomlValue"><span>dumpTomlValue:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc dumpTomlValue(n: TomlNode): string" href="openparser/toml.html#dumpTomlValue%2CTomlNode">toml: proc dumpTomlValue(n: TomlNode): string</a></li>
           </ul></dd>
 <dt><a name="eachGroup" href="#eachGroup"><span>eachGroup:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1660,6 +1670,14 @@
 <dt><a name="fromToml" href="#fromToml"><span>fromToml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc fromToml[T](doc: TomlDocument; v: var T)" href="openparser/toml.html#fromToml%2CTomlDocument%2CT">toml: proc fromToml[T](doc: TomlDocument; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc fromToml[T](doc: TomlDocument; v: var T; opts: TomlOptions)" href="openparser/toml.html#fromToml%2CTomlDocument%2CT%2CTomlOptions">toml: proc fromToml[T](doc: TomlDocument; v: var T; opts: TomlOptions)</a></li>
+          </ul></dd>
+<dt><a name="fromTomlFile" href="#fromTomlFile"><span>fromTomlFile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc fromTomlFile[T](filename: string; v: var T)" href="openparser/toml.html#fromTomlFile%2Cstring%2CT">toml: proc fromTomlFile[T](filename: string; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc fromTomlFile[T](filename: string; v: var T; opts: TomlOptions)" href="openparser/toml.html#fromTomlFile%2Cstring%2CT%2CTomlOptions">toml: proc fromTomlFile[T](filename: string; v: var T; opts: TomlOptions)</a></li>
           </ul></dd>
 <dt><a name="fromXml" href="#fromXml"><span>fromXml:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -3347,6 +3365,42 @@
           <li><a class="reference external"
           data-doc-search-tag="json: proc parseHook[T: distinct](parser: var JsonParser; v: var T)" href="openparser/json.html#parseHook%2CJsonParser%2CT_7">json: proc parseHook[T: distinct](parser: var JsonParser; v: var T)</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[K: string; V](p: var TomlParser; v: var AnyTable[K, V])" href="openparser/toml.html#parseHook%2CTomlParser%2CAnyTable%5BK%3A%20string%2CV%5D">toml: proc parseHook[K: string; V](p: var TomlParser; v: var AnyTable[K, V])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[N: static[int]; T](p: var TomlParser; v: var array[N, T])" href="openparser/toml.html#parseHook%2CTomlParser%2Carray%5BN%2CT%5D">toml: proc parseHook[N: static[int]; T](p: var TomlParser; v: var array[N, T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook(p: var TomlParser; v: var bool)" href="openparser/toml.html#parseHook%2CTomlParser%2Cbool">toml: proc parseHook(p: var TomlParser; v: var bool)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook(p: var TomlParser; v: var char)" href="openparser/toml.html#parseHook%2CTomlParser%2Cchar">toml: proc parseHook(p: var TomlParser; v: var char)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[T](p: var TomlParser; v: var CritBitTree[T])" href="openparser/toml.html#parseHook%2CTomlParser%2CCritBitTree%5BT%5D">toml: proc parseHook[T](p: var TomlParser; v: var CritBitTree[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook(p: var TomlParser; v: var DateTime)" href="openparser/toml.html#parseHook%2CTomlParser%2CDateTime">toml: proc parseHook(p: var TomlParser; v: var DateTime)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook(p: var TomlParser; v: var JsonNode)" href="openparser/toml.html#parseHook%2CTomlParser%2CJsonNode">toml: proc parseHook(p: var TomlParser; v: var JsonNode)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[T](p: var TomlParser; v: var Option[T])" href="openparser/toml.html#parseHook%2CTomlParser%2COption%5BT%5D">toml: proc parseHook[T](p: var TomlParser; v: var Option[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[T](p: var TomlParser; v: var seq[T])" href="openparser/toml.html#parseHook%2CTomlParser%2Cseq%5BT%5D">toml: proc parseHook[T](p: var TomlParser; v: var seq[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[T](p: var TomlParser; v: var set[T])" href="openparser/toml.html#parseHook%2CTomlParser%2Cset%5BT%5D">toml: proc parseHook[T](p: var TomlParser; v: var set[T])</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook(p: var TomlParser; v: var string)" href="openparser/toml.html#parseHook%2CTomlParser%2Cstring">toml: proc parseHook(p: var TomlParser; v: var string)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[T: Integers](p: var TomlParser; v: var T)" href="openparser/toml.html#parseHook%2CTomlParser%2CT">toml: proc parseHook[T: Integers](p: var TomlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[T: float | float32 | float64](p: var TomlParser; v: var T)" href="openparser/toml.html#parseHook%2CTomlParser%2CT_2">toml: proc parseHook[T: float | float32 | float64](p: var TomlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[T: enum](p: var TomlParser; v: var T)" href="openparser/toml.html#parseHook%2CTomlParser%2CT_3">toml: proc parseHook[T: enum](p: var TomlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[T: distinct](p: var TomlParser; v: var T)" href="openparser/toml.html#parseHook%2CTomlParser%2CT_4">toml: proc parseHook[T: distinct](p: var TomlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[T: tuple](p: var TomlParser; v: var T)" href="openparser/toml.html#parseHook%2CTomlParser%2CT_5">toml: proc parseHook[T: tuple](p: var TomlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[T: object](p: var TomlParser; v: var T)" href="openparser/toml.html#parseHook%2CTomlParser%2CT_6">toml: proc parseHook[T: object](p: var TomlParser; v: var T)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseHook[T: ref object](p: var TomlParser; v: var T)" href="openparser/toml.html#parseHook%2CTomlParser%2CT_7">toml: proc parseHook[T: ref object](p: var TomlParser; v: var T)</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="toml: proc parseHook(p: var TomlParser; v: var TomlNode)" href="openparser/toml.html#parseHook%2CTomlParser%2CTomlNode">toml: proc parseHook(p: var TomlParser; v: var TomlNode)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xml: proc parseHook[K: string; V](p: var XmlParser; v: var AnyTable[K, V])" href="openparser/xml.html#parseHook%2CXmlParser%2CAnyTable%5BK%3A%20string%2CV%5D">xml: proc parseHook[K: string; V](p: var XmlParser; v: var AnyTable[K, V])</a></li>
@@ -3589,11 +3643,17 @@
           <li><a class="reference external"
           data-doc-search-tag="toml: proc parseTOML[T](input: TOML; t: typedesc[T]): T" href="openparser/toml.html#parseTOML%2CTOML%2Ctypedesc%5BT%5D">toml: proc parseTOML[T](input: TOML; t: typedesc[T]): T</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseTOML[T](input: TOML; t: typedesc[T]; opts: TomlOptions): T" href="openparser/toml.html#parseTOML%2CTOML%2Ctypedesc%5BT%5D%2CTomlOptions">toml: proc parseTOML[T](input: TOML; t: typedesc[T]; opts: TomlOptions): T</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="toml: proc parseTOML[T: object | ref object](p: var TomlParser; v: var T)" href="openparser/toml.html#parseTOML%2CTomlParser%2CT">toml: proc parseTOML[T: object | ref object](p: var TomlParser; v: var T)</a></li>
           </ul></dd>
 <dt><a name="parseTOMLFile" href="#parseTOMLFile"><span>parseTOMLFile:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: proc parseTOMLFile(filename: string): TomlDocument" href="openparser/toml.html#parseTOMLFile%2Cstring">toml: proc parseTOMLFile(filename: string): TomlDocument</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseTOMLFile[T](filename: string; t: typedesc[T]): T" href="openparser/toml.html#parseTOMLFile%2Cstring%2Ctypedesc%5BT%5D">toml: proc parseTOMLFile[T](filename: string; t: typedesc[T]): T</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc parseTOMLFile[T](filename: string; t: typedesc[T]; opts: TomlOptions): T" href="openparser/toml.html#parseTOMLFile%2Cstring%2Ctypedesc%5BT%5D%2CTomlOptions">toml: proc parseTOMLFile[T](filename: string; t: typedesc[T]; opts: TomlOptions): T</a></li>
           </ul></dd>
 <dt><a name="parseTransferEncoding" href="#parseTransferEncoding"><span>parseTransferEncoding:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -4643,11 +4703,15 @@
 <li><a class="reference external"
           data-doc-search-tag="json: template skippable()" href="openparser/json.html#skippable.t">json: template skippable()</a></li>
           <li><a class="reference external"
+          data-doc-search-tag="toml: template skippable()" href="openparser/toml.html#skippable.t">toml: template skippable()</a></li>
+          <li><a class="reference external"
           data-doc-search-tag="xml: template skippable()" href="openparser/xml.html#skippable.t">xml: template skippable()</a></li>
           </ul></dd>
 <dt><a name="skipValue" href="#skipValue"><span>skipValue:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="json: proc skipValue(parser: var JsonParser)" href="openparser/json.html#skipValue%2CJsonParser">json: proc skipValue(parser: var JsonParser)</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc skipValue(p: var TomlParser)" href="openparser/toml.html#skipValue%2CTomlParser">toml: proc skipValue(p: var TomlParser)</a></li>
           <li><a class="reference external"
           data-doc-search-tag="xml: proc skipValue(p: var XmlParser)" href="openparser/xml.html#skipValue%2CXmlParser">xml: proc skipValue(p: var XmlParser)</a></li>
           </ul></dd>
@@ -5607,6 +5671,10 @@
 <li><a class="reference external"
           data-doc-search-tag="toml: type TOML" href="openparser/toml.html#TOML">toml: type TOML</a></li>
           </ul></dd>
+<dt><a name="toml" href="#toml"><span>toml:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: template toml(name: static[string])" href="openparser/toml.html#toml.t%2Cstatic%5Bstring%5D">toml: template toml(name: static[string])</a></li>
+          </ul></dd>
 <dt><a name="TomlCtx" href="#TomlCtx"><span>TomlCtx:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: enum TomlCtx" href="openparser/toml.html#TomlCtx">toml: enum TomlCtx</a></li>
@@ -5619,6 +5687,14 @@
 <li><a class="reference external"
           data-doc-search-tag="toml: type TomlDocument" href="openparser/toml.html#TomlDocument">toml: type TomlDocument</a></li>
           </ul></dd>
+<dt><a name="tomlErrorMaxDepth" href="#tomlErrorMaxDepth"><span>tomlErrorMaxDepth:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: const tomlErrorMaxDepth" href="openparser/toml.html#tomlErrorMaxDepth">toml: const tomlErrorMaxDepth</a></li>
+          </ul></dd>
+<dt><a name="tomlErrorUnexpected" href="#tomlErrorUnexpected"><span>tomlErrorUnexpected:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: const tomlErrorUnexpected" href="openparser/toml.html#tomlErrorUnexpected">toml: const tomlErrorUnexpected</a></li>
+          </ul></dd>
 <dt><a name="TomlLexer" href="#TomlLexer"><span>TomlLexer:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: object TomlLexer" href="openparser/toml.html#TomlLexer">toml: object TomlLexer</a></li>
@@ -5626,6 +5702,10 @@
 <dt><a name="TomlNode" href="#TomlNode"><span>TomlNode:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="toml: type TomlNode" href="openparser/toml.html#TomlNode">toml: type TomlNode</a></li>
+          </ul></dd>
+<dt><a name="TomlOptions" href="#TomlOptions"><span>TomlOptions:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: type TomlOptions" href="openparser/toml.html#TomlOptions">toml: type TomlOptions</a></li>
           </ul></dd>
 <dt><a name="TomlParser" href="#TomlParser"><span>TomlParser:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -5695,6 +5775,10 @@
 <li><a class="reference external"
           data-doc-search-tag="json: macro toStaticJson(v: typed; opts: static JsonOptions = nil): untyped" href="openparser/json.html#toStaticJson.m%2Ctyped%2CstaticJsonOptions">json: macro toStaticJson(v: typed; opts: static JsonOptions = nil): untyped</a></li>
           </ul></dd>
+<dt><a name="toStaticToml" href="#toStaticToml"><span>toStaticToml:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: macro toStaticToml(v: typed): untyped" href="openparser/toml.html#toStaticToml.m%2Ctyped">toml: macro toStaticToml(v: typed): untyped</a></li>
+          </ul></dd>
 <dt><a name="toString" href="#toString"><span>toString:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="stringify: proc toString(c: Color): string" href="openparser/colors/stringify.html#toString%2CColor">stringify: proc toString(c: Color): string</a></li>
@@ -5722,6 +5806,32 @@
 <dt><a name="toTime" href="#toTime"><span>toTime:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="mime: proc toTime(d: MimeDate): times.Time" href="openparser/mime.html#toTime%2CMimeDate">mime: proc toTime(d: MimeDate): times.Time</a></li>
+          </ul></dd>
+<dt><a name="toToml" href="#toToml"><span>toToml:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc toToml[T](v: T): string" href="openparser/toml.html#toToml%2CT">toml: proc toToml[T](v: T): string</a></li>
+          </ul></dd>
+<dt><a name="toTomlFile" href="#toTomlFile"><span>toTomlFile:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc toTomlFile[T](v: T; filename: string)" href="openparser/toml.html#toTomlFile%2CT%2Cstring">toml: proc toTomlFile[T](v: T; filename: string)</a></li>
+          </ul></dd>
+<dt><a name="toTomlNode" href="#toTomlNode"><span>toTomlNode:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="toml: proc toTomlNode[T](v: CritBitTree[T]): TomlNode" href="openparser/toml.html#toTomlNode%2CCritBitTree%5BT%5D">toml: proc toTomlNode[T](v: CritBitTree[T]): TomlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc toTomlNode[T](v: Option[T]): TomlNode" href="openparser/toml.html#toTomlNode%2COption%5BT%5D">toml: proc toTomlNode[T](v: Option[T]): TomlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc toTomlNode[K: string; V](v: OrderedTable[K, V]): TomlNode" href="openparser/toml.html#toTomlNode%2COrderedTable%5BK%3A%20string%2CV%5D">toml: proc toTomlNode[K: string; V](v: OrderedTable[K, V]): TomlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc toTomlNode[K: string; V](v: OrderedTableRef[K, V]): TomlNode" href="openparser/toml.html#toTomlNode%2COrderedTableRef%5BK%3A%20string%2CV%5D">toml: proc toTomlNode[K: string; V](v: OrderedTableRef[K, V]): TomlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc toTomlNode[T](v: set[T]): TomlNode" href="openparser/toml.html#toTomlNode%2Cset%5BT%5D">toml: proc toTomlNode[T](v: set[T]): TomlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc toTomlNode[T](v: T): TomlNode" href="openparser/toml.html#toTomlNode%2CT">toml: proc toTomlNode[T](v: T): TomlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc toTomlNode[K: string; V](v: Table[K, V]): TomlNode" href="openparser/toml.html#toTomlNode%2CTable%5BK%3A%20string%2CV%5D">toml: proc toTomlNode[K: string; V](v: Table[K, V]): TomlNode</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="toml: proc toTomlNode[K: string; V](v: TableRef[K, V]): TomlNode" href="openparser/toml.html#toTomlNode%2CTableRef%5BK%3A%20string%2CV%5D">toml: proc toTomlNode[K: string; V](v: TableRef[K, V]): TomlNode</a></li>
           </ul></dd>
 <dt><a name="toVCard" href="#toVCard"><span>toVCard:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -6671,7 +6781,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-10-31 22:24:03 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-11-12 17:14:42 UTC</small>
       </div>
     </div>
   </div>
