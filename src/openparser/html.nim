@@ -14,7 +14,9 @@
 ## various HTML constructs and errors, making it suitable for both strict and lenient parsing scenarios,
 ## such as validating HTML or parsing real-world HTML (Markdown, web scraping, etc.)
 
-import std/[strutils, tables, options, memfiles]
+import std/[strutils, tables, options]
+when not defined(openparserNoMmap):
+  import std/memfiles
 import ./json
 
 type
@@ -412,13 +414,17 @@ proc error*(p: var HtmlParser, msg: string) =
     ("\n" & context & "\n" & "Error ($1:$2) " % [$atLine, $atCol]) & msg
   )
 
-proc isMapped*(m: MemFile): bool {.inline.} =
-  ## True when this MemFile currently has a valid mapped region.
-  m.mem != nil and m.size > 0
+when not defined(openparserNoMmap):
+  proc isMapped*(m: MemFile): bool {.inline.} =
+    ## True when this MemFile currently has a valid mapped region.
+    m.mem != nil and m.size > 0
 
 proc nextToken(l: var HtmlLexer): HtmlToken =
-  # Lex the next token from the input and return it
-  skipWhitespace(l)
+  # Lex the next token from the input and return it.
+  # Whitespace is only insignificant inside tags (between attributes);
+  # outside tags it is text content and must be preserved.
+  if l.inTag:
+    skipWhitespace(l)
   result = HtmlToken(line: l.line, col: l.col, pos: l.pos)
   case l.current:
   of '\0':
@@ -458,14 +464,21 @@ proc nextToken(l: var HtmlLexer): HtmlToken =
     l.inTag = false   # leaving the tag
     advance(l)
   of '/':
-    if l.charAt(l.pos + 1) == '>':
+    if l.charAt(l.pos + 1) == '>' and l.inTag:
       result.kind = tkSelfClosingTag
       l.inTag = false
       advance(l)
-    else:
+    elif l.inTag:
       result.kind = tkText
       result.value = "/"
       advance(l)
+    else:
+      # outside a tag — `/` is plain text content
+      var start = l.pos
+      while l.charAt(l.pos) notin {'<', '\0'}:
+        advance(l)
+      result.kind = tkText
+      result.value = l.slice(start, l.pos)
   of '"', '\'':
     if l.inTag:
       # inside a tag — treat as a quoted attribute value
@@ -495,25 +508,41 @@ proc nextToken(l: var HtmlLexer): HtmlToken =
       result.value = l.slice(start, l.pos)
   of '=':
     # Emit '=' as its own token so attribute names don't include the '=' char.
-    result.kind = tkText
-    result.value = "="
-    advance(l)
-  else:
-    # Text or unquoted attribute name
-    var start = l.pos
-    while l.charAt(l.pos) notin {'<', '>', '/', '"', '\'', '=', ' ', '\t', '\n', '\r'} and l.charAt(l.pos) != '\0':
+    # Outside tags it is plain text content.
+    if l.inTag:
+      result.kind = tkText
+      result.value = "="
       advance(l)
-    result.value = l.slice(start, l.pos)
-    if result.kind == tkTagOpen and result.value.len > 0:
-      # The first token after a tag open is the tag name
-      result.kind = tkTagOpen
-    elif result.kind == tkTagClose and result.value.len > 0:
-      # The first token after a tag close is the tag name
-      result.kind = tkTagClose
-    elif result.value.len > 0:
-      result.kind = tkText
     else:
+      var start = l.pos
+      while l.charAt(l.pos) notin {'<', '\0'}:
+        advance(l)
       result.kind = tkText
+      result.value = l.slice(start, l.pos)
+  else:
+    # Text or unquoted attribute name. Outside tags, everything up to
+    # the next `<` is text content (spaces, `/`, `=`, quotes preserved).
+    if not l.inTag:
+      var start = l.pos
+      while l.charAt(l.pos) notin {'<', '\0'}:
+        advance(l)
+      result.kind = tkText
+      result.value = l.slice(start, l.pos)
+    else:
+      var start = l.pos
+      while l.charAt(l.pos) notin {'<', '>', '/', '"', '\'', '=', ' ', '\t', '\n', '\r'} and l.charAt(l.pos) != '\0':
+        advance(l)
+      result.value = l.slice(start, l.pos)
+      if result.kind == tkTagOpen and result.value.len > 0:
+        # The first token after a tag open is the tag name
+        result.kind = tkTagOpen
+      elif result.kind == tkTagClose and result.value.len > 0:
+        # The first token after a tag close is the tag name
+        result.kind = tkTagClose
+      elif result.value.len > 0:
+        result.kind = tkText
+      else:
+        result.kind = tkText
 #
 # Parsing
 #
@@ -533,14 +562,11 @@ proc expectWalk*(p: var HtmlParser, expectedKind: HtmlTokenKind) =
 proc parseInnerText(p: var HtmlParser): HtmlNode =
   # Parse a text node and return it as a single HtmlNode that
   # combines consecutive tkText tokens into one string.
+  # Whitespace is preserved verbatim by the lexer, so no separator
+  # is invented here.
   var buf = newStringOfCap(64)
-  var first = true
   while p.curr.kind == tkText:
-    if not first:
-      # lexer strips whitespace, so insert a single space between tokens
-      buf.add(' ')
     buf.add(p.curr.value)
-    first = false
     discard p.advance()
   result = HtmlNode(kind: htmlInnerText,
                     value: HtmlInnerText(text: buf))
@@ -676,21 +702,22 @@ proc parseNodes(p: var HtmlParser) =
 
 proc defaulHtmlParsingPolicy*(): HtmlParserPolicy
 
-proc parseHtmlFile*(path: string, policy: HtmlParserPolicy = defaulHtmlParsingPolicy()): HtmlDocument =
-  ## Parses the HTML content of the specified file according to the given policy
-  ## and returns the resulting parse tree.
-  var mf: MemFile = memfiles.open(path, fmRead)
-  defer: mf.close()
-  var p = HtmlParser(
-    lexer: HtmlLexer(data: cast[ptr UncheckedArray[char]](mf.mem), len: mf.size, line: 1, col: 1),
-    document: HtmlDocument(),
-    policy: policy,
-  )
-  p.lexer.current = p.lexer.charAt(p.lexer.pos)
-  p.curr = p.lexer.nextToken()
-  p.next = p.lexer.nextToken()
-  p.parseNodes()
-  result = p.document
+when not defined(openparserNoMmap):
+  proc parseHtmlFile*(path: string, policy: HtmlParserPolicy = defaulHtmlParsingPolicy()): HtmlDocument =
+    ## Parses the HTML content of the specified file according to the given policy
+    ## and returns the resulting parse tree.
+    var mf: MemFile = memfiles.open(path, fmRead)
+    defer: mf.close()
+    var p = HtmlParser(
+      lexer: HtmlLexer(data: cast[ptr UncheckedArray[char]](mf.mem), len: mf.size, line: 1, col: 1),
+      document: HtmlDocument(),
+      policy: policy,
+    )
+    p.lexer.current = p.lexer.charAt(p.lexer.pos)
+    p.curr = p.lexer.nextToken()
+    p.next = p.lexer.nextToken()
+    p.parseNodes()
+    result = p.document
 
 proc defaulHtmlParsingPolicy*: HtmlParserPolicy =
   ## Returns a default HTML parser policy with common settings for typical HTML parsing.
