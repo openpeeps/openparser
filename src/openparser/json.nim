@@ -14,7 +14,9 @@
 ## serialization/deserialization mechanism.
 
 import std/[macros, macrocache, json, strutils, options,
-        tables, memfiles, critbits, typetraits, strutils]
+        tables, critbits, typetraits, strutils]
+when not defined(openparserNoMmap):
+  import std/memfiles
 
 import ./private/[types, lexutils]
 when not defined(openparserJsonNoSimd) and (defined(amd64) or defined(i386)):
@@ -147,14 +149,15 @@ proc error*(p: var JsonParser, msg: string) =
     ("\n" & context & "\n" & "Error ($1:$2) " % [$atLine, $atCol]) & msg
   )
 
-proc openReadOnly*(filename: string, allowRemap = false,
-                   mapFlags = cint(-1)): MemFile {.inline.} =
-  ## Convenience helper for read-only memory-mapped file opening.
-  open(filename, mode = fmRead, allowRemap = allowRemap, mapFlags = mapFlags)
+when not defined(openparserNoMmap):
+  proc openReadOnly*(filename: string, allowRemap = false,
+                     mapFlags = cint(-1)): MemFile {.inline.} =
+    ## Convenience helper for read-only memory-mapped file opening.
+    open(filename, mode = fmRead, allowRemap = allowRemap, mapFlags = mapFlags)
 
-proc isMapped*(m: MemFile): bool {.inline.} =
-  ## True when this MemFile currently has a valid mapped region.
-  m.mem != nil and m.size > 0
+  proc isMapped*(m: MemFile): bool {.inline.} =
+    ## True when this MemFile currently has a valid mapped region.
+    m.mem != nil and m.size > 0
 
 # Forward declarations
 proc objectToJson*(v, valImpl: NimNode, opts: JsonOptions = nil): NimNode
@@ -1327,38 +1330,39 @@ proc fromJsonL*(str: string): JsonNode =
   var parser = initParser(newJsonLexer(str))
   result = parseAnyRootL(parser)
 
-proc fromJson*(mapped: MemFile): JsonNode =
-  ## Parse JSON directly from mapped memory.
-  var parser = initParser(newJsonLexer(mapped.mem, mapped.size))
-  result = parseAnyRoot(parser)
+when not defined(openparserNoMmap):
+  proc fromJson*(mapped: MemFile): JsonNode =
+    ## Parse JSON directly from mapped memory.
+    var parser = initParser(newJsonLexer(mapped.mem, mapped.size))
+    result = parseAnyRoot(parser)
 
-proc fromJson*(mapped: MemFile, opts: JsonOptions): JsonNode =
-  ## Parse JSON directly from mapped memory with options.
-  var parser = initParser(newJsonLexer(mapped.mem, mapped.size), opts)
-  result = parseAnyRoot(parser)
+  proc fromJson*(mapped: MemFile, opts: JsonOptions): JsonNode =
+    ## Parse JSON directly from mapped memory with options.
+    var parser = initParser(newJsonLexer(mapped.mem, mapped.size), opts)
+    result = parseAnyRoot(parser)
 
-proc fromJsonL*(mapped: MemFile): JsonNode =
-  ## Parse line-delimited JSON directly from mapped memory.
-  var parser = initParser(newJsonLexer(mapped.mem, mapped.size))
-  result = parseAnyRootL(parser)
+  proc fromJsonL*(mapped: MemFile): JsonNode =
+    ## Parse line-delimited JSON directly from mapped memory.
+    var parser = initParser(newJsonLexer(mapped.mem, mapped.size))
+    result = parseAnyRootL(parser)
 
-proc fromJsonFile*(filename: string): JsonNode =
-  ## Parse JSON from a memory-mapped file.
-  var mf = memfiles.open(filename, fmRead)
-  defer: mf.close()
-  result = fromJson(mf)
+  proc fromJsonFile*(filename: string): JsonNode =
+    ## Parse JSON from a memory-mapped file.
+    var mf = memfiles.open(filename, fmRead)
+    defer: mf.close()
+    result = fromJson(mf)
 
-proc fromJsonFile*(filename: string, opts: JsonOptions): JsonNode =
-  ## Parse JSON from a memory-mapped file with options.
-  var mf = memfiles.open(filename, fmRead)
-  defer: mf.close()
-  result = fromJson(mf, opts)
+  proc fromJsonFile*(filename: string, opts: JsonOptions): JsonNode =
+    ## Parse JSON from a memory-mapped file with options.
+    var mf = memfiles.open(filename, fmRead)
+    defer: mf.close()
+    result = fromJson(mf, opts)
 
-proc fromJsonLFile*(filename: string): JsonNode =
-  ## Parse JSON-L from a memory-mapped file.
-  var mf = memfiles.open(filename, fmRead)
-  defer: mf.close()
-  result = fromJsonL(mf)
+  proc fromJsonLFile*(filename: string): JsonNode =
+    ## Parse JSON-L from a memory-mapped file.
+    var mf = memfiles.open(filename, fmRead)
+    defer: mf.close()
+    result = fromJsonL(mf)
 
 #
 # Nim Objects
@@ -1501,7 +1505,7 @@ macro fromJsonMacro(x: typed, str: typed): untyped =
     case field.kind
     of nnkSym:
       let fieldName = field.strVal
-      fields.add((fieldName, fieldName, int(fnv1a(fieldName))))
+      fields.add((fieldName, fieldName, cast[int](fnv1a(fieldName))))
     of nnkIdentDefs:
       for idx in 0 ..< field.len - 2:
         let nameNode = field[idx]
@@ -1534,7 +1538,7 @@ macro fromJsonMacro(x: typed, str: typed): untyped =
               if pName == "json":
                 # pragma value may be StrLit
                 wireName = pragmaChild[1].strVal
-        fields.add((fieldName, wireName, int(fnv1a(wireName))))
+        fields.add((fieldName, wireName, cast[int](fnv1a(wireName))))
     else:
       discard
 
@@ -1599,7 +1603,7 @@ macro fromJsonMacro(x: typed, str: typed): untyped =
         if `parserIdent`.curr.kind == jtkComma:
           `parserIdent`.advance()
         continue
-    let `wireKeyHashIdent` = int(fnv1a(`wireKeyIdent`))
+    let `wireKeyHashIdent` = cast[int](fnv1a(`wireKeyIdent`))
     `parserIdent`.advance()
     `parserIdent`.expectSkip(jtkColon)
   whileBody.add(caseStmt)
@@ -1741,7 +1745,7 @@ macro fromJsonMacroOpts(x: typed, str: typed, opts: JsonOptions): untyped =
     case field.kind
     of nnkSym:
       let fieldName = field.strVal
-      fields.add((fieldName, fieldName, int(fnv1a(fieldName))))
+      fields.add((fieldName, fieldName, cast[int](fnv1a(fieldName))))
     of nnkIdentDefs:
       for idx in 0 ..< field.len - 2:
         let nameNode = field[idx]
@@ -1773,7 +1777,7 @@ macro fromJsonMacroOpts(x: typed, str: typed, opts: JsonOptions): untyped =
               let pName = if pragmaName.kind == nnkSym: pragmaName.strVal else: $pragmaName
               if pName == "json":
                 wireName = pragmaChild[1].strVal
-        fields.add((fieldName, wireName, int(fnv1a(wireName))))
+        fields.add((fieldName, wireName, cast[int](fnv1a(wireName))))
     else:
       discard
 
@@ -1834,7 +1838,7 @@ macro fromJsonMacroOpts(x: typed, str: typed, opts: JsonOptions): untyped =
         if `parserIdent`.curr.kind == jtkComma:
           `parserIdent`.advance()
         continue
-    let `wireKeyHashIdent` = int(fnv1a(`wireKeyIdent`))
+    let `wireKeyHashIdent` = cast[int](fnv1a(`wireKeyIdent`))
     `parserIdent`.advance()
     `parserIdent`.expectSkip(jtkColon)
   whileBody.add(caseStmt)
