@@ -10,17 +10,6 @@ import ./jit/compiler as jitcore
 export compiler
 
 type
-  SkipLoopKind = enum
-    slkNone,       ## not a skipable loop
-    slkByte,       ## stop on specific byte: [^X]*
-    slkNonWord,    ## stop on first non-\w: \w* \w+
-    slkNonDigit,   ## stop on first non-\d: \d* \d+
-    slkNonSpace,   ## stop on first non-\s: \s* \s+
-    slkNonUpperDigitUnder,  ## stop on first non-[A-Z0-9_]
-
-  SkipLoop = tuple[kind: SkipLoopKind, stopCh: char, exit: int, ok: bool]
-
-type
   Captures*    = seq[int]
 
   CaptureGroup* = object
@@ -57,10 +46,10 @@ type
 
     # JIT compiled matcher; fn == nil when unsupported or disabled.
     # When active, find/findAll verify SIMD-prefilter candidates with it
-    # and match() uses the full-match variant instead of the Pike VM.
+    # and match() uses it with the context full-match flag instead of
+    # the Pike VM. One compilation serves both anchored and unanchored
+    # modes (see JitCtx.fullFlag).
     jit:       jitcore.CompiledJit
-    jitFull:   jitcore.CompiledJit  ## lazy: full-match variant for match()
-    jitFullTried: bool
 #
 # PcSet operations
 #
@@ -109,95 +98,6 @@ proc wordBoundaryAt(input: string, pos, inputLen: int): bool {.inline.} =
   let right = pos < inputLen and isWordChar(input[pos])
   left != right
 
-proc skipLoopInfo(prog: Program, pc: int): SkipLoop =
-  ## Given a consuming PC parked in the PcSet, look backwards to see if it's
-  ## the body of a simple greedy loop. Recognizes:
-  ##   [^X]*  → split(pc-2, exit); charclass at pc; jmp(split) at pc+1
-  ##   \w+    → split(pc-3, exit); progress at pc-1; escapeClass at pc; jmp(split) at pc+1
-  ##   \w*    → split(pc-2, exit); escapeClass at pc; jmp(split) at pc+1
-  ## Returns the loop kind and the exit pc when the pattern matches.
-  result.kind = slkNone
-  result.ok   = false
-  if pc < 0 or pc >= prog.instrs.len: return
-  let cur = prog.instrs[pc]
-
-  # --- Pattern A: [^X]*  ---  split; charclass; jmp(split)
-  # The charClass body is at pc. split is at pc-1 or earlier, jmp at pc+1.
-  if cur.op == opCharClass and pc + 1 < prog.instrs.len:
-    let back = prog.instrs[pc + 1]
-    if back.op == opJmp and back.arg1 >= 0 and back.arg1 < prog.instrs.len:
-      let splitPc = back.arg1
-      let splitIns = prog.instrs[splitPc]
-      if splitIns.op == opSplit and splitIns.arg1 == pc and splitPc + 1 == pc:
-        let exit = splitIns.arg2
-        let cls = prog.classes[cur.arg1]
-        if cls.negated and cls.items.len == 1:
-          let item = cls.items[0]
-          if not item.isRange and not item.isEscape:
-            result.kind   = slkByte
-            result.stopCh = item.ch
-            result.exit   = exit
-            result.ok     = true
-            return
-
-  # --- Pattern B: \w+ / \d+ / \s+  ---  split; progress; escapeClass; jmp(split)
-  # escapeClass body is at pc. split is at pc-2, progress at pc-1, jmp at pc+1.
-  if cur.op == opEscapeClass and pc >= 2 and pc + 1 < prog.instrs.len:
-    let prev = prog.instrs[pc - 1]
-    let back = prog.instrs[pc + 1]
-    if prev.op == opProgress and back.op == opJmp and back.arg1 >= 0:
-      let splitPc = back.arg1
-      let splitIns = prog.instrs[splitPc]
-      if splitIns.op == opSplit and splitIns.arg1 == pc - 1:
-        let exit = splitIns.arg2
-        case char(cur.arg1)
-        of 'w': result.kind = slkNonWord
-        of 'd': result.kind = slkNonDigit
-        of 's': result.kind = slkNonSpace
-        else: return
-        result.exit = exit
-        result.ok   = true
-        return
-
-  # --- Pattern C: \w* / \d* / \s*  ---  split; escapeClass; jmp(split)
-  # escapeClass body is at pc. split is at pc-1, jmp at pc+1.
-  if cur.op == opEscapeClass and pc >= 1 and pc + 1 < prog.instrs.len:
-    let back = prog.instrs[pc + 1]
-    if back.op == opJmp and back.arg1 >= 0:
-      let splitPc = back.arg1
-      let splitIns = prog.instrs[splitPc]
-      if splitIns.op == opSplit and splitIns.arg1 == pc:
-        let exit = splitIns.arg2
-        case char(cur.arg1)
-        of 'w': result.kind = slkNonWord
-        of 'd': result.kind = slkNonDigit
-        of 's': result.kind = slkNonSpace
-        else: return
-        result.exit = exit
-        result.ok   = true
-        return
-
-proc skipLoopIsSafe(prog: Program, loop: SkipLoop): bool =
-  ## The SIMD jump is sound when the loop's exit successor can handle the
-  ## character at the jump position — epsilon transitions are always safe
-  ## (the NFA follows them), and consuming instructions are safe only if
-  ## they match the stop character.
-  let exit = loop.exit
-  if exit < 0 or exit >= prog.instrs.len: return false
-  let exitIns = prog.instrs[exit]
-  case exitIns.op
-  of opChar:
-    # Only safe for byte-stop loops where the char matches
-    if loop.kind == slkByte:
-      return exitIns.arg1 == ord(loop.stopCh)
-    return false
-  of opMatch, opAnchorEnd:
-    return true
-  of opSplit, opSplitLazy, opSave, opProgress, opJmp:
-    # Epsilon transitions — NFA follows them, always safe
-    return true
-  else:
-    return false
 
 proc initRegexVM*(prog: Program): RegexVM =
   let n = prog.instrs.len + 1
@@ -216,23 +116,9 @@ proc initRegexVM*(prog: Program): RegexVM =
 proc closeRegexVM*(vm: var RegexVM) =
   ## Release JIT resources held by the VM. Safe to call multiple times.
   vm.jit.freeJit()
-  vm.jitFull.freeJit()
 
 proc hasJit(vm: RegexVM): bool {.inline.} =
   when defined(noRegexJit) or defined(windows): false else: vm.jit.fn != nil
-
-proc ensureJitFull(vm: var RegexVM): bool =
-  ## Lazily compile the full-match JIT variant (opMatch requires end of
-  ## input and otherwise backtracks). Returns false when unavailable.
-  when defined(noRegexJit) or defined(windows):
-    false
-  else:
-    if vm.jit.fn == nil:
-      return false
-    if vm.jitFull.fn == nil and not vm.jitFullTried:
-      vm.jitFullTried = true
-      vm.jitFull = jitcore.compileRegex(vm.prog, true)
-    vm.jitFull.fn != nil
 
 proc addEpsilon(vm: var RegexVM, nxt: var PcSet,
                 pc, inputPos, inputLen: int; input: string) =
@@ -309,8 +195,8 @@ proc execFast(vm: var RegexVM, input: string, startPos: int): MatchResult =
             hit = scanNonSpace(input, sp, inputLen)
           of slkNonUpperDigitUnder:
             hit = scanNonUpperDigitUnder(input, sp, inputLen)
-          of slkNone:
-            discard
+          of slkChar, slkNone:
+            discard  # slkChar is JIT-only; skipLoopInfo never produces it
           if hit >= 0:
             sp = hit
             clearPcSet(vm.pcCur)
@@ -436,8 +322,8 @@ proc execFull(vm: var RegexVM, input: string, startPos: int,
               hit = scanNonSpace(input, sp, inputLen)
             of slkNonUpperDigitUnder:
               hit = scanNonUpperDigitUnder(input, sp, inputLen)
-            of slkNone:
-              discard
+            of slkChar, slkNone:
+              discard  # slkChar is JIT-only; skipLoopInfo never produces it
             if hit >= 0:
               sp = hit
             else:
@@ -763,12 +649,18 @@ proc execShape(pf: Prefilter, input: string,
 proc match*(vm: var RegexVM, input: string): MatchResult =
   ## Anchored full match: must start at 0 AND consume the whole string.
   when not defined(noRegexJit) and not defined(windows):
-    if ensureJitFull(vm):
-      let stopPos = jitcore.jitExec(vm.jitFull, input, 0)
-      if stopPos >= 0 and stopPos == input.len:
-        return MatchResult(matched: true, start: 0, stop: stopPos,
-                           captures: jitcore.jitCaptures(vm.jitFull))
-      return noMatch()
+    if vm.jit.fn != nil:
+      # Same compiled code as find(): the context flag makes opMatch
+      # require end of input (with backtracking into alternatives).
+      vm.jit.ctx.fullFlag = 1
+      try:
+        let stopPos = jitcore.jitExec(vm.jit, input, 0)
+        if stopPos >= 0 and stopPos == input.len:
+          return MatchResult(matched: true, start: 0, stop: stopPos,
+                             captures: jitcore.jitCaptures(vm.jit))
+        return noMatch()
+      finally:
+        vm.jit.ctx.fullFlag = 0
   result = vm.exec(input, 0)
   if result.matched and (result.start != 0 or result.stop != input.len):
     result = noMatch()

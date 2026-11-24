@@ -26,6 +26,7 @@ type
     capsBase*:   ptr UncheckedArray[byte]  ## capture working buffer
     stackBytes*: int  ## owned backtrack stack size (for freeJitCtx)
     numSlots*:   int  ## capture slots in capsBase (for jitCapturesIn)
+    fullFlag*:   int  ## nonzero requires opMatch at end of input (match())
 
   CompiledJit* = object
     fn*:       RegexJitFn
@@ -36,6 +37,8 @@ type
     anchored*: bool   ## program starts with ^: only startPos 0 can match
     classBitmaps*: ptr UncheckedArray[uint8]  ## owned copy of class bitmaps
     numClasses*: int                          ## number of 32-byte bitmaps
+    auxTable*:   ptr UncheckedArray[uint8]  ## owned 256-byte class table:
+                                            ## bit0 = isWord, bit1 = isSpace
     capsBuf*:  ptr UncheckedArray[int]  ## owned capture working buffer
     numSlots*: int                      ## capture slots (numCaptures*2)
 
@@ -53,6 +56,9 @@ proc freeJit*(cj: var CompiledJit) =
   if cj.classBitmaps != nil:
     deallocShared(cast[pointer](cj.classBitmaps))
     cj.classBitmaps = nil
+  if cj.auxTable != nil:
+    deallocShared(cast[pointer](cj.auxTable))
+    cj.auxTable = nil
   if cj.capsBuf != nil:
     deallocShared(cast[pointer](cj.capsBuf))
     cj.capsBuf = nil
@@ -86,16 +92,16 @@ proc newJitCtx*(numSlots: int): ptr JitCtx =
   let slots = max(numSlots, 0)
   let entryBytes = 16 + slots * 8
   let stackBytes = BacktrackMaxEntries * entryBytes
-  let stack = cast[ptr UncheckedArray[byte]](allocShared0(stackBytes))
+  let stack = cast[ptr UncheckedArray[byte]](allocShared(stackBytes))
   if stack == nil:
     return nil
   var capsBuf: ptr UncheckedArray[int] = nil
   if slots > 0:
-    capsBuf = cast[ptr UncheckedArray[int]](allocShared0(slots * 8))
+    capsBuf = cast[ptr UncheckedArray[int]](allocShared(slots * 8))
     if capsBuf == nil:
       deallocShared(cast[pointer](stack))
       return nil
-  let ctx = cast[ptr JitCtx](allocShared0(sizeof(JitCtx)))
+  let ctx = cast[ptr JitCtx](allocShared(sizeof(JitCtx)))
   if ctx == nil:
     deallocShared(cast[pointer](stack))
     if capsBuf != nil:
@@ -106,6 +112,7 @@ proc newJitCtx*(numSlots: int): ptr JitCtx =
   ctx.capsBase = cast[ptr UncheckedArray[byte]](capsBuf)
   ctx.stackBytes = stackBytes
   ctx.numSlots = slots
+  ctx.fullFlag = 0
   ctx
 
 proc freeJitCtx*(ctx: ptr JitCtx) =
@@ -123,6 +130,8 @@ proc jitExecIn*(cj: CompiledJit, ctx: ptr JitCtx, input: string,
   ## Run the JIT'd matcher anchored at `startPos` using an explicit
   ## execution context. Returns the match end position, or -1 on no
   ## match (also when there is no compiled code or the context is nil).
+  ## For full-match (`match()`) semantics set `ctx.fullFlag` to 1 around
+  ## the call; `find()`/`findAll()` leave it 0.
   if cj.fn == nil or ctx == nil: return -1
   if startPos < 0 or startPos > input.len: return -1
   let p = if input.len > 0: unsafeAddr input[0] else: nil
@@ -137,11 +146,80 @@ proc jitCapturesIn*(ctx: ptr JitCtx): seq[int] =
   for i in 0 ..< ctx.numSlots:
     result[i] = caps[i]
 
+proc skipExitFor*(prog: Program, splitPc: int):
+    tuple[exit: int, kind: SkipLoopKind, stopCh: char] =
+  ## If `splitPc` heads a greedy loop replaceable by a run scan, return
+  ## the exit pc plus loop kind; else `exit` is -1. Sound only when the
+  ## exit's first consuming op provably excludes loop characters (or the
+  ## exit is end-anchored): backtracking into shorter runs could then
+  ## never succeed, so the per-char backtrack entries are dead weight.
+  ## The body must be a single class/escape/char op with a jmp back to
+  ## the split (no saves inside), and the
+  ## exit is classified by following epsilon transitions (saves, jumps,
+  ## anchors) to the first consuming op; a fork (split) gives up.
+  result = (-1, slkNone, '\0')
+  let n = prog.instrs.len
+  if splitPc < 0 or splitPc + 2 >= n: return
+  let s = prog.instrs[splitPc]
+  if s.op != opSplit or s.arg1 != splitPc + 1: return
+  var bodyPc = splitPc + 1
+  if prog.instrs[bodyPc].op == opProgress:
+    # +-form: split(body, exit); progress; body; jmp(split)
+    if splitPc + 3 >= n: return
+    bodyPc = splitPc + 2
+  var loopKind = slkNone
+  var loopCh = '\0'
+  # The body must be a single consuming op with a jmp back to the split:
+  # an unbounded `*`/`+` loop. This excludes `?` optionals (no back-edge)
+  # and multi-op bodies (which may contain saves).
+  let jmpPc = bodyPc + 1
+  if jmpPc >= n: return
+  let j = prog.instrs[jmpPc]
+  if j.op != opJmp or j.arg1 != splitPc: return
+  if prog.instrs[bodyPc].op == opChar:
+    # Literal-char loop (a* a+): consume while equal. Unlike slkByte the
+    # scan consumes the run, so a same-char exit could match a shorter
+    # retry (`a*a`) and only a *different* exit char is sound.
+    loopKind = slkChar
+    loopCh = char(prog.instrs[bodyPc].arg1)
+  elif prog.instrs[bodyPc].op in {opCharClass, opEscapeClass}:
+    let loop = skipLoopInfo(prog, bodyPc)
+    if not loop.ok or loop.exit != s.arg2: return
+    if loop.kind notin {slkByte, slkNonWord, slkNonDigit, slkNonSpace}: return
+    loopKind = loop.kind
+    loopCh = loop.stopCh
+  else:
+    return
+  var epc = s.arg2
+  var depth = 0
+  while true:
+    if epc < 0 or epc >= n or depth > 64: return (-1, slkNone, '\0')
+    let e = prog.instrs[epc]
+    case e.op
+    of opJmp: epc = e.arg1
+    of opSave, opProgress: epc = epc + 1
+    of opAnchorStart, opAnchorEnd, opWordBoundary: epc = epc + 1
+    of opMatch: return (s.arg2, loopKind, loopCh)
+    of opChar:
+      let c = char(e.arg1)
+      var sound = false
+      case loopKind
+      of slkByte: sound = c == loopCh
+      of slkChar: sound = c != loopCh
+      of slkNonWord: sound = c notin {'a'..'z', 'A'..'Z', '0'..'9', '_'}
+      of slkNonDigit: sound = c notin {'0'..'9'}
+      of slkNonSpace: sound = c notin {' ', '\t', '\n', '\r', '\f', '\v'}
+      else: discard
+      if sound: return (s.arg2, loopKind, loopCh)
+      return (-1, slkNone, '\0')
+    else: return (-1, slkNone, '\0')  # split, class, escape, anychar: give up
+    inc depth
+
 when defined(windows) or defined(noRegexJit) or not defined(amd64):
   # No JIT on Windows (System-V vs Win64 calling convention mismatch),
   # when explicitly disabled, or on non-x86_64 targets: the backend below
   # emits x86-64 machine code.
-  proc compileRegex*(prog: Program, fullMatch = false): CompiledJit =
+  proc compileRegex*(prog: Program): CompiledJit =
     ## Stub: JIT unavailable, the caller keeps using the interpreter.
     result = CompiledJit()
 
@@ -154,18 +232,23 @@ else:
   #   r12 = backtrack stack top       (callee-saved, grows upward)
   #   r15 = backtrack stack limit     (callee-saved)
   #   r14 = capture working buffer    (callee-saved)
+  #   rbp = execution context (ctx)   (callee-saved, repurposed)
   #   rax, rcx, rdx, r8-r11 = scratch
   #
   # Entry ABI: fn(rdi=input, rsi=len, rdx=startPos, rcx=ctx)
-  #   [rcx]      = backtrack stack base
-  #   [rcx + 8]  = backtrack stack limit
-  #   [rcx + 16] = capture working buffer (numSlots int64s, or nil)
+  # The prologue copies ctx to rbp (the frame pointer is unused by
+  # generated code: pushes/pops stay balanced), freeing rcx as scratch:
+  #   [rbp]      = backtrack stack base
+  #   [rbp + 8]  = backtrack stack limit
+  #   [rbp + 16] = capture working buffer (numSlots int64s, or nil)
+  #   [rbp + 40] = full-match flag: when nonzero, opMatch requires pos == len
   # Returns: match end position (>= 0) or -1 on no match.
   #
   # Backtrack entry: 16 + 8*numSlots bytes
-  #   { int64 pos; int32 resumeId; int32 pad; int64 caps[numSlots] }
+  #   { int64 pos; uint64 resumeAddr; int64 caps[numSlots] }
   # Every consuming/anchor failure jumps to the single fail-entry
-  # label which unwinds the backtrack stack, restoring captures.
+  # label which unwinds the backtrack stack, restoring captures, and
+  # indirect-jumps to the stored resume address.
   # Splits push an entry and jump to their preferred branch.
   #
 
@@ -180,10 +263,11 @@ else:
       push r14
       push r15
       mov rbx, rdi            # input ptr
+      mov rbp, rcx            # ctx (frame unused: pushes stay balanced)
       mov r13, rdx            # pos = startPos
-      mov r12, [rcx]          # backtrack top = base (empty)
-      mov r15, [rcx + 8]      # backtrack limit
-      mov r14, [rcx + 16]     # capture working buffer
+      mov r12, [rbp]          # backtrack top = base (empty)
+      mov r15, [rbp + 8]      # backtrack limit
+      mov r14, [rbp + 16]     # capture working buffer
     # Sentinel-fill the capture slots so untouched optional groups
     # read back as -1 (mirrors the interpreter's initCaps).
     for i in 0 ..< numSlots:
@@ -218,6 +302,51 @@ else:
       cmp eax, lit
       jne dyn(fail)
       inc r13
+
+  # Consume a run of literal characters with one bounds check, then
+  # wide compares (qword/dword) and single-byte tail checks. Offsets
+  # are relative to the entry r13, which advances once at the end.
+  proc emitLiteralRun(a: var Assembler, bytes: openArray[int],
+                      fail: DynamicLabel) =
+    let n = bytes.len
+    doAssert n >= 2
+    dynasm a:
+      arch x64
+      lea rax, [r13 + n]
+      cmp rax, rsi
+      ja dyn(fail)
+    var off = 0
+    while off + 8 <= n:
+      var w: uint64 = 0
+      for i in 0 ..< 8:
+        w = w or (uint64(bytes[off + i]) shl (i * 8))
+      dynasm a:
+        arch x64
+        mov rax, [rbx + r13*1 + off]
+        movabs r10, w
+        cmp rax, r10
+        jne dyn(fail)
+      off += 8
+    if off + 4 <= n:
+      var w: uint32 = 0
+      for i in 0 ..< 4:
+        w = w or (uint32(bytes[off + i]) shl (i * 8))
+      dynasm a:
+        arch x64
+        cmp dword [rbx + r13*1 + off], w
+        jne dyn(fail)
+      off += 4
+    while off < n:
+      let b = bytes[off]
+      dynasm a:
+        arch x64
+        movzx eax, byte [rbx + r13*1 + off]
+        cmp eax, b
+        jne dyn(fail)
+      inc off
+    dynasm a:
+      arch x64
+      add r13, n
 
   # Consume any character except '\n'.
   proc emitAnyChar(a: var Assembler, fail: DynamicLabel) =
@@ -260,9 +389,11 @@ else:
       inc r13                       # success: consume the char
 
   # Consume one char via escape class (\d \D \w \W \s \S).
-  # `cls` is the escape letter itself. Success falls through past the
-  # last emitted check; each multi-branch shape gets a fresh join label.
-  proc emitEscapeClass(a: var Assembler, cls: char, fail: DynamicLabel) =
+  # `tblAddr` is the aux class table (bit0=word, bit1=space); \d stays
+  # inline (sub+cmp is already minimal), \w/\s go through the table.
+  # Success falls through; each multi-branch shape gets a fresh join label.
+  proc emitEscapeClass(a: var Assembler, cls: char, fail: DynamicLabel,
+                       tblAddr = 0'u) =
     dynasm a:
       arch x64
       cmp r13, rsi
@@ -281,57 +412,21 @@ else:
         sub eax, ord('0')
         cmp eax, 9
         jbe dyn(fail)
-    of 'w':
-      let ok = a.newDynamicLabel()
+    of 'w', 'W', 's', 'S':
+      let bit = if cls in {'w', 'W'}: 1 else: 2
       dynasm a:
         arch x64
-        mov ecx, eax
-        `or` ecx, 0x20
-        sub ecx, ord('a')
-        cmp ecx, 25
-        jbe dyn(ok)
-        mov ecx, eax
-        sub ecx, ord('0')
-        cmp ecx, 9
-        jbe dyn(ok)
-        cmp eax, ord('_')
-        je dyn(ok)
-        jmp dyn(fail)
-        dynamicLabel ok
-    of 'W':
-      dynasm a:
-        arch x64
-        mov ecx, eax
-        `or` ecx, 0x20
-        sub ecx, ord('a')
-        cmp ecx, 25
-        jbe dyn(fail)
-        mov ecx, eax
-        sub ecx, ord('0')
-        cmp ecx, 9
-        jbe dyn(fail)
-        cmp eax, ord('_')
-        je dyn(fail)
-    of 's':
-      # \t(9) \n(10) \v(11) \f(12) \r(13) are contiguous
-      let ok = a.newDynamicLabel()
-      dynasm a:
-        arch x64
-        sub eax, 9
-        cmp eax, 4
-        jbe dyn(ok)
-        cmp byte [rbx + r13*1], ord(' ')
-        je dyn(ok)
-        jmp dyn(fail)
-        dynamicLabel ok
-    of 'S':
-      dynasm a:
-        arch x64
-        sub eax, 9
-        cmp eax, 4
-        jbe dyn(fail)
-        cmp byte [rbx + r13*1], ord(' ')
-        je dyn(fail)
+        movabs r10, tblAddr
+        movzx eax, byte [r10 + rax*1]
+        `and` eax, bit
+      if cls in {'w', 's'}:
+        dynasm a:
+          arch x64
+          jz dyn(fail)
+      else:
+        dynasm a:
+          arch x64
+          jnz dyn(fail)
     else:
       dynasm a:
         arch x64
@@ -354,10 +449,11 @@ else:
       cmp r13, rsi
       jne dyn(fail)
 
-  # Assert \b / \B. prevLoaded/curLoaded are caller-allocated join
-  # labels for the guarded loads. Uses r11 as scratch: r14 is the
-  # capture buffer base and must survive.
-  proc emitWordBoundary(a: var Assembler, negated: bool, fail: DynamicLabel,
+  # Assert \b / \B via the aux class table (bit0 = isWord).
+  # prevLoaded/curLoaded are caller-allocated join labels for the guarded
+  # loads. Uses r10 for the table base and ecx/edx as scratch.
+  proc emitWordBoundary(a: var Assembler, tblAddr: uint, negated: bool,
+                        fail: DynamicLabel,
                         prevLoaded, curLoaded: DynamicLabel) =
     dynasm a:
       arch x64
@@ -367,46 +463,18 @@ else:
       jz dyn(prevLoaded)
       movzx ecx, byte [rbx + r13*1 - 1]
       dynamicLabel prevLoaded
-      mov r8d, ecx
-      `or` r8d, 0x20
-      sub r8d, ord('a')
-      cmp r8d, 25
-      setbe r8b
-      movzx r8d, r8b
-      mov r9d, ecx
-      sub r9d, ord('0')
-      cmp r9d, 9
-      setbe r9b
-      movzx r9d, r9b
-      `xor` edx, edx
-      cmp ecx, ord('_')
-      sete dl
-      `or` edx, r8d
-      `or` edx, r9d              # edx = isWord(prev)
+      movabs r10, tblAddr
+      movzx ecx, byte [r10 + rcx*1]
+      `and` ecx, 1                # ecx = isWord(prev)
       # isWord(current char), 0 when pos == len
-      `xor` ecx, ecx
+      `xor` edx, edx
       cmp r13, rsi
       jae dyn(curLoaded)
-      movzx ecx, byte [rbx + r13*1]
+      movzx edx, byte [rbx + r13*1]
       dynamicLabel curLoaded
-      mov r8d, ecx
-      `or` r8d, 0x20
-      sub r8d, ord('a')
-      cmp r8d, 25
-      setbe r8b
-      movzx r8d, r8b
-      mov r9d, ecx
-      sub r9d, ord('0')
-      cmp r9d, 9
-      setbe r9b
-      movzx r9d, r9b
-      `xor` r11d, r11d
-      cmp ecx, ord('_')
-      sete r11b
-      movzx r11d, r11b
-      `or` r11d, r8d
-      `or` r11d, r9d             # r11d = isWord(cur)
-      `xor` edx, r11d            # edx = 1 iff boundary
+      movzx edx, byte [r10 + rdx*1]
+      `and` edx, 1                # edx = isWord(cur)
+      `xor` ecx, edx              # ecx = 1 iff boundary
     if negated:
       dynasm a:
         arch x64
@@ -429,18 +497,90 @@ else:
       arch x64
       mov [r14 + off], r13
 
-  # Fork execution: push {pos, resumeId, caps...} and try preferred branch.
+  # Greedy-loop skip: replace per-char push/consume/unwind traffic with a
+  # single scan to the run end, then continue at the exit. Sound only for
+  # the exits classified by skipExitFor below.
+  proc emitSkipLoop(a: var Assembler, kind: SkipLoopKind, stopCh: char,
+                    tblAddr: uint, exitLbl: DynamicLabel) =
+    let scan = a.newDynamicLabel()
+    let done = a.newDynamicLabel()
+    let stopOrd = ord(stopCh)
+    case kind
+    of slkByte:
+      dynasm a:
+        arch x64
+        dynamicLabel scan
+        cmp r13, rsi
+        jae dyn(done)
+        movzx eax, byte [rbx + r13*1]
+        cmp eax, stopOrd
+        je dyn(done)
+        inc r13
+        jmp dyn(scan)
+        dynamicLabel done
+    of slkNonWord, slkNonSpace:
+      let bit = if kind == slkNonWord: 1 else: 2
+      dynasm a:
+        arch x64
+        movabs r10, tblAddr
+        dynamicLabel scan
+        cmp r13, rsi
+        jae dyn(done)
+        movzx eax, byte [rbx + r13*1]
+        movzx eax, byte [r10 + rax*1]
+        `and` eax, bit
+        jz dyn(done)
+        inc r13
+        jmp dyn(scan)
+        dynamicLabel done
+    of slkNonDigit:
+      dynasm a:
+        arch x64
+        dynamicLabel scan
+        cmp r13, rsi
+        jae dyn(done)
+        movzx eax, byte [rbx + r13*1]
+        sub eax, ord('0')
+        cmp eax, 9
+        ja dyn(done)
+        inc r13
+        jmp dyn(scan)
+        dynamicLabel done
+    of slkChar:
+      # Consume while equal to the loop char (a* a+).
+      dynasm a:
+        arch x64
+        dynamicLabel scan
+        cmp r13, rsi
+        jae dyn(done)
+        movzx eax, byte [rbx + r13*1]
+        cmp eax, stopOrd
+        jne dyn(done)
+        inc r13
+        jmp dyn(scan)
+        dynamicLabel done
+    else:
+      doAssert false, "emitSkipLoop: unsupported kind"
+    dynasm a:
+      arch x64
+      jmp dyn(exitLbl)
+
+  # Fork execution: push {pos, resumeAddr, caps...} and try preferred branch.
   # Greedy split passes arg1's label; lazy split passes arg2's label
-  # as tryFirst. Captures are snapshotted so the deferred branch resumes
-  # with the values live at the fork point (PCRE semantics).
-  proc emitSplit(a: var Assembler, tryFirst: DynamicLabel,
-                 resumeId, entryBytes, numSlots: int, fail: DynamicLabel) =
+  # as tryFirst. The deferred address is a code pointer (RIP-relative LEA,
+  # resolved at finalize), so failure unwinds with a single indirect jump
+  # instead of a linear id-dispatch chain. Captures are snapshotted so the
+  # deferred branch resumes with the values live at the fork point (PCRE
+  # semantics). Entry stays 16 + 8*numSlots bytes: {pos:8, addr:8, caps}.
+  proc emitSplit(a: var Assembler, tryFirst, resume: DynamicLabel,
+                 entryBytes, numSlots: int, fail: DynamicLabel) =
     dynasm a:
       arch x64
       cmp r12, r15
       jae dyn(fail)              # stack full -> treat path as failed
       mov [r12], r13
-      mov dword [r12 + 8], resumeId
+      mov rax, dyn(resume)
+      mov [r12 + 8], rax
     for i in 0 ..< numSlots:
       let off = 16 + i * 8
       let src = i * 8
@@ -453,26 +593,28 @@ else:
       add r12, entryBytes
       jmp dyn(tryFirst)
 
-  # Success: return current position. In full-match mode the match only
-  # counts when it reached end of input; otherwise backtrack so that
-  # another alternation/quantifier path can try to consume the rest.
-  proc emitMatch(a: var Assembler, exitLbl, fail: DynamicLabel,
-                 wantFull: bool) =
-    if wantFull:
-      dynasm a:
-        arch x64
-        cmp r13, rsi
-        jne dyn(fail)
+  # Success: return current position. When the context full-match flag
+  # is set (match()), the match only counts at end of input; otherwise
+  # backtrack so another alternation/quantifier path can consume the rest.
+  # One dynamic check serves both match() and find()/findAll() from a
+  # single compilation (opMatch runs at most once per verification).
+  proc emitMatch(a: var Assembler, exitLbl, fail: DynamicLabel) =
+    let fullOk = a.newDynamicLabel()
     dynasm a:
       arch x64
+      cmp qword [rbp + 40], 0
+      je dyn(fullOk)
+      cmp r13, rsi
+      jne dyn(fail)
+      dynamicLabel fullOk
       mov rax, r13
       jmp dyn(exitLbl)
 
-  # Fail-entry head: unwind one backtrack entry into r13/eax,
+  # Fail-entry head: unwind one backtrack entry into r13/rax,
   # restoring the capture snapshot, or jump to noMatch when the stack
   # is empty. The base is recomputed from the limit since no register
-  # is reserved for it. The restore uses r10 as temp so eax (resume id)
-  # survives for the dispatch chain.
+  # is reserved for it. The restore uses r10 as temp so rax (resume
+  # address) survives for the final indirect jump.
   proc emitFailHead(a: var Assembler, noMatch: DynamicLabel,
                     entryBytes, numSlots: int, stackBytes: int) =
     dynasm a:
@@ -482,7 +624,7 @@ else:
       jbe dyn(noMatch)             # empty
       sub r12, entryBytes
       mov r13, [r12]
-      mov eax, [r12 + 8]
+      mov rax, [r12 + 8]
     for i in 0 ..< numSlots:
       let off = 16 + i * 8
       let dst = i * 8
@@ -490,13 +632,9 @@ else:
         arch x64
         mov r10, [r12 + off]
         mov [r14 + dst], r10
-
-  # One dispatch case for the unwound resume id (eax).
-  proc emitDispatch(a: var Assembler, id: int, target: DynamicLabel) =
     dynasm a:
       arch x64
-      cmp eax, id
-      je dyn(target)
+      jmp rax                      # O(1) resume: no id-dispatch chain
 
   # No match: return -1.
   proc emitNoMatch(a: var Assembler) =
@@ -504,11 +642,12 @@ else:
       arch x64
       `or` rax, -1
 
-  proc compileRegex*(prog: Program, fullMatch = false): CompiledJit =
-    ## Compile `prog` to native code. With `fullMatch`, opMatch only
-    ## succeeds at end of input (PCRE fullmatch semantics: failed end
-    ## checks backtrack into remaining alternatives). Capture groups are
-    ## supported: saves write the working buffer, splits snapshot it.
+  proc compileRegex*(prog: Program): CompiledJit =
+    ## Compile `prog` to native code. A single compilation serves both
+    ## `match()` (sets the context full-match flag so opMatch requires
+    ## end of input, with PCRE fullmatch backtracking semantics) and
+    ## `find()`/`findAll()`. Capture groups are supported: saves write
+    ## the working buffer, splits snapshot it.
     ## Returns a result with fn == nil when the program contains
     ## epsilon cycles.
     let numInstrs = prog.instrs.len
@@ -593,28 +732,81 @@ else:
     let numClasses = prog.classes.len
     var bitmapStore: ptr UncheckedArray[uint8] = nil
     if numClasses > 0:
-      bitmapStore = cast[ptr UncheckedArray[uint8]](allocShared0(numClasses * 32))
+      bitmapStore = cast[ptr UncheckedArray[uint8]](allocShared(numClasses * 32))
       if bitmapStore == nil:
         return
       for ci in 0 ..< numClasses:
         copyMem(addr bitmapStore[ci * 32],
                 unsafeAddr prog.classes[ci].bitmap[0], 32)
 
+    # Skip-loop pre-pass: greedy loops with sound exits become run scans
+    # (no backtrack traffic). Runs before aux-table sizing since word/
+    # space scans need the table.
+    var skipExits = initTable[int, tuple[exit: int, kind: SkipLoopKind,
+                                         stopCh: char]]()
+    var skipNeedsTbl = false
+    for pc in 0 ..< numInstrs:
+      if prog.instrs[pc].op != opSplit: continue
+      let sk = skipExitFor(prog, pc)
+      if sk.exit < 0: continue
+      skipExits[pc] = sk
+      if sk.kind in {slkNonWord, slkNonSpace}: skipNeedsTbl = true
+
+    # Aux class table (bit0 = isWord, bit1 = isSpace) for \b and
+    # \w\W\s\S. Allocated only when the program uses them; the generated
+    # code embeds a raw pointer, so it must outlive `prog` like the
+    # bitmaps above.
+    var auxTable: ptr UncheckedArray[uint8] = nil
+    block allocAux:
+      var needAux = skipNeedsTbl
+      if not needAux:
+        for ins in prog.instrs:
+          if ins.op == opWordBoundary:
+            needAux = true
+            break
+          if ins.op == opEscapeClass and char(ins.arg1) in {'w', 'W', 's', 'S'}:
+            needAux = true
+            break
+      if not needAux:
+        break allocAux
+      auxTable = cast[ptr UncheckedArray[uint8]](allocShared(256))
+      if auxTable == nil:
+        if bitmapStore != nil:
+          deallocShared(cast[pointer](bitmapStore))
+        return
+      for c in 0 ..< 256:
+        var b = 0'u8
+        let ch = char(c)
+        if ch in {'a'..'z', 'A'..'Z', '0'..'9', '_'}: b = b or 1
+        if ch in {' ', '\t', '\n', '\r', '\f', '\v'}: b = b or 2
+        auxTable[c] = b
+    let tblAddr = if auxTable != nil: cast[uint](auxTable) else: 0'u
+
     emitPrologue(a, numSlots)
 
-    type ResumeCase = tuple[id: int, target: DynamicLabel]
-    var resumeCases: seq[ResumeCase] = @[]
-    var nextResumeId = 0
-
     # Pass 2: emit opcode bodies.
-    for pc in 0 ..< numInstrs:
+    var pc = 0
+    while pc < numInstrs:
       let ins = prog.instrs[pc]
       if pc in pcToLabel:
         emitDefine(a, pcToLabel[pc])
 
       case ins.op
       of opChar:
-        emitChar(a, ins.arg1, failEntry)
+        # Coalesce maximal literal runs (stop before jump targets that
+        # land mid-run so every label keeps its position).
+        var run = @[ins.arg1]
+        var q = pc + 1
+        while q < numInstrs and prog.instrs[q].op == opChar and
+            q notin pcToLabel:
+          run.add(prog.instrs[q].arg1)
+          inc q
+        if run.len >= 2:
+          emitLiteralRun(a, run, failEntry)
+        else:
+          emitChar(a, ins.arg1, failEntry)
+        pc = q
+        continue
 
       of opAnyChar:
         emitAnyChar(a, failEntry)
@@ -625,12 +817,14 @@ else:
         if ins.arg1 < 0 or ins.arg1 >= numClasses:
           if bitmapStore != nil:
             deallocShared(cast[pointer](bitmapStore))
+          if auxTable != nil:
+            deallocShared(cast[pointer](auxTable))
           return
         emitCharClass(a, cast[uint](addr bitmapStore[ins.arg1 * 32]),
                       ins.neg, failEntry)
 
       of opEscapeClass:
-        emitEscapeClass(a, char(ins.arg1), failEntry)
+        emitEscapeClass(a, char(ins.arg1), failEntry, tblAddr)
 
       of opAnchorStart:
         emitAnchorStart(a, failEntry)
@@ -640,21 +834,23 @@ else:
 
       of opWordBoundary:
         let (pl, cl) = wbLabels[pc]
-        emitWordBoundary(a, ins.neg, failEntry, pl, cl)
+        emitWordBoundary(a, tblAddr, ins.neg, failEntry, pl, cl)
 
       of opJmp:
         emitJmp(a, pcToLabel[ins.arg1])
 
       of opSplit, opSplitLazy:
-        let tryFirstPc = if ins.op == opSplit: ins.arg1 else: ins.arg2
-        let resumePc   = if ins.op == opSplit: ins.arg2 else: ins.arg1
-        resumeCases.add((nextResumeId, pcToLabel[resumePc]))
-        emitSplit(a, pcToLabel[tryFirstPc], nextResumeId,
-                  entryBytes, numSlots, failEntry)
-        inc nextResumeId
+        if pc in skipExits:
+          let sk = skipExits[pc]
+          emitSkipLoop(a, sk.kind, sk.stopCh, tblAddr, pcToLabel[sk.exit])
+        else:
+          let tryFirstPc = if ins.op == opSplit: ins.arg1 else: ins.arg2
+          let resumePc   = if ins.op == opSplit: ins.arg2 else: ins.arg1
+          emitSplit(a, pcToLabel[tryFirstPc], pcToLabel[resumePc],
+                    entryBytes, numSlots, failEntry)
 
       of opMatch:
-        emitMatch(a, matchExit, failEntry, fullMatch)
+        emitMatch(a, matchExit, failEntry)
 
       of opProgress:
         discard  # pure epsilon
@@ -665,17 +861,18 @@ else:
         if ins.arg1 < 0 or ins.arg1 >= numSlots:
           if bitmapStore != nil:
             deallocShared(cast[pointer](bitmapStore))
+          if auxTable != nil:
+            deallocShared(cast[pointer](auxTable))
           return
         emitSave(a, ins.arg1)
+      inc pc
 
-    # Tail: match exit, failure unwinder with dispatch chain, no-match.
+    # Tail: match exit, failure unwinder (O(1) indirect resume), no-match.
     emitDefine(a, matchExit)
     emitEpilogue(a)
 
     emitDefine(a, failEntry)
     emitFailHead(a, noMatch, entryBytes, numSlots, stackBytes)
-    for rc in resumeCases:
-      emitDispatch(a, rc.id, rc.target)
 
     emitDefine(a, noMatch)
     emitNoMatch(a)
@@ -690,28 +887,34 @@ else:
     # qualify for the same reason as the class bitmaps above.
     var capsBuf: ptr UncheckedArray[int] = nil
     if numSlots > 0:
-      capsBuf = cast[ptr UncheckedArray[int]](allocShared0(numSlots * 8))
+      capsBuf = cast[ptr UncheckedArray[int]](allocShared(numSlots * 8))
       if capsBuf == nil:
         if bitmapStore != nil:
           deallocShared(cast[pointer](bitmapStore))
+        if auxTable != nil:
+          deallocShared(cast[pointer](auxTable))
         buf.destroy()
         return
 
-    let stack = cast[ptr UncheckedArray[byte]](allocShared0(stackBytes))
+    let stack = cast[ptr UncheckedArray[byte]](allocShared(stackBytes))
     if stack == nil:
       if capsBuf != nil:
         deallocShared(cast[pointer](capsBuf))
       if bitmapStore != nil:
         deallocShared(cast[pointer](bitmapStore))
+      if auxTable != nil:
+        deallocShared(cast[pointer](auxTable))
       buf.destroy()
       return
-    let ctx = cast[ptr JitCtx](allocShared0(sizeof(JitCtx)))
+    let ctx = cast[ptr JitCtx](allocShared(sizeof(JitCtx)))
     if ctx == nil:
       deallocShared(cast[pointer](stack))
       if capsBuf != nil:
         deallocShared(cast[pointer](capsBuf))
       if bitmapStore != nil:
         deallocShared(cast[pointer](bitmapStore))
+      if auxTable != nil:
+        deallocShared(cast[pointer](auxTable))
       buf.destroy()
       return
     ctx.stackBase  = stack
@@ -719,6 +922,7 @@ else:
     ctx.capsBase   = cast[ptr UncheckedArray[byte]](capsBuf)
     ctx.stackBytes = stackBytes
     ctx.numSlots   = numSlots
+    ctx.fullFlag   = 0
 
     # Scan hints: a leading ^ pins matches to position 0; a leading
     # literal byte lets jitScan use SIMD to skip between candidates.
@@ -737,6 +941,7 @@ else:
                          ctx: ctx, buf: buf, codeSize: buf.len,
                          firstByte: firstByte, anchored: anchored,
                          classBitmaps: bitmapStore, numClasses: numClasses,
+                         auxTable: auxTable,
                          capsBuf: capsBuf, numSlots: numSlots)
 
 proc jitExec*(cj: CompiledJit, input: string, startPos = 0): int {.inline.} =

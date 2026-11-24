@@ -68,6 +68,114 @@ type
   RegexCompiler* = object
     prog: Program
 
+  SkipLoopKind* = enum
+    slkNone,       ## not a skipable loop
+    slkByte,       ## stop on specific byte: [^X]*
+    slkChar,       ## consume while byte equals: a* a+ (JIT only)
+    slkNonWord,    ## stop on first non-\w: \w* \w+
+    slkNonDigit,   ## stop on first non-\d: \d* \d+
+    slkNonSpace,   ## stop on first non-\s: \s* \s+
+    slkNonUpperDigitUnder,  ## stop on first non-[A-Z0-9_]
+
+  SkipLoop* = tuple[kind: SkipLoopKind, stopCh: char, exit: int, ok: bool]
+
+#
+# Skip-loop analysis (shared by the interpreter fast path and the JIT).
+# Recognizes simple greedy loops whose iterations can be replaced by a
+# single scan to the run end:
+#   [^X]*  → split(pc-2, exit); charclass at pc; jmp(split) at pc+1
+#   \w+    → split(pc-3, exit); progress at pc-1; escapeClass at pc; jmp(split) at pc+1
+#   \w*    → split(pc-2, exit); escapeClass at pc; jmp(split) at pc+1
+#
+
+proc skipLoopInfo*(prog: Program, pc: int): SkipLoop =
+  ## Given a consuming PC parked in the PcSet (interpreter) or heading a
+  ## loop body (JIT), look backwards to see if it's the body of a simple
+  ## greedy loop. Returns the loop kind and the exit pc when the pattern
+  ## matches.
+  result.kind = slkNone
+  result.ok   = false
+  if pc < 0 or pc >= prog.instrs.len: return
+  let cur = prog.instrs[pc]
+
+  # --- Pattern A: [^X]*  ---  split; charclass; jmp(split)
+  # The charClass body is at pc. split is at pc-1 or earlier, jmp at pc+1.
+  if cur.op == opCharClass and pc + 1 < prog.instrs.len:
+    let back = prog.instrs[pc + 1]
+    if back.op == opJmp and back.arg1 >= 0 and back.arg1 < prog.instrs.len:
+      let splitPc = back.arg1
+      let splitIns = prog.instrs[splitPc]
+      if splitIns.op == opSplit and splitIns.arg1 == pc and splitPc + 1 == pc:
+        let exit = splitIns.arg2
+        let cls = prog.classes[cur.arg1]
+        if cls.negated and cls.items.len == 1:
+          let item = cls.items[0]
+          if not item.isRange and not item.isEscape:
+            result.kind   = slkByte
+            result.stopCh = item.ch
+            result.exit   = exit
+            result.ok     = true
+            return
+
+  # --- Pattern B: \w+ / \d+ / \s+  ---  split; progress; escapeClass; jmp(split)
+  # escapeClass body is at pc. split is at pc-2, progress at pc-1, jmp at pc+1.
+  if cur.op == opEscapeClass and pc >= 2 and pc + 1 < prog.instrs.len:
+    let prev = prog.instrs[pc - 1]
+    let back = prog.instrs[pc + 1]
+    if prev.op == opProgress and back.op == opJmp and back.arg1 >= 0:
+      let splitPc = back.arg1
+      let splitIns = prog.instrs[splitPc]
+      if splitIns.op == opSplit and splitIns.arg1 == pc - 1:
+        let exit = splitIns.arg2
+        case char(cur.arg1)
+        of 'w': result.kind = slkNonWord
+        of 'd': result.kind = slkNonDigit
+        of 's': result.kind = slkNonSpace
+        else: return
+        result.exit = exit
+        result.ok   = true
+        return
+
+  # --- Pattern C: \w* / \d* / \s*  ---  split; escapeClass; jmp(split)
+  # escapeClass body is at pc. split is at pc-1, jmp at pc+1.
+  if cur.op == opEscapeClass and pc >= 1 and pc + 1 < prog.instrs.len:
+    let back = prog.instrs[pc + 1]
+    if back.op == opJmp and back.arg1 >= 0:
+      let splitPc = back.arg1
+      let splitIns = prog.instrs[splitPc]
+      if splitIns.op == opSplit and splitIns.arg1 == pc:
+        let exit = splitIns.arg2
+        case char(cur.arg1)
+        of 'w': result.kind = slkNonWord
+        of 'd': result.kind = slkNonDigit
+        of 's': result.kind = slkNonSpace
+        else: return
+        result.exit = exit
+        result.ok   = true
+        return
+
+proc skipLoopIsSafe*(prog: Program, loop: SkipLoop): bool =
+  ## The SIMD jump is sound (interpreter) when the loop's exit successor
+  ## can handle the character at the jump position — epsilon transitions
+  ## are always safe (the NFA follows them), and consuming instructions
+  ## are safe only if they match the stop character.
+  let exit = loop.exit
+  if exit < 0 or exit >= prog.instrs.len: return false
+  let exitIns = prog.instrs[exit]
+  case exitIns.op
+  of opChar:
+    # Only safe for byte-stop loops where the char matches
+    if loop.kind == slkByte:
+      return exitIns.arg1 == ord(loop.stopCh)
+    return false
+  of opMatch, opAnchorEnd:
+    return true
+  of opSplit, opSplitLazy, opSave, opProgress, opJmp:
+    # Epsilon transitions — NFA follows them, always safe
+    return true
+  else:
+    return false
+
 #
 # Helpers
 #
