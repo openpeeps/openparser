@@ -215,10 +215,11 @@ proc skipExitFor*(prog: Program, splitPc: int):
     else: return (-1, slkNone, '\0')  # split, class, escape, anychar: give up
     inc depth
 
-when defined(windows) or defined(noRegexJit) or
-    (not defined(amd64) and not defined(arm64)):
-  # No JIT on Windows (System-V vs Win64 calling convention mismatch),
-  # when explicitly disabled, or on targets without a backend below.
+when defined(noRegexJit) or (not defined(amd64) and not defined(arm64)):
+  # No JIT when explicitly disabled, or on targets without a backend below.
+  # Windows is supported: x86-64 uses the Win64 ABI (args in rcx, rdx, r8,
+  # r9; rsi is callee-saved and preserved), AArch64 Windows uses the same
+  # x0-x3 argument registers as AAPCS64.
   proc compileRegex*(prog: Program): CompiledJit =
     ## Stub: JIT unavailable, the caller keeps using the interpreter.
     result = CompiledJit()
@@ -227,7 +228,10 @@ else:
   #
   # Generated-code register contracts.
   #
-  # x86-64 (System V ABI: fn(rdi=input, rsi=len, rdx=startPos, rcx=ctx)):
+  # x86-64 (System V ABI: fn(rdi=input, rsi=len, rdx=startPos, rcx=ctx);
+  # Win64 ABI: fn(rcx=input, rdx=len, r8=startPos, r9=ctx) — the prologue
+  # below remaps args and preserves rsi, which is callee-saved on Win64.
+  # Every other emitter keeps using rsi/rbx/r12-r15/rbp unchanged.
   #   rbx = input base pointer        (callee-saved)
   #   rsi = input length
   #   r13 = current position          (callee-saved)
@@ -291,6 +295,33 @@ else:
         dynasm a:
           arch aarch64
           str x4, [x11, off]
+    elif defined(windows):
+      # Win64: args arrive in rcx/rdx/r8/r9; rsi is callee-saved, so it
+      # is preserved and every other emitter stays ABI-agnostic.
+      dynasm a:
+        arch x64
+        push rbp
+        mov rbp, rsp
+        push rbx
+        push r12
+        push r13
+        push r14
+        push r15
+        push rsi              # preserved: callee-saved on Win64
+        mov rbx, rcx          # input ptr
+        mov rsi, rdx          # input len
+        mov r13, r8           # pos = startPos
+        mov rbp, r9           # ctx (frame unused: pushes stay balanced)
+        mov r12, [rbp]        # backtrack top = base (empty)
+        mov r15, [rbp + 8]    # backtrack limit
+        mov r14, [rbp + 16]   # capture working buffer
+      # Sentinel-fill the capture slots so untouched optional groups
+      # read back as -1 (mirrors the interpreter's initCaps).
+      for i in 0 ..< numSlots:
+        let off = i * 8
+        dynasm a:
+          arch x64
+          mov qword [r14 + off], -1
     else:
       dynasm a:
         arch x64
@@ -320,6 +351,17 @@ else:
       # Leaf function: nothing pushed, just return (x0 holds the result).
       dynasm a:
         arch aarch64
+        ret()
+    elif defined(windows):
+      dynasm a:
+        arch x64
+        pop rsi
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        pop rbp
         ret()
     else:
       dynasm a:
@@ -1370,7 +1412,7 @@ proc jitScan*(cj: CompiledJit, input: string, fromPos = 0): tuple[start, stop: i
     return
   if cj.anchored and fromPos > 0:
     return
-  when not defined(noRegexJit) and not defined(windows):
+  when not defined(noRegexJit):
     if cj.firstByte >= 0:
       # SIMD hop between candidate positions where the required first
       # byte occurs; full verification still runs in generated code.

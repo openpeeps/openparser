@@ -107,10 +107,9 @@ proc initRegexVM*(prog: Program): RegexVM =
   result.prefilter = extractPrefilter(prog)
   result.pcCur     = initPcSet(n)
   result.pcNxt     = initPcSet(n)
-  when not defined(noRegexJit) and not defined(windows):
+  when not defined(noRegexJit):
     # Programs with epsilon cycles get fn == nil here and keep using the
-    # interpreter below. JIT is disabled on Windows due to System-V vs
-    # Win64 calling convention mismatch and missing sys/mman.h.
+    # interpreter below. The x86-64 backend speaks Win64 on Windows.
     result.jit = jitcore.compileRegex(prog)
 
 proc closeRegexVM*(vm: var RegexVM) =
@@ -118,7 +117,7 @@ proc closeRegexVM*(vm: var RegexVM) =
   vm.jit.freeJit()
 
 proc hasJit(vm: RegexVM): bool {.inline.} =
-  when defined(noRegexJit) or defined(windows): false else: vm.jit.fn != nil
+  when defined(noRegexJit): false else: vm.jit.fn != nil
 
 proc addEpsilon(vm: var RegexVM, nxt: var PcSet,
                 pc, inputPos, inputLen: int; input: string) =
@@ -460,7 +459,7 @@ proc verifyAt(vm: var RegexVM, input: string, pos: int): MatchResult {.inline.} 
   ## scans and only survivors run the verifier. Captures come from the
   ## JIT working buffer, mirroring interpreter capture slots (with -1
   ## for groups that did not participate).
-  when not defined(noRegexJit) and not defined(windows):
+  when not defined(noRegexJit):
     if vm.jit.fn != nil:
       let stopPos = jitcore.jitExec(vm.jit, input, pos)
       if stopPos >= 0:
@@ -648,7 +647,7 @@ proc execShape(pf: Prefilter, input: string,
 
 proc match*(vm: var RegexVM, input: string): MatchResult =
   ## Anchored full match: must start at 0 AND consume the whole string.
-  when not defined(noRegexJit) and not defined(windows):
+  when not defined(noRegexJit):
     if vm.jit.fn != nil:
       # Same compiled code as find(): the context flag makes opMatch
       # require end of input (with backtracking into alternatives).
@@ -885,7 +884,7 @@ proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
         for j in 0 ..< plen:
           if input[pos + j] != pf.prefix[j]: hit = false; break
         if hit:
-          when not defined(noRegexJit) and not defined(windows):
+          when not defined(noRegexJit):
             if vm.jit.fn != nil:
               let r = vm.verifyAt(input, pos)
               if r.matched:
