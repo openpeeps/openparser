@@ -1,6 +1,6 @@
 import ../../src/openparser/regex/[lexer, parser, compiler, prefilter, vm]
 import pkg/regex
-import pkg/reni
+import pkg/reni as reniLib
 
 import std/[times, strutils, strformat, os, memfiles, monotimes, re]
 
@@ -107,13 +107,13 @@ proc bench(pattern, inputDesc, input: string; engine = EngineKind.openparser; ru
     result.shapeName  = "n/a"
     result.pfKindName = "n/a"
 
-    let rre = reni.re(pattern)
+    let rre = reniLib.re(pattern)
     # reni's default per-attempt step limit (1M) trips on some 15MB-input
     # patterns; raise it so the scan completes. The limit only costs
     # anything when an attempt actually burns that many steps.
     const reniStepLimit = 100_000_000
     var warm = 0
-    for m in reni.findAll(input, rre, stepLimit = reniStepLimit):
+    for m in reniLib.findAll(input, rre, stepLimit = reniStepLimit):
       inc warm
     discard warm
 
@@ -121,7 +121,7 @@ proc bench(pattern, inputDesc, input: string; engine = EngineKind.openparser; ru
       let wallT0 = getMonoTime()
       let cpuT0  = cpuTime()
       var c = 0
-      for m in reni.findAll(input, rre, stepLimit = reniStepLimit):
+      for m in reniLib.findAll(input, rre, stepLimit = reniStepLimit):
         inc c
       let cpuT1  = cpuTime()
       let wallT1 = getMonoTime()
