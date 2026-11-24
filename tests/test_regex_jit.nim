@@ -40,9 +40,9 @@ proc jitFindGroups(pattern, input: string): seq[string] =
   if not m.matched: return @[]
   result = m.groups(input)
 
-# The DynASM backend emits x86-64 machine code: on other targets
+# The JIT backend emits x86-64 or AArch64 machine code: on other targets
 # compileRegex returns fn == nil and the interpreter handles everything.
-when defined(amd64):
+when defined(amd64) or defined(arm64):
   suite "Regex JIT: literals":
     test "simple literal match":
       check jitMatchAt("hello", "hello world", 0) == 5
@@ -215,7 +215,7 @@ when defined(amd64):
       check ms[1].groupStr("a=1 b=22", 1) == "b"
       check ms[1].groupStr("a=1 b=22", 2) == "22"
 else:
-  suite "Regex JIT: unavailable on non-x86_64 (interpreter fallback)":
+  suite "Regex JIT: unavailable without a backend (interpreter fallback)":
     test "compileRegex returns nil fn":
       check not jitSupported("hello")
       check jitMatchAt("hello", "hello world", 0) == -1

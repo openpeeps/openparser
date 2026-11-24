@@ -215,17 +215,19 @@ proc skipExitFor*(prog: Program, splitPc: int):
     else: return (-1, slkNone, '\0')  # split, class, escape, anychar: give up
     inc depth
 
-when defined(windows) or defined(noRegexJit) or not defined(amd64):
+when defined(windows) or defined(noRegexJit) or
+    (not defined(amd64) and not defined(arm64)):
   # No JIT on Windows (System-V vs Win64 calling convention mismatch),
-  # when explicitly disabled, or on non-x86_64 targets: the backend below
-  # emits x86-64 machine code.
+  # when explicitly disabled, or on targets without a backend below.
   proc compileRegex*(prog: Program): CompiledJit =
     ## Stub: JIT unavailable, the caller keeps using the interpreter.
     result = CompiledJit()
 
 else:
   #
-  # Generated-code register contract:
+  # Generated-code register contracts.
+  #
+  # x86-64 (System V ABI: fn(rdi=input, rsi=len, rdx=startPos, rcx=ctx)):
   #   rbx = input base pointer        (callee-saved)
   #   rsi = input length
   #   r13 = current position          (callee-saved)
@@ -234,14 +236,27 @@ else:
   #   r14 = capture working buffer    (callee-saved)
   #   rbp = execution context (ctx)   (callee-saved, repurposed)
   #   rax, rcx, rdx, r8-r11 = scratch
-  #
-  # Entry ABI: fn(rdi=input, rsi=len, rdx=startPos, rcx=ctx)
-  # The prologue copies ctx to rbp (the frame pointer is unused by
-  # generated code: pushes/pops stay balanced), freeing rcx as scratch:
   #   [rbp]      = backtrack stack base
   #   [rbp + 8]  = backtrack stack limit
   #   [rbp + 16] = capture working buffer (numSlots int64s, or nil)
   #   [rbp + 40] = full-match flag: when nonzero, opMatch requires pos == len
+  #
+  # AArch64 (AAPCS64: fn(x0=input, x1=len, x2=startPos, x3=ctx)):
+  #   The function is a leaf (no calls, no stack use), so no registers
+  #   are saved; x8/x16-x18/x19-x30/sp are never touched.
+  #   x0 = input base pointer         (preserved whole run)
+  #   x1 = input length               (preserved whole run)
+  #   x2 = current position           (working)
+  #   x9  = backtrack stack top       (working, grows upward)
+  #   x10 = backtrack stack limit     (fixed)
+  #   x11 = capture working buffer    (fixed)
+  #   x12 = full-match flag           (fixed, 0/1)
+  #   x13 = backtrack stack base      (fixed, for the empty check)
+  #   x4-x7, x14, x15 = scratch (x7 = address materialization)
+  #   [x3]      = backtrack stack base
+  #   [x3 + 8]  = backtrack stack limit
+  #   [x3 + 16] = capture working buffer (numSlots int64s, or nil)
+  #   [x3 + 40] = full-match flag: when nonzero, opMatch requires pos == len
   # Returns: match end position (>= 0) or -1 on no match.
   #
   # Backtrack entry: 16 + 8*numSlots bytes
@@ -252,56 +267,175 @@ else:
   # Splits push an entry and jump to their preferred branch.
   #
 
+  when defined(arm64):
+    # AArch64 caps: add/sub immediates are 12-bit, ldr/str unsigned
+    # offsets are scaled 0..4095, and adr reaches ±1MB. Fall back to
+    # the interpreter for gigantic programs rather than risk overflow.
+    const MaxJitEntryBytes = 4095
+    const MaxJitInstrs = 8192
+
   proc emitPrologue(a: var Assembler, numSlots: int) =
-    dynasm a:
-      arch x64
-      push rbp
-      mov rbp, rsp
-      push rbx
-      push r12
-      push r13
-      push r14
-      push r15
-      mov rbx, rdi            # input ptr
-      mov rbp, rcx            # ctx (frame unused: pushes stay balanced)
-      mov r13, rdx            # pos = startPos
-      mov r12, [rbp]          # backtrack top = base (empty)
-      mov r15, [rbp + 8]      # backtrack limit
-      mov r14, [rbp + 16]     # capture working buffer
-    # Sentinel-fill the capture slots so untouched optional groups
-    # read back as -1 (mirrors the interpreter's initCaps).
-    for i in 0 ..< numSlots:
-      let off = i * 8
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        ldr x9, [x3]          # backtrack top = base (empty)
+        ldr x13, [x3]         # backtrack base (empty check)
+        ldr x10, [x3, 8]      # backtrack limit
+        ldr x11, [x3, 16]     # capture working buffer
+        ldr x12, [x3, 40]     # full-match flag
+        movn x4, 0            # x4 = -1 sentinel
+      # Sentinel-fill the capture slots so untouched optional groups
+      # read back as -1 (mirrors the interpreter's initCaps).
+      for i in 0 ..< numSlots:
+        let off = i * 8
+        dynasm a:
+          arch aarch64
+          str x4, [x11, off]
+    else:
       dynasm a:
         arch x64
-        mov qword [r14 + off], -1
+        push rbp
+        mov rbp, rsp
+        push rbx
+        push r12
+        push r13
+        push r14
+        push r15
+        mov rbx, rdi            # input ptr
+        mov rbp, rcx            # ctx (frame unused: pushes stay balanced)
+        mov r13, rdx            # pos = startPos
+        mov r12, [rbp]          # backtrack top = base (empty)
+        mov r15, [rbp + 8]      # backtrack limit
+        mov r14, [rbp + 16]     # capture working buffer
+      # Sentinel-fill the capture slots so untouched optional groups
+      # read back as -1 (mirrors the interpreter's initCaps).
+      for i in 0 ..< numSlots:
+        let off = i * 8
+        dynasm a:
+          arch x64
+          mov qword [r14 + off], -1
 
   proc emitEpilogue(a: var Assembler) =
-    dynasm a:
-      arch x64
-      pop r15
-      pop r14
-      pop r13
-      pop r12
-      pop rbx
-      pop rbp
-      ret()
+    when defined(arm64):
+      # Leaf function: nothing pushed, just return (x0 holds the result).
+      dynasm a:
+        arch aarch64
+        ret()
+    else:
+      dynasm a:
+        arch x64
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        pop rbp
+        ret()
 
   proc emitDefine(a: var Assembler, L: DynamicLabel) =
-    dynasm a:
-      arch x64
-      dynamicLabel L
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        dynamicLabel L
+    else:
+      dynasm a:
+        arch x64
+        dynamicLabel L
+
+  # Materialize a 64-bit absolute address into x7 (AArch64's mov is a
+  # single movz/movn; wider values need explicit movk steps).
+  when defined(arm64):
+    proc emitMovAddr(a: var Assembler, v: uint64) =
+      let lo = (v and 0xFFFF'u64).uint
+      let m1 = ((v shr 16) and 0xFFFF'u64).uint
+      let m2 = ((v shr 32) and 0xFFFF'u64).uint
+      let m3 = ((v shr 48) and 0xFFFF'u64).uint
+      dynasm a:
+        arch aarch64
+        movz x7, lo
+      if m1 != 0:
+        dynasm a:
+          arch aarch64
+          movk x7, m1, lsl, 16
+      if m2 != 0:
+        dynasm a:
+          arch aarch64
+          movk x7, m2, lsl, 32
+      if m3 != 0:
+        dynasm a:
+          arch aarch64
+          movk x7, m3, lsl, 48
 
   # Consume one literal character.
   proc emitChar(a: var Assembler, lit: int, fail: DynamicLabel) =
-    dynasm a:
-      arch x64
-      cmp r13, rsi
-      jge dyn(fail)
-      movzx eax, byte [rbx + r13*1]
-      cmp eax, lit
-      jne dyn(fail)
-      inc r13
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        cmp x2, x1
+        b.hs dyn(fail)
+        add x4, x0, x2
+        ldrb w4, [x4]
+        cmp w4, lit
+        b.ne dyn(fail)
+        add x2, x2, 1
+    else:
+      dynasm a:
+        arch x64
+        cmp r13, rsi
+        jge dyn(fail)
+        movzx eax, byte [rbx + r13*1]
+        cmp eax, lit
+        jne dyn(fail)
+        inc r13
+
+  when defined(arm64):
+    # One bounds-checked chunk (<= 1024 bytes) of a literal run.
+    # x5 holds the run base (input + entry pos) across the chunk.
+    proc emitLiteralChunk(a: var Assembler, bytes: openArray[int],
+                          fail: DynamicLabel) =
+      let n = bytes.len
+      doAssert n >= 1
+      dynasm a:
+        arch aarch64
+        add x4, x2, n
+        cmp x4, x1
+        b.hi dyn(fail)
+        add x5, x0, x2
+      var off = 0
+      while off + 8 <= n:
+        var w: uint64 = 0
+        for i in 0 ..< 8:
+          w = w or (uint64(bytes[off + i]) shl (i * 8))
+        emitMovAddr(a, w)
+        dynasm a:
+          arch aarch64
+          ldr x4, [x5, off]
+          cmp x4, x7
+          b.ne dyn(fail)
+        off += 8
+      if off + 4 <= n:
+        var w: uint32 = 0
+        for i in 0 ..< 4:
+          w = w or (uint32(bytes[off + i]) shl (i * 8))
+        emitMovAddr(a, uint64(w))
+        dynasm a:
+          arch aarch64
+          ldr w4, [x5, off]
+          cmp w4, w7
+          b.ne dyn(fail)
+        off += 4
+      while off < n:
+        let b = bytes[off]
+        dynasm a:
+          arch aarch64
+          add x4, x5, off
+          ldrb w4, [x4]
+          cmp w4, b
+          b.ne dyn(fail)
+        inc off
+      dynasm a:
+        arch aarch64
+        add x2, x2, n
 
   # Consume a run of literal characters with one bounds check, then
   # wide compares (qword/dword) and single-byte tail checks. Offsets
@@ -310,83 +444,132 @@ else:
                       fail: DynamicLabel) =
     let n = bytes.len
     doAssert n >= 2
-    dynasm a:
-      arch x64
-      lea rax, [r13 + n]
-      cmp rax, rsi
-      ja dyn(fail)
-    var off = 0
-    while off + 8 <= n:
-      var w: uint64 = 0
-      for i in 0 ..< 8:
-        w = w or (uint64(bytes[off + i]) shl (i * 8))
-      dynasm a:
-        arch x64
-        mov rax, [rbx + r13*1 + off]
-        movabs r10, w
-        cmp rax, r10
-        jne dyn(fail)
-      off += 8
-    if off + 4 <= n:
-      var w: uint32 = 0
-      for i in 0 ..< 4:
-        w = w or (uint32(bytes[off + i]) shl (i * 8))
-      dynasm a:
-        arch x64
-        cmp dword [rbx + r13*1 + off], w
-        jne dyn(fail)
-      off += 4
-    while off < n:
-      let b = bytes[off]
-      dynasm a:
-        arch x64
-        movzx eax, byte [rbx + r13*1 + off]
-        cmp eax, b
-        jne dyn(fail)
-      inc off
-    dynasm a:
-      arch x64
-      add r13, n
-
-  # Consume any character except '\n'.
-  proc emitAnyChar(a: var Assembler, fail: DynamicLabel) =
-    dynasm a:
-      arch x64
-      cmp r13, rsi
-      jge dyn(fail)
-      movzx eax, byte [rbx + r13*1]
-      cmp eax, 10
-      je dyn(fail)
-      inc r13
-
-  # Consume one char via 256-bit class bitmap (address embedded with
-  # movabs). The bit test that DynASM expressed as `bt` is spelled as
-  # shr+and here: edx holds the bitmap byte, ecx the bit index.
-  proc emitCharClass(a: var Assembler, bitmapAddr: uint, negated: bool,
-                     fail: DynamicLabel) =
-    dynasm a:
-      arch x64
-      cmp r13, rsi
-      jge dyn(fail)
-      movzx ecx, byte [rbx + r13*1]  # c
-      mov eax, ecx
-      `shr` eax, 3
-      movabs r10, bitmapAddr
-      movzx edx, byte [r10 + rax*1]  # bitmap[c >> 3]
-      `and` ecx, 7
-      `shr` edx, cl
-      `and` edx, 1
-    if negated:
-      dynasm a:
-        arch x64
-        jnz dyn(fail)
+    when defined(arm64):
+      # Chunk the upfront check: add/sub immediates are 12-bit.
+      var pos = 0
+      while pos < n:
+        let m = min(n - pos, 1024)
+        emitLiteralChunk(a, bytes.toOpenArray(pos, pos + m - 1), fail)
+        pos += m
     else:
       dynasm a:
         arch x64
-        jz dyn(fail)
-    dynasm a:
-      arch x64
-      inc r13                       # success: consume the char
+        lea rax, [r13 + n]
+        cmp rax, rsi
+        ja dyn(fail)
+      var off = 0
+      while off + 8 <= n:
+        var w: uint64 = 0
+        for i in 0 ..< 8:
+          w = w or (uint64(bytes[off + i]) shl (i * 8))
+        dynasm a:
+          arch x64
+          mov rax, [rbx + r13*1 + off]
+          movabs r10, w
+          cmp rax, r10
+          jne dyn(fail)
+        off += 8
+      if off + 4 <= n:
+        var w: uint32 = 0
+        for i in 0 ..< 4:
+          w = w or (uint32(bytes[off + i]) shl (i * 8))
+        dynasm a:
+          arch x64
+          cmp dword [rbx + r13*1 + off], w
+          jne dyn(fail)
+        off += 4
+      while off < n:
+        let b = bytes[off]
+        dynasm a:
+          arch x64
+          movzx eax, byte [rbx + r13*1 + off]
+          cmp eax, b
+          jne dyn(fail)
+        inc off
+      dynasm a:
+        arch x64
+        add r13, n
+
+
+  # Consume any character except '\n'.
+  proc emitAnyChar(a: var Assembler, fail: DynamicLabel) =
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        cmp x2, x1
+        b.hs dyn(fail)
+        add x4, x0, x2
+        ldrb w4, [x4]
+        cmp w4, 10
+        b.eq dyn(fail)
+        add x2, x2, 1
+    else:
+      dynasm a:
+        arch x64
+        cmp r13, rsi
+        jge dyn(fail)
+        movzx eax, byte [rbx + r13*1]
+        cmp eax, 10
+        je dyn(fail)
+        inc r13
+
+  # Consume one char via 256-bit class bitmap. The address is
+  # materialized with movz/movk on AArch64 (movabs on x64). The bit
+  # index must be masked: AArch64 shifts take the count in a register
+  # directly (lslv/lsrv), so no cl dance is needed.
+  proc emitCharClass(a: var Assembler, bitmapAddr: uint, negated: bool,
+                     fail: DynamicLabel) =
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        cmp x2, x1
+        b.hs dyn(fail)
+        add x4, x0, x2
+        ldrb w4, [x4]             # c
+        lsr x5, x4, 3             # byte index
+        `and` x4, x4, 7           # bit index
+      emitMovAddr(a, uint64(bitmapAddr))
+      dynasm a:
+        arch aarch64
+        add x6, x7, x5
+        ldrb w6, [x6]             # bitmap[c >> 3]
+        lsr w6, w6, w4
+        `and` w6, w6, 1
+      if negated:
+        dynasm a:
+          arch aarch64
+          cbnz w6, dyn(fail)
+      else:
+        dynasm a:
+          arch aarch64
+          cbz w6, dyn(fail)
+      dynasm a:
+        arch aarch64
+        add x2, x2, 1             # success: consume the char
+    else:
+      dynasm a:
+        arch x64
+        cmp r13, rsi
+        jge dyn(fail)
+        movzx ecx, byte [rbx + r13*1]  # c
+        mov eax, ecx
+        `shr` eax, 3
+        movabs r10, bitmapAddr
+        movzx edx, byte [r10 + rax*1]  # bitmap[c >> 3]
+        `and` ecx, 7
+        `shr` edx, cl
+        `and` edx, 1
+      if negated:
+        dynasm a:
+          arch x64
+          jnz dyn(fail)
+      else:
+        dynasm a:
+          arch x64
+          jz dyn(fail)
+      dynasm a:
+        arch x64
+        inc r13                       # success: consume the char
 
   # Consume one char via escape class (\d \D \w \W \s \S).
   # `tblAddr` is the aux class table (bit0=word, bit1=space); \d stays
@@ -394,108 +577,209 @@ else:
   # Success falls through; each multi-branch shape gets a fresh join label.
   proc emitEscapeClass(a: var Assembler, cls: char, fail: DynamicLabel,
                        tblAddr = 0'u) =
-    dynasm a:
-      arch x64
-      cmp r13, rsi
-      jge dyn(fail)
-      movzx eax, byte [rbx + r13*1]
-    case cls
-    of 'd':
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        cmp x2, x1
+        b.hs dyn(fail)
+        add x4, x0, x2
+        ldrb w4, [x4]
+      case cls
+      of 'd':
+        dynasm a:
+          arch aarch64
+          sub w4, w4, 48
+          cmp w4, 9
+          b.hi dyn(fail)
+      of 'D':
+        dynasm a:
+          arch aarch64
+          sub w4, w4, 48
+          cmp w4, 9
+          b.ls dyn(fail)
+      of 'w', 'W', 's', 'S':
+        let bit = if cls in {'w', 'W'}: 1 else: 2
+        emitMovAddr(a, tblAddr)
+        dynasm a:
+          arch aarch64
+          add x4, x7, x4
+          ldrb w4, [x4]
+          `and` w4, w4, bit
+        if cls in {'w', 's'}:
+          dynasm a:
+            arch aarch64
+            cbz w4, dyn(fail)
+        else:
+          dynasm a:
+            arch aarch64
+            cbnz w4, dyn(fail)
+      else:
+        dynasm a:
+          arch aarch64
+          b dyn(fail)
+      dynasm a:
+        arch aarch64
+        add x2, x2, 1               # success: consume the char
+    else:
       dynasm a:
         arch x64
-        sub eax, ord('0')
-        cmp eax, 9
-        ja dyn(fail)
-    of 'D':
-      dynasm a:
-        arch x64
-        sub eax, ord('0')
-        cmp eax, 9
-        jbe dyn(fail)
-    of 'w', 'W', 's', 'S':
-      let bit = if cls in {'w', 'W'}: 1 else: 2
-      dynasm a:
-        arch x64
-        movabs r10, tblAddr
-        movzx eax, byte [r10 + rax*1]
-        `and` eax, bit
-      if cls in {'w', 's'}:
+        cmp r13, rsi
+        jge dyn(fail)
+        movzx eax, byte [rbx + r13*1]
+      case cls
+      of 'd':
         dynasm a:
           arch x64
-          jz dyn(fail)
+          sub eax, ord('0')
+          cmp eax, 9
+          ja dyn(fail)
+      of 'D':
+        dynasm a:
+          arch x64
+          sub eax, ord('0')
+          cmp eax, 9
+          jbe dyn(fail)
+      of 'w', 'W', 's', 'S':
+        let bit = if cls in {'w', 'W'}: 1 else: 2
+        dynasm a:
+          arch x64
+          movabs r10, tblAddr
+          movzx eax, byte [r10 + rax*1]
+          `and` eax, bit
+        if cls in {'w', 's'}:
+          dynasm a:
+            arch x64
+            jz dyn(fail)
+        else:
+          dynasm a:
+            arch x64
+            jnz dyn(fail)
       else:
         dynasm a:
           arch x64
-          jnz dyn(fail)
-    else:
+          jmp dyn(fail)
       dynasm a:
         arch x64
-        jmp dyn(fail)
-    dynasm a:
-      arch x64
-      inc r13                       # success: consume the char
+        inc r13                       # success: consume the char
 
   # Assert ^: absolute start of input.
   proc emitAnchorStart(a: var Assembler, fail: DynamicLabel) =
-    dynasm a:
-      arch x64
-      test r13, r13
-      jnz dyn(fail)
-
-  # Assert $: absolute end of input.
-  proc emitAnchorEnd(a: var Assembler, fail: DynamicLabel) =
-    dynasm a:
-      arch x64
-      cmp r13, rsi
-      jne dyn(fail)
-
-  # Assert \b / \B via the aux class table (bit0 = isWord).
-  # prevLoaded/curLoaded are caller-allocated join labels for the guarded
-  # loads. Uses r10 for the table base and ecx/edx as scratch.
-  proc emitWordBoundary(a: var Assembler, tblAddr: uint, negated: bool,
-                        fail: DynamicLabel,
-                        prevLoaded, curLoaded: DynamicLabel) =
-    dynasm a:
-      arch x64
-      # isWord(prev char), 0 when pos == 0
-      `xor` ecx, ecx
-      test r13, r13
-      jz dyn(prevLoaded)
-      movzx ecx, byte [rbx + r13*1 - 1]
-      dynamicLabel prevLoaded
-      movabs r10, tblAddr
-      movzx ecx, byte [r10 + rcx*1]
-      `and` ecx, 1                # ecx = isWord(prev)
-      # isWord(current char), 0 when pos == len
-      `xor` edx, edx
-      cmp r13, rsi
-      jae dyn(curLoaded)
-      movzx edx, byte [rbx + r13*1]
-      dynamicLabel curLoaded
-      movzx edx, byte [r10 + rdx*1]
-      `and` edx, 1                # edx = isWord(cur)
-      `xor` ecx, edx              # ecx = 1 iff boundary
-    if negated:
+    when defined(arm64):
       dynasm a:
-        arch x64
-        jnz dyn(fail)            # \B wants none
+        arch aarch64
+        cbnz x2, dyn(fail)
     else:
       dynasm a:
         arch x64
-        jz dyn(fail)             # \b wants a boundary
+        test r13, r13
+        jnz dyn(fail)
+
+  # Assert $: absolute end of input.
+  proc emitAnchorEnd(a: var Assembler, fail: DynamicLabel) =
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        cmp x2, x1
+        b.ne dyn(fail)
+    else:
+      dynasm a:
+        arch x64
+        cmp r13, rsi
+        jne dyn(fail)
+
+  # Assert \b / \B via the aux class table (bit0 = isWord).
+  # prevLoaded/curLoaded are caller-allocated join labels for the guarded
+  # loads.
+  proc emitWordBoundary(a: var Assembler, tblAddr: uint, negated: bool,
+                        fail: DynamicLabel,
+                        prevLoaded, curLoaded: DynamicLabel) =
+    when defined(arm64):
+      # x7 keeps the table base across both lookups (scratch x4/x5/x6
+      # are reused per side); x4/x5 hold the isWord bits at the end.
+      emitMovAddr(a, tblAddr)
+      dynasm a:
+        arch aarch64
+        # isWord(prev char), 0 when pos == 0
+        mov x4, 0
+        cbz x2, dyn(prevLoaded)
+        sub x5, x2, 1
+        add x5, x0, x5
+        ldrb w4, [x5]
+        dynamicLabel prevLoaded
+        add x5, x7, x4
+        ldrb w4, [x5]
+        `and` x4, x4, 1              # x4 = isWord(prev)
+        # isWord(current char), 0 when pos == len
+        mov x5, 0
+        cmp x2, x1
+        b.hs dyn(curLoaded)
+        add x5, x0, x2
+        ldrb w5, [x5]
+        dynamicLabel curLoaded
+        add x5, x7, x5
+        ldrb w5, [x5]
+        `and` x5, x5, 1              # x5 = isWord(cur)
+        eor x4, x4, x5               # x4 = 1 iff boundary
+      if negated:
+        dynasm a:
+          arch aarch64
+          cbnz x4, dyn(fail)         # \B wants none
+      else:
+        dynasm a:
+          arch aarch64
+          cbz x4, dyn(fail)          # \b wants a boundary
+    else:
+      dynasm a:
+        arch x64
+        # isWord(prev char), 0 when pos == 0
+        `xor` ecx, ecx
+        test r13, r13
+        jz dyn(prevLoaded)
+        movzx ecx, byte [rbx + r13*1 - 1]
+        dynamicLabel prevLoaded
+        movabs r10, tblAddr
+        movzx ecx, byte [r10 + rcx*1]
+        `and` ecx, 1                # ecx = isWord(prev)
+        # isWord(current char), 0 when pos == len
+        `xor` edx, edx
+        cmp r13, rsi
+        jae dyn(curLoaded)
+        movzx edx, byte [rbx + r13*1]
+        dynamicLabel curLoaded
+        movzx edx, byte [r10 + rdx*1]
+        `and` edx, 1                # edx = isWord(cur)
+        `xor` ecx, edx              # ecx = 1 iff boundary
+      if negated:
+        dynasm a:
+          arch x64
+          jnz dyn(fail)            # \B wants none
+      else:
+        dynasm a:
+          arch x64
+          jz dyn(fail)             # \b wants a boundary
 
   # Unconditional jump.
   proc emitJmp(a: var Assembler, target: DynamicLabel) =
-    dynasm a:
-      arch x64
-      jmp dyn(target)
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        b dyn(target)
+    else:
+      dynasm a:
+        arch x64
+        jmp dyn(target)
 
   # Save the current position into capture slot `slot`.
   proc emitSave(a: var Assembler, slot: int) =
     let off = slot * 8
-    dynasm a:
-      arch x64
-      mov [r14 + off], r13
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        str x2, [x11, off]
+    else:
+      dynasm a:
+        arch x64
+        mov [r14 + off], r13
 
   # Greedy-loop skip: replace per-char push/consume/unwind traffic with a
   # single scan to the run end, then continue at the exit. Sound only for
@@ -505,93 +789,180 @@ else:
     let scan = a.newDynamicLabel()
     let done = a.newDynamicLabel()
     let stopOrd = ord(stopCh)
-    case kind
-    of slkByte:
+    when defined(arm64):
+      case kind
+      of slkByte:
+        dynasm a:
+          arch aarch64
+          dynamicLabel scan
+          cmp x2, x1
+          b.hs dyn(done)
+          add x4, x0, x2
+          ldrb w4, [x4]
+          cmp w4, stopOrd
+          b.eq dyn(done)
+          add x2, x2, 1
+          b dyn(scan)
+          dynamicLabel done
+      of slkNonWord, slkNonSpace:
+        let bit = if kind == slkNonWord: 1 else: 2
+        emitMovAddr(a, uint64(tblAddr))
+        dynasm a:
+          arch aarch64
+          dynamicLabel scan
+          cmp x2, x1
+          b.hs dyn(done)
+          add x4, x0, x2
+          ldrb w4, [x4]
+          add x4, x7, x4
+          ldrb w4, [x4]
+          `and` w4, w4, bit
+          cbz w4, dyn(done)
+          add x2, x2, 1
+          b dyn(scan)
+          dynamicLabel done
+      of slkNonDigit:
+        dynasm a:
+          arch aarch64
+          dynamicLabel scan
+          cmp x2, x1
+          b.hs dyn(done)
+          add x4, x0, x2
+          ldrb w4, [x4]
+          sub w4, w4, 48
+          cmp w4, 9
+          b.hi dyn(done)
+          add x2, x2, 1
+          b dyn(scan)
+          dynamicLabel done
+      of slkChar:
+        # Consume while equal to the loop char (a* a+).
+        dynasm a:
+          arch aarch64
+          dynamicLabel scan
+          cmp x2, x1
+          b.hs dyn(done)
+          add x4, x0, x2
+          ldrb w4, [x4]
+          cmp w4, stopOrd
+          b.ne dyn(done)
+          add x2, x2, 1
+          b dyn(scan)
+          dynamicLabel done
+      else:
+        doAssert false, "emitSkipLoop: unsupported kind"
       dynasm a:
-        arch x64
-        dynamicLabel scan
-        cmp r13, rsi
-        jae dyn(done)
-        movzx eax, byte [rbx + r13*1]
-        cmp eax, stopOrd
-        je dyn(done)
-        inc r13
-        jmp dyn(scan)
-        dynamicLabel done
-    of slkNonWord, slkNonSpace:
-      let bit = if kind == slkNonWord: 1 else: 2
-      dynasm a:
-        arch x64
-        movabs r10, tblAddr
-        dynamicLabel scan
-        cmp r13, rsi
-        jae dyn(done)
-        movzx eax, byte [rbx + r13*1]
-        movzx eax, byte [r10 + rax*1]
-        `and` eax, bit
-        jz dyn(done)
-        inc r13
-        jmp dyn(scan)
-        dynamicLabel done
-    of slkNonDigit:
-      dynasm a:
-        arch x64
-        dynamicLabel scan
-        cmp r13, rsi
-        jae dyn(done)
-        movzx eax, byte [rbx + r13*1]
-        sub eax, ord('0')
-        cmp eax, 9
-        ja dyn(done)
-        inc r13
-        jmp dyn(scan)
-        dynamicLabel done
-    of slkChar:
-      # Consume while equal to the loop char (a* a+).
-      dynasm a:
-        arch x64
-        dynamicLabel scan
-        cmp r13, rsi
-        jae dyn(done)
-        movzx eax, byte [rbx + r13*1]
-        cmp eax, stopOrd
-        jne dyn(done)
-        inc r13
-        jmp dyn(scan)
-        dynamicLabel done
+        arch aarch64
+        b dyn(exitLbl)
     else:
-      doAssert false, "emitSkipLoop: unsupported kind"
-    dynasm a:
-      arch x64
-      jmp dyn(exitLbl)
+      case kind
+      of slkByte:
+        dynasm a:
+          arch x64
+          dynamicLabel scan
+          cmp r13, rsi
+          jae dyn(done)
+          movzx eax, byte [rbx + r13*1]
+          cmp eax, stopOrd
+          je dyn(done)
+          inc r13
+          jmp dyn(scan)
+          dynamicLabel done
+      of slkNonWord, slkNonSpace:
+        let bit = if kind == slkNonWord: 1 else: 2
+        dynasm a:
+          arch x64
+          movabs r10, tblAddr
+          dynamicLabel scan
+          cmp r13, rsi
+          jae dyn(done)
+          movzx eax, byte [rbx + r13*1]
+          movzx eax, byte [r10 + rax*1]
+          `and` eax, bit
+          jz dyn(done)
+          inc r13
+          jmp dyn(scan)
+          dynamicLabel done
+      of slkNonDigit:
+        dynasm a:
+          arch x64
+          dynamicLabel scan
+          cmp r13, rsi
+          jae dyn(done)
+          movzx eax, byte [rbx + r13*1]
+          sub eax, ord('0')
+          cmp eax, 9
+          ja dyn(done)
+          inc r13
+          jmp dyn(scan)
+          dynamicLabel done
+      of slkChar:
+        # Consume while equal to the loop char (a* a+).
+        dynasm a:
+          arch x64
+          dynamicLabel scan
+          cmp r13, rsi
+          jae dyn(done)
+          movzx eax, byte [rbx + r13*1]
+          cmp eax, stopOrd
+          jne dyn(done)
+          inc r13
+          jmp dyn(scan)
+          dynamicLabel done
+      else:
+        doAssert false, "emitSkipLoop: unsupported kind"
+      dynasm a:
+        arch x64
+        jmp dyn(exitLbl)
 
   # Fork execution: push {pos, resumeAddr, caps...} and try preferred branch.
   # Greedy split passes arg1's label; lazy split passes arg2's label
-  # as tryFirst. The deferred address is a code pointer (RIP-relative LEA,
-  # resolved at finalize), so failure unwinds with a single indirect jump
-  # instead of a linear id-dispatch chain. Captures are snapshotted so the
-  # deferred branch resumes with the values live at the fork point (PCRE
-  # semantics). Entry stays 16 + 8*numSlots bytes: {pos:8, addr:8, caps}.
+  # as tryFirst. The deferred address is a code pointer (RIP-relative LEA
+  # on x64, adr on AArch64, resolved at finalize), so failure unwinds
+  # with a single indirect jump instead of a linear id-dispatch chain.
+  # Captures are snapshotted so the deferred branch resumes with the
+  # values live at the fork point (PCRE semantics). Entry stays
+  # 16 + 8*numSlots bytes: {pos:8, addr:8, caps}.
   proc emitSplit(a: var Assembler, tryFirst, resume: DynamicLabel,
                  entryBytes, numSlots: int, fail: DynamicLabel) =
-    dynasm a:
-      arch x64
-      cmp r12, r15
-      jae dyn(fail)              # stack full -> treat path as failed
-      mov [r12], r13
-      mov rax, dyn(resume)
-      mov [r12 + 8], rax
-    for i in 0 ..< numSlots:
-      let off = 16 + i * 8
-      let src = i * 8
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        cmp x9, x10
+        b.hs dyn(fail)              # stack full -> treat path as failed
+        str x2, [x9]
+        adr x4, dyn(resume)
+        str x4, [x9, 8]
+      for i in 0 ..< numSlots:
+        let off = 16 + i * 8
+        let src = i * 8
+        dynasm a:
+          arch aarch64
+          ldr x4, [x11, src]
+          str x4, [x9, off]
+      dynasm a:
+        arch aarch64
+        add x9, x9, entryBytes
+        b dyn(tryFirst)
+    else:
       dynasm a:
         arch x64
-        mov rax, [r14 + src]
-        mov [r12 + off], rax
-    dynasm a:
-      arch x64
-      add r12, entryBytes
-      jmp dyn(tryFirst)
+        cmp r12, r15
+        jae dyn(fail)              # stack full -> treat path as failed
+        mov [r12], r13
+        mov rax, dyn(resume)
+        mov [r12 + 8], rax
+      for i in 0 ..< numSlots:
+        let off = 16 + i * 8
+        let src = i * 8
+        dynasm a:
+          arch x64
+          mov rax, [r14 + src]
+          mov [r12 + off], rax
+      dynasm a:
+        arch x64
+        add r12, entryBytes
+        jmp dyn(tryFirst)
 
   # Success: return current position. When the context full-match flag
   # is set (match()), the match only counts at end of input; otherwise
@@ -600,47 +971,81 @@ else:
   # single compilation (opMatch runs at most once per verification).
   proc emitMatch(a: var Assembler, exitLbl, fail: DynamicLabel) =
     let fullOk = a.newDynamicLabel()
-    dynasm a:
-      arch x64
-      cmp qword [rbp + 40], 0
-      je dyn(fullOk)
-      cmp r13, rsi
-      jne dyn(fail)
-      dynamicLabel fullOk
-      mov rax, r13
-      jmp dyn(exitLbl)
-
-  # Fail-entry head: unwind one backtrack entry into r13/rax,
-  # restoring the capture snapshot, or jump to noMatch when the stack
-  # is empty. The base is recomputed from the limit since no register
-  # is reserved for it. The restore uses r10 as temp so rax (resume
-  # address) survives for the final indirect jump.
-  proc emitFailHead(a: var Assembler, noMatch: DynamicLabel,
-                    entryBytes, numSlots: int, stackBytes: int) =
-    dynasm a:
-      arch x64
-      lea rax, [r15 - stackBytes]  # rax = stack base
-      cmp r12, rax
-      jbe dyn(noMatch)             # empty
-      sub r12, entryBytes
-      mov r13, [r12]
-      mov rax, [r12 + 8]
-    for i in 0 ..< numSlots:
-      let off = 16 + i * 8
-      let dst = i * 8
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        cbz x12, dyn(fullOk)
+        cmp x2, x1
+        b.ne dyn(fail)
+        dynamicLabel fullOk
+        mov x0, x2
+        b dyn(exitLbl)
+    else:
       dynasm a:
         arch x64
-        mov r10, [r12 + off]
-        mov [r14 + dst], r10
-    dynasm a:
-      arch x64
-      jmp rax                      # O(1) resume: no id-dispatch chain
+        cmp qword [rbp + 40], 0
+        je dyn(fullOk)
+        cmp r13, rsi
+        jne dyn(fail)
+        dynamicLabel fullOk
+        mov rax, r13
+        jmp dyn(exitLbl)
+
+  # Fail-entry head: unwind one backtrack entry into pos/resume-reg,
+  # restoring the capture snapshot, or jump to noMatch when the stack
+  # is empty. x13 holds the stack base (prologue); the restore uses x4
+  # as temp on AArch64 (r10 on x64) so the resume address survives for
+  # the final indirect jump.
+  proc emitFailHead(a: var Assembler, noMatch: DynamicLabel,
+                    entryBytes, numSlots: int, stackBytes: int) =
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        cmp x9, x13
+        b.ls dyn(noMatch)            # empty
+        sub x9, x9, entryBytes
+        ldr x2, [x9]
+        ldr x4, [x9, 8]
+      for i in 0 ..< numSlots:
+        let off = 16 + i * 8
+        let dst = i * 8
+        dynasm a:
+          arch aarch64
+          ldr x5, [x9, off]
+          str x5, [x11, dst]
+      dynasm a:
+        arch aarch64
+        br x4                          # O(1) resume
+    else:
+      dynasm a:
+        arch x64
+        lea rax, [r15 - stackBytes]  # rax = stack base
+        cmp r12, rax
+        jbe dyn(noMatch)             # empty
+        sub r12, entryBytes
+        mov r13, [r12]
+        mov rax, [r12 + 8]
+      for i in 0 ..< numSlots:
+        let off = 16 + i * 8
+        let dst = i * 8
+        dynasm a:
+          arch x64
+          mov r10, [r12 + off]
+          mov [r14 + dst], r10
+      dynasm a:
+        arch x64
+        jmp rax                      # O(1) resume: no id-dispatch chain
 
   # No match: return -1.
   proc emitNoMatch(a: var Assembler) =
-    dynasm a:
-      arch x64
-      `or` rax, -1
+    when defined(arm64):
+      dynasm a:
+        arch aarch64
+        movn x0, 0
+    else:
+      dynasm a:
+        arch x64
+        `or` rax, -1
 
   proc compileRegex*(prog: Program): CompiledJit =
     ## Compile `prog` to native code. A single compilation serves both
@@ -656,8 +1061,14 @@ else:
     let numSlots = prog.numCaptures * 2
     let entryBytes = 16 + numSlots * 8
     let stackBytes = BacktrackMaxEntries * entryBytes
+    when defined(arm64):
+      # AArch64 add/sub immediates are 12-bit, str offsets must stay in
+      # range, and adr reaches ±1MB: fall back to the interpreter for
+      # gigantic programs rather than risk overflow.
+      if entryBytes > MaxJitEntryBytes or numInstrs > MaxJitInstrs:
+        return
 
-    var a = newAssembler(akX64)
+    var a = newAssembler(when defined(arm64): akAarch64 else: akX64)
 
     # Reserved dynamic labels, allocated first by convention.
     let matchExit = a.newDynamicLabel()  ## success exit: rax = stop position
