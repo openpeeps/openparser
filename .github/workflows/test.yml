@@ -14,11 +14,14 @@ on:
       - .github/workflows
 jobs:
   nim:
-    name: nim tests
-    uses: nimbase/setup-nim-action/.github/workflows/test.yml@main
+    name: regex JIT tests
+    uses: nimbase/setup-nim-action/.github/workflows/test_clue.yml@main
     with:
       nim-version: '2.2.x'
       os: '[{"os":"ubuntu-latest"},{"os":"macos-latest"}]'
+      # Scope CI to the regex JIT suite for speed: `clue test` takes the
+      # filter as a positional arg, so it rides along in test-flags.
+      test-flags: 'test_regex_jit'
 
   napi:
     name: napi addon
