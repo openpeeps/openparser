@@ -10,9 +10,6 @@
 import ./compiler, ./simd
 
 type
-  BackscanKind* = enum
-    bsNone, bsAlphaWord, bsWordChar
-
   PrefilterKind* = enum
     pfNone
     pfByte
@@ -37,7 +34,11 @@ type
         offset2*: int  ## min lookback
     of pfInnerLiteral:
       anchor*: char
-      backscan*: BackscanKind
+      firstAlpha*: bool  ## match start must be [a-zA-Z_]
+      gapFirst*: bool    ## prefix may start with a gap: try every window pos
+      fastStarts*: bool  ## exact-word loop first: only run starts can win
+      runGroups*: int    ## logical run clusters in the prefix
+      skipPairs*: bool   ## no lone `*` runs: first-run window is exact
     of pfByteRange:
       lo*, hi*: char
     of pfAnyOf2:
@@ -61,15 +62,18 @@ proc isLoopSplit(prog: Program, pc: int): bool =
       return true
   false
 
-proc findInnerLiteral(prog: Program): tuple[ch: char, bs: BackscanKind] =
+proc findInnerLiteral(prog: Program): tuple[ch: char, firstAlpha, gapFirst, firstExact, firstLoop: bool, groups: int, skipOk: bool] =
   # Walk instruction stream past variable-width prefix looking for a selective
-  # mandatory literal (e.g. '(' in `\\w*\\s*\\([^)]*\\)`).
-  # Returns ('\\0', bsNone) when no sound filter exists:
-  # - only transparent epsilons, homogeneous word/alpha runs (with at most
-  #   one trailing gap group) and quantifier loops (followed via the exit
-  #   every complete match takes) may be walked; anything else bails out;
-  # - the backscan kind must exactly cover what the pattern consumes,
-  #   otherwise overshoot/undershoot breaks the located start;
+  # mandatory literal (e.g. '(' in `\w+\s*\([^)]*\)`).
+  # Returns ('\0', false, false) when no sound filter exists. Soundness rules:
+  # - every walked consuming op must consume only word/space chars, so any
+  #   match that uses this anchor occurrence starts inside the maximal
+  #   word/space region before it. The VM enumerates every position in that
+  #   window and lets the verifier pick the leftmost: overshoot and
+  #   undershoot are impossible by construction;
+  # - only transparent epsilons and quantifier loops (followed via the exit
+  #   every complete match takes) may be walked; forks whose branches need
+  #   not contain the literal bail out;
   # - the anchor must be mandatory on all walked paths.
   const SELECTIVE = {'(', ')', ';', ':', '#', '"', '<', '>', '[', ']', '{', '}', '!', '=', '/', '*'}
   const WordChars = {'a'..'z', 'A'..'Z', '0'..'9', '_'}
@@ -77,14 +81,58 @@ proc findInnerLiteral(prog: Program): tuple[ch: char, bs: BackscanKind] =
   const SpaceChars = {' ', '\t', '\n', '\r', '\f', '\v'}
   var pc = 0
   var guard = prog.instrs.len * 4 + 64
-  var wordOk = true
-  var alphaOk = true
   var runs = 0
-  var gapOpen = false
+  var sawGap = false
+  var firstKind = 0  # 0 unset, 1 word-run, 2 alpha-run, 3 gap
+  var firstExact = false  # first run accepts any word char (\w / exact class)
+  var firstLoop = false   # first run is loop-like (body, or single + star loop)
+  var groups = 0     # logical run clusters separated by gaps
+  var runOpen = false     # currently inside a logical run
+  var gapPending = false  # a gap was seen since the current logical run
+  var hasLoneStar = false # a lone `*` loop (nullable run) precedes the anchor
 
-  template noLiteral(): tuple[ch: char, bs: BackscanKind] = ('\0', bsNone)
+  template noLiteral(): tuple[ch: char, firstAlpha, gapFirst, firstExact, firstLoop: bool, groups: int, skipOk: bool] = ('\0', false, false, false, false, 0, false)
+  template loopHeadExactWord(splitPc: int): bool =
+    ## True when the loop at splitPc repeats an exact-word atom
+    ## (\w or an exact [A-Za-z0-9_] class): a following star loop makes
+    ## a leading inline single loop-like (plus-form copy + star tail).
+    var ok = false
+    var hq = splitPc + 1
+    while hq < prog.instrs.len and prog.instrs[hq].op in {opSave, opProgress}:
+      inc hq
+    if hq < prog.instrs.len:
+      case prog.instrs[hq].op
+      of opEscapeClass:
+        ok = char(prog.instrs[hq].arg1) == 'w'
+      of opCharClass:
+        ok = exactWord(prog.classes[prog.instrs[hq].arg1])
+      else: discard
+    ok
+  template noteRun(alphaOnly, exactWordAtom, loopLike: bool) =
+    ## A run-ish atom (word/alpha consumption). The first one decides the
+    ## candidate filter: alpha-only first atoms need only alpha positions;
+    ## exact-word loop-like first atoms need only run starts (fast path).
+    ## Adjacent run atoms merge into one logical run (plus-form copy +
+    ## star tail); only a run after a gap opens a new cluster.
+    if firstKind == 0:
+      firstKind = if alphaOnly: 2 else: 1
+      firstExact = exactWordAtom
+      firstLoop = loopLike
+    if not runOpen:
+      groups += 1
+    runOpen = true
+    gapPending = false
+    inc runs
+  template noteGap() =
+    ## A gap atom (spaces). A gap-first prefix may start on a space, so
+    ## the VM must try every window position unfiltered.
+    if firstKind == 0:
+      firstKind = 3
+    sawGap = true
+    gapPending = true
+    runOpen = false
   template exactWord(cls: CompiledClass): bool =
-    ## True when the class matches exactly [A-Za-z0-9_].
+    ## True when the class matches exactly [A-Za-z0-9_] (or \w).
     var ok = not cls.negated
     var hasLo, hasUp, hasDi, hasUs, hasW = false
     if ok:
@@ -102,83 +150,101 @@ proc findInnerLiteral(prog: Program): tuple[ch: char, bs: BackscanKind] =
           else: ok = false; break
       ok = ok and ((hasLo and hasUp and hasDi and hasUs) or hasW)
     ok
-  template exactAlpha(cls: CompiledClass): bool =
-    ## True when the class matches exactly [a-zA-Z_].
-    var ok = not cls.negated
-    var hasLo, hasUp, hasUs = false
-    if ok:
+  template classSets(cls: CompiledClass): tuple[w, s, a, ws: bool] =
+    ## w: matches only word chars; s: only spaces; a: only alpha;
+    ## ws: only word-or-space (mixed, e.g. [\w\s] — treated as a gap).
+    ## Anything else (negations, dots-outside-class, \D\W\S) clears all.
+    var w = not cls.negated
+    var s = not cls.negated
+    var a = not cls.negated
+    var ws = not cls.negated
+    if w or s or a or ws:
       for it in cls.items:
+        var iw, sp, ia: bool
         if it.isRange:
-          if it.lo == 'a' and it.hi == 'z': hasLo = true
-          elif it.lo == 'A' and it.hi == 'Z': hasUp = true
-          else: ok = false; break
+          iw = (it.lo == 'a' and it.hi == 'z') or
+               (it.lo == 'A' and it.hi == 'Z') or
+               (it.lo == '0' and it.hi == '9') or
+               (it.lo == it.hi and it.lo in WordChars)
+          sp = it.lo == '\t' and it.hi == '\r'
+          ia = (it.lo == 'a' and it.hi == 'z') or
+               (it.lo == 'A' and it.hi == 'Z') or
+               (it.lo == it.hi and it.lo in AlphaChars)
         elif it.isEscape:
-          ok = false; break
+          case it.escapeChar
+          of 'w': iw = true
+          of 'd': iw = true  # digits are word chars
+          of 's': sp = true
+          else: discard
         else:
-          if it.ch == '_': hasUs = true
-          else: ok = false; break
-      ok = ok and hasLo and hasUp and hasUs
-    ok
+          iw = it.ch in WordChars
+          sp = it.ch in SpaceChars
+          ia = it.ch in AlphaChars
+        if iw: discard
+        else: w = false
+        if sp: discard
+        else: s = false
+        if ia: discard
+        else: a = false
+        if not (iw or sp): ws = false
+        if not w and not s and not a and not ws: break
+    (w, s, a, ws)
 
   while pc < prog.instrs.len and guard > 0:
     dec guard
     let ins = prog.instrs[pc]
     case ins.op
     of opSave, opProgress, opJmp, opAnchorStart, opAnchorEnd, opWordBoundary:
-      inc pc  # transparent — zero-width, no backscan impact
+      inc pc  # transparent — zero-width, no window impact
     of opChar:
       let c = char(ins.arg1)
       if c in SELECTIVE:
-        # An anchor with no run behind it is handled by cheaper
-        # prefilters; the backscan needs something to walk back over.
-        if runs == 0 and not gapOpen:
+        # An anchor with no run or gap behind it is handled by cheaper
+        # prefilters; the window needs something to anchor the scan.
+        if runs == 0 and not sawGap:
           return noLiteral()
-        if alphaOk: return (c, bsAlphaWord)
-        elif wordOk: return (c, bsWordChar)
-        else: return noLiteral()
+        return (c, firstKind == 2, firstKind == 3, firstExact, firstLoop, groups, not hasLoneStar)
       if c in SpaceChars:
-        # Gaps are only sound trailing: a run after a gap means the
-        # backscan stops at the wrong run.
-        gapOpen = true
-        alphaOk = false  # spaces break alpha runs
+        noteGap()
+      elif c in WordChars:
+        # A concrete word char: the window plus verifier still locate
+        # the start soundly (the verifier checks the exact char).
+        # Singles are subset runs: only the loop lookahead matters
+        # for loop-likeness, and singles never qualify as exact.
+        noteRun(c in AlphaChars, false, false)
       else:
-        # A concrete char pins the match start: the class backscan
-        # cannot locate it, so it ends filtering here.
+        # Consumes outside word/space: the match start may lie outside
+        # the region the VM walks back over — bail out.
         return noLiteral()
       inc pc
     of opEscapeClass:
       case char(ins.arg1)
       of 'w':
-        if gapOpen: return noLiteral()  # run after a gap: wrong run
-        alphaOk = false  # digits break alpha backscan
-        inc runs
+        noteRun(false, true,
+                pc + 1 < prog.instrs.len and isLoopSplit(prog, pc + 1) and
+                loopHeadExactWord(pc + 1))
+      of 'd':
+        noteRun(false, false, false)  # digits: subset run, full window
       of 's':
-        # Whitespace gaps are what the word backscan skips between
-        # the run and the anchor (e.g. \w+\s*\(). Stays trailing:
-        # a later run still bails out above/below.
-        gapOpen = true
-        alphaOk = false
+        noteGap()
       else:
-        # Digits need a digit backscan (nonexistent); negations and
-        # other classes would let the backscan mislocate the start.
         return noLiteral()
       inc pc
     of opCharClass:
-      let subW = exactWord(prog.classes[ins.arg1])
-      let subA = exactAlpha(prog.classes[ins.arg1])
-      if not subW and not subA:
+      let sets = classSets(prog.classes[ins.arg1])
+      if sets.a:
+        noteRun(true, false, false)
+      elif sets.w:
+        noteRun(false, exactWord(prog.classes[ins.arg1]),
+                pc + 1 < prog.instrs.len and isLoopSplit(prog, pc + 1) and
+                loopHeadExactWord(pc + 1))
+      elif sets.s or sets.ws:
+        noteGap()
+      else:
         return noLiteral()
-      if gapOpen:
-        # A run after a gap means the backscan stops at the wrong run.
-        # (Gaps alone are fine: the backscan skips trailing whitespace.)
-        if subW or subA:
-          return noLiteral()
-      wordOk = wordOk and subW
-      alphaOk = alphaOk and subA
-      inc runs
       inc pc
     of opAnyChar:
-      # Matches anything, including backscan break chars.
+      # Matches anything, including region break chars.
       return noLiteral()
     of opSplit, opSplitLazy:
       # Only quantifier loops may be followed, via the exit every
@@ -192,21 +258,20 @@ proc findInnerLiteral(prog: Program): tuple[ch: char, bs: BackscanKind] =
       if prog.instrs[bodyPc].op == opProgress and bodyPc + 1 < prog.instrs.len:
         plusForm = true
         bodyPc += 1
+
       if plusForm and bodyPc < prog.instrs.len and
          prog.instrs[bodyPc].op == opChar:
         let ch = char(prog.instrs[bodyPc].arg1)
         if ch in SELECTIVE:
           # `+` runs its body at least once, so a selective literal
-          # opening the body is mandatory. The backscan walks the
+          # opening the body is mandatory. The window covers the
           # pre-loop prefix, which the flags describe.
-          if runs == 0 and not gapOpen:
+          if runs == 0 and not sawGap:
             return noLiteral()
-          if alphaOk: return (ch, bsAlphaWord)
-          elif wordOk: return (ch, bsWordChar)
-          else: return noLiteral()
-      # The loop body must be a single homogeneous consuming op for the
-      # backscan to walk through it; anything else may hide characters
-      # the backscan class cannot see. Find the back-jump first.
+          return (ch, firstKind == 2, firstKind == 3, firstExact, firstLoop, groups, not hasLoneStar)
+      # The loop body must be a single word/space-compatible consuming
+      # op; anything else may hide characters outside the region.
+      # Find the back-jump first.
       var jmpPc = -1
       var q = bodyPc
       while q < prog.instrs.len:
@@ -238,50 +303,43 @@ proc findInnerLiteral(prog: Program): tuple[ch: char, bs: BackscanKind] =
           let c = char(prog.instrs[bq].arg1)
           if c in SELECTIVE:
             # Selective body char without +-form peek: the loop may
-            # skip it, so it is not mandatory — and it breaks the
-            # backscan classes. Bail out.
+            # skip it, so it is not mandatory. Bail out.
             return noLiteral()
           elif c in SpaceChars:
-            gapOpen = true
-            alphaOk = false
-          elif c in AlphaChars:
-            # AlphaChars subset of WordChars: check first. Digits are
-            # handled below and clear alphaOk.
-            if gapOpen: return noLiteral()
-            inc runs
+            noteGap()
           elif c in WordChars:
-            # Remaining WordChars are digits: break alpha runs.
-            if gapOpen: return noLiteral()
-            alphaOk = false
-            inc runs
+            # A lone `*` run body matches empty: pattern runs can vanish,
+            # so the backward run alignment may shift and the VM must not
+            # narrow the window. (Plus-form tails are covered by their
+            # mandatory copy, so they stay precise.)
+            if not plusForm: hasLoneStar = true
+            noteRun(c in AlphaChars, false, true)
           else:
             return noLiteral()
         of opEscapeClass:
           case char(prog.instrs[bq].arg1)
           of 'w':
-            if gapOpen: return noLiteral()
-            alphaOk = false
-            inc runs
+            if not plusForm: hasLoneStar = true
+            noteRun(false, true, true)
+          of 'd':
+            if not plusForm: hasLoneStar = true
+            noteRun(false, false, true)
           of 's':
-            # Whitespace loop bodies are trailing gaps the word
-            # backscan skips; a later run still bails out.
-            gapOpen = true
-            alphaOk = false
+            noteGap()
           else:
             return noLiteral()
         of opCharClass:
-          # Loop bodies must be exact word/alpha runs like inline code:
-          # a subset (e.g. [ab]*) would let the backscan walk characters
-          # the pattern cannot consume and mislocate the start.
-          let subW = exactWord(prog.classes[prog.instrs[bq].arg1])
-          let subA = exactAlpha(prog.classes[prog.instrs[bq].arg1])
-          if not subW and not subA:
+          let sets = classSets(prog.classes[prog.instrs[bq].arg1])
+          if sets.a:
+            if not plusForm: hasLoneStar = true
+            noteRun(true, false, true)
+          elif sets.w:
+            if not plusForm: hasLoneStar = true
+            noteRun(false, exactWord(prog.classes[prog.instrs[bq].arg1]), true)
+          elif sets.s or sets.ws:
+            noteGap()
+          else:
             return noLiteral()
-          if gapOpen:
-            return noLiteral()  # run after a gap: wrong run
-          wordOk = wordOk and subW
-          alphaOk = alphaOk and subA
-          inc runs
         else:
           return noLiteral()
       else:
@@ -442,17 +500,22 @@ proc extractPrefilterInner(prog: Program): Prefilter =
     if pf.kind != pfNone: return pf
 
   # 3. Inner mandatory literal — check BEFORE falling back to class prefilters.
-  #    A selective char like '(' is far cheaper than pfAlpha/pfWordChar.
+  #    A selective char like '(' is far cheaper than pfAlpha/pfWordChar:
+  #    the VM scans for the rare anchor, then enumerates the word/space
+  #    window before it and lets the verifier pick the leftmost start.
   #    Skip for shapes that have their own SIMD fast-path.
-  #    bsNone never yields a filter: without a runnable backscan the
-  #    match start cannot be located from the anchor.
   if shape notin {psWordSpaceStarWord, psLitSpaceWordPlus, psLitWordSpaceWord,
                    psLitWordSpaceWordPlus, psHexPrefixHexPlus, psDigitPlusULSuffix,
                    psEndAnchorByte}:
-    let (innerCh, bs) = findInnerLiteral(prog)
-    if innerCh != '\0' and bs != bsNone:
+    let (innerCh, innerAlpha, innerGap, innerExact,
+         innerLoop, innerGroups, innerSkip) = findInnerLiteral(prog)
+    if innerCh != '\0':
       return Prefilter(kind: pfInnerLiteral, anchor: innerCh,
-                       backscan: bs, shape: shape)
+                       firstAlpha: innerAlpha, gapFirst: innerGap,
+                       fastStarts: not innerGap and not innerAlpha and
+                                   innerExact and innerLoop,
+                       runGroups: innerGroups, skipPairs: innerSkip,
+                       shape: shape)
 
   # 4. Shape fast-path (pure SIMD, no NFA)
   if shape != psNone:
@@ -474,10 +537,11 @@ proc extractPrefilterInner(prog: Program): Prefilter =
       return Prefilter(kind: pfNone, shape: shape)
     of psWordSpaceStarWord:
       # \w+\s*\*+\s*\w+ — the '*' run is mandatory and sparse: anchor
-      # candidates on it and backscan to the \w+ start instead of
-      # trying every (dense) word char.
+      # candidates on it and enumerate the window to the \w+ start
+      # instead of trying every (dense) word char.
       return Prefilter(kind: pfInnerLiteral, anchor: '*',
-                       backscan: bsWordChar,
+                       firstAlpha: false, gapFirst: false,
+                       fastStarts: true, runGroups: 1, skipPairs: true,
                        shape: shape)
     of psLitSpaceWordPlus, psLitWordSpaceWord, psLitWordSpaceWordPlus:
       # <literal>... — use pfLiteral to scan for literal prefix, shape fast-path handles rest

@@ -664,33 +664,57 @@ proc match*(vm: var RegexVM, input: string): MatchResult =
   if result.matched and (result.start != 0 or result.stop != input.len):
     result = noMatch()
 
-proc backscanStart(input: string, anchorPos, minPos: int,
-                   bs: BackscanKind): int {.inline.} =
-  ## Walk backward from anchorPos-1 to find the NFA start position.
-  ## Returns -1 if no valid start found.
-  var s = anchorPos - 1
-  case bs
-  of bsAlphaWord:
-    # skip optional whitespace (full \s, matching \s* in the pattern)
-    while s >= minPos and input[s] in {' ', '\t', '\n', '\r', '\f', '\v'}: dec s
-    # skip word chars
-    while s >= minPos and input[s] in {'a'..'z','A'..'Z','0'..'9','_'}: dec s
-    inc s
-    if s < anchorPos and input[s] in {'a'..'z','A'..'Z','_'}: return s
-    return -1
-  of bsWordChar:
-    # Optional whitespace may sit between the word run and the anchor
-    # (e.g. \w+\s*= or \s\w+=): skip full \s first, then word chars.
-    while s >= minPos and input[s] in {' ', '\t', '\n', '\r', '\f', '\v'}: dec s
-    while s >= minPos and input[s] in {'a'..'z', 'A'..'Z', '0'..'9', '_'}: dec s
-    inc s
-    if s < anchorPos: return s
-    return -1
-  of bsNone:
-    # Unreachable: findInnerLiteral never yields a filter without a
-    # runnable backscan. Fail closed so a future producer cannot
-    # silently skip positions.
-    return -1
+const InnerWordChars = {'a'..'z', 'A'..'Z', '0'..'9', '_'}
+const InnerAlphaChars = {'a'..'z', 'A'..'Z', '_'}
+const InnerSpaceChars = {' ', '\t', '\n', '\r', '\f', '\v'}
+
+proc firstRunWindow(input: string, anchorPos, minPos, skipPairs: int,
+                     gapFirst: bool): tuple[lo, hi: int] {.inline.} =
+  ## Narrow the anchor's word/space region to the first pattern run:
+  ## walk back trailing spaces, then `skipPairs` run+gap pairs (each
+  ## pattern run but the first aligns one text run further back), then
+  ## the first run itself. Any match using this anchor starts in
+  ## [lo..hi] (or at the lo/r truncation edges the caller always tries).
+  ## Sound only when no lone `*` run can shift the alignment — the
+  ## caller falls back to the whole region otherwise. A leading gap
+  ## extends lo back over spaces (gap-first prefixes may start there).
+  var gp = anchorPos
+  while gp > minPos and input[gp-1] in InnerSpaceChars: dec gp
+  var k = skipPairs
+  while k > 0:
+    while gp > minPos and input[gp-1] in InnerWordChars: dec gp
+    while gp > minPos and input[gp-1] in InnerSpaceChars: dec gp
+    dec k
+  let hi = gp
+  while gp > minPos and input[gp-1] in InnerWordChars: dec gp
+  var lo = gp
+  if gapFirst:
+    while lo > minPos and input[lo-1] in InnerSpaceChars: dec lo
+  (max(lo, minPos), hi)
+
+proc regionStart(input: string, anchorPos, minPos: int): int {.inline.} =
+  ## Walk back over word/space chars to the start of the maximal region
+  ## that could hold the inner-literal prefix. Any match using the anchor
+  ## at anchorPos starts at or after the result: findInnerLiteral only
+  ## walks prefixes that consume word/space characters.
+  var s = anchorPos
+  while s > minPos and input[s-1] in InnerWordChars + InnerSpaceChars: dec s
+  s
+
+template innerIsRunStart(input: string, p: int): bool =
+  ## True when p starts a word run: used by the fastStarts path, where an
+  ## exact-word loop opens the prefix, so any mid-run start implies its
+  ## run start verifies and only run starts can be leftmost.
+  input[p] in InnerWordChars and input[p-1] notin InnerWordChars
+
+template innerPass(pf: Prefilter, input: string, p: int): bool =
+  ## Candidate filter from the prefix's first atom. Gap-first prefixes
+  ## may start anywhere (spaces included); alpha prefixes need an alpha
+  ## start; otherwise any word char starts a candidate. The window
+  ## endpoints are always tried (empty prefixes, region edges).
+  pf.gapFirst or
+    (if pf.firstAlpha: input[p] in InnerAlphaChars
+     else: input[p] in InnerWordChars)
 
 proc find*(vm: var RegexVM, input: string): MatchResult =
   ## Leftmost match anywhere in input, using SIMD prefilter/shape checks
@@ -703,18 +727,29 @@ proc find*(vm: var RegexVM, input: string): MatchResult =
   if pf.shape != psNone:
     while pos <= inputLen:
       # Candidate start for execShape. Inner-literal prefilters yield
-      # anchor positions, so backscan to the match start first.
+      # anchor positions, so enumerate the word/space window before the
+      # anchor and verify each candidate in leftmost order.
       var shapeStart = pos
       var anchorPos = -1
       if pf.kind == pfInnerLiteral:
         anchorPos = pf.nextCandidate(input, pos, inputLen)
         if anchorPos > inputLen: break
-        shapeStart = backscanStart(input, anchorPos,
-                                   pos,
-                                   pf.backscan)
-        if shapeStart < pos or shapeStart >= anchorPos:
-          pos = anchorPos + 1
-          continue
+        let w = if pf.skipPairs: firstRunWindow(input, anchorPos, pos, max(pf.runGroups - 1, 0), pf.gapFirst)
+                  else: (max(regionStart(input, anchorPos, pos), pos), anchorPos)
+        let lo = w.lo
+        let hi = w.hi
+        var p = lo
+        while p <= anchorPos:
+          var okCand = p == lo or p == anchorPos
+          if not okCand and p <= hi:
+            okCand = if pf.fastStarts: innerIsRunStart(input, p) else: innerPass(pf, input, p)
+          if okCand:
+            let rc = execShape(pf, input, p, inputLen)
+            if rc.matched and rc.stop > anchorPos:
+              return rc
+          inc p
+        pos = anchorPos + 1
+        continue
       else:
         pos = pf.nextCandidate(input, pos, inputLen)
         if pos > inputLen: break
@@ -758,17 +793,29 @@ proc find*(vm: var RegexVM, input: string): MatchResult =
       i = r + 1
     return noMatch()
 
-  # Inner literal with backscan
+  # Inner literal with window enumeration: scan for the rare anchor,
+  # then try every word/space-window position before it in leftmost
+  # order. The window provably covers all possible match starts (the
+  # walked prefix only consumes word/space characters).
   if pf.kind == pfInnerLiteral:
     var i = pos
     while i < inputLen:
       let r = scanByte(input, i, inputLen, pf.anchor)
       if r < 0: break
-      let s = backscanStart(input, r, pos, pf.backscan)
-      if s >= pos and s < r:
-        let ra = vm.verifyAt(input, s)
-        if ra.matched and ra.stop > r:
-          return ra
+      let w = if pf.skipPairs: firstRunWindow(input, r, pos, max(pf.runGroups - 1, 0), pf.gapFirst)
+                else: (max(regionStart(input, r, pos), pos), r)
+      let lo = w.lo
+      let hi = w.hi
+      var p = lo
+      while p <= r:
+        var okCand = p == lo or p == r
+        if not okCand and p <= hi:
+          okCand = if pf.fastStarts: innerIsRunStart(input, p) else: innerPass(pf, input, p)
+        if okCand:
+          let ra = vm.verifyAt(input, p)
+          if ra.matched and ra.stop > r:
+            return ra
+        inc p
       i = r + 1
     return noMatch()
 
@@ -791,18 +838,34 @@ proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
   if pf.shape != psNone:
     while pos <= inputLen:
       # Candidate start for execShape. Inner-literal prefilters yield
-      # anchor positions, so backscan to the match start first.
+      # anchor positions, so enumerate the word/space window before the
+      # anchor and verify each candidate in leftmost order.
       var shapeStart = pos
       var anchorPos = -1
       if pf.kind == pfInnerLiteral:
         anchorPos = pf.nextCandidate(input, pos, inputLen)
         if anchorPos > inputLen: break
-        shapeStart = backscanStart(input, anchorPos,
-                                   pos,
-                                   pf.backscan)
-        if shapeStart < pos or shapeStart >= anchorPos:
+        let w = if pf.skipPairs: firstRunWindow(input, anchorPos, pos, max(pf.runGroups - 1, 0), pf.gapFirst)
+                  else: (max(regionStart(input, anchorPos, pos), pos), anchorPos)
+        let lo = w.lo
+        let hi = w.hi
+        var p = lo
+        var hit = false
+        while p <= anchorPos:
+          var okCand = p == lo or p == anchorPos
+          if not okCand and p <= hi:
+            okCand = if pf.fastStarts: innerIsRunStart(input, p) else: innerPass(pf, input, p)
+          if okCand:
+            let rc = execShape(pf, input, p, inputLen)
+            if rc.matched and rc.stop > anchorPos:
+              result.add rc
+              pos = rc.stop
+              hit = true
+              break
+          inc p
+        if not hit:
           pos = anchorPos + 1
-          continue
+        continue
       else:
         pos = pf.nextCandidate(input, pos, inputLen)
         if pos > inputLen: break
@@ -856,21 +919,36 @@ proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
       i = r + 1
     return
   
-  # Inner literal with backscan
+  # Inner literal with window enumeration: scan for the rare anchor,
+  # then try every word/space-window position before it in leftmost
+  # order. The window provably covers all possible match starts (the
+  # walked prefix only consumes word/space characters).
   if pf.kind == pfInnerLiteral:
     var i = pos
     while i < inputLen:
       let r = scanByte(input, i, inputLen, pf.anchor)
       if r < 0: break
-      let s = backscanStart(input, r, pos, pf.backscan)
-      if s >= pos and s < r:
-        let ra = vm.verifyAt(input, s)
-        if ra.matched and ra.stop > r:
-          result.add ra
-          pos = ra.stop
-          i = ra.stop
-          continue
-      i = r + 1
+      let w = if pf.skipPairs: firstRunWindow(input, r, pos, max(pf.runGroups - 1, 0), pf.gapFirst)
+                else: (max(regionStart(input, r, pos), pos), r)
+      let lo = w.lo
+      let hi = w.hi
+      var p = lo
+      var hit = false
+      while p <= r:
+        var okCand = p == lo or p == r
+        if not okCand and p <= hi:
+          okCand = if pf.fastStarts: innerIsRunStart(input, p) else: innerPass(pf, input, p)
+        if okCand:
+          let ra = vm.verifyAt(input, p)
+          if ra.matched and ra.stop > r:
+            result.add ra
+            pos = ra.stop
+            i = ra.stop
+            hit = true
+            break
+        inc p
+      if not hit:
+        i = r + 1
     return
 
   while pos <= inputLen:
