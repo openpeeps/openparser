@@ -687,7 +687,10 @@ proc backscanStart(input: string, anchorPos, minPos: int,
     if s < anchorPos: return s
     return -1
   of bsNone:
-    return max(minPos, anchorPos - 1)
+    # Unreachable: findInnerLiteral never yields a filter without a
+    # runnable backscan. Fail closed so a future producer cannot
+    # silently skip positions.
+    return -1
 
 proc find*(vm: var RegexVM, input: string): MatchResult =
   ## Leftmost match anywhere in input, using SIMD prefilter/shape checks
@@ -707,7 +710,7 @@ proc find*(vm: var RegexVM, input: string): MatchResult =
         anchorPos = pf.nextCandidate(input, pos, inputLen)
         if anchorPos > inputLen: break
         shapeStart = backscanStart(input, anchorPos,
-                                   max(0, anchorPos - pf.maxLookback),
+                                   pos,
                                    pf.backscan)
         if shapeStart < pos or shapeStart >= anchorPos:
           pos = anchorPos + 1
@@ -761,7 +764,7 @@ proc find*(vm: var RegexVM, input: string): MatchResult =
     while i < inputLen:
       let r = scanByte(input, i, inputLen, pf.anchor)
       if r < 0: break
-      let s = backscanStart(input, r, max(0, r - pf.maxLookback), pf.backscan)
+      let s = backscanStart(input, r, pos, pf.backscan)
       if s >= pos and s < r:
         let ra = vm.verifyAt(input, s)
         if ra.matched and ra.stop > r:
@@ -795,7 +798,7 @@ proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
         anchorPos = pf.nextCandidate(input, pos, inputLen)
         if anchorPos > inputLen: break
         shapeStart = backscanStart(input, anchorPos,
-                                   max(0, anchorPos - pf.maxLookback),
+                                   pos,
                                    pf.backscan)
         if shapeStart < pos or shapeStart >= anchorPos:
           pos = anchorPos + 1
@@ -859,7 +862,7 @@ proc findAll*(vm: var RegexVM, input: string): seq[MatchResult] =
     while i < inputLen:
       let r = scanByte(input, i, inputLen, pf.anchor)
       if r < 0: break
-      let s = backscanStart(input, r, max(0, r - pf.maxLookback), pf.backscan)
+      let s = backscanStart(input, r, pos, pf.backscan)
       if s >= pos and s < r:
         let ra = vm.verifyAt(input, s)
         if ra.matched and ra.stop > r:

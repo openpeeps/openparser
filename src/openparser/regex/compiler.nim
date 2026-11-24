@@ -176,6 +176,33 @@ proc skipLoopIsSafe*(prog: Program, loop: SkipLoop): bool =
   else:
     return false
 
+proc progCanBeEmpty*(prog: Program): bool =
+  ## True when opMatch is reachable from pc 0 without consuming input.
+  ## A nullable pattern can match empty at a skipped offset, so position
+  ## skipping (prefilters, shape fast paths) is unsound for it: every
+  ## position must be verified. Computed once per compilation; DFS over
+  ## the instruction stream following epsilon edges only.
+  if prog.instrs.len == 0: return false
+  var visited = newSeq[bool](prog.instrs.len)
+  var stack = @[0]
+  while stack.len > 0:
+    let pc = stack.pop()
+    if pc < 0 or pc >= prog.instrs.len or visited[pc]: continue
+    visited[pc] = true
+    case prog.instrs[pc].op
+    of opMatch:
+      return true
+    of opJmp:
+      stack.add(prog.instrs[pc].arg1)
+    of opSplit, opSplitLazy:
+      stack.add(prog.instrs[pc].arg1)
+      stack.add(prog.instrs[pc].arg2)
+    of opSave, opProgress, opAnchorStart, opAnchorEnd, opWordBoundary:
+      stack.add(pc + 1)  # zero-width: no input consumed
+    else:
+      discard  # consuming op: this path needs input
+  false
+
 #
 # Helpers
 #

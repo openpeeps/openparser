@@ -112,8 +112,16 @@ proc parseCharClass(p: var RegexParser): RegexNode =
     var loChar: char
 
     case loTok.kind
-    of tkChar, tkNumber:
+    of tkChar:
       loChar = loTok.lexeme[0]
+      p.advance()
+    of tkNumber:
+      # A number token may be multi-digit (e.g. "123" in [abc123]).
+      # PCRE reads classes char by char, so all but the last digit are
+      # plain singles; the last may still open a range below.
+      for i in 0 ..< loTok.lexeme.len - 1:
+        result.items.add(CharClassItem(isRange: false, ch: loTok.lexeme[i]))
+      loChar = loTok.lexeme[^1]
       p.advance()
     of tkEscaped:
       let ec = loTok.lexeme[0]
@@ -146,9 +154,17 @@ proc parseCharClass(p: var RegexParser): RegexNode =
       else:
         let hiTok = p.current
         var hiChar: char
+        var hiRest = ""
         case hiTok.kind
-        of tkChar, tkNumber:
+        of tkChar:
           hiChar = hiTok.lexeme[0]
+          p.advance()
+        of tkNumber:
+          # Multi-digit hi side (e.g. "34" in [2-34]): the first char
+          # closes the range, the rest are plain singles after it.
+          hiChar = hiTok.lexeme[0]
+          if hiTok.lexeme.len > 1:
+            hiRest = hiTok.lexeme[1 .. ^1]
           p.advance()
         of tkEscaped:
           hiChar = case hiTok.lexeme[0]   # same fix for hi side of range
@@ -166,6 +182,8 @@ proc parseCharClass(p: var RegexParser): RegexNode =
           p.lexer.error("Character class range out of order: " &
                         $loChar & "-" & $hiChar)
         result.items.add(CharClassItem(isRange: true, lo: loChar, hi: hiChar))
+        for c in hiRest:
+          result.items.add(CharClassItem(isRange: false, ch: c))
     else:
       result.items.add(CharClassItem(isRange: false, ch: loChar))
 
