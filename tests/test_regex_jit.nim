@@ -40,9 +40,12 @@ proc jitFindGroups(pattern, input: string): seq[string] =
   if not m.matched: return @[]
   result = m.groups(input)
 
-# The JIT backend emits x86-64 or AArch64 machine code: on other targets
-# compileRegex returns fn == nil and the interpreter handles everything.
-when defined(amd64) or defined(arm64):
+# The JIT backend emits x86-64 or AArch64 machine code, never on
+# Windows or with noRegexJit: there compileRegex returns fn == nil and
+# the interpreter handles everything. This gate mirrors the backend
+# gate in src/openparser/regex/jit/compiler.nim — keep them in sync.
+when (defined(amd64) or defined(arm64)) and not defined(windows) and
+    not defined(noRegexJit):
   suite "Regex JIT: literals":
     test "simple literal match":
       check jitMatchAt("hello", "hello world", 0) == 5
