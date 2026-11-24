@@ -16,9 +16,16 @@ when defined(amd64) or defined(i386):
   else:
     const hasAvx2* = false
   const hasSse2* = true
+  const hasNeon* = false
+elif defined(arm64):
+  import nimsimd/neon
+  const hasSse2* = false
+  const hasAvx2* = false
+  const hasNeon* = true
 else:
   const hasSse2* = false
   const hasAvx2* = false
+  const hasNeon* = false
 
 # ---------------------------------------------------------------------------
 # Scalar fallbacks
@@ -37,6 +44,14 @@ proc scanByteSetScalar*(s: string, start, stop: int, lo, hi: char): int {.inline
 proc scanAnyOfScalar*(s: string, start, stop: int, a, b: char): int {.inline.} =
   for i in start ..< stop:
     if s[i] == a or s[i] == b: return i
+  -1
+
+proc scanAnyOfNScalar*(s: string, start, stop: int,
+                       needles: openArray[char]): int {.inline.} =
+  ## First position holding any of `needles`.
+  for i in start ..< stop:
+    for b in needles:
+      if s[i] == b: return i
   -1
 
 proc scanAlphaUnderscoreScalar*(s: string, start, stop: int): int {.inline.} =
@@ -139,6 +154,31 @@ when hasSse2:
       i += 16
     while i < stop:
       if s[i] == a or s[i] == b: return i
+      inc i
+    -1
+
+  proc scanAnyOfNSse2*(s: string, start, stop: int,
+                       needles: openArray[char]): int =
+    ## First position holding any of `needles` (cap 8: the prefilter
+    ## never builds larger sets). One broadcast per needle up front,
+    ## then an OR-tree of compares per 16-byte chunk.
+    let n = min(needles.len, 8)
+    if n == 0: return -1
+    var vecs: array[8, M128i]
+    for k in 0 ..< n:
+      vecs[k] = mm_set1_epi8(cast[int8](needles[k]))
+    var i = start
+    while i + 16 <= stop:
+      let chunk = mm_loadu_si128(cast[ptr M128i](unsafeAddr s[i]))
+      var acc = mm_cmpeq_epi8(chunk, vecs[0])
+      for k in 1 ..< n:
+        acc = mm_or_si128(acc, mm_cmpeq_epi8(chunk, vecs[k]))
+      let mask = mm_movemask_epi8(acc)
+      if mask != 0: return i + countTrailingZeroBits(cast[uint32](mask))
+      i += 16
+    while i < stop:
+      for b in needles:
+        if s[i] == b: return i
       inc i
     -1
 
@@ -485,57 +525,319 @@ when hasAvx2:
     -1
 
 # ---------------------------------------------------------------------------
+# NEON paths (16 bytes / cycle) — compiled only on AArch64
+# ---------------------------------------------------------------------------
+
+when hasNeon:
+  # Lane-bit table for movemaskNeon: loaded once per scan call.
+  let neonBitMask = [1'u8, 2, 4, 8, 16, 32, 64, 128,
+                     1'u8, 2, 4, 8, 16, 32, 64, 128]
+
+  proc movemaskNeon(v: uint8x16): uint32 {.inline.} =
+    ## Collapse a 0xFF/0x00 lane mask to a 16-bit bitmask (lane i → bit i).
+    ## vand keeps each lane's distinct bit, then two vpadds fold the
+    ## disjoint bits down (addition == OR: no two set bits overlap).
+    let bits = vandq_u8(v, vld1q_u8(cast[pointer](unsafeAddr neonBitMask[0])))
+    let pairs = vpadd_u8(vget_low_u8(bits), vget_high_u8(bits))
+    let quads = vpadd_u8(pairs, pairs)
+    let w = vget_lane_u32(vreinterpret_u32_u8(quads), 0)
+    let lo = (w and 0xFF'u32) + ((w shr 8) and 0xFF'u32)
+    let hi = ((w shr 16) and 0xFF'u32) + ((w shr 24) and 0xFF'u32)
+    lo or (hi shl 8)
+
+  proc rangeMaskNeon(chunk: uint8x16, lo: char, span: int): uint8x16 =
+    let loV = vmovq_n_u8(uint8(ord(lo)))
+    let spV = vmovq_n_u8(uint8(span))
+    let d   = vsubq_u8(chunk, loV)          ## wrapping, not saturating
+    vmvnq_u8(vcltq_u8(spV, d))              ## NOT(span < d) ⟺ d <= span
+
+  proc scanByteNeon*(s: string, start, stop: int, b: char): int =
+    let bVec = vmovq_n_u8(uint8(ord(b)))
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      let m = vceqq_u8(chunk, bVec)
+      if vmaxvq_u8(m) != 0:
+        let mask = movemaskNeon(m)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] == b: return i
+      inc i
+    -1
+
+  proc scanByteRangeNeon*(s: string, start, stop: int, lo, hi: char): int =
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      let m = rangeMaskNeon(chunk, lo, ord(hi) - ord(lo))
+      if vmaxvq_u8(m) != 0:
+        let mask = movemaskNeon(m)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] >= lo and s[i] <= hi: return i
+      inc i
+    -1
+
+  proc scanAnyOfNeon*(s: string, start, stop: int, a, b: char): int =
+    let va = vmovq_n_u8(uint8(ord(a)))
+    let vb = vmovq_n_u8(uint8(ord(b)))
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      let m = vorrq_u8(vceqq_u8(chunk, va), vceqq_u8(chunk, vb))
+      if vmaxvq_u8(m) != 0:
+        let mask = movemaskNeon(m)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] == a or s[i] == b: return i
+      inc i
+    -1
+
+  proc scanAnyOfNNeon*(s: string, start, stop: int,
+                       needles: openArray[char]): int =
+    let n = min(needles.len, 8)
+    if n == 0: return -1
+    var vecs: array[8, uint8x16]
+    for k in 0 ..< n:
+      vecs[k] = vmovq_n_u8(uint8(ord(needles[k])))
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      var acc = vceqq_u8(chunk, vecs[0])
+      for k in 1 ..< n:
+        acc = vorrq_u8(acc, vceqq_u8(chunk, vecs[k]))
+      if vmaxvq_u8(acc) != 0:
+        let mask = movemaskNeon(acc)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      for b in needles:
+        if s[i] == b: return i
+      inc i
+    -1
+
+  proc wordCharMaskNeon(chunk: uint8x16): uint8x16 {.inline.} =
+    ## Returns a mask where bytes that ARE \w are 0xFF.
+    let mLo = rangeMaskNeon(chunk, 'a', 25)
+    let mUp = rangeMaskNeon(chunk, 'A', 25)
+    let mDi = rangeMaskNeon(chunk, '0', 9)
+    let mUs = vceqq_u8(chunk, vmovq_n_u8(uint8(ord('_'))))
+    vorrq_u8(vorrq_u8(mLo, mUp), vorrq_u8(mDi, mUs))
+
+  proc alphaUnderMaskNeon(chunk: uint8x16): uint8x16 {.inline.} =
+    ## Returns mask where bytes that ARE [a-zA-Z_] are 0xFF.
+    let mLo = rangeMaskNeon(chunk, 'a', 25)
+    let mUp = rangeMaskNeon(chunk, 'A', 25)
+    let mUs = vceqq_u8(chunk, vmovq_n_u8(uint8(ord('_'))))
+    vorrq_u8(vorrq_u8(mLo, mUp), mUs)
+
+  proc upperDigitUnderMaskNeon(chunk: uint8x16): uint8x16 {.inline.} =
+    let mUp = rangeMaskNeon(chunk, 'A', 25)
+    let mDi = rangeMaskNeon(chunk, '0', 9)
+    let mUs = vceqq_u8(chunk, vmovq_n_u8(uint8(ord('_'))))
+    vorrq_u8(vorrq_u8(mUp, mDi), mUs)
+
+  proc scanAlphaUnderscoreNeon*(s: string, start, stop: int): int =
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      let m = alphaUnderMaskNeon(chunk)
+      if vmaxvq_u8(m) != 0:
+        let mask = movemaskNeon(m)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] in {'a'..'z','A'..'Z','_'}: return i
+      inc i
+    -1
+
+  proc scanWordCharNeon*(s: string, start, stop: int): int =
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      let m = wordCharMaskNeon(chunk)
+      if vmaxvq_u8(m) != 0:
+        let mask = movemaskNeon(m)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] in {'a'..'z','A'..'Z','0'..'9','_'}: return i
+      inc i
+    -1
+
+  proc scanNonWordCharNeon*(s: string, start, stop: int): int =
+    ## Find first byte NOT in \w — marks end of an identifier run.
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      let m = vmvnq_u8(wordCharMaskNeon(chunk))
+      if vmaxvq_u8(m) != 0:
+        let mask = movemaskNeon(m)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] notin {'a'..'z','A'..'Z','0'..'9','_'}: return i
+      inc i
+    -1
+
+  proc scanNonDigitNeon*(s: string, start, stop: int): int =
+    ## Find first byte NOT in \d — end-of-digit-run scan.
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      let m = vmvnq_u8(rangeMaskNeon(chunk, '0', 9))
+      if vmaxvq_u8(m) != 0:
+        let mask = movemaskNeon(m)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] notin {'0'..'9'}: return i
+      inc i
+    -1
+
+  proc scanNonSpaceNeon*(s: string, start, stop: int): int =
+    ## Find first byte NOT in \s — end-of-whitespace run scan.
+    let vSp = vmovq_n_u8(uint8(ord(' ')))
+    let vTb = vmovq_n_u8(uint8(ord('\t')))
+    let vNl = vmovq_n_u8(uint8(ord('\n')))
+    let vCr = vmovq_n_u8(uint8(ord('\r')))
+    let vFf = vmovq_n_u8(uint8(ord('\f')))
+    let vVt = vmovq_n_u8(uint8(ord('\v')))
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      let mSp = vceqq_u8(chunk, vSp)
+      let mTb = vceqq_u8(chunk, vTb)
+      let mNl = vceqq_u8(chunk, vNl)
+      let mCr = vceqq_u8(chunk, vCr)
+      let mFf = vceqq_u8(chunk, vFf)
+      let mVt = vceqq_u8(chunk, vVt)
+      let wsMask = vorrq_u8(vorrq_u8(mSp, mTb), vorrq_u8(mNl, mCr))
+      let wsAll  = vorrq_u8(wsMask, vorrq_u8(mFf, mVt))
+      let m = vmvnq_u8(wsAll)
+      if vmaxvq_u8(m) != 0:
+        let mask = movemaskNeon(m)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] notin {' ','\t','\n','\r','\f','\v'}: return i
+      inc i
+    -1
+
+  proc scanNonAlphaUnderNeon*(s: string, start, stop: int): int =
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      let m = vmvnq_u8(alphaUnderMaskNeon(chunk))
+      if vmaxvq_u8(m) != 0:
+        let mask = movemaskNeon(m)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] notin {'a'..'z','A'..'Z','_'}: return i
+      inc i
+    -1
+
+  proc scanUpperDigitUnderNeon*(s: string, start, stop: int): int =
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      let m = upperDigitUnderMaskNeon(chunk)
+      if vmaxvq_u8(m) != 0:
+        let mask = movemaskNeon(m)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] in {'A'..'Z','0'..'9','_'}: return i
+      inc i
+    -1
+
+  proc scanNonUpperDigitUnderNeon*(s: string, start, stop: int): int =
+    var i = start
+    while i + 16 <= stop:
+      let chunk = vld1q_u8(cast[pointer](unsafeAddr s[i]))
+      let m = vmvnq_u8(upperDigitUnderMaskNeon(chunk))
+      if vmaxvq_u8(m) != 0:
+        let mask = movemaskNeon(m)
+        return i + countTrailingZeroBits(mask)
+      i += 16
+    while i < stop:
+      if s[i] notin {'A'..'Z','0'..'9','_'}: return i
+      inc i
+    -1
+
+# ---------------------------------------------------------------------------
 # Unified dispatch
 # ---------------------------------------------------------------------------
 
 proc scanByte*(s: string, start, stop: int, b: char): int {.inline.} =
   when hasSse2: scanByteSse2(s, start, stop, b)
+  elif hasNeon: scanByteNeon(s, start, stop, b)
   else:         scanByteScalar(s, start, stop, b)
 
 proc scanByteRange*(s: string, start, stop: int, lo, hi: char): int {.inline.} =
   when hasSse2: scanByteRangeSse2(s, start, stop, lo, hi)
+  elif hasNeon: scanByteRangeNeon(s, start, stop, lo, hi)
   else:         scanByteSetScalar(s, start, stop, lo, hi)
 
 proc scanAnyOf*(s: string, start, stop: int, a, b: char): int {.inline.} =
   when hasSse2: scanAnyOfSse2(s, start, stop, a, b)
+  elif hasNeon: scanAnyOfNeon(s, start, stop, a, b)
   else:         scanAnyOfScalar(s, start, stop, a, b)
+
+proc scanAnyOfN*(s: string, start, stop: int,
+                 needles: openArray[char]): int {.inline.} =
+  when hasSse2: scanAnyOfNSse2(s, start, stop, needles)
+  elif hasNeon: scanAnyOfNNeon(s, start, stop, needles)
+  else:         scanAnyOfNScalar(s, start, stop, needles)
 
 proc scanAlphaUnderscore*(s: string, start, stop: int): int {.inline.} =
   when hasAvx2: scanAlphaUnderscoreAvx2(s, start, stop)
   elif hasSse2: scanAlphaUnderscoreSse2(s, start, stop)
+  elif hasNeon: scanAlphaUnderscoreNeon(s, start, stop)
   else:         scanAlphaUnderscoreScalar(s, start, stop)
 
 proc scanWordChar*(s: string, start, stop: int): int {.inline.} =
   when hasAvx2: scanWordCharAvx2(s, start, stop)
   elif hasSse2: scanWordCharSse2(s, start, stop)
+  elif hasNeon: scanWordCharNeon(s, start, stop)
   else:         scanWordCharScalar(s, start, stop)
 
 proc scanNonWordChar*(s: string, start, stop: int): int {.inline.} =
   when hasAvx2: scanNonWordCharAvx2(s, start, stop)
   elif hasSse2: scanNonWordCharSse2(s, start, stop)
+  elif hasNeon: scanNonWordCharNeon(s, start, stop)
   else:         scanNonWordCharScalar(s, start, stop)
 
 proc scanNonAlphaUnder*(s: string, start, stop: int): int {.inline.} =
   when hasAvx2: scanNonAlphaUnderAvx2(s, start, stop)
   elif hasSse2: scanNonAlphaUnderSse2(s, start, stop)
+  elif hasNeon: scanNonAlphaUnderNeon(s, start, stop)
   else:         scanNonAlphaUnderScalar(s, start, stop)
 
 proc scanUpperDigitUnder*(s: string, start, stop: int): int {.inline.} =
   when hasAvx2: scanUpperDigitUnderAvx2(s, start, stop)
   elif hasSse2: scanUpperDigitUnderSse2(s, start, stop)
+  elif hasNeon: scanUpperDigitUnderNeon(s, start, stop)
   else:         scanUpperDigitUnderScalar(s, start, stop)
 
 proc scanNonUpperDigitUnder*(s: string, start, stop: int): int {.inline.} =
   when hasAvx2: scanNonUpperDigitUnderAvx2(s, start, stop)
   elif hasSse2: scanNonUpperDigitUnderSse2(s, start, stop)
+  elif hasNeon: scanNonUpperDigitUnderNeon(s, start, stop)
   else:         scanNonUpperDigitUnderScalar(s, start, stop)
 
 proc scanNonDigit*(s: string, start, stop: int): int {.inline.} =
   when hasAvx2: scanNonDigitAvx2(s, start, stop)
   elif hasSse2: scanNonDigitSse2(s, start, stop)
+  elif hasNeon: scanNonDigitNeon(s, start, stop)
   else:         scanNonDigitScalar(s, start, stop)
 
 proc scanNonSpace*(s: string, start, stop: int): int {.inline.} =
   when hasAvx2: scanNonSpaceAvx2(s, start, stop)
   elif hasSse2: scanNonSpaceSse2(s, start, stop)
+  elif hasNeon: scanNonSpaceNeon(s, start, stop)
   else:         scanNonSpaceScalar(s, start, stop)

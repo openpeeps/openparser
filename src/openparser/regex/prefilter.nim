@@ -19,6 +19,7 @@ type
     pfLiteral
     pfByteRange
     pfAnyOf2
+    pfAnyOfN         ## first bytes of a 3+-branch alternation (cap 8)
     pfAnchorStart
     pfAlpha          ## [a-zA-Z_]
     pfWordChar       ## [a-zA-Z0-9_]
@@ -42,6 +43,8 @@ type
       lo*, hi*: char
     of pfAnyOf2:
       alt1*, alt2*: char
+    of pfAnyOfN:
+      alts*: seq[char]  ## distinct first bytes, 3..8 (owned by the prefilter)
     of pfAnchorStart, pfNone, pfAlpha, pfWordChar, pfUpperAlpha: discard
     shape*: PatternShape
     literalEndPc*: int  ## PC after literal prefix (for pfLiteral advance optimization)
@@ -154,7 +157,23 @@ proc extractAlternationPrefilter(branches: seq[string], total: int,
     # No shared literal: a match must start with one of the two bytes.
     return Prefilter(kind: pfAnyOf2, alt1: branches[0][0],
                      alt2: branches[1][0], shape: shape)
-  Prefilter(kind: pfNone, shape: shape)
+
+  # Three or more branches, no long shared anchor: a match must start
+  # with one of the branches' first bytes. Beyond 8 distinct bytes the
+  # SIMD OR-tree costs more than it saves → no filter.
+  var firstBytes: seq[char] = @[]
+  for s in branches:
+    if s[0] notin firstBytes: firstBytes.add(s[0])
+  case firstBytes.len
+  of 1:
+    return Prefilter(kind: pfByte, byte1: firstBytes[0], shape: shape)
+  of 2:
+    return Prefilter(kind: pfAnyOf2, alt1: firstBytes[0],
+                     alt2: firstBytes[1], shape: shape)
+  of 3..8:
+    return Prefilter(kind: pfAnyOfN, alts: firstBytes, shape: shape)
+  else:
+    return Prefilter(kind: pfNone, shape: shape)
 
 proc extractLiteralPrefix(prog: Program): string =
   ## Walk instructions from pc=0, collecting consecutive opChar bytes,
@@ -396,6 +415,9 @@ proc nextCandidate*(pf: Prefilter, input: string,
     if r < 0: inputLen + 1 else: r
   of pfAnyOf2:
     let r = scanAnyOf(input, pos, inputLen, pf.alt1, pf.alt2)
+    if r < 0: inputLen + 1 else: r
+  of pfAnyOfN:
+    let r = scanAnyOfN(input, pos, inputLen, pf.alts)
     if r < 0: inputLen + 1 else: r
   of pfAlpha:
     let r = scanAlphaUnderscore(input, pos, inputLen)
