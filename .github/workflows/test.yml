@@ -22,7 +22,7 @@ jobs:
       # Full suite: `clue test` takes the filter as a positional arg and
       # extra flags ride along in test-flags, so `--parallel` runs every
       # module in tests/ on a worker pool.
-      test-flags: '--parallel'
+      # test-flags: '--parallel'
 
   napi:
     name: napi addon
