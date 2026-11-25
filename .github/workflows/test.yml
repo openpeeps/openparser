@@ -14,31 +14,35 @@ on:
       - .github/workflows
 jobs:
   nim:
-    name: regex JIT tests
+    name: nim tests
     uses: nimbase/setup-nim-action/.github/workflows/test_clue.yml@main
     with:
       nim-version: '2.2.x'
       os: '[{"os":"ubuntu-latest"},{"os":"ubuntu-24.04-arm"},{"os":"macos-15"},{"os":"macos-15-intel"},{"os":"windows-latest"},{"os":"windows-11-arm"}]'
-      # Scope CI to the regex JIT suite for speed: `clue test` takes the
-      # filter as a positional arg, so it rides along in test-flags.
-      test-flags: 'test_regex_jit'
+      # Full suite: `clue test` takes the filter as a positional arg and
+      # extra flags ride along in test-flags, so `--parallel` runs every
+      # module in tests/ on a worker pool.
+      test-flags: '--parallel'
 
-  # napi: disabled for now (Node addon tested separately)
-  # name: napi addon
-  # uses: nimbase/setup-nim-action/.github/workflows/test.yml@main
-  # with:
-  # nim-version: '2.2.x'
-  # os: '[{"os":"ubuntu-latest"},{"os":"ubuntu-24.04-arm"},{"os":"macos-15"},{"os":"macos-15-intel"},{"os":"windows-latest"},{"os":"windows-11-arm"}]'
-  # Node-side prerequisites, openparser-side only: the runners ship
-  # Node + npm + cmake, so only the cmake-js CLI (used by
-  # `denim build --cmake`) needs installing. GITHUB_PATH persists the
-  # fallback location to the later steps.
-  # pre-install-command: >-
-  # npm install -g cmake-js ||
-  # (npm install --prefix "$HOME/.cmake-js" cmake-js &&
-  # echo "$HOME/.cmake-js/bin" >> "$GITHUB_PATH")
-  # pre-test-command: >-
-  # cd .. && nimble install denim &&
-  # cd openparser && denim build src/openparser.nim --cmake -y &&
-  # node addons/openparser_napi/scripts/place-binary.js &&
-  # npm test --prefix addons/openparser_napi
+  napi:
+    name: napi addon
+    uses: nimbase/setup-nim-action/.github/workflows/test_clue.yml@main
+    with:
+      nim-version: '2.2.x'
+      # windows-11-arm excluded: addons build natively per runner and
+      # place-binary.js supports win32-x64 only (no win32-arm64 slot).
+      os: '[{"os":"ubuntu-latest"},{"os":"ubuntu-24.04-arm"},{"os":"macos-15"},{"os":"macos-15-intel"},{"os":"windows-latest"}]'
+      # Node-side prerequisites, openparser-side only: the runners ship
+      # Node + npm + cmake, so only the cmake-js CLI (used by
+      # `denim build --cmake`) needs installing. GITHUB_PATH persists the
+      # fallback location to the later steps.
+      pre-install-command: >-
+        npm install -g cmake-js ||
+        (npm install --prefix "$HOME/.cmake-js" cmake-js &&
+        echo "$HOME/.cmake-js/bin" >> "$GITHUB_PATH")
+      pre-test-command: >-
+        clue install denim &&
+        denim build src/openparser.nim --cmake -y &&
+        node addons/openparser_napi/scripts/place-binary.js &&
+        npm test --prefix addons/openparser_napi
+      test-flags: '--parallel'
